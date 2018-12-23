@@ -11,13 +11,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace RebensAPI
+namespace ias.Rebens.api
 {
     public class Startup
     {
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+
+            ServiceLocator<ICategoryRepository>.Config(() => new CategoryRepository());
+            ServiceLocator<ILogErrorRepository>.Config(() => new LogErrorRepository());
         }
 
         public IConfiguration Configuration { get; }

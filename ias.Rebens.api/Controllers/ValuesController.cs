@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
-namespace RebensAPI.Controllers
+namespace ias.Rebens.api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
