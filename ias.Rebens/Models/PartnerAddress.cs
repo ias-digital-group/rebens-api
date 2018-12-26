@@ -8,7 +8,7 @@ namespace ias.Rebens
         public int IdPartner { get; set; }
         public int IdAddress { get; set; }
 
-        public virtual Address IdAddressNavigation { get; set; }
-        public virtual Partner IdPartnerNavigation { get; set; }
+        public virtual Address Address { get; set; }
+        public virtual Partner Partner { get; set; }
     }
 }

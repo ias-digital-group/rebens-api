@@ -8,7 +8,7 @@ namespace ias.Rebens
         public int IdBenefit { get; set; }
         public int IdCategory { get; set; }
 
-        public virtual Benefit IdBenefitNavigation { get; set; }
-        public virtual Category IdCategoryNavigation { get; set; }
+        public virtual Benefit Benefit { get; set; }
+        public virtual Category Category { get; set; }
     }
 }

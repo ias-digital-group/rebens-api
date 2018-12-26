@@ -33,9 +33,9 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual BenefitType IdBenefitTypeNavigation { get; set; }
-        public virtual IntegrationType IdIntegrationTypeNavigation { get; set; }
-        public virtual Partner IdPartnerNavigation { get; set; }
+        public virtual BenefitType BenefitType { get; set; }
+        public virtual IntegrationType IntegrationType { get; set; }
+        public virtual Partner Partner { get; set; }
         public virtual ICollection<Banner> Banners { get; set; }
         public virtual ICollection<BenefitAddress> BenefitAddresses { get; set; }
         public virtual ICollection<BenefitCategory> BenefitCategories { get; set; }

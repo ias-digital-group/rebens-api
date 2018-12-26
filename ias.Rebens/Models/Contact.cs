@@ -20,7 +20,7 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual Address IdAddressNavigation { get; set; }
+        public virtual Address Address { get; set; }
         public virtual ICollection<Partner> Partners { get; set; }
     }
 }

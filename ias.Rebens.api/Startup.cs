@@ -26,6 +26,7 @@ namespace ias.Rebens.api
             ServiceLocator<IFaqRepository>.Config(() => new FaqRepository());
             ServiceLocator<IIntegrationTypeRepository>.Config(() => new IntegrationTypeRepository());
             ServiceLocator<ILogErrorRepository>.Config(() => new LogErrorRepository());
+            ServiceLocator<IOperationRepository>.Config(() => new OperationRepository());
             ServiceLocator<IOperationTypeRepository>.Config(() => new OperationTypeRepository());
             ServiceLocator<IPermissionRepository>.Config(() => new PermissionRepository());
             ServiceLocator<IProfileRepository>.Config(() => new ProfileRepository());

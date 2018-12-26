@@ -8,7 +8,7 @@ namespace ias.Rebens
         public int IdBanner { get; set; }
         public int IdOperation { get; set; }
 
-        public virtual Banner IdBannerNavigation { get; set; }
-        public virtual Operation IdOperationNavigation { get; set; }
+        public virtual Banner Banner { get; set; }
+        public virtual Operation Operation { get; set; }
     }
 }
