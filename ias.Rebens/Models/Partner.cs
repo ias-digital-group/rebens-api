@@ -7,8 +7,8 @@ namespace ias.Rebens
     {
         public Partner()
         {
-            Benefit = new HashSet<Benefit>();
-            PartnerAddress = new HashSet<PartnerAddress>();
+            Benefits = new HashSet<Benefit>();
+            PartnerAddresses = new HashSet<PartnerAddress>();
         }
 
         public int Id { get; set; }
@@ -18,8 +18,8 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual Contact IdContactNavigation { get; set; }
-        public virtual ICollection<Benefit> Benefit { get; set; }
-        public virtual ICollection<PartnerAddress> PartnerAddress { get; set; }
+        public virtual Contact Contact { get; set; }
+        public virtual ICollection<Benefit> Benefits { get; set; }
+        public virtual ICollection<PartnerAddress> PartnerAddresses { get; set; }
     }
 }

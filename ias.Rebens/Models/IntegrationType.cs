@@ -7,7 +7,7 @@ namespace ias.Rebens
     {
         public IntegrationType()
         {
-            Benefit = new HashSet<Benefit>();
+            Benefits = new HashSet<Benefit>();
         }
 
         public int Id { get; set; }
@@ -16,6 +16,6 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual ICollection<Benefit> Benefit { get; set; }
+        public virtual ICollection<Benefit> Benefits { get; set; }
     }
 }

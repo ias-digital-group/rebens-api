@@ -7,10 +7,10 @@ namespace ias.Rebens
     {
         public Operation()
         {
-            BannerOperation = new HashSet<BannerOperation>();
-            BenefitOperation = new HashSet<BenefitOperation>();
-            Faq = new HashSet<Faq>();
-            StaticText = new HashSet<StaticText>();
+            BannerOperations = new HashSet<BannerOperation>();
+            BenefitOperations = new HashSet<BenefitOperation>();
+            Faqs = new HashSet<Faq>();
+            StaticTexts = new HashSet<StaticText>();
         }
 
         public int Id { get; set; }
@@ -26,10 +26,10 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual OperationType IdOperationTypeNavigation { get; set; }
-        public virtual ICollection<BannerOperation> BannerOperation { get; set; }
-        public virtual ICollection<BenefitOperation> BenefitOperation { get; set; }
-        public virtual ICollection<Faq> Faq { get; set; }
-        public virtual ICollection<StaticText> StaticText { get; set; }
+        public virtual OperationType OperationType { get; set; }
+        public virtual ICollection<BannerOperation> BannerOperations { get; set; }
+        public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }
+        public virtual ICollection<Faq> Faqs { get; set; }
+        public virtual ICollection<StaticText> StaticTexts { get; set; }
     }
 }

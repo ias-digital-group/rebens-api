@@ -7,7 +7,7 @@ namespace ias.Rebens
     {
         public BenefitOperationPosition()
         {
-            BenefitOperation = new HashSet<BenefitOperation>();
+            BenefitOperations = new HashSet<BenefitOperation>();
         }
 
         public int Id { get; set; }
@@ -16,6 +16,6 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual ICollection<BenefitOperation> BenefitOperation { get; set; }
+        public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }
     }
 }

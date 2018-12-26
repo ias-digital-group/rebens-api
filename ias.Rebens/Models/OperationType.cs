@@ -7,7 +7,7 @@ namespace ias.Rebens
     {
         public OperationType()
         {
-            Operation = new HashSet<Operation>();
+            Operations = new HashSet<Operation>();
         }
 
         public int Id { get; set; }
@@ -16,6 +16,6 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual ICollection<Operation> Operation { get; set; }
+        public virtual ICollection<Operation> Operations { get; set; }
     }
 }

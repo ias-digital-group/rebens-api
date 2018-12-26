@@ -7,7 +7,7 @@ namespace ias.Rebens
     {
         public StaticTextType()
         {
-            StaticText = new HashSet<StaticText>();
+            StaticTexts = new HashSet<StaticText>();
         }
 
         public int Id { get; set; }
@@ -17,6 +17,6 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual ICollection<StaticText> StaticText { get; set; }
+        public virtual ICollection<StaticText> StaticTexts { get; set; }
     }
 }

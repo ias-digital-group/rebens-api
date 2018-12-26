@@ -7,10 +7,10 @@ namespace ias.Rebens
     {
         public Benefit()
         {
-            Banner = new HashSet<Banner>();
-            BenefitAddress = new HashSet<BenefitAddress>();
-            BenefitCategory = new HashSet<BenefitCategory>();
-            BenefitOperation = new HashSet<BenefitOperation>();
+            Banners = new HashSet<Banner>();
+            BenefitAddresses = new HashSet<BenefitAddress>();
+            BenefitCategories = new HashSet<BenefitCategory>();
+            BenefitOperations = new HashSet<BenefitOperation>();
         }
 
         public int Id { get; set; }
@@ -36,9 +36,9 @@ namespace ias.Rebens
         public virtual BenefitType IdBenefitTypeNavigation { get; set; }
         public virtual IntegrationType IdIntegrationTypeNavigation { get; set; }
         public virtual Partner IdPartnerNavigation { get; set; }
-        public virtual ICollection<Banner> Banner { get; set; }
-        public virtual ICollection<BenefitAddress> BenefitAddress { get; set; }
-        public virtual ICollection<BenefitCategory> BenefitCategory { get; set; }
-        public virtual ICollection<BenefitOperation> BenefitOperation { get; set; }
+        public virtual ICollection<Banner> Banners { get; set; }
+        public virtual ICollection<BenefitAddress> BenefitAddresses { get; set; }
+        public virtual ICollection<BenefitCategory> BenefitCategories { get; set; }
+        public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }
     }
 }

@@ -7,5 +7,11 @@ namespace ias.Rebens
     public interface ILogErrorRepository
     {
         int Create(LogError log);
+
+        bool Clear();
+
+        bool DeleteOlderThan(DateTime date);
+
+        ResultPage<LogError> ListPage(int page, int pageItems);
     }
 }

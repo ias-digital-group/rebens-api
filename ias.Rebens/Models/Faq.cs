@@ -14,6 +14,6 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual Operation IdOperationNavigation { get; set; }
+        public virtual Operation Operation { get; set; }
     }
 }

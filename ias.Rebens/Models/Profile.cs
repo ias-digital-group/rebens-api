@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ias.Rebens
 {
-    public partial class BenefitType
+    public partial class Profile
     {
-        public BenefitType()
+        public Profile()
         {
-            Benefits = new HashSet<Benefit>();
+            AdminUsers = new HashSet<AdminUser>();
         }
 
         public int Id { get; set; }
         public string Name { get; set; }
+        public long Permissions { get; set; }
         public bool Active { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual ICollection<Benefit> Benefits { get; set; }
+        public virtual ICollection<AdminUser> AdminUsers { get; set; }
     }
 }

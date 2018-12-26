@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,8 +20,16 @@ namespace ias.Rebens.api
         {
             Configuration = configuration;
 
+            ServiceLocator<IAdminUserRepository>.Config(() => new AdminUserRepository());
+            ServiceLocator<IBenefitTypeRepository>.Config(() => new BenefitTypeRepository());
             ServiceLocator<ICategoryRepository>.Config(() => new CategoryRepository());
+            ServiceLocator<IFaqRepository>.Config(() => new FaqRepository());
+            ServiceLocator<IIntegrationTypeRepository>.Config(() => new IntegrationTypeRepository());
             ServiceLocator<ILogErrorRepository>.Config(() => new LogErrorRepository());
+            ServiceLocator<IOperationTypeRepository>.Config(() => new OperationTypeRepository());
+            ServiceLocator<IPermissionRepository>.Config(() => new PermissionRepository());
+            ServiceLocator<IProfileRepository>.Config(() => new ProfileRepository());
+            ServiceLocator<IStaticTextTypeRepository>.Config(() => new StaticTextTypeRepository());
         }
 
         public IConfiguration Configuration { get; }
@@ -28,6 +37,7 @@ namespace ias.Rebens.api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<RebensContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

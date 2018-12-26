@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Configuration;
+
 
 namespace ias.Rebens
 {
@@ -16,6 +18,7 @@ namespace ias.Rebens
         }
 
         public virtual DbSet<Address> Address { get; set; }
+        public virtual DbSet<AdminUser> AdminUser { get; set; }
         public virtual DbSet<Banner> Banner { get; set; }
         public virtual DbSet<BannerOperation> BannerOperation { get; set; }
         public virtual DbSet<Benefit> Benefit { get; set; }
@@ -29,19 +32,30 @@ namespace ias.Rebens
         public virtual DbSet<Faq> Faq { get; set; }
         public virtual DbSet<IntegrationType> IntegrationType { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }
+        public virtual DbSet<Permission> Permission { get; set; }
+        public virtual DbSet<Profile> Profile { get; set; }
         public virtual DbSet<Operation> Operation { get; set; }
         public virtual DbSet<OperationType> OperationType { get; set; }
         public virtual DbSet<Partner> Partner { get; set; }
         public virtual DbSet<PartnerAddress> PartnerAddress { get; set; }
         public virtual DbSet<StaticText> StaticText { get; set; }
-        public virtual DbSet<StaticTextType> StaticTextTypw { get; set; }
+        public virtual DbSet<StaticTextType> StaticTextType { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            //IConfigurationRoot configuration = new ConfigurationBuilder()
+            //    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+            //    .AddJsonFile("appsettings.json")
+            //    .Build();
+            // optionsBuilder.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Server=IAS-02;Database=Rebens;user id=ias_user;password=k4r0l1n4;");
+                optionsBuilder.UseSqlServer(_connectionString);
+                //optionsBuilder.UseSqlServer("Server=IAS-02;Database=Rebens;user id=ias_user;password=k4r0l1n4;");
+                //optionsBuilder.UseSqlServer("Server=192.96.210.14;Database=RebensDB;user id=Rebens_user;password=i$f6LiF*N2kv;");
+                //optionsBuilder.UseSqlServer("Server=172.31.9.4;Database=Rebens;user id=Rebens_user;password=i$f6LiF*N2kv;");
             }
         }
 
@@ -78,6 +92,26 @@ namespace ias.Rebens
                 entity.Property(e => e.Zipcode).HasMaxLength(50);
             });
 
+            modelBuilder.Entity<AdminUser>(entity =>
+            {
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.EncryptedPassword).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.PasswordSalt).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(e => e.Profile)
+                  .WithMany(e => e.AdminUsers)
+                  .HasForeignKey(d => d.IdProfile)
+                  .HasConstraintName("FK_User_Profile");
+            });
+
             modelBuilder.Entity<Banner>(entity =>
             {
                 entity.Property(e => e.BackgroundColor).HasMaxLength(50);
@@ -103,7 +137,7 @@ namespace ias.Rebens
                 entity.Property(e => e.Start).HasColumnType("datetime");
 
                 entity.HasOne(d => d.IdBenefitNavigation)
-                    .WithMany(p => p.Banner)
+                    .WithMany(p => p.Banners)
                     .HasForeignKey(d => d.IdBenefit)
                     .HasConstraintName("FK_Banner_Benefit");
             });
@@ -113,13 +147,13 @@ namespace ias.Rebens
                 entity.HasKey(e => new { e.IdBanner, e.IdOperation });
 
                 entity.HasOne(d => d.IdBannerNavigation)
-                    .WithMany(p => p.BannerOperation)
+                    .WithMany(p => p.BannerOperations)
                     .HasForeignKey(d => d.IdBanner)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BannerOperation_Banner");
 
                 entity.HasOne(d => d.IdOperationNavigation)
-                    .WithMany(p => p.BannerOperation)
+                    .WithMany(p => p.BannerOperations)
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BannerOperation_Operation");
@@ -160,19 +194,19 @@ namespace ias.Rebens
                 entity.Property(e => e.WebSite).HasMaxLength(500);
 
                 entity.HasOne(d => d.IdBenefitTypeNavigation)
-                    .WithMany(p => p.Benefit)
+                    .WithMany(p => p.Benefits)
                     .HasForeignKey(d => d.IdBenefitType)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Benefit_BenefitType");
 
                 entity.HasOne(d => d.IdIntegrationTypeNavigation)
-                    .WithMany(p => p.Benefit)
+                    .WithMany(p => p.Benefits)
                     .HasForeignKey(d => d.IdIntegrationType)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Benefit_IntegrationType");
 
                 entity.HasOne(d => d.IdPartnerNavigation)
-                    .WithMany(p => p.Benefit)
+                    .WithMany(p => p.Benefits)
                     .HasForeignKey(d => d.IdPartner)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Benefit_Partner");
@@ -183,13 +217,13 @@ namespace ias.Rebens
                 entity.HasKey(e => new { e.IdBenefit, e.IdAddress });
 
                 entity.HasOne(d => d.IdAddressNavigation)
-                    .WithMany(p => p.BenefitAddress)
+                    .WithMany(p => p.BenefitAddresses)
                     .HasForeignKey(d => d.IdAddress)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BenefitAddress_Address");
 
                 entity.HasOne(d => d.IdBenefitNavigation)
-                    .WithMany(p => p.BenefitAddress)
+                    .WithMany(p => p.BenefitAddresses)
                     .HasForeignKey(d => d.IdBenefit)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BenefitAddress_Benefit");
@@ -200,13 +234,13 @@ namespace ias.Rebens
                 entity.HasKey(e => new { e.IdBenefit, e.IdCategory });
 
                 entity.HasOne(d => d.IdBenefitNavigation)
-                    .WithMany(p => p.BenefitCategory)
+                    .WithMany(p => p.BenefitCategories)
                     .HasForeignKey(d => d.IdBenefit)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BenefitCategory_Benefit");
 
                 entity.HasOne(d => d.IdCategoryNavigation)
-                    .WithMany(p => p.BenefitCategory)
+                    .WithMany(p => p.BenefitCategories)
                     .HasForeignKey(d => d.IdCategory)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BenefitCategory_Category");
@@ -221,19 +255,19 @@ namespace ias.Rebens
                 entity.Property(e => e.Modified).HasColumnType("datetime");
 
                 entity.HasOne(d => d.IdBenefitNavigation)
-                    .WithMany(p => p.BenefitOperation)
+                    .WithMany(p => p.BenefitOperations)
                     .HasForeignKey(d => d.IdBenefit)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BenefitOperation_Benefit");
 
                 entity.HasOne(d => d.IdOperationNavigation)
-                    .WithMany(p => p.BenefitOperation)
+                    .WithMany(p => p.BenefitOperations)
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BenefitOperation_Operation");
 
                 entity.HasOne(d => d.IdPositionNavigation)
-                    .WithMany(p => p.BenefitOperation)
+                    .WithMany(p => p.BenefitOperations)
                     .HasForeignKey(d => d.IdPosition)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BenefitOperation_BenefitOperationPosition");
@@ -298,7 +332,7 @@ namespace ias.Rebens
                 entity.Property(e => e.Phone).HasMaxLength(50);
 
                 entity.HasOne(d => d.IdAddressNavigation)
-                    .WithMany(p => p.Contact)
+                    .WithMany(p => p.Contacts)
                     .HasForeignKey(d => d.IdAddress)
                     .HasConstraintName("FK_Contact_Address");
             });
@@ -317,8 +351,8 @@ namespace ias.Rebens
                     .IsRequired()
                     .HasMaxLength(1000);
 
-                entity.HasOne(d => d.IdOperationNavigation)
-                    .WithMany(p => p.Faq)
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.Faqs)
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Faq_Operation");
@@ -352,6 +386,29 @@ namespace ias.Rebens
                 entity.Property(e => e.StackTrace).HasColumnType("text");
             });
 
+            modelBuilder.Entity<Permission>(entity =>
+            {
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(e => e.Parent)
+                   .WithMany(e => e.Permissions)
+                   .HasForeignKey(d => d.IdParent)
+                   .HasConstraintName("FK_Permission_Permission");
+            });
+
+            modelBuilder.Entity<Profile>(entity =>
+            {
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+            });
+
             modelBuilder.Entity<Operation>(entity =>
             {
                 entity.Property(e => e.CashbackPercentage).HasColumnType("money");
@@ -376,8 +433,8 @@ namespace ias.Rebens
                     .IsRequired()
                     .HasMaxLength(300);
 
-                entity.HasOne(d => d.IdOperationTypeNavigation)
-                    .WithMany(p => p.Operation)
+                entity.HasOne(d => d.OperationType)
+                    .WithMany(p => p.Operations)
                     .HasForeignKey(d => d.IdOperationType)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Operation_OperationType");
@@ -404,8 +461,8 @@ namespace ias.Rebens
                     .IsRequired()
                     .HasMaxLength(200);
 
-                entity.HasOne(d => d.IdContactNavigation)
-                    .WithMany(p => p.Partner)
+                entity.HasOne(d => d.Contact)
+                    .WithMany(p => p.Partners)
                     .HasForeignKey(d => d.IdContact)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Partner_Contact");
@@ -416,13 +473,13 @@ namespace ias.Rebens
                 entity.HasKey(e => new { e.IdPartner, e.IdAddress });
 
                 entity.HasOne(d => d.IdAddressNavigation)
-                    .WithMany(p => p.PartnerAddress)
+                    .WithMany(p => p.PartnerAddresses)
                     .HasForeignKey(d => d.IdAddress)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PartnerAddress_Address");
 
                 entity.HasOne(d => d.IdPartnerNavigation)
-                    .WithMany(p => p.PartnerAddress)
+                    .WithMany(p => p.PartnerAddresses)
                     .HasForeignKey(d => d.IdPartner)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PartnerAddress_Partner");
@@ -446,14 +503,14 @@ namespace ias.Rebens
 
                 entity.Property(e => e.Url).HasMaxLength(200);
 
-                entity.HasOne(d => d.IdOperationNavigation)
-                    .WithMany(p => p.StaticText)
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.StaticTexts)
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_StaticText_Operation");
 
-                entity.HasOne(d => d.IdStaticTextTypeNavigation)
-                    .WithMany(p => p.StaticText)
+                entity.HasOne(d => d.StaticTextType)
+                    .WithMany(p => p.StaticTexts)
                     .HasForeignKey(d => d.IdStaticTextType)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_StaticText_StaticTextType");

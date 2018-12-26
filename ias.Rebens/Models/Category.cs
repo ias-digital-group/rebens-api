@@ -7,7 +7,7 @@ namespace ias.Rebens
     {
         public Category()
         {
-            BenefitCategory = new HashSet<BenefitCategory>();
+            BenefitCategories = new HashSet<BenefitCategory>();
             Categories = new HashSet<Category>();
         }
 
@@ -21,7 +21,7 @@ namespace ias.Rebens
         public DateTime Modified { get; set; }
 
         public virtual Category Parent { get; set; }
-        public virtual ICollection<BenefitCategory> BenefitCategory { get; set; }
+        public virtual ICollection<BenefitCategory> BenefitCategories { get; set; }
         public virtual ICollection<Category> Categories { get; set; }
     }
 }

@@ -7,7 +7,7 @@ namespace ias.Rebens
     {
         public Contact()
         {
-            Partner = new HashSet<Partner>();
+            Partners = new HashSet<Partner>();
         }
 
         public int Id { get; set; }
@@ -21,6 +21,6 @@ namespace ias.Rebens
         public DateTime Modified { get; set; }
 
         public virtual Address IdAddressNavigation { get; set; }
-        public virtual ICollection<Partner> Partner { get; set; }
+        public virtual ICollection<Partner> Partners { get; set; }
     }
 }

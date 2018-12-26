@@ -7,7 +7,7 @@ namespace ias.Rebens
     {
         public Banner()
         {
-            BannerOperation = new HashSet<BannerOperation>();
+            BannerOperations = new HashSet<BannerOperation>();
         }
 
         public int Id { get; set; }
@@ -25,6 +25,6 @@ namespace ias.Rebens
         public DateTime Modified { get; set; }
 
         public virtual Benefit IdBenefitNavigation { get; set; }
-        public virtual ICollection<BannerOperation> BannerOperation { get; set; }
+        public virtual ICollection<BannerOperation> BannerOperations { get; set; }
     }
 }
