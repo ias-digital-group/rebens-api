@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace ias.Rebens
 {
-    public class AddressRepository
+    public class AddressRepository : IAddressRepository
     {
         public bool Create(Address address, out string error)
         {

@@ -28,6 +28,8 @@ namespace ias.Rebens.api.Models
             this.Phone = contact.Phone;
             this.CellPhone = contact.CellPhone;
             this.IdAddress = contact.IdAddress;
+            if (contact.IdAddress.HasValue && contact.Address != null)
+                this.Address = new AddressModel(contact.Address);
         }
 
         public Contact GetEntity()

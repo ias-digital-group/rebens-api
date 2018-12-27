@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace ias.Rebens
 {
-    public class ContactRepository
+    public class ContactRepository : IContactRepository
     {
         public bool Create(Contact contact, out string error)
         {
@@ -97,7 +97,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext())
                 {
-                    ret = db.Contact.SingleOrDefault(c => c.Id == id);
+                    ret = db.Contact.Include("Address").SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }

@@ -60,7 +60,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext())
                 {
-                    ret = db.Operation.SingleOrDefault(c => c.Id == id);
+                    ret = db.Operation.Include("Contact").Include("Contact.Address").SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }

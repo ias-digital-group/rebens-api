@@ -71,16 +71,46 @@ namespace ias.Rebens.api.Controllers
         {
             var repo = ServiceLocator<IOperationRepository>.Create();
             var model = new JsonModel();
+            string error = null;
 
-            if (repo.Update(operation.GetEntity(), out string error))
+            var op = operation.GetEntity();
+            if (operation.Contact != null)
             {
-                model.Status = "ok";
-                model.Message = "Operação atualizada com sucesso!";
+                var contact = operation.Contact.GetEntity();
+
+                if (operation.Contact.Address != null)
+                {
+                    var addrRepo = ServiceLocator<IAddressRepository>.Create();
+                    var addr = operation.Contact.Address.GetEntity();
+                    if (addrRepo.Update(addr, out error))
+                        contact.IdAddress = addr.Id;
+                }
+
+                if (string.IsNullOrEmpty(error))
+                {
+                    var contactRepo = ServiceLocator<IContactRepository>.Create();
+                    if (contactRepo.Update(contact, out error))
+                        op.IdContact = contact.Id;
+                }
             }
-            else
+
+            if (!string.IsNullOrEmpty(error))
             {
                 model.Status = "error";
                 model.Message = error;
+            }
+            else
+            {
+                if (repo.Update(op, out error))
+                {
+                    model.Status = "ok";
+                    model.Message = "Operação atualizada com sucesso!";
+                }
+                else
+                {
+                    model.Status = "error";
+                    model.Message = error;
+                }
             }
 
             return new JsonResult(model);
@@ -89,21 +119,49 @@ namespace ias.Rebens.api.Controllers
         [HttpPut]
         public JsonResult Put([FromBody] OperationModel operation)
         {
-            var addrRepo = ServiceLocator<IAddressRepository>.Create();
-            var contactRepo = ServiceLocator<IContactRepository>.Create();
             var repo = ServiceLocator<IOperationRepository>.Create();
             var model = new JsonModel();
+            string error = null;
 
-            
-            if (repo.Create(operation.GetEntity(), out string error))
+            var op = operation.GetEntity();
+            if(operation.Contact != null )
             {
-                model.Status = "ok";
-                model.Message = "Operação criada com sucesso!";
+                var contact = operation.Contact.GetEntity();
+
+                if(operation.Contact.Address != null)
+                {
+                    var addrRepo = ServiceLocator<IAddressRepository>.Create();
+                    var addr = operation.Contact.Address.GetEntity();
+                    if (addrRepo.Create(addr, out error))
+                        contact.IdAddress = addr.Id;
+                }
+
+                if(string.IsNullOrEmpty(error))
+                {
+                    var contactRepo = ServiceLocator<IContactRepository>.Create();
+                    if (contactRepo.Create(contact, out error))
+                        op.IdContact = contact.Id;
+                }
             }
-            else
+
+            if (!string.IsNullOrEmpty(error))
             {
                 model.Status = "error";
                 model.Message = error;
+            }
+            else
+            {
+                if (repo.Create(op, out error))
+                {
+                    model.Status = "ok";
+                    model.Message = "Operação criada com sucesso!";
+                    model.Extra = new { id = op.Id };
+                }
+                else
+                {
+                    model.Status = "error";
+                    model.Message = error;
+                }
             }
 
             return new JsonResult(model);

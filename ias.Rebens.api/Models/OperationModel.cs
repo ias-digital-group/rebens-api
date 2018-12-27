@@ -33,6 +33,8 @@ namespace ias.Rebens.api.Models
             this.IdOperationType = operation.IdOperationType;
             this.CachbackPercentage = operation.CashbackPercentage;
             this.Active = operation.Active;
+            if(operation.IdContact.HasValue && operation.Contact != null)
+                this.Contact = new ContactModel(operation.Contact);
         }
 
         public Operation GetEntity()

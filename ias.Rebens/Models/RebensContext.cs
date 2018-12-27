@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
@@ -437,6 +437,12 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdOperationType)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Operation_OperationType");
+
+                entity.HasOne(d => d.Contact)
+                    .WithMany(p => p.Operations)
+                    .HasForeignKey(d => d.IdContact)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Operation_Contact");
             });
 
             modelBuilder.Entity<OperationType>(entity =>

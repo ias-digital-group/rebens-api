@@ -26,6 +26,7 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
+        public virtual Contact Contact { get; set; }
         public virtual OperationType OperationType { get; set; }
         public virtual ICollection<BannerOperation> BannerOperations { get; set; }
         public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }

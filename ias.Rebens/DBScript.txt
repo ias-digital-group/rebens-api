@@ -1,1 +1,6 @@
-﻿
+﻿ALTER TABLE [dbo].[Operation]  WITH CHECK ADD  CONSTRAINT [FK_Operation_Contact] FOREIGN KEY([IdContact])
+REFERENCES [dbo].[Contact] ([Id])
+GO
+
+ALTER TABLE [dbo].[Operation] CHECK CONSTRAINT [FK_Operation_Contact]
+GO

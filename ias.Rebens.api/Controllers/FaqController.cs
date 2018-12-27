@@ -92,10 +92,12 @@ namespace ias.Rebens.api.Controllers
             var repo = ServiceLocator<IFaqRepository>.Create();
             var model = new JsonModel();
 
-            if (repo.Create(faq.GetEntity(), out string error))
+            var f = faq.GetEntity();
+            if (repo.Create(f, out string error))
             {
                 model.Status = "ok";
                 model.Message = "Pergunta criada com sucesso!";
+                model.Extra = new { id = f.Id };
             }
             else
             {

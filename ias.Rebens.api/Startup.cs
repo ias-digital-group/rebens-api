@@ -20,9 +20,11 @@ namespace ias.Rebens.api
         {
             Configuration = configuration;
 
+            ServiceLocator<IAddressRepository>.Config(() => new AddressRepository());
             ServiceLocator<IAdminUserRepository>.Config(() => new AdminUserRepository());
             ServiceLocator<IBenefitTypeRepository>.Config(() => new BenefitTypeRepository());
             ServiceLocator<ICategoryRepository>.Config(() => new CategoryRepository());
+            ServiceLocator<IContactRepository>.Config(() => new ContactRepository());
             ServiceLocator<IFaqRepository>.Config(() => new FaqRepository());
             ServiceLocator<IIntegrationTypeRepository>.Config(() => new IntegrationTypeRepository());
             ServiceLocator<ILogErrorRepository>.Config(() => new LogErrorRepository());

@@ -92,10 +92,12 @@ namespace ias.Rebens.api.Controllers
             var repo = ServiceLocator<ICategoryRepository>.Create();
             var model = new JsonModel();
 
-            if(repo.Create(category.GetEntity(), out string error))
+            var cat = category.GetEntity();
+            if(repo.Create(cat, out string error))
             {
                 model.Status = "ok";
                 model.Message = "Categoria criada com sucesso!";
+                model.Extra = new { id = cat.Id };
             }
             else
             {

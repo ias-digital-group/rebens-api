@@ -8,6 +8,7 @@ namespace ias.Rebens
         public Contact()
         {
             Partners = new HashSet<Partner>();
+            Operations = new HashSet<Operation>();
         }
 
         public int Id { get; set; }
@@ -22,5 +23,6 @@ namespace ias.Rebens
 
         public virtual Address Address { get; set; }
         public virtual ICollection<Partner> Partners { get; set; }
+        public virtual ICollection<Operation> Operations { get; set; }
     }
 }
