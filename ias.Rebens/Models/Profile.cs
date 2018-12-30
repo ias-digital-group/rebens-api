@@ -8,7 +8,6 @@ namespace ias.Rebens
     {
         public Profile()
         {
-            AdminUsers = new HashSet<AdminUser>();
         }
 
         public int Id { get; set; }
@@ -18,6 +17,5 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual ICollection<AdminUser> AdminUsers { get; set; }
     }
 }

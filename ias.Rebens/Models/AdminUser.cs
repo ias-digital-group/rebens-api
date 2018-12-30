@@ -12,11 +12,20 @@ namespace ias.Rebens
         public DateTime? LastLogin { get; set; }
         public string EncryptedPassword { get; set; }
         public string PasswordSalt { get; set; }
-        public int IdProfile { get; set; }
         public int Status { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual Profile Profile { get; set; }
+        public void SetPassword(string password)
+        {
+            this.PasswordSalt = Helper.SecurityHelper.GenerateSalt();
+            this.EncryptedPassword = Helper.SecurityHelper.EncryptPassword(password, this.PasswordSalt);
+        }
+
+        public bool CheckPassword(string password)
+        {
+            var encryptedPass = Helper.SecurityHelper.EncryptPassword(password, this.PasswordSalt);
+            return encryptedPass == this.EncryptedPassword;
+        }
     }
 }

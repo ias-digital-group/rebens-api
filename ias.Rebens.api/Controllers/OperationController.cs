@@ -5,17 +5,25 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ias.Rebens.api.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/Operation")]
+    [Route("api/Operation"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class OperationController : ControllerBase
     {
+        /// <summary>
+        /// Lista todas as operações com paginação
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <returns></returns>
         [HttpGet]
         public JsonResult ListOperation([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
+            string op = TokenHelper.GetCurrentUser(User.Identity);
             var repo = ServiceLocator<IOperationRepository>.Create();
             var list = repo.ListPage(page, pageItems, out string error);
 
@@ -34,6 +42,7 @@ namespace ias.Rebens.api.Controllers
                     ret.Page.Add(new OperationModel(operation));
 
                 model.Status = "ok";
+                model.Message = op;
                 model.Extra = ret;
             }
             else
@@ -45,6 +54,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Retorna uma operação
+        /// </summary>
+        /// <param name="id">Id da operação</param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public JsonResult GetOperation(int id)
         {
@@ -66,6 +80,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Atualiza uma operação
+        /// </summary>
+        /// <param name="operation"></param>
+        /// <returns></returns>
         [HttpPost]
         public JsonResult Post([FromBody] OperationModel operation)
         {
@@ -116,6 +135,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Cria uma operação
+        /// </summary>
+        /// <param name="operation"></param>
+        /// <returns></returns>
         [HttpPut]
         public JsonResult Put([FromBody] OperationModel operation)
         {

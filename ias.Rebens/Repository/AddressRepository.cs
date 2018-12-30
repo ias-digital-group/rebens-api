@@ -9,12 +9,18 @@ namespace ias.Rebens
 {
     public class AddressRepository : IAddressRepository
     {
+        private string _connectionString;
+        public AddressRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(Address address, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     address.Modified = address.Created = DateTime.UtcNow;
                     db.Address.Add(address);
@@ -36,7 +42,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     if (db.Contact.Any(c => c.IdAddress == id))
                     {
@@ -76,7 +82,7 @@ namespace ias.Rebens
             ResultPage<Address> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Address.OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Address.Count();
@@ -100,7 +106,7 @@ namespace ias.Rebens
             Address ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Address.SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -120,7 +126,7 @@ namespace ias.Rebens
             ResultPage<Address> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Address.Where(c => c.Name.Contains(word) || c.Street.Contains(word)).OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Address.Count(c => c.Name.Contains(word) || c.Street.Contains(word));
@@ -144,7 +150,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.Address.SingleOrDefault(c => c.Id == address.Id);
                     if (update != null)

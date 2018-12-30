@@ -1,18 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using System.Linq;
 
 namespace ias.Rebens
 {
     public class OperationTypeRepository : IOperationTypeRepository
     {
+        private string _connectionString;
+        public OperationTypeRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(OperationType operationType, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     operationType.Modified = operationType.Created = DateTime.UtcNow;
                     db.OperationType.Add(operationType);
@@ -34,7 +41,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     if (db.Operation.Any(c => c.IdOperationType == id))
                     {
@@ -64,7 +71,7 @@ namespace ias.Rebens
             List<OperationType> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.OperationType.ToList();
                     error = null;
@@ -84,7 +91,7 @@ namespace ias.Rebens
             List<OperationType> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.OperationType.Where(t => t.Active).ToList();
                     error = null;
@@ -104,7 +111,7 @@ namespace ias.Rebens
             OperationType ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.OperationType.SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -124,7 +131,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.OperationType.SingleOrDefault(c => c.Id == operationType.Id);
                     if (update != null)

@@ -1,18 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using System.Linq;
 
 namespace ias.Rebens
 {
     public class FaqRepository : IFaqRepository
     {
+        private string _connectionString;
+        public FaqRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(Faq faq, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     faq.Modified = faq.Created = DateTime.UtcNow;
                     db.Faq.Add(faq);
@@ -34,7 +41,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var item = db.Faq.SingleOrDefault(c => c.Id == id);
                     db.Faq.Remove(item);
@@ -56,7 +63,7 @@ namespace ias.Rebens
             ResultPage<Faq> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Faq.OrderBy(c => c.Question).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Faq.Count();
@@ -80,7 +87,7 @@ namespace ias.Rebens
             List<Faq> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Faq.Where(f => f.IdOperation == idOperation && f.Active).OrderBy(f => f.Order).ToList();
                     error = null;
@@ -100,7 +107,7 @@ namespace ias.Rebens
             Faq ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Faq.SingleOrDefault(f => f.Id == id);
                     error = null;
@@ -120,7 +127,7 @@ namespace ias.Rebens
             ResultPage<Faq> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Faq.Where(c => c.Question.Contains(word)).OrderBy(c => c.Question).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Faq.Count(c => c.Question.Contains(word));
@@ -144,7 +151,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.Faq.SingleOrDefault(c => c.Id == faq.Id);
                     if (update != null)

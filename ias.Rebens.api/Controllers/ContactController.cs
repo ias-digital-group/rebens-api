@@ -1,13 +1,19 @@
 ﻿using ias.Rebens.api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class ContactController : ControllerBase
     {
+        /// <summary>
+        /// Retorna um contato
+        /// </summary>
+        /// <param name="id">id do contato</param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public JsonResult GetContact(int id)
         {
@@ -29,6 +35,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Atualiza um contato
+        /// </summary>
+        /// <param name="contact"></param>
+        /// <returns></returns>
         [HttpPost]
         public JsonResult Post([FromBody] ContactModel contact)
         {
@@ -66,6 +77,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Cria um novo contato
+        /// </summary>
+        /// <param name="contact"></param>
+        /// <returns></returns>
         [HttpPut]
         public JsonResult Put([FromBody] ContactModel contact)
         {

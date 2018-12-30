@@ -9,12 +9,18 @@ namespace ias.Rebens
 {
     public class CategoryRepository : ICategoryRepository
     {
+        private string _connectionString;
+        public CategoryRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(Category category, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     category.Modified = category.Created = DateTime.UtcNow;
                     db.Category.Add(category);
@@ -35,7 +41,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     if (db.Category.Any(c => c.IdParent == id))
                     {
@@ -65,7 +71,7 @@ namespace ias.Rebens
             ResultPage<Category> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Category.OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Category.Count();
@@ -89,7 +95,7 @@ namespace ias.Rebens
             List<Category> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active).ToList();
                     error = null;
@@ -109,7 +115,7 @@ namespace ias.Rebens
             Category ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Category.SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -129,7 +135,7 @@ namespace ias.Rebens
             ResultPage<Category> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Category.Where(c => c.Name.Contains(word)).OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Category.Count(c => c.Name.Contains(word));
@@ -153,7 +159,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.Category.SingleOrDefault(c => c.Id == category.Id);
                     if(update != null)

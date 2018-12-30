@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,12 +8,18 @@ namespace ias.Rebens
 {
     public class BenefitTypeRepository : IBenefitTypeRepository
     {
+        private string _connectionString;
+        public BenefitTypeRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(BenefitType benefitType, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     benefitType.Modified = benefitType.Created = DateTime.UtcNow;
                     db.BenefitType.Add(benefitType);
@@ -34,7 +41,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     if (db.Benefit.Any(c => c.IdBenefitType == id))
                     {
@@ -64,7 +71,7 @@ namespace ias.Rebens
             List<BenefitType> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.BenefitType.ToList();
                     error = null;
@@ -84,7 +91,7 @@ namespace ias.Rebens
             List<BenefitType> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.BenefitType.Where(t => t.Active).ToList();
                     error = null;
@@ -104,7 +111,7 @@ namespace ias.Rebens
             BenefitType ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.BenefitType.SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -124,7 +131,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.BenefitType.SingleOrDefault(c => c.Id == benefitType.Id);
                     if (update != null)

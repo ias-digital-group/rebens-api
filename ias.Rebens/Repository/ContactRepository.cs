@@ -9,12 +9,18 @@ namespace ias.Rebens
 {
     public class ContactRepository : IContactRepository
     {
+        private string _connectionString;
+        public ContactRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(Contact contact, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     contact.Modified = contact.Created = DateTime.UtcNow;
                     db.Contact.Add(contact);
@@ -36,7 +42,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     if (db.Operation.Any(c => c.IdContact == id))
                     {
@@ -71,7 +77,7 @@ namespace ias.Rebens
             ResultPage<Contact> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Contact.OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Contact.Count();
@@ -95,7 +101,7 @@ namespace ias.Rebens
             Contact ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Contact.Include("Address").SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -115,7 +121,7 @@ namespace ias.Rebens
             ResultPage<Contact> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Contact.Where(c => c.Name.Contains(word)).OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Contact.Count(c => c.Name.Contains(word));
@@ -139,7 +145,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.Contact.SingleOrDefault(c => c.Id == contact.Id);
                     if (update != null)

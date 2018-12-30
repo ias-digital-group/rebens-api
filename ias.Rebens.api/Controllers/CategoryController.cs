@@ -3,16 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ias.Rebens.api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/Category")]
+    [Route("api/Category"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class CategoryController : ControllerBase
     {
+        /// <summary>
+        /// Lista as categorias com patinação
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <returns></returns>
         [HttpGet]
         public JsonResult ListCategory([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
@@ -45,6 +52,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
         
+        /// <summary>
+        /// Retorna uma categoria
+        /// </summary>
+        /// <param name="id">id da categoria</param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public JsonResult GetCategory(int id)
         {
@@ -66,6 +78,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Atualiza a categoria
+        /// </summary>
+        /// <param name="category"></param>
+        /// <returns></returns>
         [HttpPost]
         public JsonResult Post([FromBody] CategoryModel category)
         {
@@ -86,6 +103,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Cria uma nova categoria
+        /// </summary>
+        /// <param name="category"></param>
+        /// <returns></returns>
         [HttpPut]
         public JsonResult Put([FromBody] CategoryModel category)
         {
@@ -129,6 +151,10 @@ namespace ias.Rebens.api.Controllers
 
         }
 
+        /// <summary>
+        /// Lista a árvore de categorias
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("ListTree")]
         public JsonResult ListTree()
         {

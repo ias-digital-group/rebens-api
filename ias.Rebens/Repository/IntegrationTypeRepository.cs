@@ -2,17 +2,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace ias.Rebens
 {
     public class IntegrationTypeRepository : IIntegrationTypeRepository
     {
+        private string _connectionString;
+        public IntegrationTypeRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(IntegrationType integrationType, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     integrationType.Modified = integrationType.Created = DateTime.UtcNow;
                     db.IntegrationType.Add(integrationType);
@@ -34,7 +41,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     if (db.Benefit.Any(c => c.IdIntegrationType == id))
                     {
@@ -64,7 +71,7 @@ namespace ias.Rebens
             List<IntegrationType> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.IntegrationType.ToList();
                     error = null;
@@ -84,7 +91,7 @@ namespace ias.Rebens
             List<IntegrationType> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.IntegrationType.Where(t => t.Active).ToList();
                     error = null;
@@ -104,7 +111,7 @@ namespace ias.Rebens
             IntegrationType ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.IntegrationType.SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -124,7 +131,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.IntegrationType.SingleOrDefault(c => c.Id == integrationType.Id);
                     if (update != null)

@@ -1,13 +1,19 @@
 ﻿using ias.Rebens.api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class AddressController : ControllerBase
     {
+        /// <summary>
+        /// Retorna uma categoria
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public JsonResult GetCategory(int id)
         {
@@ -29,6 +35,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Atualiza a categoria
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
         [HttpPost]
         public JsonResult Post([FromBody] AddressModel addr)
         {
@@ -49,6 +60,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Cria uma categoria
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
         [HttpPut]
         public JsonResult Put([FromBody] AddressModel address)
         {

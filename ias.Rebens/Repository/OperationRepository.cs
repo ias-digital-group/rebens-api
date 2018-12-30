@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +8,18 @@ namespace ias.Rebens
 {
     public class OperationRepository : IOperationRepository
     {
+        private string _connectionString;
+        public OperationRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(Operation operation, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     operation.Modified = operation.Created = DateTime.UtcNow;
                     db.Operation.Add(operation);
@@ -34,7 +41,7 @@ namespace ias.Rebens
             ResultPage<Operation> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Operation.OrderBy(c => c.Title).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Operation.Count();
@@ -58,7 +65,7 @@ namespace ias.Rebens
             Operation ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Operation.Include("Contact").Include("Contact.Address").SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -78,7 +85,7 @@ namespace ias.Rebens
             ResultPage<Operation> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Operation.Where(o => o.Title.Contains(word)).OrderBy(o => o.Title).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Operation.Count(o => o.Title.Contains(word));
@@ -102,7 +109,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.Operation.SingleOrDefault(c => c.Id == operation.Id);
                     if (update != null)

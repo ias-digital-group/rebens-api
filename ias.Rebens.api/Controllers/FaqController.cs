@@ -5,14 +5,21 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ias.Rebens.api.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/Faq")]
+    [Route("api/Faq"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class FaqController : ControllerBase
     {
+        /// <summary>
+        /// Lista as perguntas de faq
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <returns></returns>
         [HttpGet]
         public JsonResult ListFaq([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
@@ -45,6 +52,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Retorna uma pergunta
+        /// </summary>
+        /// <param name="id">id da pergunta</param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public JsonResult GetFaq(int id)
         {
@@ -66,6 +78,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Atualiza uma pergunta
+        /// </summary>
+        /// <param name="faq"></param>
+        /// <returns></returns>
         [HttpPost]
         public JsonResult Post([FromBody] FaqModel faq)
         {
@@ -86,6 +103,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Cria uma pergunta
+        /// </summary>
+        /// <param name="faq"></param>
+        /// <returns></returns>
         [HttpPut]
         public JsonResult Put([FromBody] FaqModel faq)
         {
@@ -129,6 +151,11 @@ namespace ias.Rebens.api.Controllers
 
         }
 
+        /// <summary>
+        /// Lista as perguntas de uma operação 
+        /// </summary>
+        /// <param name="idOperation">id da operação</param>
+        /// <returns></returns>
         [HttpGet("ListByOperation")]
         public JsonResult ListByOperation([FromQuery]int idOperation)
         {

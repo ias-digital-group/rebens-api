@@ -1,18 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using System.Linq;
 
 namespace ias.Rebens
 {
     public class AdminUserRepository : IAdminUserRepository
     {
+        private string _connectionString;
+        public AdminUserRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool ChangePassword(int id, string passwordEncrypted, string passwordSalt, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var user = db.AdminUser.SingleOrDefault(s => s.Id == id);
                     user.EncryptedPassword = passwordEncrypted;
@@ -36,7 +43,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     adminUser.Modified = adminUser.Created = DateTime.UtcNow;
                     db.AdminUser.Add(adminUser);
@@ -58,7 +65,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var user = db.AdminUser.SingleOrDefault(s => s.Id == id);
                     db.AdminUser.Remove(user);
@@ -80,7 +87,7 @@ namespace ias.Rebens
             ResultPage<AdminUser> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.AdminUser.OrderBy(p => p.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.AdminUser.Count();
@@ -103,7 +110,7 @@ namespace ias.Rebens
             AdminUser ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.AdminUser.SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -123,7 +130,7 @@ namespace ias.Rebens
             AdminUser ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.AdminUser.SingleOrDefault(c => c.Email == email);
                     error = null;
@@ -143,7 +150,7 @@ namespace ias.Rebens
             ResultPage<AdminUser> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.AdminUser.Where(p => p.Name.Contains(word)).OrderBy(p => p.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.AdminUser.Count(p => p.Name.Contains(word));
@@ -166,7 +173,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var user = db.AdminUser.SingleOrDefault(s => s.Id == id);
                     user.LastLogin = DateTime.UtcNow;
@@ -188,7 +195,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.AdminUser.SingleOrDefault(c => c.Id == adminUser.Id);
                     if (update != null)
@@ -198,7 +205,6 @@ namespace ias.Rebens
                         update.LastLogin = adminUser.LastLogin;
                         update.Modified = DateTime.UtcNow;
                         update.Status = adminUser.Status;
-                        update.IdProfile = adminUser.IdProfile;
 
                         db.SaveChanges();
                         error = null;

@@ -3,15 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ias.Rebens.api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class HelperController : ControllerBase
     {
+        /// <summary>
+        /// Lista os tipos de benefício
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("ListBenefitType")]
         public JsonResult ListBenefitType()
         {
@@ -36,6 +41,10 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Lista os tipos de integração
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("ListIntegrationType")]
         public JsonResult ListIntegrationType()
         {
@@ -60,6 +69,10 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Lista os tipos de operação
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("ListOperationType")]
         public JsonResult ListOperationType()
         {
@@ -84,6 +97,10 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Lista os tipos de textos estáticos
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("ListStaticTextType")]
         public JsonResult ListStaticTextType()
         {
@@ -108,6 +125,10 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Lista as permissões do sistema
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("ListPermissionsTree")]
         public JsonResult ListPermissionsTree()
         {

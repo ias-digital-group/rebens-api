@@ -1,18 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using System.Linq;
 
 namespace ias.Rebens
 {
     public class PermissionRepository : IPermissionRepository
     {
+        private string _connectionString;
+        public PermissionRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(Permission permission, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     permission.Modified = permission.Created = DateTime.UtcNow;
                     db.Permission.Add(permission);
@@ -34,7 +41,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var permission = db.Permission.SingleOrDefault(s => s.Id == id);
                     db.Permission.Remove(permission);
@@ -56,7 +63,7 @@ namespace ias.Rebens
             ResultPage<Permission> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Permission.OrderBy(p => p.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Permission.Count();
@@ -79,7 +86,7 @@ namespace ias.Rebens
             List<Permission> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Permission.Include("Permissions").Where(p => !p.IdParent.HasValue).OrderBy(p => p.Name).ToList();
                     error = null;
@@ -99,7 +106,7 @@ namespace ias.Rebens
             Permission ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Permission.SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -119,7 +126,7 @@ namespace ias.Rebens
             ResultPage<Permission> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var list = db.Permission.Where(p => p.Name.Contains(word)).OrderBy(p => p.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Permission.Count(p => p.Name.Contains(word));
@@ -142,7 +149,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.Permission.SingleOrDefault(c => c.Id == Permission.Id);
                     if (update != null)

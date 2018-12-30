@@ -1,18 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using System.Linq;
 
 namespace ias.Rebens
 {
     public class StaticTextTypeRepository : IStaticTextTypeRepository
     {
+        private string _connectionString;
+        public StaticTextTypeRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
         public bool Create(StaticTextType staticTextType, out string error)
         {
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     staticTextType.Modified = staticTextType.Created = DateTime.UtcNow;
                     db.StaticTextType.Add(staticTextType);
@@ -34,7 +41,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     if (db.StaticText.Any(c => c.IdStaticTextType == id))
                     {
@@ -64,7 +71,7 @@ namespace ias.Rebens
             List<StaticTextType> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.StaticTextType.ToList();
                     error = null;
@@ -84,7 +91,7 @@ namespace ias.Rebens
             List<StaticTextType> ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.StaticTextType.Where(t => t.Active).ToList();
                     error = null;
@@ -104,7 +111,7 @@ namespace ias.Rebens
             StaticTextType ret;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.StaticTextType.SingleOrDefault(c => c.Id == id);
                     error = null;
@@ -124,7 +131,7 @@ namespace ias.Rebens
             bool ret = true;
             try
             {
-                using (var db = new RebensContext())
+                using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.StaticTextType.SingleOrDefault(c => c.Id == staticTextType.Id);
                     if (update != null)

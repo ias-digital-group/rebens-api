@@ -8,8 +8,11 @@ namespace ias.Rebens
 {
     public partial class RebensContext : DbContext
     {
-        public RebensContext()
+        private readonly string connectionString;
+
+        public RebensContext(string connection)
         {
+            this.connectionString = connection;
         }
 
         public RebensContext(DbContextOptions<RebensContext> options)
@@ -43,19 +46,8 @@ namespace ias.Rebens
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            //IConfigurationRoot configuration = new ConfigurationBuilder()
-            //    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            //    .AddJsonFile("appsettings.json")
-            //    .Build();
-            // optionsBuilder.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
-
             if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Server=IAS-02;Database=Rebens;user id=ias_user;password=k4r0l1n4;");
-                //optionsBuilder.UseSqlServer("Server=192.96.210.14;Database=RebensDB;user id=Rebens_user;password=i$f6LiF*N2kv;");
-                //optionsBuilder.UseSqlServer("Server=172.31.9.4;Database=Rebens;user id=Rebens_user;password=i$f6LiF*N2kv;");
-            }
+                optionsBuilder.UseSqlServer(connectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -104,11 +96,6 @@ namespace ias.Rebens
                 entity.Property(e => e.Modified).HasColumnType("datetime");
 
                 entity.Property(e => e.Created).HasColumnType("datetime");
-
-                entity.HasOne(e => e.Profile)
-                  .WithMany(e => e.AdminUsers)
-                  .HasForeignKey(d => d.IdProfile)
-                  .HasConstraintName("FK_User_Profile");
             });
 
             modelBuilder.Entity<Banner>(entity =>
