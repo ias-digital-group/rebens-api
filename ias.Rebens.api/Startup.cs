@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using ias.Rebens.api.helper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 namespace ias.Rebens.api
 {
@@ -112,16 +113,29 @@ namespace ias.Rebens.api
                 app.UseHsts();
             }
 
+            // https redirection
             app.UseHttpsRedirection();
+            
+            // initilize swagger to generate the documentation
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = "swagger";
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Rebens API");
             });
-            app.UseAuthentication();
-            app.UseMvc();
 
+            // autentication, to block the anonimous requests
+            app.UseAuthentication();
+
+            // to use the static files with the defaults
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+
+            // enable CORs 
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().AllowCredentials());
+
+            // MVC
+            app.UseMvc();
         }
     }
 }

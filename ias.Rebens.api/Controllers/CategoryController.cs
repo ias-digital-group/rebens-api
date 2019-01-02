@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/Category"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/Category"), Authorize("Bearer", Roles = "administrator,test")]
     [ApiController]
     public class CategoryController : ControllerBase
     {

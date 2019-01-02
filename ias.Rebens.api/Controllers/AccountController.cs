@@ -46,7 +46,8 @@ namespace ias.Rebens.api.Controllers
 
                 //foreach (var role in user.Roles)
                 //{
-                   identity.AddClaim(new Claim(ClaimTypes.Role, "administrator"));
+                   identity.AddClaim(new Claim(ClaimTypes.Role, "test"));
+                   //identity.AddClaim(new Claim(ClaimTypes.Role, "administrator"));
                 //}
 
                 //foreach (var policy in user.Permissions)
@@ -87,6 +88,8 @@ namespace ias.Rebens.api.Controllers
                             user = new { id = user.Id, name = user.Name, email = user.Email }
                         }
                     };
+
+                    repo.SetLastLogin(user.Id, out error);
                 }
                 else
                 {
@@ -167,22 +170,37 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(resultModel);
         }
 
-        //[HttpPost("ChangePassword")]
-        //[Authorize("Bearer")]
-        //public JsonResult ChangePassword([FromBody]Models.ChangePasswordModel model)
-        //{
-        //    Models.JsonModel resultModel;
-
-        //    var salt = Helper.SecurityHelper.GenerateSalt();
-        //    var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.Password, salt);
-        //    var repo = new UserRepository();
-        //    if (repo.ChangePassword(model.Id, salt, encryptedPassword, out string error))
-        //        resultModel = new Models.JsonModel() { Status = "ok" };
-        //    else
-        //        resultModel = new Models.JsonModel() { Status = "error", Message = error };
-
-        //    return new JsonResult(resultModel);
-        //}
+        [HttpPost("ChangePassword")]
+        [Authorize("Bearer")]
+        public JsonResult ChangePassword([FromBody]ChangePasswordModel model)
+        {
+            JsonModel resultModel;
+            var repo = ServiceLocator<IAdminUserRepository>.Create();
+            var user = repo.Read(model.Id, out string error);
+            if(user != null)
+            {
+                if(user.CheckPassword(model.OldPassword))
+                {
+                    if(model.NewPassword == model.NewPasswordConfirm)
+                    {
+                        var salt = Helper.SecurityHelper.GenerateSalt();
+                        var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.OldPassword, salt);
+                        if (repo.ChangePassword(model.Id, encryptedPassword, salt, out error))
+                            resultModel = new JsonModel() { Status = "ok" };
+                        else
+                            resultModel = new JsonModel() { Status = "error", Message = error };
+                    }
+                    else
+                        resultModel = new JsonModel() { Status = "error", Message = "A nova senha e a confirmação da nova senha devem ser iguais!" };
+                }
+                else
+                    resultModel = new JsonModel() { Status = "error", Message = "A senha atual não confere!" };
+            }
+            else
+                resultModel = new JsonModel() { Status = "error", Message = string.IsNullOrEmpty(error) ? "Usuário não encontrado" : error };
+            
+            return new JsonResult(resultModel);
+        }
 
         //[AllowAnonymous]
         //[HttpPut]
