@@ -14,6 +14,13 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class OperationController : ControllerBase
     {
+        private IOperationRepository repo;
+
+        public OperationController(IOperationRepository operationRepository)
+        {
+            this.repo = operationRepository;
+        }
+
         /// <summary>
         /// Lista todas as operações com paginação
         /// </summary>
@@ -24,7 +31,6 @@ namespace ias.Rebens.api.Controllers
         public JsonResult ListOperation([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
             string op = TokenHelper.GetCurrentUser(User.Identity);
-            var repo = ServiceLocator<IOperationRepository>.Create();
             var list = repo.ListPage(page, pageItems, out string error);
 
             var model = new JsonModel();
@@ -37,13 +43,13 @@ namespace ias.Rebens.api.Controllers
                 ret.ItemsPerPage = list.ItemsPerPage;
                 ret.TotalItems = list.TotalItems;
                 ret.TotalPages = list.TotalPages;
-                ret.Page = new List<OperationModel>();
+                ret.Data = new List<OperationModel>();
                 foreach (var operation in list.Page)
-                    ret.Page.Add(new OperationModel(operation));
+                    ret.Data.Add(new OperationModel(operation));
 
                 model.Status = "ok";
                 model.Message = op;
-                model.Extra = ret;
+                model.Data = ret;
             }
             else
             {
@@ -62,14 +68,13 @@ namespace ias.Rebens.api.Controllers
         [HttpGet("{id}")]
         public JsonResult GetOperation(int id)
         {
-            var repo = ServiceLocator<IOperationRepository>.Create();
             var operation = repo.Read(id, out string error);
 
             var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
                 model.Status = "ok";
-                model.Extra = new OperationModel(operation);
+                model.Data = new OperationModel(operation);
             }
             else
             {
@@ -88,7 +93,6 @@ namespace ias.Rebens.api.Controllers
         [HttpPost]
         public JsonResult Post([FromBody] OperationModel operation)
         {
-            var repo = ServiceLocator<IOperationRepository>.Create();
             var model = new JsonModel();
             string error = null;
 
@@ -143,7 +147,6 @@ namespace ias.Rebens.api.Controllers
         [HttpPut]
         public JsonResult Put([FromBody] OperationModel operation)
         {
-            var repo = ServiceLocator<IOperationRepository>.Create();
             var model = new JsonModel();
             string error = null;
 
@@ -179,7 +182,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     model.Status = "ok";
                     model.Message = "Operação criada com sucesso!";
-                    model.Extra = new { id = op.Id };
+                    model.Data = new { id = op.Id };
                 }
                 else
                 {

@@ -9,6 +9,13 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class AddressController : ControllerBase
     {
+        private IAddressRepository repo;
+        
+        public AddressController(IAddressRepository addressRepository)
+        {
+            this.repo = addressRepository;
+        }
+
         /// <summary>
         /// Retorna uma categoria
         /// </summary>
@@ -17,14 +24,13 @@ namespace ias.Rebens.api.Controllers
         [HttpGet("{id}")]
         public JsonResult GetCategory(int id)
         {
-            var repo = ServiceLocator<IAddressRepository>.Create();
             var addr = repo.Read(id, out string error);
 
             var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
                 model.Status = "ok";
-                model.Extra = new AddressModel(addr);
+                model.Data = new AddressModel(addr);
             }
             else
             {
@@ -43,7 +49,6 @@ namespace ias.Rebens.api.Controllers
         [HttpPost]
         public JsonResult Post([FromBody] AddressModel addr)
         {
-            var repo = ServiceLocator<IAddressRepository>.Create();
             var model = new JsonModel();
 
             if (repo.Update(addr.GetEntity(), out string error))
@@ -68,7 +73,6 @@ namespace ias.Rebens.api.Controllers
         [HttpPut]
         public JsonResult Put([FromBody] AddressModel address)
         {
-            var repo = ServiceLocator<IAddressRepository>.Create();
             var model = new JsonModel();
 
             var addr = address.GetEntity();
@@ -76,7 +80,7 @@ namespace ias.Rebens.api.Controllers
             {
                 model.Status = "ok";
                 model.Message = "Endereço criado com sucesso!";
-                model.Extra = new { id = addr.Id };
+                model.Data = new { id = addr.Id };
             }
             else
             {

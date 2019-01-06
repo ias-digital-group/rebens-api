@@ -14,21 +14,32 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
+        private ICategoryRepository repo;
+
+        public CategoryController(ICategoryRepository categoryRepository) {
+            this.repo = categoryRepository;
+        }
+
         /// <summary>
-        /// Lista as categorias com patinação
+        /// Retorna uma lista de categorias conforme os parametros
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <returns></returns>
+        /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <returns>Lista com as categorias encontradas</returns>
+        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
         [HttpGet]
-        public JsonResult ListCategory([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        public IActionResult ListCategory([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
         {
-            var repo = ServiceLocator<ICategoryRepository>.Create();
-            var list = repo.ListPage(page, pageItems, out string error);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
 
-            var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
+                if (list != null && list.Count() == 0)
+                    return NoContent();
+
                 var ret = new ResultPageModel<CategoryModel>();
                 ret.CurrentPage = list.CurrentPage;
                 ret.HasNextPage = list.HasNextPage;
@@ -36,59 +47,58 @@ namespace ias.Rebens.api.Controllers
                 ret.ItemsPerPage = list.ItemsPerPage;
                 ret.TotalItems = list.TotalItems;
                 ret.TotalPages = list.TotalPages;
-                ret.Page = new List<CategoryModel>();
+                ret.Data = new List<CategoryModel>();
                 foreach (var cat in list.Page)
-                    ret.Page.Add(new CategoryModel(cat));
+                    ret.Data.Add(new CategoryModel(cat));
 
-                model.Status = "ok";
-                model.Extra = ret;
+                return Ok(ret);
             }
             else
             {
+                var model = new JsonModel();
                 model.Status = "error";
                 model.Message = error;
+                return Ok(model);
             }
-            
-            return new JsonResult(model);
         }
-        
+
         /// <summary>
-        /// Retorna uma categoria
+        /// Retorna a categoria conforme o ID
         /// </summary>
-        /// <param name="id">id da categoria</param>
-        /// <returns></returns>
+        /// <param name="id">Id da categoria desejada</param>
+        /// <returns>Categoria</returns>
+        /// <response code="201">Retorna a categoria, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
         [HttpGet("{id}")]
-        public JsonResult GetCategory(int id)
+        public IActionResult GetCategory([FromQuery]int id)
         {
-            var repo = ServiceLocator<ICategoryRepository>.Create();
             var category = repo.Read(id, out string error);
 
-            var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
-                model.Status = "ok";
-                model.Extra = new CategoryModel(category);
+                if (category != null || category.Id == 0)
+                    return NoContent();
+                return Ok(new { data = new CategoryModel(category) });
             }
             else
             {
+                var model = new JsonModel();
                 model.Status = "error";
                 model.Message = error;
+                return Ok(model);
             }
-
-            return new JsonResult(model);
         }
 
         /// <summary>
-        /// Atualiza a categoria
+        /// Atualiza uma categoria
         /// </summary>
         /// <param name="category"></param>
-        /// <returns></returns>
-        [HttpPost]
-        public JsonResult Post([FromBody] CategoryModel category)
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+        /// <response code="201"></response>
+        [HttpPut]
+        public IActionResult Put([FromBody]CategoryModel category)
         {
-            var repo = ServiceLocator<ICategoryRepository>.Create();
             var model = new JsonModel();
-
             if (repo.Update(category.GetEntity(), out string error))
             {
                 model.Status = "ok";
@@ -100,26 +110,25 @@ namespace ias.Rebens.api.Controllers
                 model.Message = error;
             }
 
-            return new JsonResult(model);
+            return Ok(model);
         }
 
         /// <summary>
-        /// Cria uma nova categoria
+        /// Cria uma categoria
         /// </summary>
         /// <param name="category"></param>
-        /// <returns></returns>
-        [HttpPut]
-        public JsonResult Put([FromBody] CategoryModel category)
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id da categoria criada</returns>
+        /// <response code="201"></response>
+        [HttpPost]
+        public IActionResult Post([FromBody]CategoryModel category)
         {
-            var repo = ServiceLocator<ICategoryRepository>.Create();
             var model = new JsonModel();
-
             var cat = category.GetEntity();
             if(repo.Create(cat, out string error))
             {
                 model.Status = "ok";
                 model.Message = "Categoria criada com sucesso!";
-                model.Extra = new { id = cat.Id };
+                model.Data = new { id = cat.Id };
             }
             else
             {
@@ -127,15 +136,19 @@ namespace ias.Rebens.api.Controllers
                 model.Message = error;
             }
 
-            return new JsonResult(model);
+            return Ok(model);
         }
 
+        /// <summary>
+        /// Apaga uma categoria
+        /// </summary>
+        /// <param name="id">Id da categoria a ser apagada</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+        /// <response code="201"></response>
         [HttpDelete("{id}")]
-        public JsonResult Delete(int id)
+        public IActionResult Delete(int id)
         {
-            var repo = ServiceLocator<ICategoryRepository>.Create();
             var model = new JsonModel();
-
             if (repo.Delete(id, out string error))
             {
                 model.Status = "ok";
@@ -147,36 +160,37 @@ namespace ias.Rebens.api.Controllers
                 model.Message = error;
             }
 
-            return new JsonResult(model);
+            return Ok(model);
 
         }
 
         /// <summary>
-        /// Lista a árvore de categorias
+        /// Retorna a arvore de categorias 
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Lista com as categorias encontradas</returns>
+        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
         [HttpGet("ListTree")]
-        public JsonResult ListTree()
+        public IActionResult ListTree()
         {
-            var repo = ServiceLocator<ICategoryRepository>.Create();
             var list = repo.ListTree(out string error);
-
-            var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
+                if (list != null && list.Count() == 0)
+                    return NoContent();
+
                 var ret = new List<CategoryModel>();
                 list.ForEach(item => { ret.Add(new CategoryModel(item)); });
 
-                model.Status = "ok";
-                model.Extra = ret;
+                return Ok(ret);
             }
             else
             {
+                var model = new JsonModel();
                 model.Status = "error";
                 model.Message = error;
+                return Ok(model);
             }
-
-            return new JsonResult(model);
         }
     }
 }

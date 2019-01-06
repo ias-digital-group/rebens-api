@@ -12,6 +12,13 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class LogErrorController : ControllerBase
     {
+        private ILogErrorRepository repo;
+
+        public LogErrorController(ILogErrorRepository logErrorRepository)
+        {
+            this.repo = logErrorRepository;
+        }
+
         [HttpGet]
         public JsonResult Get([FromQuery]string token, [FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
@@ -26,7 +33,6 @@ namespace ias.Rebens.api.Controllers
                 var decryptedToken = Helper.SecurityHelper.SimpleDecryption(token);
                 if(decryptedToken.IndexOf('|') > 0 && decryptedToken.Split('|').Length == 2 && decryptedToken.Split('|')[0] == "ias_user" && decryptedToken.Split('|')[1] == "#K)YKb4B=&eN")
                 {
-                    var repo = ServiceLocator<ILogErrorRepository>.Create();
                     var list = repo.ListPage(page, pageItems);
 
                     var ret = new ResultPageModel<LogError>();
@@ -36,10 +42,10 @@ namespace ias.Rebens.api.Controllers
                     ret.ItemsPerPage = list.ItemsPerPage;
                     ret.TotalItems = list.TotalItems;
                     ret.TotalPages = list.TotalPages;
-                    ret.Page = list.Page.ToList();
+                    ret.Data = list.Page.ToList();
 
                     model.Status = "ok";
-                    model.Extra = ret;
+                    model.Data = ret;
                   
                 }
                 else
@@ -68,7 +74,6 @@ namespace ias.Rebens.api.Controllers
                 {
                     try
                     {
-                        var repo = ServiceLocator<ILogErrorRepository>.Create();
                         repo.Clear();
                         model.Status = "ok";
                     }
@@ -104,7 +109,6 @@ namespace ias.Rebens.api.Controllers
                 {
                     try
                     {
-                        var repo = ServiceLocator<ILogErrorRepository>.Create();
                         repo.DeleteOlderThan(date);
                         model.Status = "ok";
                     }

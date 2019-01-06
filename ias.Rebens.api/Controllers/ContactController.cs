@@ -9,6 +9,13 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class ContactController : ControllerBase
     {
+        private IContactRepository repo;
+
+        public ContactController(IContactRepository contactRepository)
+        {
+            this.repo = contactRepository;
+        }
+
         /// <summary>
         /// Retorna um contato
         /// </summary>
@@ -17,14 +24,13 @@ namespace ias.Rebens.api.Controllers
         [HttpGet("{id}")]
         public JsonResult GetContact(int id)
         {
-            var repo = ServiceLocator<IContactRepository>.Create();
             var contact = repo.Read(id, out string error);
 
             var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
                 model.Status = "ok";
-                model.Extra = new ContactModel(contact);
+                model.Data = new ContactModel(contact);
             }
             else
             {
@@ -43,7 +49,6 @@ namespace ias.Rebens.api.Controllers
         [HttpPost]
         public JsonResult Post([FromBody] ContactModel contact)
         {
-            var repo = ServiceLocator<IContactRepository>.Create();
             var model = new JsonModel();
             var cont = contact.GetEntity();
             string error = null;
@@ -85,7 +90,6 @@ namespace ias.Rebens.api.Controllers
         [HttpPut]
         public JsonResult Put([FromBody] ContactModel contact)
         {
-            var repo = ServiceLocator<IContactRepository>.Create();
             var model = new JsonModel();
             var cont = contact.GetEntity();
             string error = null;
@@ -109,7 +113,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     model.Status = "ok";
                     model.Message = "Contato criado com sucesso!";
-                    model.Extra = new { id = cont.Id };
+                    model.Data = new { id = cont.Id };
                 }
                 else
                 {

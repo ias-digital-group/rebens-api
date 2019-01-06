@@ -66,14 +66,37 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Category> ListPage(int page, int pageItems, out string error)
+        public ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Category> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.Category.OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
+                    var tmpList = db.Category.Where(c => string.IsNullOrEmpty(word));
+                    switch(sort)
+                    {
+                        case "Name ASC":
+                            tmpList = tmpList.OrderBy(c => c.Name);
+                            break;
+                        case "Name DESC":
+                            tmpList = tmpList.OrderByDescending(c => c.Name);
+                            break;
+                        case "Id ASC":
+                            tmpList = tmpList.OrderBy(c => c.Id);
+                            break;
+                        case "Id DESC":
+                            tmpList = tmpList.OrderByDescending(c => c.Id);
+                            break;
+                        case "Order ASC":
+                            tmpList = tmpList.OrderBy(c => c.Order);
+                            break;
+                        case "Order DESC":
+                            tmpList = tmpList.OrderByDescending(c => c.Order);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Category.Count();
 
                     ret = new ResultPage<Category>(list, page, pageItems, total);
@@ -125,30 +148,6 @@ namespace ias.Rebens
             {
                 int idLog = Helper.LogHelper.Add("CategoryRepository.Read", ex);
                 error = "Ocorreu um erro ao tentar criar ler a categoria. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public ResultPage<Category> SearchPage(string word, int page, int pageItems, out string error)
-        {
-            ResultPage<Category> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var list = db.Category.Where(c => c.Name.Contains(word)).OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Category.Count(c => c.Name.Contains(word));
-
-                    ret = new ResultPage<Category>(list, page, pageItems, total);
-
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = Helper.LogHelper.Add("CategoryRepository.SearchPage", ex);
-                error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;

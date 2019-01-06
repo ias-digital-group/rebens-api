@@ -14,6 +14,13 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class FaqController : ControllerBase
     {
+        private IFaqRepository repo;
+
+        public FaqController(IFaqRepository faqRepository)
+        {
+            this.repo = faqRepository;
+        }
+
         /// <summary>
         /// Lista as perguntas de faq
         /// </summary>
@@ -36,12 +43,12 @@ namespace ias.Rebens.api.Controllers
                 ret.ItemsPerPage = list.ItemsPerPage;
                 ret.TotalItems = list.TotalItems;
                 ret.TotalPages = list.TotalPages;
-                ret.Page = new List<FaqModel>();
+                ret.Data = new List<FaqModel>();
                 foreach (var faq in list.Page)
-                    ret.Page.Add(new FaqModel(faq));
+                    ret.Data.Add(new FaqModel(faq));
 
                 model.Status = "ok";
-                model.Extra = ret;
+                model.Data = ret;
             }
             else
             {
@@ -67,7 +74,7 @@ namespace ias.Rebens.api.Controllers
             if (string.IsNullOrEmpty(error))
             {
                 model.Status = "ok";
-                model.Extra = new FaqModel(faq);
+                model.Data = new FaqModel(faq);
             }
             else
             {
@@ -119,7 +126,7 @@ namespace ias.Rebens.api.Controllers
             {
                 model.Status = "ok";
                 model.Message = "Pergunta criada com sucesso!";
-                model.Extra = new { id = f.Id };
+                model.Data = new { id = f.Id };
             }
             else
             {
@@ -169,7 +176,7 @@ namespace ias.Rebens.api.Controllers
                 list.ForEach(item => { ret.Add(new FaqModel(item)); });
 
                 model.Status = "ok";
-                model.Extra = ret;
+                model.Data = ret;
             }
             else
             {

@@ -9,6 +9,6 @@ namespace ias.Rebens.api.Models
     {
         public string Status { get; set; }
         public string Message { get; set; }
-        public object Extra { get; set; }
+        public object Data { get; set; }
     }
 }

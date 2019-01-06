@@ -18,19 +18,26 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
+        private IAdminUserRepository repo;
+
+        public AccountController(IAdminUserRepository adminUserRepository)
+        {
+            this.repo = adminUserRepository;
+        }
+
         /// <summary>
         /// Autentica um usuário na api
         /// </summary>
         /// <param name="model"></param>
         /// <param name="signingConfigurations"></param>
         /// <param name="tokenConfigurations"></param>
-        /// <returns></returns>
+        /// <returns>O token e o usuário</returns>
+        /// <respons code="201"></respons>
+        /// <respons code="404"></respons>
         [AllowAnonymous]
         [HttpPost("Login")]
-        public JsonResult Login([FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
+        public IActionResult Login([FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
-            JsonModel resultModel = new JsonModel();
-            var repo = ServiceLocator<IAdminUserRepository>.Create();
             var user = repo.ReadByEmail(model.Email, out string error);
             if (user != null)
             {
@@ -44,21 +51,21 @@ namespace ias.Rebens.api.Controllers
                         }
                     );
 
-                //foreach (var role in user.Roles)
-                //{
-                   identity.AddClaim(new Claim(ClaimTypes.Role, "test"));
-                   //identity.AddClaim(new Claim(ClaimTypes.Role, "administrator"));
-                //}
+                    //foreach (var role in user.Roles)
+                    //{
+                    identity.AddClaim(new Claim(ClaimTypes.Role, "test"));
+                    //identity.AddClaim(new Claim(ClaimTypes.Role, "administrator"));
+                    //}
 
-                //foreach (var policy in user.Permissions)
-                //{
-                //    identity.AddClaim(new Claim("permissions", "permission1"));
-                //}
+                    //foreach (var policy in user.Permissions)
+                    //{
+                    //    identity.AddClaim(new Claim("permissions", "permission1"));
+                    //}
 
-                identity.AddClaim(new Claim("operationId", "77"));
-                identity.AddClaim(new Claim("Id", user.Id.ToString()));
+                    identity.AddClaim(new Claim("operationId", "77"));
+                    identity.AddClaim(new Claim("Id", user.Id.ToString()));
 
-                DateTime dataCriacao = DateTime.UtcNow;
+                    DateTime dataCriacao = DateTime.UtcNow;
                     DateTime dataExpiracao = dataCriacao.AddDays(2);
 
                     var handler = new JwtSecurityTokenHandler();
@@ -73,37 +80,31 @@ namespace ias.Rebens.api.Controllers
                     });
                     var token = handler.WriteToken(securityToken);
 
-                    resultModel = new JsonModel()
+                    var Data = new
                     {
-                        Status = "ok",
-                        Extra = new
+                        token = new TokenModel()
                         {
-                            token = new TokenModel()
-                            {
-                                authenticated = true,
-                                created = dataCriacao,
-                                expiration = dataExpiracao,
-                                accessToken = token
-                            },
-                            user = new { id = user.Id, name = user.Name, email = user.Email }
-                        }
+                            authenticated = true,
+                            created = dataCriacao,
+                            expiration = dataExpiracao,
+                            accessToken = token
+                        },
+                        user = new { id = user.Id, name = user.Name, email = user.Email },
+                        role = "administrator"
                     };
 
                     repo.SetLastLogin(user.Id, out error);
+
+                    return Ok(Data);
                 }
-                else
-                {
-                    resultModel.Status = "error";
-                    resultModel.Message = "O login ou a senha não conferem!";
-                }
-            }
-            else
-            {
-                resultModel.Status = "error";
-                resultModel.Message = "O login ou a senha não conferem!";
             }
 
-            return new JsonResult(resultModel);
+            var resultModel = new JsonModel()
+            {
+                Status = "error",
+                Message = "O login ou a senha não conferem!"
+            };
+            return NotFound(resultModel);
         }
         
         /// <summary>
@@ -115,7 +116,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("CheckToken")]
-        public JsonResult CheckToken([FromBody]TokenModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
+        public IActionResult CheckToken([FromBody]TokenModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
             JsonModel resultModel;
 
@@ -156,23 +157,23 @@ namespace ias.Rebens.api.Controllers
                     // The token failed validation!
                     // TODO: Log it or display an error.
                     //throw new Exception($"Token failed validation: {stvex.Message}");
-                    resultModel = new Models.JsonModel() { Status = "error", Message = "not valid", Extra = stvex.Message };
+                    resultModel = new Models.JsonModel() { Status = "error", Message = "not valid", Data = stvex.Message };
                 }
                 catch (ArgumentException argex)
                 {
                     // The token was not well-formed or was invalid for some other reason.
                     // TODO: Log it or display an error.
                     //throw new Exception($"Token was invalid: {argex.Message}");
-                    resultModel = new Models.JsonModel() { Status = "error", Message = "wrong format", Extra = argex.Message };
+                    resultModel = new Models.JsonModel() { Status = "error", Message = "wrong format", Data = argex.Message };
                 }
 
             }
-            return new JsonResult(resultModel);
+            return Ok(resultModel);
         }
 
         [HttpPost("ChangePassword")]
         [Authorize("Bearer")]
-        public JsonResult ChangePassword([FromBody]ChangePasswordModel model)
+        public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
         {
             JsonModel resultModel;
             var repo = ServiceLocator<IAdminUserRepository>.Create();
@@ -199,7 +200,7 @@ namespace ias.Rebens.api.Controllers
             else
                 resultModel = new JsonModel() { Status = "error", Message = string.IsNullOrEmpty(error) ? "Usuário não encontrado" : error };
             
-            return new JsonResult(resultModel);
+            return Ok(resultModel);
         }
 
         //[AllowAnonymous]

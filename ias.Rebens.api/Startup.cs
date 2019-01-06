@@ -25,20 +25,6 @@ namespace ias.Rebens.api
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-
-            ServiceLocator<IAddressRepository>.Config(() => new AddressRepository(configuration));
-            ServiceLocator<IAdminUserRepository>.Config(() => new AdminUserRepository(configuration));
-            ServiceLocator<IBenefitTypeRepository>.Config(() => new BenefitTypeRepository(configuration));
-            ServiceLocator<ICategoryRepository>.Config(() => new CategoryRepository(configuration));
-            ServiceLocator<IContactRepository>.Config(() => new ContactRepository(configuration));
-            ServiceLocator<IFaqRepository>.Config(() => new FaqRepository(configuration));
-            ServiceLocator<IIntegrationTypeRepository>.Config(() => new IntegrationTypeRepository(configuration));
-            ServiceLocator<ILogErrorRepository>.Config(() => new LogErrorRepository(configuration));
-            ServiceLocator<IOperationRepository>.Config(() => new OperationRepository(configuration));
-            ServiceLocator<IOperationTypeRepository>.Config(() => new OperationTypeRepository(configuration));
-            ServiceLocator<IPermissionRepository>.Config(() => new PermissionRepository(configuration));
-            ServiceLocator<IProfileRepository>.Config(() => new ProfileRepository(configuration));
-            ServiceLocator<IStaticTextTypeRepository>.Config(() => new StaticTextTypeRepository(configuration));
         }
 
         public IConfiguration Configuration { get; }
@@ -94,6 +80,18 @@ namespace ias.Rebens.api
             {
                 c.SwaggerDoc("v1", new Info { Title = "Rebens API", Version = "v1" });
             });
+
+            services.AddTransient<IAddressRepository, AddressRepository>();
+            services.AddTransient<IAdminUserRepository, AdminUserRepository>();
+            services.AddTransient<IBenefitTypeRepository, BenefitTypeRepository>();
+            services.AddTransient<ICategoryRepository, CategoryRepository>();
+            services.AddTransient<IContactRepository, ContactRepository>();
+            services.AddTransient<IFaqRepository, FaqRepository>();
+            services.AddTransient<IIntegrationTypeRepository, IntegrationTypeRepository>();
+            services.AddTransient<ILogErrorRepository, LogErrorRepository>();
+            services.AddTransient<IOperationRepository, OperationRepository>();
+            services.AddTransient<IOperationTypeRepository, OperationTypeRepository>();
+            services.AddTransient<IStaticTextTypeRepository, StaticTextTypeRepository>();
 
             services.AddDbContext<RebensContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
