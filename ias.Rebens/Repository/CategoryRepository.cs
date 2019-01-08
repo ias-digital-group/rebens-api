@@ -29,7 +29,8 @@ namespace ias.Rebens
                 }
             }
             catch (Exception ex) {
-                int idLog = Helper.LogHelper.Add("CategoryRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar a categoria. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -59,7 +60,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("CategoryRepository.Delete", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir a categoria. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -73,8 +75,9 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Category.Where(c => string.IsNullOrEmpty(word));
-                    switch(sort)
+                    var tmpList = db.Category.Where(c => string.IsNullOrEmpty(word) || c.Name.Contains(word));
+
+                    switch (sort)
                     {
                         case "Name ASC":
                             tmpList = tmpList.OrderBy(c => c.Name);
@@ -97,16 +100,18 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Category.Count();
+                    var total = db.Category.Count(c => string.IsNullOrEmpty(word) || c.Name.Contains(word));
 
                     ret = new ResultPage<Category>(list, page, pageItems, total);
 
                     error = null;
+                    db.SaveChanges();
                 }
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("CategoryRepository.ListPage", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -126,7 +131,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("CategoryRepository.ListTree", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.ListTree", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -146,7 +152,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("CategoryRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler a categoria. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -181,7 +188,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("CategoryRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar a categoria. (erro:" + idLog + ")";
                 ret = false;
             }

@@ -1,17 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace ias.Rebens.api.Models
 {
     public class ContactModel
     {
+        [Required]
         public int Id { get; set; }
+        [Required]
+        [MaxLength(300)]
         public string Name { get; set; }
+        [MaxLength(400)]
         public string Email { get; set; }
+        [MaxLength(200)]
         public string JobTitle { get; set; }
+        [MaxLength(50)]
         public string Phone { get; set; }
+        [MaxLength(50)]
         public string CellPhone { get; set; }
         public int? IdAddress { get; set; }
 

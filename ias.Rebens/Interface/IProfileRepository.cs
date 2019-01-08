@@ -6,9 +6,7 @@ namespace ias.Rebens
 {
     public interface IProfileRepository
     {
-        ResultPage<Profile> ListPage(int page, int pageItems, out string error);
-
-        ResultPage<Profile> SearchPage(string word, int page, int pageItems, out string error);
+        ResultPage<Profile> ListPage(int page, int pageItems, string word, string sort, out string error);
 
         bool Create(Profile profile, out string error);
 

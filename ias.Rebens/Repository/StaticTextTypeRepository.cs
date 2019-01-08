@@ -29,7 +29,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("StaticTextTypeRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextTypeRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o tipo de texto. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -59,7 +60,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("StaticTextTypeRepository.Delete", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextTypeRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o tipo de texto. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -79,7 +81,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("StaticTextTypeRepository.List", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextTypeRepository.List", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os tipos de textos. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -99,7 +102,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("StaticTextTypeRepository.ListActive", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextTypeRepository.ListActive", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os tipos de textos. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -119,7 +123,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("StaticTextTypeRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextTypeRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o tipo de texto. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -149,7 +154,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("StaticTextTypeRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextTypeRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o tipo de texto. (erro:" + idLog + ")";
                 ret = false;
             }

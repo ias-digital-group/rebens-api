@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace ias.Rebens.api.Models
 {
     public class IntegrationTypeModel
     {
+        [Required]
         public int Id { get; set; }
+        [Required]
+        [MaxLength(200)]
         public string Name { get; set; }
 
         public IntegrationTypeModel() { }

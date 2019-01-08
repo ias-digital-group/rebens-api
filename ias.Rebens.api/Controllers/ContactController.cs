@@ -10,35 +10,37 @@ namespace ias.Rebens.api.Controllers
     public class ContactController : ControllerBase
     {
         private IContactRepository repo;
+        private IAddressRepository addrRepo;
 
-        public ContactController(IContactRepository contactRepository)
+        public ContactController(IContactRepository contactRepository, IAddressRepository addressRepository)
         {
             this.repo = contactRepository;
+            this.addrRepo = addressRepository;
         }
 
         /// <summary>
-        /// Retorna um contato
+        /// Retorna o contato conforme o ID
         /// </summary>
-        /// <param name="id">id do contato</param>
-        /// <returns></returns>
+        /// <param name="id">Id do contato desejado</param>
+        /// <returns>Contato</returns>
+        /// <response code="201">Retorna o contato, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
         [HttpGet("{id}")]
-        public JsonResult GetContact(int id)
+        public IActionResult GetContact(int id)
         {
             var contact = repo.Read(id, out string error);
 
-            var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
-                model.Status = "ok";
-                model.Data = new ContactModel(contact);
-            }
-            else
-            {
-                model.Status = "error";
-                model.Message = error;
+                if (contact != null || contact.Id == 0)
+                    return NoContent();
+                return Ok(new { data = new ContactModel(contact) });
             }
 
-            return new JsonResult(model);
+            var model = new JsonModel();
+            model.Status = "error";
+            model.Message = error;
+            return Ok(model);
         }
 
         /// <summary>
@@ -47,7 +49,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="contact"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult Post([FromBody] ContactModel contact)
+        public IActionResult Post([FromBody] ContactModel contact)
         {
             var model = new JsonModel();
             var cont = contact.GetEntity();
@@ -55,7 +57,6 @@ namespace ias.Rebens.api.Controllers
 
             if (contact.Address != null)
             {
-                var addrRepo = ServiceLocator<IAddressRepository>.Create();
                 var addr = contact.Address.GetEntity();
                 if (addrRepo.Update(addr, out error))
                     cont.IdAddress = addr.Id;
@@ -88,7 +89,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="contact"></param>
         /// <returns></returns>
         [HttpPut]
-        public JsonResult Put([FromBody] ContactModel contact)
+        public IActionResult Put([FromBody] ContactModel contact)
         {
             var model = new JsonModel();
             var cont = contact.GetEntity();
@@ -96,7 +97,6 @@ namespace ias.Rebens.api.Controllers
 
             if(contact.Address != null)
             {
-                var addrRepo = ServiceLocator<IAddressRepository>.Create();
                 var addr = contact.Address.GetEntity();
                 if (addrRepo.Create(addr, out error))
                     cont.IdAddress = addr.Id;

@@ -29,7 +29,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("IntegrationTypeRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("IntegrationTypeRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o tipo de integração. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -59,7 +60,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("IntegrationTypeRepository.Delete", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("IntegrationTypeRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o tipo de integração. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -79,7 +81,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("IntegrationTypeRepository.List", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("IntegrationTypeRepository.List", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os tipos de integração. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -99,7 +102,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("IntegrationTypeRepository.ListActive", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("IntegrationTypeRepository.ListActive", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os tipos de integração. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -119,7 +123,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("IntegrationTypeRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("IntegrationTypeRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o tipo de integração. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -149,7 +154,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("IntegrationTypeRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("IntegrationTypeRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o tipo de integração. (erro:" + idLog + ")";
                 ret = false;
             }

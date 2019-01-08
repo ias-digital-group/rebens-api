@@ -31,7 +31,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.ChangePassword", $"id:{id}", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.ChangePassword", ex.Message, $"id:{id}", ex.StackTrace);
                 error = $"Ocorreu um erro ao tentar alterar a senha do usuário. (erro:{idLog})";
                 ret = false;
             }
@@ -53,7 +54,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o usuário. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -75,22 +77,46 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.Delete", $"id:{id}", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.Delete", ex.Message, $"id:{id}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o usuário. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public ResultPage<AdminUser> ListPage(int page, int pageItems, out string error)
+        public ResultPage<AdminUser> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<AdminUser> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.AdminUser.OrderBy(p => p.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.AdminUser.Count();
+                    var tmpList = db.AdminUser.Where(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word));
+                    switch (sort)
+                    {
+                        case "Name ASC":
+                            tmpList = tmpList.OrderBy(a => a.Name);
+                            break;
+                        case "Name DESC":
+                            tmpList = tmpList.OrderByDescending(a => a.Name);
+                            break;
+                        case "Id ASC":
+                            tmpList = tmpList.OrderBy(a => a.Id);
+                            break;
+                        case "Id DESC":
+                            tmpList = tmpList.OrderByDescending(a => a.Id);
+                            break;
+                        case "Email ASC":
+                            tmpList = tmpList.OrderBy(a => a.Email);
+                            break;
+                        case "Email DESC":
+                            tmpList = tmpList.OrderByDescending(a => a.Email);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.AdminUser.Count(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word));
 
                     ret = new ResultPage<AdminUser>(list, page, pageItems, total);
                     error = null;
@@ -98,7 +124,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.List", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.List", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os usuários. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -118,7 +145,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.Read", $"id:{id}", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.Read", ex.Message, $"id:{id}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o usuário. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -138,31 +166,9 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.ReadByEmail", $"email:{email}", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.ReadByEmail", ex.Message, $"email:{email}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o usuário. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public ResultPage<AdminUser> SearchPage(string word, int page, int pageItems, out string error)
-        {
-            ResultPage<AdminUser> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var list = db.AdminUser.Where(p => p.Name.Contains(word)).OrderBy(p => p.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.AdminUser.Count(p => p.Name.Contains(word));
-
-                    ret = new ResultPage<AdminUser>(list, page, pageItems, total);
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.List", ex);
-                error = "Ocorreu um erro ao tentar listar os usuários. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
@@ -183,7 +189,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.SetLastLogin", $"id:{id}", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.SetLastLogin", ex.Message, $"id:{id}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar salvar a data de último login do usuário. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -215,7 +222,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AdminUserRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o usuário. (erro:" + idLog + ")";
                 ret = false;
             }

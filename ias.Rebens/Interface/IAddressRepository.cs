@@ -8,9 +8,7 @@ namespace ias.Rebens
     {
         Address Read(int id, out string error);
 
-        ResultPage<Address> ListPage(int page, int pageItems, out string error);
-
-        ResultPage<Address> SearchPage(string word, int page, int pageItems, out string error);
+        ResultPage<Address> ListPage(int page, int pageItems, string word, string sort, out string error);
 
         bool Delete(int id, out string error);
 

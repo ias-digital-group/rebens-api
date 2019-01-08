@@ -17,37 +17,40 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Retorna uma categoria
+        /// Retorna o endereço conforme o ID
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <param name="id">Id do endereço desejada</param>
+        /// <returns>Endereço</returns>
+        /// <response code="201">Retorna a categoria, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
         [HttpGet("{id}")]
-        public JsonResult GetCategory(int id)
+        public IActionResult GetCategory(int id)
         {
             var addr = repo.Read(id, out string error);
 
-            var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
-                model.Status = "ok";
-                model.Data = new AddressModel(addr);
-            }
-            else
-            {
-                model.Status = "error";
-                model.Message = error;
+                if (addr != null || addr.Id == 0)
+                    return NoContent();
+
+                return Ok(new { data = new AddressModel(addr) });
             }
 
-            return new JsonResult(model);
+
+            var model = new JsonModel();
+            model.Status = "error";
+            model.Message = error;
+            return Ok(model);
         }
 
         /// <summary>
-        /// Atualiza a categoria
+        /// Atualiza um endereço
         /// </summary>
-        /// <param name="addr"></param>
-        /// <returns></returns>
-        [HttpPost]
-        public JsonResult Post([FromBody] AddressModel addr)
+        /// <param name="address"></param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+        /// <response code="201"></response>
+        [HttpPut]
+        public IActionResult Put([FromBody] AddressModel addr)
         {
             var model = new JsonModel();
 
@@ -62,20 +65,21 @@ namespace ias.Rebens.api.Controllers
                 model.Message = error;
             }
 
-            return new JsonResult(model);
+            return Ok(model);
         }
 
         /// <summary>
-        /// Cria uma categoria
+        /// Cria um endereço
         /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        [HttpPut]
-        public JsonResult Put([FromBody] AddressModel address)
+        /// <param name="address'"></param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id da categoria criada</returns>
+        /// <response code="201"></response>
+        [HttpPost]
+        public IActionResult Post([FromBody] AddressModel address)
         {
             var model = new JsonModel();
-
             var addr = address.GetEntity();
+
             if (repo.Create(addr, out string error))
             {
                 model.Status = "ok";
@@ -88,7 +92,7 @@ namespace ias.Rebens.api.Controllers
                 model.Message = error;
             }
 
-            return new JsonResult(model);
+            return Ok(model);
         }
     }
 }

@@ -11,6 +11,8 @@ namespace ias.Rebens
             BenefitOperations = new HashSet<BenefitOperation>();
             Faqs = new HashSet<Faq>();
             StaticTexts = new HashSet<StaticText>();
+            OperationAddresses = new HashSet<OperationAddress>();
+            OperationContacts = new HashSet<OperationContact>();
         }
 
         public int Id { get; set; }
@@ -19,18 +21,18 @@ namespace ias.Rebens
         public string CompanyDoc { get; set; }
         public string Image { get; set; }
         public string Domain { get; set; }
-        public int? IdContact { get; set; }
         public int IdOperationType { get; set; }
         public decimal? CashbackPercentage { get; set; }
         public bool Active { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual Contact Contact { get; set; }
         public virtual OperationType OperationType { get; set; }
         public virtual ICollection<BannerOperation> BannerOperations { get; set; }
         public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }
         public virtual ICollection<Faq> Faqs { get; set; }
         public virtual ICollection<StaticText> StaticTexts { get; set; }
+        public virtual ICollection<OperationAddress> OperationAddresses { get; set; }
+        public virtual ICollection<OperationContact> OperationContacts { get; set; }
     }
 }

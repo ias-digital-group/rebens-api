@@ -1,17 +1,23 @@
 ﻿using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ias.Rebens.api.Models
 {
     public class CategoryModel
     {
+        [Required]
         public int Id { get; set; }
+        [Required]
+        [MaxLength(200)]
         public string Name { get; set; }
+        [Required]
         public int Order { get; set; }
         public int? IdParent { get; set; }
+        [MaxLength(500)]
         public string Icon { get; set; }
+        [Required]
         public bool Active { get; set; }
     
         public List<CategoryModel> Categories { get; set; }

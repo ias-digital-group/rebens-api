@@ -29,7 +29,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("BenefitTypeRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitTypeRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o tipo de benefício. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -59,7 +60,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("BenefitTypeRepository.Delete", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitTypeRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o tipo de benefício. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -79,7 +81,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("BenefitTypeRepository.List", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitTypeRepository.List", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os tipos de benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -99,7 +102,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("BenefitTypeRepository.ListActive", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitTypeRepository.ListActive", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os tipos de benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -119,7 +123,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("BenefitTypeRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitTypeRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o tipo de benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -149,7 +154,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("BenefitTypeRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitTypeRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o tipo de benefício. (erro:" + idLog + ")";
                 ret = false;
             }

@@ -29,7 +29,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ProfileRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ProfileRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o perfil. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -67,15 +68,32 @@ namespace ias.Rebens
             throw new NotImplementedException();
         }
 
-        public ResultPage<Profile> ListPage(int page, int pageItems, out string error)
+        public ResultPage<Profile> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Profile> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.Profile.OrderBy(p => p.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Profile.Count();
+                    var tmpList = db.Profile.Where(p => string.IsNullOrEmpty(word) || p.Name.Contains(word));
+                    switch (sort)
+                    {
+                        case "Name ASC":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "Name DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "Id ASC":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "Id DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Profile.Count(p => string.IsNullOrEmpty(word) || p.Name.Contains(word));
 
                     ret = new ResultPage<Profile>(list, page, pageItems, total);
                     error = null;
@@ -83,7 +101,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ProfileRepository.List", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ProfileRepository.List", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os perfils. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -103,31 +122,9 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ProfileRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ProfileRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o perfil. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public ResultPage<Profile> SearchPage(string word, int page, int pageItems, out string error)
-        {
-            ResultPage<Profile> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var list = db.Profile.Where(p => p.Name.Contains(word)).OrderBy(p => p.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Profile.Count(p => p.Name.Contains(word));
-
-                    ret = new ResultPage<Profile>(list, page, pageItems, total);
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = Helper.LogHelper.Add("ProfileRepository.List", ex);
-                error = "Ocorreu um erro ao tentar listar os perfils. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
@@ -157,7 +154,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ProfileRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ProfileRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o perfil. (erro:" + idLog + ")";
                 ret = false;
             }

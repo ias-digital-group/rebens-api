@@ -28,10 +28,9 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <returns></returns>
         [HttpGet]
-        public JsonResult ListFaq([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        public JsonResult ListFaq([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
         {
-            var repo = ServiceLocator<IFaqRepository>.Create();
-            var list = repo.ListPage(page, pageItems, out string error);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
 
             var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
@@ -67,7 +66,6 @@ namespace ias.Rebens.api.Controllers
         [HttpGet("{id}")]
         public JsonResult GetFaq(int id)
         {
-            var repo = ServiceLocator<IFaqRepository>.Create();
             var faq = repo.Read(id, out string error);
 
             var model = new JsonModel();
@@ -93,7 +91,6 @@ namespace ias.Rebens.api.Controllers
         [HttpPost]
         public JsonResult Post([FromBody] FaqModel faq)
         {
-            var repo = ServiceLocator<IFaqRepository>.Create();
             var model = new JsonModel();
 
             if (repo.Update(faq.GetEntity(), out string error))
@@ -118,7 +115,6 @@ namespace ias.Rebens.api.Controllers
         [HttpPut]
         public JsonResult Put([FromBody] FaqModel faq)
         {
-            var repo = ServiceLocator<IFaqRepository>.Create();
             var model = new JsonModel();
 
             var f = faq.GetEntity();
@@ -140,7 +136,6 @@ namespace ias.Rebens.api.Controllers
         [HttpDelete("{id}")]
         public JsonResult Delete(int id)
         {
-            var repo = ServiceLocator<IFaqRepository>.Create();
             var model = new JsonModel();
 
             if (repo.Delete(id, out string error))
@@ -166,7 +161,6 @@ namespace ias.Rebens.api.Controllers
         [HttpGet("ListByOperation")]
         public JsonResult ListByOperation([FromQuery]int idOperation)
         {
-            var repo = ServiceLocator<IFaqRepository>.Create();
             var list = repo.ListByOperation(idOperation, out string error);
 
             var model = new JsonModel();

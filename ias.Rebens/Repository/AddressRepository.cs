@@ -30,7 +30,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AddressRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o endereço. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -70,22 +71,58 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AddressRepository.Delete", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o endereço. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public ResultPage<Address> ListPage(int page, int pageItems, out string error)
+        public ResultPage<Address> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Address> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.Address.OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Address.Count();
+                    var tmpList = db.Address.Where(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word));
+                    switch (sort)
+                    {
+                        case "Name ASC":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "Name DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "Id ASC":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "Id DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "Street ASC":
+                            tmpList = tmpList.OrderBy(f => f.Street);
+                            break;
+                        case "Street DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Street);
+                            break;
+                        case "City ASC":
+                            tmpList = tmpList.OrderBy(f => f.City);
+                            break;
+                        case "City DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.City);
+                            break;
+                        case "State ASC":
+                            tmpList = tmpList.OrderBy(f => f.State);
+                            break;
+                        case "State DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.State);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Address.Count(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word));
 
                     ret = new ResultPage<Address>(list, page, pageItems, total);
 
@@ -94,7 +131,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AddressRepository.ListPage", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os endereços. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -114,32 +152,9 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AddressRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o endereço. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public ResultPage<Address> SearchPage(string word, int page, int pageItems, out string error)
-        {
-            ResultPage<Address> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var list = db.Address.Where(c => c.Name.Contains(word) || c.Street.Contains(word)).OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Address.Count(c => c.Name.Contains(word) || c.Street.Contains(word));
-
-                    ret = new ResultPage<Address>(list, page, pageItems, total);
-
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = Helper.LogHelper.Add("AddressRepository.SearchPage", ex);
-                error = "Ocorreu um erro ao tentar listar os endereços. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
@@ -179,7 +194,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("AddressRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o endereço. (erro:" + idLog + ")";
                 ret = false;
             }

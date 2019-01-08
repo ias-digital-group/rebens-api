@@ -15,9 +15,11 @@ namespace ias.Rebens.api.Controllers
     public class CategoryController : ControllerBase
     {
         private ICategoryRepository repo;
+        private ILogErrorRepository logRepo;
 
-        public CategoryController(ICategoryRepository categoryRepository) {
+        public CategoryController(ICategoryRepository categoryRepository, ILogErrorRepository logErrorRepository) {
             this.repo = categoryRepository;
+            this.logRepo = logErrorRepository;
         }
 
         /// <summary>
@@ -53,13 +55,11 @@ namespace ias.Rebens.api.Controllers
 
                 return Ok(ret);
             }
-            else
-            {
-                var model = new JsonModel();
-                model.Status = "error";
-                model.Message = error;
-                return Ok(model);
-            }
+
+            var model = new JsonModel();
+            model.Status = "error";
+            model.Message = error;
+            return Ok(model);
         }
 
         /// <summary>
@@ -80,13 +80,11 @@ namespace ias.Rebens.api.Controllers
                     return NoContent();
                 return Ok(new { data = new CategoryModel(category) });
             }
-            else
-            {
-                var model = new JsonModel();
-                model.Status = "error";
-                model.Message = error;
-                return Ok(model);
-            }
+
+            var model = new JsonModel();
+            model.Status = "error";
+            model.Message = error;
+            return Ok(model);
         }
 
         /// <summary>
@@ -117,7 +115,7 @@ namespace ias.Rebens.api.Controllers
         /// Cria uma categoria
         /// </summary>
         /// <param name="category"></param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id da categoria criada</returns>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da categoria criada</returns>
         /// <response code="201"></response>
         [HttpPost]
         public IActionResult Post([FromBody]CategoryModel category)

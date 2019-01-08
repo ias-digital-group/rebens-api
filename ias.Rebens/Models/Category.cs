@@ -16,10 +16,12 @@ namespace ias.Rebens
         [Required]
         public int Id { get; set; }
         [Required]
+        [MaxLength(200)]
         public string Name { get; set; }
         [Required]
         public int Order { get; set; }
         public int? IdParent { get; set; }
+        [MaxLength(500)]
         public string Icon { get; set; }
         [Required]
         [DefaultValue(false)]

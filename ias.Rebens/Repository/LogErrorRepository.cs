@@ -14,6 +14,11 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public LogErrorRepository(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
         public bool Clear()
         {
             bool ret = true;
@@ -41,6 +46,34 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogError.Add(log);
+                    db.SaveChanges();
+                    ret = log.Id;
+                }
+            }
+            catch
+            {
+                //Helper.EmailHelper.Send("israel@iasdigitalgroup.com", "Israel", "[vzt] - logerror error", "error on trying to save logError", false);
+                ret = 0;
+            }
+            return ret;
+        }
+
+        public int Create(string reference, string message, string complement, string stackTrace)
+        {
+            int ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    LogError log = new LogError() {
+                        Complement = complement,
+                        Created = DateTime.UtcNow,
+                        Message = message,
+                        Reference = reference,
+                        StackTrace = stackTrace
+                    };
+
                     db.LogError.Add(log);
                     db.SaveChanges();
                     ret = log.Id;

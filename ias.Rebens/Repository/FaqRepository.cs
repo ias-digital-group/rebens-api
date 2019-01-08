@@ -29,7 +29,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("FaqRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FaqRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar a pergunta. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -51,22 +52,52 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("FaqRepository.Delete", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FaqRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir a pergunta. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public ResultPage<Faq> ListPage(int page, int pageItems, out string error)
+        public ResultPage<Faq> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Faq> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.Faq.OrderBy(c => c.Question).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Faq.Count();
+                    var tmpList = db.Faq.Where(f => string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word));
+                    switch (sort)
+                    {
+                        case "Question ASC":
+                            tmpList = tmpList.OrderBy(f => f.Question);
+                            break;
+                        case "Question DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Question);
+                            break;
+                        case "Id ASC":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "Id DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "Answer ASC":
+                            tmpList = tmpList.OrderBy(f => f.Answer);
+                            break;
+                        case "Answer DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Answer);
+                            break;
+                        case "Order ASC":
+                            tmpList = tmpList.OrderBy(f => f.Order);
+                            break;
+                        case "Order DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Order);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Faq.Count(f => string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word));
 
                     ret = new ResultPage<Faq>(list, page, pageItems, total);
 
@@ -75,7 +106,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("FaqRepository.ListPage", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FaqRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as perguntas. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -95,7 +127,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("FaqRepository.ListByOperation", $"idOperation: {idOperation}", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FaqRepository.ListByOperatiion", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as perguntas. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -115,32 +148,9 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("FaqRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FaqRepository.Create", ex.Message, $"id: {id}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler a pergunta. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public ResultPage<Faq> SearchPage(string word, int page, int pageItems, out string error)
-        {
-            ResultPage<Faq> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var list = db.Faq.Where(c => c.Question.Contains(word)).OrderBy(c => c.Question).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Faq.Count(c => c.Question.Contains(word));
-
-                    ret = new ResultPage<Faq>(list, page, pageItems, total);
-
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = Helper.LogHelper.Add("FaqRepository.SearchPage", ex);
-                error = "Ocorreu um erro ao tentar listar as perguntas. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
@@ -174,7 +184,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("FaqRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FaqRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar a pergunta. (erro:" + idLog + ")";
                 ret = false;
             }

@@ -30,7 +30,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ContactRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ContactRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o contato. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -44,12 +45,12 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if (db.Operation.Any(c => c.IdContact == id))
+                    if (db.OperationContact.Any(c => c.IdContact == id))
                     {
                         ret = false;
                         error = "Esso contato não pode ser excluida pois está associado a uma operação.";
                     }
-                    else if (db.Partner.Any(c => c.IdContact == id))
+                    else if (db.PartnerContact.Any(c => c.IdContact == id))
                     {
                         ret = false;
                         error = "Esso contato não pode ser excluida pois está associado a um parceiro.";
@@ -65,22 +66,52 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ContactRepository.Delete", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ContactRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o contato. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public ResultPage<Contact> ListPage(int page, int pageItems, out string error)
+        public ResultPage<Contact> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Contact> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.Contact.OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Contact.Count();
+                    var tmpList = db.Contact.Where(c => string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word));
+                    switch (sort)
+                    {
+                        case "Name ASC":
+                            tmpList = tmpList.OrderBy(c => c.Name);
+                            break;
+                        case "Name DESC":
+                            tmpList = tmpList.OrderByDescending(c => c.Name);
+                            break;
+                        case "Id ASC":
+                            tmpList = tmpList.OrderBy(c => c.Id);
+                            break;
+                        case "Id DESC":
+                            tmpList = tmpList.OrderByDescending(c => c.Id);
+                            break;
+                        case "Email ASC":
+                            tmpList = tmpList.OrderBy(c => c.Email);
+                            break;
+                        case "Email DESC":
+                            tmpList = tmpList.OrderByDescending(c => c.Email);
+                            break;
+                        case "JobTitle ASC":
+                            tmpList = tmpList.OrderBy(c => c.JobTitle);
+                            break;
+                        case "JobTitle DESC":
+                            tmpList = tmpList.OrderByDescending(c => c.JobTitle);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Contact.Count(c => string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word));
 
                     ret = new ResultPage<Contact>(list, page, pageItems, total);
 
@@ -89,7 +120,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ContactRepository.ListPage", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ContactRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os contatos. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -109,32 +141,9 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ContactRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ContactRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o contato. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public ResultPage<Contact> SearchPage(string word, int page, int pageItems, out string error)
-        {
-            ResultPage<Contact> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var list = db.Contact.Where(c => c.Name.Contains(word)).OrderBy(c => c.Name).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Contact.Count(c => c.Name.Contains(word));
-
-                    ret = new ResultPage<Contact>(list, page, pageItems, total);
-
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = Helper.LogHelper.Add("ContactRepository.SearchPage", ex);
-                error = "Ocorreu um erro ao tentar listar os contatos. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
@@ -170,7 +179,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("ContactRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ContactRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o contato. (erro:" + idLog + ")";
                 ret = false;
             }

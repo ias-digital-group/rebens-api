@@ -1,17 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace ias.Rebens.api.Models
 {
     public class FaqModel
     {
+        [Required]
         public int Id { get; set; }
+        [Required]
         public int IdOperation { get; set; }
+        [Required]
+        [MaxLength(1000)]
         public string Question { get; set; }
+        [Required]
+        [MaxLength(1000)]
         public string Answer { get; set; }
+        [Required]
         public int Order { get; set; }
+        [Required]
         public bool Active { get; set; }
 
         public FaqModel() { }

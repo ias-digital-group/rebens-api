@@ -14,6 +14,56 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public bool AddAddress(int idOperation, int idAddress, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if(!db.OperationAddress.Any(o => o.IdOperation == idOperation && o.IdAddress == idAddress))
+                    {
+                        db.OperationAddress.Add(new OperationAddress() { IdAddress = idAddress, IdOperation = idOperation });
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.AddAddress", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar adicionar o contato. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool AddContact(int idOperation, int idContact, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (!db.OperationContact.Any(o => o.IdOperation == idOperation && o.IdContact == idContact))
+                    {
+                        db.OperationContact.Add(new OperationContact() { IdContact = idContact, IdOperation = idOperation });
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar adicionar o endereço. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
         public bool Create(Operation operation, out string error)
         {
             bool ret = true;
@@ -29,22 +79,104 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar a opreação. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public ResultPage<Operation> ListPage(int page, int pageItems, out string error)
+        public bool DeleteAddress(int idOperation, int idAddress, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmp = db.OperationAddress.SingleOrDefault(o => o.IdOperation == idOperation && o.IdAddress == idAddress);
+                    db.OperationAddress.Remove(tmp);
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar excluir o endereço. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool DeleteContact(int idOperation, int idContact, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmp = db.OperationContact.SingleOrDefault(o => o.IdOperation == idOperation && o.IdContact == idContact);
+                    db.OperationContact.Remove(tmp);
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar excluir o contato. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public ResultPage<Operation> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Operation> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.Operation.OrderBy(c => c.Title).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Operation.Count();
+                    var tmpList = db.Operation.Where(o => string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word));
+                    switch (sort)
+                    {
+                        case "Domain ASC":
+                            tmpList = tmpList.OrderBy(f => f.Domain);
+                            break;
+                        case "Domain DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Domain);
+                            break;
+                        case "Id ASC":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "Id DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "Title ASC":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "Title DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "CompanyName ASC":
+                            tmpList = tmpList.OrderBy(f => f.CompanyName);
+                            break;
+                        case "CompanyName DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.CompanyName);
+                            break;
+                        case "CompanyDoc ASC":
+                            tmpList = tmpList.OrderBy(f => f.CompanyDoc);
+                            break;
+                        case "CompanyDoc DESC":
+                            tmpList = tmpList.OrderByDescending(f => f.CompanyDoc);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Operation.Count(o => string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word));
 
                     ret = new ResultPage<Operation>(list, page, pageItems, total);
 
@@ -53,7 +185,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationRepository.ListPage", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as operações. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -67,38 +200,15 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Operation.Include("Contact").Include("Contact.Address").SingleOrDefault(c => c.Id == id);
+                    ret = db.Operation.Include("OperationContacts").SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler a operação. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public ResultPage<Operation> SearchPage(string word, int page, int pageItems, out string error)
-        {
-            ResultPage<Operation> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var list = db.Operation.Where(o => o.Title.Contains(word)).OrderBy(o => o.Title).Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Operation.Count(o => o.Title.Contains(word));
-
-                    ret = new ResultPage<Operation>(list, page, pageItems, total);
-
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = Helper.LogHelper.Add("OperationRepository.SearchPage", ex);
-                error = "Ocorreu um erro ao tentar listar as operações. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
@@ -119,8 +229,6 @@ namespace ias.Rebens
                         update.CompanyDoc = operation.CompanyDoc;
                         update.CompanyName = operation.CompanyName;
                         update.Domain = operation.Domain;
-                        if(operation.IdContact.HasValue)
-                            update.IdContact = operation.IdContact;
                         update.IdOperationType = operation.IdOperationType;
                         update.Image = operation.Image;
                         update.Modified = DateTime.UtcNow;
@@ -137,7 +245,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar a operação. (erro:" + idLog + ")";
                 ret = false;
             }

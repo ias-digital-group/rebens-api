@@ -53,8 +53,8 @@ namespace ias.Rebens.api.Controllers
 
                     //foreach (var role in user.Roles)
                     //{
-                    identity.AddClaim(new Claim(ClaimTypes.Role, "test"));
-                    //identity.AddClaim(new Claim(ClaimTypes.Role, "administrator"));
+                    //identity.AddClaim(new Claim(ClaimTypes.Role, "test"));
+                    identity.AddClaim(new Claim(ClaimTypes.Role, "administrator"));
                     //}
 
                     //foreach (var policy in user.Permissions)
@@ -176,7 +176,6 @@ namespace ias.Rebens.api.Controllers
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
         {
             JsonModel resultModel;
-            var repo = ServiceLocator<IAdminUserRepository>.Create();
             var user = repo.Read(model.Id, out string error);
             if(user != null)
             {

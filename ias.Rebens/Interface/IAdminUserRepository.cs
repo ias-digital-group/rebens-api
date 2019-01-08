@@ -6,9 +6,7 @@ namespace ias.Rebens
 {
     public interface IAdminUserRepository
     {
-        ResultPage<AdminUser> ListPage(int page, int pageItems, out string error);
-
-        ResultPage<AdminUser> SearchPage(string word, int page, int pageItems, out string error);
+        ResultPage<AdminUser> ListPage(int page, int pageItems, string word, string sort, out string error);
 
         bool Create(AdminUser adminUser, out string error);
 

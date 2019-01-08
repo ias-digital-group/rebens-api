@@ -38,9 +38,12 @@ namespace ias.Rebens
         public virtual DbSet<Permission> Permission { get; set; }
         public virtual DbSet<Profile> Profile { get; set; }
         public virtual DbSet<Operation> Operation { get; set; }
+        public virtual DbSet<OperationAddress> OperationAddress { get; set; }
+        public virtual DbSet<OperationContact> OperationContact { get; set; }
         public virtual DbSet<OperationType> OperationType { get; set; }
         public virtual DbSet<Partner> Partner { get; set; }
         public virtual DbSet<PartnerAddress> PartnerAddress { get; set; }
+        public virtual DbSet<PartnerContact> PartnerContact { get; set; }
         public virtual DbSet<StaticText> StaticText { get; set; }
         public virtual DbSet<StaticTextType> StaticTextType { get; set; }
 
@@ -424,12 +427,40 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdOperationType)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Operation_OperationType");
+            });
 
-                entity.HasOne(d => d.Contact)
-                    .WithMany(p => p.Operations)
+            modelBuilder.Entity<OperationAddress>(entity =>
+            {
+                entity.HasKey(e => new { e.IdOperation, e.IdAddress });
+
+                entity.HasOne(d => d.Operations)
+                    .WithMany(p => p.OperationAddresses)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OperationAddress_Operation");
+
+                entity.HasOne(d => d.Addresses)
+                    .WithMany(p => p.OperationAddresses)
+                    .HasForeignKey(d => d.IdAddress)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OperationAddress_Address");
+            });
+
+            modelBuilder.Entity<OperationContact>(entity =>
+            {
+                entity.HasKey(e => new { e.IdOperation, e.IdContact });
+
+                entity.HasOne(d => d.Operations)
+                    .WithMany(p => p.OperationContacts)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OperationContact_Operation");
+
+                entity.HasOne(d => d.Contacts)
+                    .WithMany(p => p.OperationContacts)
                     .HasForeignKey(d => d.IdContact)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Operation_Contact");
+                    .HasConstraintName("FK_OperationContact_Contact");
             });
 
             modelBuilder.Entity<OperationType>(entity =>
@@ -452,29 +483,40 @@ namespace ias.Rebens
                 entity.Property(e => e.Nome)
                     .IsRequired()
                     .HasMaxLength(200);
-
-                entity.HasOne(d => d.Contact)
-                    .WithMany(p => p.Partners)
-                    .HasForeignKey(d => d.IdContact)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Partner_Contact");
             });
 
             modelBuilder.Entity<PartnerAddress>(entity =>
             {
                 entity.HasKey(e => new { e.IdPartner, e.IdAddress });
 
-                entity.HasOne(d => d.Address)
+                entity.HasOne(d => d.Addresses)
                     .WithMany(p => p.PartnerAddresses)
                     .HasForeignKey(d => d.IdAddress)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PartnerAddress_Address");
 
-                entity.HasOne(d => d.Partner)
+                entity.HasOne(d => d.Partners)
                     .WithMany(p => p.PartnerAddresses)
                     .HasForeignKey(d => d.IdPartner)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PartnerAddress_Partner");
+            });
+
+            modelBuilder.Entity<PartnerContact>(entity =>
+            {
+                entity.HasKey(e => new { e.IdPartner, e.IdContact });
+
+                entity.HasOne(d => d.Contacts)
+                    .WithMany(p => p.PartnerContacts)
+                    .HasForeignKey(d => d.IdContact)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_PartnerContact_Contact");
+
+                entity.HasOne(d => d.Partners)
+                    .WithMany(p => p.PartnerContacts)
+                    .HasForeignKey(d => d.IdPartner)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_PartnerContact_Partner");
             });
 
             modelBuilder.Entity<StaticText>(entity =>

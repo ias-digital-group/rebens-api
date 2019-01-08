@@ -29,7 +29,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationTypeRepository.Create", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationTypeRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o tipo de operação. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -59,7 +60,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationTypeRepository.Delete", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationTypeRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o tipo de operação. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -79,7 +81,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationTypeRepository.List", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationTypeRepository.List", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os tipos de operação. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -99,7 +102,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationTypeRepository.ListActive", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationTypeRepository.ListActive", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os tipos de operação. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -119,7 +123,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationTypeRepository.Read", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationTypeRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o tipo de operação. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -149,7 +154,8 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogHelper.Add("OperationTypeRepository.Update", ex);
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationTypeRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o tipo de operação. (erro:" + idLog + ")";
                 ret = false;
             }

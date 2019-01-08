@@ -10,6 +10,7 @@ namespace ias.Rebens
             BenefitAddresses = new HashSet<BenefitAddress>();
             Contacts = new HashSet<Contact>();
             PartnerAddresses = new HashSet<PartnerAddress>();
+            OperationAddresses = new HashSet<OperationAddress>();
         }
 
         public int Id { get; set; }
@@ -30,5 +31,6 @@ namespace ias.Rebens
         public virtual ICollection<BenefitAddress> BenefitAddresses { get; set; }
         public virtual ICollection<Contact> Contacts { get; set; }
         public virtual ICollection<PartnerAddress> PartnerAddresses { get; set; }
+        public virtual ICollection<OperationAddress> OperationAddresses { get; set; }
     }
 }
