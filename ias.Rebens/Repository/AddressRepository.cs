@@ -79,6 +79,69 @@ namespace ias.Rebens
             return ret;
         }
 
+        public List<Address> ListByOperation(int idOperation, out string error)
+        {
+            List<Address> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Address.Where(a => a.OperationAddresses.Any(oa => oa.IdOperation == idOperation)).OrderBy(a => a.Name).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.ListByOperation", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os endereços. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Address> ListByBenefit(int idBenefit, out string error)
+        {
+            List<Address> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Address.Where(a => a.BenefitAddresses.Any(oa => oa.IdBenefit == idBenefit)).OrderBy(a => a.Name).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.ListByBenefit", ex.Message, $"idBenefit: {idBenefit}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os endereços. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Address> ListByPartner(int idPartner, out string error)
+        {
+            List<Address> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Address.Where(a => a.PartnerAddresses.Any(pa => pa.IdPartner == idPartner)).OrderBy(a => a.Name).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.ListByPartner", ex.Message, $"idPartner: {idPartner}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os endereços. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public ResultPage<Address> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Address> ret;
@@ -87,36 +150,36 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Address.Where(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word));
-                    switch (sort)
+                    switch (sort.ToLower())
                     {
-                        case "Name ASC":
+                        case "name asc":
                             tmpList = tmpList.OrderBy(f => f.Name);
                             break;
-                        case "Name DESC":
+                        case "name desc":
                             tmpList = tmpList.OrderByDescending(f => f.Name);
                             break;
-                        case "Id ASC":
+                        case "id asc":
                             tmpList = tmpList.OrderBy(f => f.Id);
                             break;
-                        case "Id DESC":
+                        case "id desc":
                             tmpList = tmpList.OrderByDescending(f => f.Id);
                             break;
-                        case "Street ASC":
+                        case "street asc":
                             tmpList = tmpList.OrderBy(f => f.Street);
                             break;
-                        case "Street DESC":
+                        case "street desc":
                             tmpList = tmpList.OrderByDescending(f => f.Street);
                             break;
-                        case "City ASC":
+                        case "city asc":
                             tmpList = tmpList.OrderBy(f => f.City);
                             break;
-                        case "City DESC":
+                        case "city desc":
                             tmpList = tmpList.OrderByDescending(f => f.City);
                             break;
-                        case "State ASC":
+                        case "state asc":
                             tmpList = tmpList.OrderBy(f => f.State);
                             break;
-                        case "State DESC":
+                        case "state desc":
                             tmpList = tmpList.OrderByDescending(f => f.State);
                             break;
                     }

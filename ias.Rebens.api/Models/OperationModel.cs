@@ -4,35 +4,78 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ias.Rebens.api.Models
 {
+    /// <summary>
+    /// Operação
+    /// </summary>
     public class OperationModel
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Required]
         public int Id { get; set; }
+        /// <summary>
+        /// Título
+        /// </summary>
         [Required]
         [MaxLength(300)]
         public string Title { get; set; }
+        /// <summary>
+        /// Nome da empresa
+        /// </summary>
         [Required]
         [MaxLength(300)]
         public string CompanyName { get; set; }
+        /// <summary>
+        /// Documento da empresa
+        /// </summary>
         [MaxLength(50)]
         public string CompanyDoc { get; set; }
+        /// <summary>
+        /// Logo
+        /// </summary>
         [MaxLength(500)]
         public string Image { get; set; }
+        /// <summary>
+        /// Domínio da opreação
+        /// </summary>
         [Required]
         [MaxLength(200)]
         public string Domain { get; set; }
+        /// <summary>
+        /// Tipo da operação
+        /// </summary>
         [Required]
         public int IdOperationType { get; set; }
+        /// <summary>
+        /// Porcentagem do cashback
+        /// </summary>
         public decimal? CachbackPercentage { get; set; }
+        /// <summary>
+        /// Ativo
+        /// </summary>
         [Required]
         public bool Active { get; set; }
 
+        /// <summary>
+        /// Contato
+        /// </summary>
         public ContactModel Contact { get; set; }
 
+        /// <summary>
+        /// Lista de relacionamento de Operações com Contato
+        /// </summary>
         public List<OperationContactModel> OperationContacts { get; set; }
 
+        /// <summary>
+        /// Construtor
+        /// </summary>
         public OperationModel() { }
 
+        /// <summary>
+        /// Construtor que recebe um objeto Operation e popula os atributos
+        /// </summary>
+        /// <param name="operation"></param>
         public OperationModel(Operation operation) {
             this.Id = operation.Id;
             this.Title = operation.Title;
@@ -52,6 +95,10 @@ namespace ias.Rebens.api.Models
             }
         }
 
+        /// <summary>
+        /// Retorna um objeto Operation com as informações
+        /// </summary>
+        /// <returns></returns>
         public Operation GetEntity()
         {
             return new Operation()
@@ -67,13 +114,5 @@ namespace ias.Rebens.api.Models
                 Active = this.Active
             };
         }
-    }
-
-    public class OperationContactModel
-    {
-        [Required]
-        public int IdOperation { get; set; }
-        [Required]
-        public int IdContact { get; set; }
     }
 }

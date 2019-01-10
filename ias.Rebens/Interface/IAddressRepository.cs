@@ -15,5 +15,11 @@ namespace ias.Rebens
         bool Create(Address address, out string error);
 
         bool Update(Address address, out string error);
+
+        List<Address> ListByOperation(int idOperation, out string error);
+
+        List<Address> ListByPartner(int idPartner, out string error);
+
+        List<Address> ListByBenefit(int idBenefit, out string error);
     }
 }

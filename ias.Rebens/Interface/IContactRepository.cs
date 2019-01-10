@@ -15,5 +15,9 @@ namespace ias.Rebens
         bool Create(Contact contact, out string error);
 
         bool Update(Contact contact, out string error);
+
+        List<Contact> ListByOperation(int idOperation, out string error);
+
+        List<Contact> ListByPartner(int idPartner, out string error);
     }
 }

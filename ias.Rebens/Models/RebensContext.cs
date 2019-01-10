@@ -480,7 +480,7 @@ namespace ias.Rebens
 
                 entity.Property(e => e.Modified).HasColumnType("datetime");
 
-                entity.Property(e => e.Nome)
+                entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(200);
             });

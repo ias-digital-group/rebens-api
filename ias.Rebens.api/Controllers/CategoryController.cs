@@ -30,7 +30,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com as categorias encontradas</returns>
-        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="201">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         [HttpGet]
         public IActionResult ListCategory([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
@@ -39,7 +39,7 @@ namespace ias.Rebens.api.Controllers
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list != null && list.Count() == 0)
+                if (list == null || list.Count() == 0)
                     return NoContent();
 
                 var ret = new ResultPageModel<CategoryModel>();
@@ -70,21 +70,18 @@ namespace ias.Rebens.api.Controllers
         /// <response code="201">Retorna a categoria, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         [HttpGet("{id}")]
-        public IActionResult GetCategory([FromQuery]int id)
+        public IActionResult GetCategory(int id)
         {
             var category = repo.Read(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (category != null || category.Id == 0)
+                if (category == null || category.Id == 0)
                     return NoContent();
                 return Ok(new { data = new CategoryModel(category) });
             }
 
-            var model = new JsonModel();
-            model.Status = "error";
-            model.Message = error;
-            return Ok(model);
+            return Ok(new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -174,7 +171,7 @@ namespace ias.Rebens.api.Controllers
             var list = repo.ListTree(out string error);
             if (string.IsNullOrEmpty(error))
             {
-                if (list != null && list.Count() == 0)
+                if (list == null || list.Count() == 0)
                     return NoContent();
 
                 var ret = new List<CategoryModel>();

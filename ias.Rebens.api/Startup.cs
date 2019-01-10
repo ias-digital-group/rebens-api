@@ -1,22 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
-using Microsoft.IdentityModel.Tokens;
 using ias.Rebens.api.helper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors.Infrastructure;
+using System.IO;
+using Microsoft.DotNet.PlatformAbstractions;
 
 namespace ias.Rebens.api
 {
@@ -79,10 +74,29 @@ namespace ias.Rebens.api
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Rebens API", Version = "v1" });
+                c.AddSecurityDefinition("bearer",
+                    new ApiKeyScheme
+                    {
+                        In = "header",
+                        Description = "Autenticação baseada em Json Web Token (JWT)",
+                        Name = "Authorization",
+                        Type = "apiKey"
+                    });
+
+                string appPath = ApplicationEnvironment.ApplicationBasePath;
+                string appName = "ias.Rebens.api"; // ApplicationEnvironment.ApplicationName;
+                string xmlDocumentPath = Path.Combine(appPath, $"{appName}.xml");
+                //var xmlDocumentPath = "ias.Rebens.api.xml";
+
+                if (File.Exists(xmlDocumentPath))
+                {
+                    c.IncludeXmlComments(xmlDocumentPath);
+                }
             });
 
             services.AddTransient<IAddressRepository, AddressRepository>();
             services.AddTransient<IAdminUserRepository, AdminUserRepository>();
+            services.AddTransient<IBenefitRepository, BenefitRepository>();
             services.AddTransient<IBenefitTypeRepository, BenefitTypeRepository>();
             services.AddTransient<ICategoryRepository, CategoryRepository>();
             services.AddTransient<IContactRepository, ContactRepository>();
@@ -91,6 +105,9 @@ namespace ias.Rebens.api
             services.AddTransient<ILogErrorRepository, LogErrorRepository>();
             services.AddTransient<IOperationRepository, OperationRepository>();
             services.AddTransient<IOperationTypeRepository, OperationTypeRepository>();
+            services.AddTransient<IPartnerRepository, PartnerRepository>();
+            services.AddTransient<IProfileRepository, ProfileRepository>();
+            services.AddTransient<IStaticTextRepository, StaticTextRepository>();
             services.AddTransient<IStaticTextTypeRepository, StaticTextTypeRepository>();
 
             services.AddDbContext<RebensContext>(options =>

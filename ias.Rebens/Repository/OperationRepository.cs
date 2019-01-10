@@ -141,36 +141,36 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Operation.Where(o => string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word));
-                    switch (sort)
+                    switch (sort.ToLower())
                     {
-                        case "Domain ASC":
+                        case "domain asc":
                             tmpList = tmpList.OrderBy(f => f.Domain);
                             break;
-                        case "Domain DESC":
+                        case "domain desc":
                             tmpList = tmpList.OrderByDescending(f => f.Domain);
                             break;
-                        case "Id ASC":
+                        case "id asc":
                             tmpList = tmpList.OrderBy(f => f.Id);
                             break;
-                        case "Id DESC":
+                        case "id desc":
                             tmpList = tmpList.OrderByDescending(f => f.Id);
                             break;
-                        case "Title ASC":
+                        case "title asc":
                             tmpList = tmpList.OrderBy(f => f.Title);
                             break;
-                        case "Title DESC":
+                        case "title desc":
                             tmpList = tmpList.OrderByDescending(f => f.Title);
                             break;
-                        case "CompanyName ASC":
+                        case "companyname asc":
                             tmpList = tmpList.OrderBy(f => f.CompanyName);
                             break;
-                        case "CompanyName DESC":
+                        case "companyname desc":
                             tmpList = tmpList.OrderByDescending(f => f.CompanyName);
                             break;
-                        case "CompanyDoc ASC":
+                        case "companydoc asc":
                             tmpList = tmpList.OrderBy(f => f.CompanyDoc);
                             break;
-                        case "CompanyDoc DESC":
+                        case "companydoc desc":
                             tmpList = tmpList.OrderByDescending(f => f.CompanyDoc);
                             break;
                     }
@@ -249,6 +249,48 @@ namespace ias.Rebens
                 int idLog = logError.Create("OperationRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar a operação. (erro:" + idLog + ")";
                 ret = false;
+            }
+            return ret;
+        }
+
+        public List<Operation> ListByBenefit(int idBenefit, out string error)
+        {
+            List<Operation> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Operation.Where(o => o.Active && o.BenefitOperations.Any(bo => bo.IdBenefit == idBenefit)).OrderBy(o => o.Title).ToList();
+                    error = null;
+                }
+            }
+            catch(Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ListByBenefit", ex.Message, $"idBenefit: {idBenefit}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as operações. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Operation> ListByBanner(int idBanner, out string error)
+        {
+            List<Operation> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Operation.Where(o => o.Active && o.BannerOperations.Any(bo => bo.IdBanner == idBanner)).OrderBy(o => o.Title).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ListByBanner", ex.Message, $"idBanner: {idBanner}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as operações. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

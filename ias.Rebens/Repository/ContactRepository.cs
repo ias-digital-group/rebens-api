@@ -74,6 +74,48 @@ namespace ias.Rebens
             return ret;
         }
 
+        public List<Contact> ListByOperation(int idOperation, out string error)
+        {
+            List<Contact> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Contact.Where(c => c.OperationContacts.Any(oc => oc.IdOperation == idOperation)).OrderBy(c => c.Name).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ContactRepository.ListByOperation", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os contatos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Contact> ListByPartner(int idPartner, out string error)
+        {
+            List<Contact> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Contact.Where(c => c.PartnerContacts.Any(pc => pc.IdPartner == idPartner)).OrderBy(c => c.Name).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ContactRepository.ListByPartner", ex.Message, $"idPartner: {idPartner}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os contatos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public ResultPage<Contact> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Contact> ret;
@@ -82,30 +124,30 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Contact.Where(c => string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word));
-                    switch (sort)
+                    switch (sort.ToLower())
                     {
-                        case "Name ASC":
+                        case "name asc":
                             tmpList = tmpList.OrderBy(c => c.Name);
                             break;
-                        case "Name DESC":
+                        case "name desc":
                             tmpList = tmpList.OrderByDescending(c => c.Name);
                             break;
-                        case "Id ASC":
+                        case "id asc":
                             tmpList = tmpList.OrderBy(c => c.Id);
                             break;
-                        case "Id DESC":
+                        case "id desc":
                             tmpList = tmpList.OrderByDescending(c => c.Id);
                             break;
-                        case "Email ASC":
+                        case "email asc":
                             tmpList = tmpList.OrderBy(c => c.Email);
                             break;
-                        case "Email DESC":
+                        case "email desc":
                             tmpList = tmpList.OrderByDescending(c => c.Email);
                             break;
-                        case "JobTitle ASC":
+                        case "jobtitle asc":
                             tmpList = tmpList.OrderBy(c => c.JobTitle);
                             break;
-                        case "JobTitle DESC":
+                        case "jobtitle desc":
                             tmpList = tmpList.OrderByDescending(c => c.JobTitle);
                             break;
                     }

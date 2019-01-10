@@ -93,24 +93,24 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.AdminUser.Where(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word));
-                    switch (sort)
+                    switch (sort.ToLower())
                     {
-                        case "Name ASC":
+                        case "name asc":
                             tmpList = tmpList.OrderBy(a => a.Name);
                             break;
-                        case "Name DESC":
+                        case "name desc":
                             tmpList = tmpList.OrderByDescending(a => a.Name);
                             break;
-                        case "Id ASC":
+                        case "id asc":
                             tmpList = tmpList.OrderBy(a => a.Id);
                             break;
-                        case "Id DESC":
+                        case "id desc":
                             tmpList = tmpList.OrderByDescending(a => a.Id);
                             break;
-                        case "Email ASC":
+                        case "email asc":
                             tmpList = tmpList.OrderBy(a => a.Email);
                             break;
-                        case "Email DESC":
+                        case "email desc":
                             tmpList = tmpList.OrderByDescending(a => a.Email);
                             break;
                     }

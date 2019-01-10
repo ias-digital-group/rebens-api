@@ -7,39 +7,42 @@ using Microsoft.AspNetCore.Authorization;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/Operation"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/Partner")]
     [ApiController]
-    public class OperationController : ControllerBase
+    public class PartnerController : ControllerBase
     {
-        private IOperationRepository repo;
+        private IPartnerRepository repo;
         private IAddressRepository addressRepo;
         private IContactRepository contactRepo;
+        private IBenefitRepository benefitRepo;
 
         /// <summary>
         /// Construtor
         /// </summary>
-        /// <param name="operationRepository">Injeção de dependencia do repositório de operação</param>
+        /// <param name="partnerRepository">Injeção de dependencia do repositório de parceiros</param>
         /// <param name="contactRepository">Injeção de dependencia do repositório de contato</param>
         /// <param name="addressRepository">Injeção de dependencia do repositório de endereço</param>
-        public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository)
+        /// <param name="benefitRepository">Injeção de dependencia do repositório de benefício</param>
+        public PartnerController(IPartnerRepository partnerRepository, IContactRepository contactRepository, IAddressRepository addressRepository, IBenefitRepository benefitRepository)
         {
-            this.repo = operationRepository;
+            this.repo = partnerRepository;
             this.addressRepo = addressRepository;
             this.contactRepo = contactRepository;
+            this.benefitRepo = benefitRepository;
         }
 
         /// <summary>
-        /// Lista todas as operações com paginação
+        /// Lista todos os parceiros com paginação
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="sort">Ordenação campos (Id, Domain, Title, CompanyName, CompanyDoc), direção (ASC, DESC)</param>
+        /// <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
-        /// <returns>Lista com as operações encontradas</returns>
+        /// <returns>Lista com os parceiros encontrados</returns>
         /// <response code="201">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         [HttpGet]
-        public IActionResult ListOperation([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListPartners([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
 
@@ -48,16 +51,16 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<OperationModel>();
+                var ret = new ResultPageModel<PartnerModel>();
                 ret.CurrentPage = list.CurrentPage;
                 ret.HasNextPage = list.HasNextPage;
                 ret.HasPreviousPage = list.HasPreviousPage;
                 ret.ItemsPerPage = list.ItemsPerPage;
                 ret.TotalItems = list.TotalItems;
                 ret.TotalPages = list.TotalPages;
-                ret.Data = new List<OperationModel>();
-                foreach (var operation in list.Page)
-                    ret.Data.Add(new OperationModel(operation));
+                ret.Data = new List<PartnerModel>();
+                foreach (var part in list.Page)
+                    ret.Data.Add(new PartnerModel(part));
 
                 return Ok(ret);
             }
@@ -69,22 +72,22 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Retorna a operação conforme o ID
+        /// Retorna o parceiro conforme o ID
         /// </summary>
-        /// <param name="id">Id da operação desejada</param>
-        /// <returns>Operação</returns>
-        /// <response code="201">Retorna a operação, ou algum erro caso interno</response>
+        /// <param name="id">Id do parceiro</param>
+        /// <returns>Parceiros</returns>
+        /// <response code="201">Retorna o parceiro, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         [HttpGet("{id}")]
-        public IActionResult GetOperation(int id)
+        public IActionResult GetPartner(int id)
         {
-            var operation = repo.Read(id, out string error);
+            var partner = repo.Read(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (operation == null || operation.Id == 0)
+                if (partner == null || partner.Id == 0)
                     return NoContent();
-                return Ok(new { data = new OperationModel(operation) });
+                return Ok(new { data = new PartnerModel(partner) });
             }
 
             var model = new JsonModel();
@@ -94,21 +97,22 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Atualiza uma operação
+        /// Atualiza um parceiro
         /// </summary>
-        /// <param name="operation"></param>
+        /// <param name="partner"></param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="201"></response>
         [HttpPut]
-        public IActionResult Put([FromBody]OperationModel operation)
+        public IActionResult Put([FromBody]PartnerModel partner)
         {
             var model = new JsonModel();
+            string error = null;
 
-            var op = operation.GetEntity();
-            if (repo.Update(op, out string error))
+            var part = partner.GetEntity();
+            if (repo.Update(part, out error))
             {
                 model.Status = "ok";
-                model.Message = "Operação atualizada com sucesso!";
+                model.Message = "Parceiro atualizado com sucesso!";
             }
             else
             {
@@ -120,26 +124,25 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Cria uma operação
+        /// Cria um parceiro
         /// </summary>
-        /// <param name="operation"></param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da operação criada</returns>
+        /// <param name="partner"></param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do parceiro criado</returns>
         /// <response code="201"></response>
         [HttpPost]
-        public IActionResult Post([FromBody] OperationModel operation)
+        public IActionResult Post([FromBody]PartnerModel partner)
         {
             string error = null;
             int idContact = 0;
             var model = new JsonModel();
 
-            var op = operation.GetEntity();
-            if(operation.Contact != null )
+            if (partner.Contact != null)
             {
-                var contact = operation.Contact.GetEntity();
+                var contact = partner.Contact.GetEntity();
 
-                if(operation.Contact.Address != null)
+                if (partner.Contact.Address != null)
                 {
-                    var addr = operation.Contact.Address.GetEntity();
+                    var addr = partner.Contact.Address.GetEntity();
                     if (addressRepo.Create(addr, out error))
                     {
                         contact.IdAddress = addr.Id;
@@ -156,17 +159,19 @@ namespace ias.Rebens.api.Controllers
                 model.Status = "error";
                 model.Message = error;
             }
-            else {
+            else
+            {
 
-                if (repo.Create(op, out error))
+                var part = partner.GetEntity();
+                if (repo.Create(part, out error))
                 {
                     if (idContact > 0)
                     {
-                        if (repo.AddContact(op.Id, idContact, out error))
+                        if (repo.AddContact(part.Id, idContact, out error))
                         {
                             model.Status = "ok";
-                            model.Message = "Operação criada com sucesso!";
-                            model.Data = new { id = op.Id };
+                            model.Message = "Parceiro criado com sucesso!";
+                            model.Data = new { id = part.Id };
                         }
                         else
                         {
@@ -177,10 +182,10 @@ namespace ias.Rebens.api.Controllers
                     else
                     {
                         model.Status = "ok";
-                        model.Message = "Operação criada com sucesso!";
-                        model.Data = new { id = op.Id };
+                        model.Message = "Parceiro criado com sucesso!";
+                        model.Data = new { id = part.Id };
                     }
-                    
+
                 }
                 else
                 {
@@ -192,16 +197,16 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Lista os contatos de uma operação
+        /// Lista os contatos de um parceiro
         /// </summary>
-        /// <param name="id">id da operação</param>
+        /// <param name="id">id do parceiro</param>
         /// <returns>Lista com os contatos encontradas</returns>
         /// <response code="201">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         [HttpGet("{id}/Contacts")]
         public IActionResult ListContacts(int id)
         {
-            var list = contactRepo.ListByOperation(id, out string error);
+            var list = contactRepo.ListByPartner(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -224,16 +229,16 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Lista os endereço de uma Operação
+        /// Lista os endereço de um parceiro
         /// </summary>
-        /// <param name="id">id da operação</param>
+        /// <param name="id">id do parceiro</param>
         /// <returns>Lista com os endereços encontradas</returns>
         /// <response code="201">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         [HttpGet("{id}/Address")]
         public IActionResult ListAddress(int id)
         {
-            var list = addressRepo.ListByOperation(id, out string error);
+            var list = addressRepo.ListByPartner(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -256,17 +261,17 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Adiciona um contato a uma operação
+        /// Adiciona um contato a um parceiro
         /// </summary>
-        /// <param name="model">{ idOperation: 0, idContact: 0 }</param>
+        /// <param name="model">{ idPartner: 0, idContact: 0 }</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
         [HttpPost("AddContact")]
-        public IActionResult AddContact([FromBody]OperationContactModel model)
+        public IActionResult AddContact([FromBody]PartnerContactModel model)
         {
             var resultModel = new JsonModel();
 
-            if(repo.AddContact(model.IdOperation, model.IdContact, out string error))
+            if (repo.AddContact(model.IdPartner, model.IdContact, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Contato adicionado com sucesso!";
@@ -281,17 +286,17 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Remove um contato de uma operação
+        /// Remove um contato de um parceiro
         /// </summary>
-        /// <param name="model">{ idOperation: 0, idContact: 0 }</param>
+        /// <param name="model">{ idPartner: 0, idContact: 0 }</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
         [HttpPost("RemoveContact")]
-        public IActionResult RemoveContact([FromBody]OperationContactModel model)
+        public IActionResult RemoveContact([FromBody]PartnerContactModel model)
         {
             var resultModel = new JsonModel();
 
-            if (repo.DeleteContact(model.IdOperation, model.IdContact, out string error))
+            if (repo.DeleteContact(model.IdPartner, model.IdContact, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Contato removido com sucesso!";
@@ -306,17 +311,17 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Adiciona um endereço a uma operação
+        /// Adiciona um endereço a um parceiro
         /// </summary>
-        /// <param name="model">{ idOperation: 0, idAddress: 0 }</param>
+        /// <param name="model">{ idPartner: 0, idAddress: 0 }</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
         [HttpPost("AddAddress")]
-        public IActionResult AddAddress([FromBody]OperationAddressModel model)
+        public IActionResult AddAddress([FromBody]PartnerAddressModel model)
         {
             var resultModel = new JsonModel();
 
-            if (repo.AddAddress(model.IdOperation, model.IdAddress, out string error))
+            if (repo.AddAddress(model.IdPartner, model.IdAddress, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Endereço adicionado com sucesso!";
@@ -331,17 +336,17 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Remove um endereço de uma operação
+        /// Remove um endereço de um parceiro
         /// </summary>
-        /// <param name="model">{ idOperation: 0, idAddress: 0 }</param>
+        /// <param name="model">{ idPartner: 0, idAddress: 0 }</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
         [HttpPost("RemoveAddress")]
-        public IActionResult RemoveAddress([FromBody]OperationAddressModel model)
+        public IActionResult RemoveAddress([FromBody]PartnerAddressModel model)
         {
             var resultModel = new JsonModel();
 
-            if (repo.DeleteAddress(model.IdOperation, model.IdAddress, out string error))
+            if (repo.DeleteAddress(model.IdPartner, model.IdAddress, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Endereço removido com sucesso!";
@@ -353,6 +358,38 @@ namespace ias.Rebens.api.Controllers
             }
 
             return Ok(resultModel);
+        }
+
+        /// <summary>
+        /// Lista os endereço de um parceiro
+        /// </summary>
+        /// <param name="id">id do parceiro</param>
+        /// <returns>Lista com os benefícios encontradas</returns>
+        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        [HttpGet("{id}/Benefits")]
+        public IActionResult ListBenefits(int id)
+        {
+            var list = benefitRepo.ListByPartner(id, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new List<BenefitModel>();
+                foreach (var benfit in list)
+                    ret.Add(new BenefitModel(benfit));
+
+                return Ok(new { data = ret });
+            }
+
+            var model = new JsonModel()
+            {
+                Status = "error",
+                Message = error
+            };
+            return Ok(model);
         }
     }
 }

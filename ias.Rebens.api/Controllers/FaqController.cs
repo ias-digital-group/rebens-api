@@ -16,25 +16,31 @@ namespace ias.Rebens.api.Controllers
     {
         private IFaqRepository repo;
 
-        public FaqController(IFaqRepository faqRepository)
+        public FaqController(IFaqRepository faqRepository, IContactRepository contactRepository, IAddressRepository addressRepository)
         {
             this.repo = faqRepository;
         }
 
         /// <summary>
-        /// Lista as perguntas de faq
+        /// Lista as perguntas de faq conforme os parametros
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <returns></returns>
+        /// <param name="sort">Ordenação campos (Id, Question, Answer, Order), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <returns>Lista com as faqs encontradas</returns>
+        /// <response code="201">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
         [HttpGet]
-        public JsonResult ListFaq([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListFaq([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Question ASC", [FromQuery]string searchWord = "")
         {
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
 
-            var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
+                if (list == null || list.Count() == 0)
+                    return NoContent();
+
                 var ret = new ResultPageModel<FaqModel>();
                 ret.CurrentPage = list.CurrentPage;
                 ret.HasNextPage = list.HasNextPage;
@@ -46,50 +52,48 @@ namespace ias.Rebens.api.Controllers
                 foreach (var faq in list.Page)
                     ret.Data.Add(new FaqModel(faq));
 
-                model.Status = "ok";
-                model.Data = ret;
-            }
-            else
-            {
-                model.Status = "error";
-                model.Message = error;
+                return Ok(ret);
             }
 
-            return new JsonResult(model);
+            var model = new JsonModel();
+            model.Status = "error";
+            model.Message = error;
+            return Ok(model);
         }
 
         /// <summary>
         /// Retorna uma pergunta
         /// </summary>
-        /// <param name="id">id da pergunta</param>
-        /// <returns></returns>
+        /// <param name="id">Id da pergunta desejada</param>
+        /// <returns>FAQ</returns>
+        /// <response code="201">Retorna a faq, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
         [HttpGet("{id}")]
-        public JsonResult GetFaq(int id)
+        public IActionResult GetFaq(int id)
         {
             var faq = repo.Read(id, out string error);
 
-            var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
-                model.Status = "ok";
-                model.Data = new FaqModel(faq);
-            }
-            else
-            {
-                model.Status = "error";
-                model.Message = error;
+                if (faq == null || faq.Id == 0)
+                    return NoContent();
+                return Ok(new { data = new FaqModel(faq) });
             }
 
-            return new JsonResult(model);
+            var model = new JsonModel();
+            model.Status = "error";
+            model.Message = error;
+            return Ok(model);
         }
 
         /// <summary>
         /// Atualiza uma pergunta
         /// </summary>
-        /// <param name="faq"></param>
-        /// <returns></returns>
-        [HttpPost]
-        public JsonResult Post([FromBody] FaqModel faq)
+        /// <param name="faq">FAQ</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+        /// <response code="201"></response>
+        [HttpPut]
+        public IActionResult Put([FromBody] FaqModel faq)
         {
             var model = new JsonModel();
 
@@ -104,16 +108,17 @@ namespace ias.Rebens.api.Controllers
                 model.Message = error;
             }
 
-            return new JsonResult(model);
+            return Ok(model);
         }
 
         /// <summary>
         /// Cria uma pergunta
         /// </summary>
         /// <param name="faq"></param>
-        /// <returns></returns>
-        [HttpPut]
-        public JsonResult Put([FromBody] FaqModel faq)
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+        /// <response code="201"></response>
+        [HttpPost]
+        public IActionResult Post([FromBody] FaqModel faq)
         {
             var model = new JsonModel();
 
@@ -130,11 +135,17 @@ namespace ias.Rebens.api.Controllers
                 model.Message = error;
             }
 
-            return new JsonResult(model);
+            return Ok(model);
         }
 
+        /// <summary>
+        /// Apaga uma pergunta
+        /// </summary>
+        /// <param name="id">Id da pergunta a ser apagada</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+        /// <response code="201"></response>
         [HttpDelete("{id}")]
-        public JsonResult Delete(int id)
+        public IActionResult Delete(int id)
         {
             var model = new JsonModel();
 
@@ -149,7 +160,7 @@ namespace ias.Rebens.api.Controllers
                 model.Message = error;
             }
 
-            return new JsonResult(model);
+            return Ok(model);
 
         }
 
@@ -157,15 +168,20 @@ namespace ias.Rebens.api.Controllers
         /// Lista as perguntas de uma operação 
         /// </summary>
         /// <param name="idOperation">id da operação</param>
-        /// <returns></returns>
+        /// <returns>lista das Perguntas da operação</returns>
+        /// <response code="201">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
         [HttpGet("ListByOperation")]
-        public JsonResult ListByOperation([FromQuery]int idOperation)
+        public IActionResult ListByOperation([FromQuery]int idOperation)
         {
             var list = repo.ListByOperation(idOperation, out string error);
 
             var model = new JsonModel();
             if (string.IsNullOrEmpty(error))
             {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
                 var ret = new List<FaqModel>();
                 list.ForEach(item => { ret.Add(new FaqModel(item)); });
 

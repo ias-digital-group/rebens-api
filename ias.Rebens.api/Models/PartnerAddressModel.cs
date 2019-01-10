@@ -4,22 +4,20 @@ using System.ComponentModel.DataAnnotations;
 namespace ias.Rebens.api.Models
 {
     /// <summary>
-    /// Login
+    /// Relacionamento Parceiro com Endereço
     /// </summary>
-    public class LoginModel
+    public class PartnerAddressModel
     {
         /// <summary>
-        /// Email
+        /// Id do parceiro
         /// </summary>
         [Required]
-        [MaxLength(300)]
-        public string Email { get; set; }
+        public int IdPartner { get; set; }
 
         /// <summary>
-        /// Senha
+        /// Id do endereço
         /// </summary>
         [Required]
-        [MaxLength(50)]
-        public string Password { get; set; }
+        public int IdAddress { get; set; }
     }
 }

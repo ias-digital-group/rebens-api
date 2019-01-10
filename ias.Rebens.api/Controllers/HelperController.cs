@@ -41,7 +41,7 @@ namespace ias.Rebens.api.Controllers
             
             if (string.IsNullOrEmpty(error))
             {
-                if (list != null && list.Count() == 0)
+                if (list == null || list.Count() == 0)
                     return NoContent();
 
                 var ret = new List<BenefitTypeModel>();
@@ -66,7 +66,7 @@ namespace ias.Rebens.api.Controllers
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list != null && list.Count() == 0)
+                if (list == null || list.Count() == 0)
                     return NoContent();
 
                 var ret = new List<IntegrationTypeModel>();
@@ -91,7 +91,7 @@ namespace ias.Rebens.api.Controllers
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list != null && list.Count() == 0)
+                if (list == null || list.Count() == 0)
                     return NoContent();
 
                 var ret = new List<OperationTypeModel>();
@@ -116,7 +116,7 @@ namespace ias.Rebens.api.Controllers
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list != null && list.Count() == 0)
+                if (list == null || list.Count() == 0)
                     return NoContent();
 
                 var ret = new List<StaticTextTypeModel>();

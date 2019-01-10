@@ -76,18 +76,18 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Profile.Where(p => string.IsNullOrEmpty(word) || p.Name.Contains(word));
-                    switch (sort)
+                    switch (sort.ToLower())
                     {
-                        case "Name ASC":
+                        case "name asc":
                             tmpList = tmpList.OrderBy(f => f.Name);
                             break;
-                        case "Name DESC":
+                        case "name desc":
                             tmpList = tmpList.OrderByDescending(f => f.Name);
                             break;
-                        case "Id ASC":
+                        case "id asc":
                             tmpList = tmpList.OrderBy(f => f.Id);
                             break;
-                        case "Id DESC":
+                        case "id desc":
                             tmpList = tmpList.OrderByDescending(f => f.Id);
                             break;
                     }

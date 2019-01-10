@@ -77,24 +77,24 @@ namespace ias.Rebens
                 {
                     var tmpList = db.Category.Where(c => string.IsNullOrEmpty(word) || c.Name.Contains(word));
 
-                    switch (sort)
+                    switch (sort.ToLower())
                     {
-                        case "Name ASC":
+                        case "name asc":
                             tmpList = tmpList.OrderBy(c => c.Name);
                             break;
-                        case "Name DESC":
+                        case "name desc":
                             tmpList = tmpList.OrderByDescending(c => c.Name);
                             break;
-                        case "Id ASC":
+                        case "id asc":
                             tmpList = tmpList.OrderBy(c => c.Id);
                             break;
-                        case "Id DESC":
+                        case "id desc":
                             tmpList = tmpList.OrderByDescending(c => c.Id);
                             break;
-                        case "Order ASC":
+                        case "order asc":
                             tmpList = tmpList.OrderBy(c => c.Order);
                             break;
-                        case "Order DESC":
+                        case "order desc":
                             tmpList = tmpList.OrderByDescending(c => c.Order);
                             break;
                     }
@@ -192,6 +192,48 @@ namespace ias.Rebens
                 int idLog = logError.Create("CategoryRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar a categoria. (erro:" + idLog + ")";
                 ret = false;
+            }
+            return ret;
+        }
+
+        public List<Category> ListByBenefit(int idBenefit, out string error)
+        {
+            List<Category> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Category.Where(c => c.Active && c.BenefitCategories.Any(bc => bc.IdBenefit == idBenefit)).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.ListByBenefit", ex.Message, $"idBenefit: {idBenefit}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Category> ListChildren(int idParent, out string error)
+        {
+            List<Category> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Category.Where(c => c.IdParent == idParent).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.ListChildren", ex.Message, $"idParent: {idParent}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

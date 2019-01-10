@@ -19,6 +19,13 @@ namespace ias.Rebens.api.Controllers
             this.repo = logErrorRepository;
         }
 
+        /// <summary>
+        /// Lista os logs com paginação
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="page"></param>
+        /// <param name="pageItems"></param>
+        /// <returns></returns>
         [HttpGet]
         public JsonResult Get([FromQuery]string token, [FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
@@ -58,6 +65,11 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Limpa todos os logs
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
         [HttpGet("Clear")]
         public JsonResult Clear([FromQuery]string token)
         {
@@ -93,6 +105,12 @@ namespace ias.Rebens.api.Controllers
             return new JsonResult(model);
         }
 
+        /// <summary>
+        /// Apaga todos os logs mais antigos que a data enviada
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="date"></param>
+        /// <returns></returns>
         [HttpGet("DeleteOlderThan")]
         public JsonResult Delete([FromQuery]string token, [FromQuery]DateTime date)
         {

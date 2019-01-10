@@ -171,6 +171,11 @@ namespace ias.Rebens.api.Controllers
             return Ok(resultModel);
         }
 
+        /// <summary>
+        /// Altera a senha do usuário
+        /// </summary>
+        /// <param name="model">{ Id: id do usuário, OldPassword: senha antiga, NewPassword: nova senha, NewPasswordConfirm: confirmação da nova senha }</param>
+        /// <returns></returns>
         [HttpPost("ChangePassword")]
         [Authorize("Bearer")]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)

@@ -68,30 +68,30 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Faq.Where(f => string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word));
-                    switch (sort)
+                    switch (sort.ToLower())
                     {
-                        case "Question ASC":
+                        case "question asc":
                             tmpList = tmpList.OrderBy(f => f.Question);
                             break;
-                        case "Question DESC":
+                        case "question desc":
                             tmpList = tmpList.OrderByDescending(f => f.Question);
                             break;
-                        case "Id ASC":
+                        case "id asc":
                             tmpList = tmpList.OrderBy(f => f.Id);
                             break;
-                        case "Id DESC":
+                        case "id desc":
                             tmpList = tmpList.OrderByDescending(f => f.Id);
                             break;
-                        case "Answer ASC":
+                        case "answer asc":
                             tmpList = tmpList.OrderBy(f => f.Answer);
                             break;
-                        case "Answer DESC":
+                        case "answer desc":
                             tmpList = tmpList.OrderByDescending(f => f.Answer);
                             break;
-                        case "Order ASC":
+                        case "order asc":
                             tmpList = tmpList.OrderBy(f => f.Order);
                             break;
-                        case "Order DESC":
+                        case "order desc":
                             tmpList = tmpList.OrderByDescending(f => f.Order);
                             break;
                     }
