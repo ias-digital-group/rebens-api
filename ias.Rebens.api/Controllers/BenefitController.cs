@@ -37,9 +37,13 @@ namespace ias.Rebens.api.Controllers
         /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com os benefícios encontrados</returns>
-        /// <response code="201">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet]
+        [ProducesResponseType(typeof(ResultPageModel<BenefitModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListBenefit([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
@@ -63,7 +67,7 @@ namespace ias.Rebens.api.Controllers
                 return Ok(ret);
             }
 
-            return Ok(new JsonModel() { Status = "error", Message = error });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -71,9 +75,13 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="id">Id do benefício</param>
         /// <returns>Parceiros</returns>
-        /// <response code="201">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}")]
+        [ProducesResponseType(typeof(JsonDataModel<BenefitModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetBenefit(int id)
         {
             var benefit = repo.Read(id, out string error);
@@ -82,10 +90,10 @@ namespace ias.Rebens.api.Controllers
             {
                 if (benefit == null || benefit.Id == 0)
                     return NoContent();
-                return Ok(new { data = new BenefitModel(benefit) });
+                return Ok(new JsonDataModel<BenefitModel>() { Data = new BenefitModel(benefit) });
             }
 
-            return Ok(new JsonModel() { Status = "error", Message = error });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -93,8 +101,11 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="benefit"></param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-        /// <response code="201"></response>
+        /// <response code="200">Se o objeto for atualizado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpPut]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]BenefitModel benefit)
         {
             var model = new JsonModel();
@@ -102,17 +113,9 @@ namespace ias.Rebens.api.Controllers
 
             var part = benefit.GetEntity();
             if (repo.Update(part, out error))
-            {
-                model.Status = "ok";
-                model.Message = "Benefício atualizado com sucesso!";
-            }
-            else
-            {
-                model.Status = "error";
-                model.Message = error;
-            }
+                return Ok(new JsonModel() { Status = "ok", Message = "Benefício atualizado com sucesso!" });
 
-            return Ok(model);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -120,8 +123,11 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="benefit"></param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do benefício criado</returns>
-        /// <response code="201"></response>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]BenefitModel benefit)
         {
             string error = null;
@@ -129,17 +135,9 @@ namespace ias.Rebens.api.Controllers
 
             var item = benefit.GetEntity();
             if (repo.Create(item, out error))
-            {
-                model.Status = "ok";
-                model.Message = "Benefício criado com sucesso!";
-                model.Data = new { id = item.Id };
-            }
-            else
-            {
-                model.Status = "error";
-                model.Message = error;
-            }
-            return Ok(model);
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "", Id = item.Id });
+            
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -147,9 +145,13 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="id">id do benefício</param>
         /// <returns>Lista com os endereços encontradas</returns>
-        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Address")]
+        [ProducesResponseType(typeof(JsonDataModel<List<AddressModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListAddress(int id)
         {
             var list = addressRepo.ListByBenefit(id, out string error);
@@ -159,19 +161,15 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new List<AddressModel>();
+                var ret = new JsonDataModel<List<AddressModel>>();
+                ret.Data = new List<AddressModel>();
                 foreach (var addr in list)
-                    ret.Add(new AddressModel(addr));
+                    ret.Data.Add(new AddressModel(addr));
 
-                return Ok(new { data = ret });
+                return Ok(ret);
             }
 
-            var model = new JsonModel()
-            {
-                Status = "error",
-                Message = error
-            };
-            return Ok(model);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -179,24 +177,19 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="model">{ IdBenefit: 0, idAddress: 0 }</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="201"></response>
+        /// <response code="200">Víncula um benefício com um endereço</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost("AddAddress")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddAddress([FromBody]BenefitAddressModel model)
         {
             var resultModel = new JsonModel();
 
             if (repo.AddAddress(model.IdBenefit, model.IdAddress, out string error))
-            {
-                resultModel.Status = "ok";
-                resultModel.Message = "Endereço adicionado com sucesso!";
-            }
-            else
-            {
-                resultModel.Status = "error";
-                resultModel.Message = error;
-            }
-
-            return Ok(resultModel);
+                return Ok(new JsonModel() { Status = "ok", Message = "Endereço adicionado com sucesso!" });
+            
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -205,24 +198,19 @@ namespace ias.Rebens.api.Controllers
         /// <param name="id">id do benefídio</param>
         /// <param name="idAddress">id do endereço</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="201"></response>
+        /// <response code="200">Remove o vínculo de benefício com endereço</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpDelete("{id}/Address/{idAddress}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveAddress(int id, int idAddress)
         {
             var resultModel = new JsonModel();
 
             if (repo.DeleteAddress(id, idAddress, out string error))
-            {
-                resultModel.Status = "ok";
-                resultModel.Message = "Endereço removido com sucesso!";
-            }
-            else
-            {
-                resultModel.Status = "error";
-                resultModel.Message = error;
-            }
+                return Ok(new JsonModel() { Status = "ok", Message = "Endereço removido com sucesso!" });
 
-            return Ok(resultModel);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -230,9 +218,13 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="id">id do benefício</param>
         /// <returns>Lista com as categorias encontradas</returns>
-        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Category")]
+        [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCategories(int id)
         {
             var list = categoryRepo.ListByBenefit(id, out string error);
@@ -242,14 +234,15 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new List<CategoryModel>();
+                var ret = new JsonDataModel<List<CategoryModel>>();
+                ret.Data = new List<CategoryModel>();
                 foreach (var cat in list)
-                    ret.Add(new CategoryModel(cat));
+                    ret.Data.Add(new CategoryModel(cat));
 
-                return Ok(new { data = ret });
+                return Ok(ret);
             }
 
-            return Ok(new JsonModel() { Status = "error", Message = error });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -257,24 +250,19 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="model">{ IdBenefit: 0, IdCategory: 0 }</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="201"></response>
+        /// <response code="200">Víncula um benefício com uma categoria</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost("AddCategory")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddCategory([FromBody]BenefitCategoryModel model)
         {
             var resultModel = new JsonModel();
 
             if (repo.AddCategory(model.IdBenefit, model.IdCategory, out string error))
-            {
-                resultModel.Status = "ok";
-                resultModel.Message = "Categoria adicionada com sucesso!";
-            }
-            else
-            {
-                resultModel.Status = "error";
-                resultModel.Message = error;
-            }
+                return Ok(new JsonModel() { Status = "ok", Message = "Categoria adicionado com sucesso!" });
 
-            return Ok(resultModel);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -283,24 +271,19 @@ namespace ias.Rebens.api.Controllers
         /// <param name="id">id do benefício</param>
         /// <param name="idCategory">id da categoria</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="201"></response>
+        /// <response code="200">Remove o vínculo de benefício com uma categoria</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpDelete("{id}/Category/{idCategory}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveCategory(int id, int idCategory)
         {
             var resultModel = new JsonModel();
 
             if (repo.DeleteCategory(id, idCategory, out string error))
-            {
-                resultModel.Status = "ok";
-                resultModel.Message = "Categoria removida com sucesso!";
-            }
-            else
-            {
-                resultModel.Status = "error";
-                resultModel.Message = error;
-            }
+                return Ok(new JsonModel() { Status = "ok", Message = "Categoria removida com sucesso!" });
 
-            return Ok(resultModel);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -308,8 +291,9 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="id">id do benefício</param>
         /// <returns>Lista com as operações encontradas</returns>
-        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Operations")]
         public IActionResult ListOperations(int id)
         {
@@ -335,8 +319,11 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="model">{ IdBenefit: 0, id: 0 }</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="201"></response>
+        /// <response code="200">Víncula um benefício com uma Operação</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost("AddOperation")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddOperation([FromBody]BenefitOperationModel model)
         {
             var resultModel = new JsonModel();
@@ -361,33 +348,32 @@ namespace ias.Rebens.api.Controllers
         /// <param name="id">id do benefício</param>
         /// <param name="idOperation">id da categoria</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="201"></response>
+        /// <response code="200">Remove o vínculo de benefício com uma operação</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpDelete("{id}/Operation/{idOperation}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveOperation(int id, int idOperation)
         {
             var resultModel = new JsonModel();
 
             if (repo.DeleteOperation(id, idOperation, out string error))
-            {
-                resultModel.Status = "ok";
-                resultModel.Message = "Operação removida com sucesso!";
-            }
-            else
-            {
-                resultModel.Status = "error";
-                resultModel.Message = error;
-            }
+                return Ok(new JsonModel() { Status = "ok", Message = "Operação removida com sucesso!" });
 
-            return Ok(resultModel);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
         /// Lista as posições
         /// </summary>
         /// <returns>Lista com as posições</returns>
-        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("Positions")]
+        [ProducesResponseType(typeof(JsonDataModel<List<PositionModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListPositions()
         {
             var list = repo.ListPositions(out string error);
@@ -397,14 +383,15 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new List<PositionModel>();
+                var ret = new JsonDataModel<List<PositionModel>>();
+                ret.Data = new List<PositionModel>();
                 foreach (var pos in list)
-                    ret.Add(new PositionModel(pos));
+                    ret.Data.Add(new PositionModel(pos));
 
-                return Ok(new { data = ret });
+                return Ok(ret);
             }
 
-            return Ok(new JsonModel() { Status = "error", Message = error });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }

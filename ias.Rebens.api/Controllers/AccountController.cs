@@ -32,10 +32,12 @@ namespace ias.Rebens.api.Controllers
         /// <param name="signingConfigurations"></param>
         /// <param name="tokenConfigurations"></param>
         /// <returns>O token e o usuário</returns>
-        /// <respons code="201"></respons>
-        /// <respons code="404"></respons>
+        /// <respons code="200">se o usuário logar</respons>
+        /// <respons code="404">se não encontrar o usuário ou a senha não estiver correta</respons>
         [AllowAnonymous]
         [HttpPost("Login")]
+        [ProducesResponseType(typeof(LoginResultModel), 201)]
+        [ProducesResponseType(typeof(JsonModel), 404)]
         public IActionResult Login([FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
             var user = repo.ReadByEmail(model.Email, out string error);
@@ -80,17 +82,17 @@ namespace ias.Rebens.api.Controllers
                     });
                     var token = handler.WriteToken(securityToken);
 
-                    var Data = new
+                    var Data = new LoginResultModel()
                     {
-                        token = new TokenModel()
+                        Token = new TokenModel()
                         {
                             authenticated = true,
                             created = dataCriacao,
                             expiration = dataExpiracao,
                             accessToken = token
                         },
-                        user = new { id = user.Id, name = user.Name, email = user.Email },
-                        role = "administrator"
+                        User = new UserModel(){ Id = user.Id, Name = user.Name, Email = user.Email },
+                        Role = "administrator"
                     };
 
                     repo.SetLastLogin(user.Id, out error);

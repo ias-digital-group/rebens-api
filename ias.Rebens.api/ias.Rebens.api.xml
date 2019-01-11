@@ -12,8 +12,8 @@
             <param name="signingConfigurations"></param>
             <param name="tokenConfigurations"></param>
             <returns>O token e o usuário</returns>
-            <respons code="201"></respons>
-            <respons code="404"></respons>
+            <respons code="200">se o usuário logar</respons>
+            <respons code="404">se não encontrar o usuário ou a senha não estiver correta</respons>
         </member>
         <member name="M:ias.Rebens.api.Controllers.AccountController.CheckToken(ias.Rebens.api.Models.TokenModel,ias.Rebens.api.helper.SigningConfigurations,ias.Rebens.api.helper.TokenOptions)">
             <summary>
@@ -40,8 +40,9 @@
             <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com os endereços encontradas</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.AddressController.GetCategory(System.Int32)">
             <summary>
@@ -49,8 +50,9 @@
             </summary>
             <param name="id">Id do endereço desejada</param>
             <returns>Endereço</returns>
-            <response code="201">Retorna a categoria, ou algum erro caso interno</response>
+            <response code="200">Retorna a categoria, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.AddressController.Put(ias.Rebens.api.Models.AddressModel)">
             <summary>
@@ -58,7 +60,8 @@
             </summary>
             <param name="address"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.AddressController.Post(ias.Rebens.api.Models.AddressModel)">
             <summary>
@@ -66,7 +69,8 @@
             </summary>
             <param name="address"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id da categoria criada</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.AddressController.Delete(System.Int32)">
             <summary>
@@ -74,7 +78,8 @@
             </summary>
             <param name="id">Id do endereço a ser apagado</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.#ctor(ias.Rebens.IBenefitRepository,ias.Rebens.IAddressRepository,ias.Rebens.ICategoryRepository,ias.Rebens.IOperationRepository)">
             <summary>
@@ -94,8 +99,9 @@
             <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com os benefícios encontrados</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.GetBenefit(System.Int32)">
             <summary>
@@ -103,8 +109,9 @@
             </summary>
             <param name="id">Id do benefício</param>
             <returns>Parceiros</returns>
-            <response code="201">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.Put(ias.Rebens.api.Models.BenefitModel)">
             <summary>
@@ -112,7 +119,8 @@
             </summary>
             <param name="benefit"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.Post(ias.Rebens.api.Models.BenefitModel)">
             <summary>
@@ -120,7 +128,8 @@
             </summary>
             <param name="benefit"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do benefício criado</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.ListAddress(System.Int32)">
             <summary>
@@ -128,8 +137,9 @@
             </summary>
             <param name="id">id do benefício</param>
             <returns>Lista com os endereços encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.AddAddress(ias.Rebens.api.Models.BenefitAddressModel)">
             <summary>
@@ -137,7 +147,8 @@
             </summary>
             <param name="model">{ IdBenefit: 0, idAddress: 0 }</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Víncula um benefício com um endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveAddress(System.Int32,System.Int32)">
             <summary>
@@ -146,7 +157,8 @@
             <param name="id">id do benefídio</param>
             <param name="idAddress">id do endereço</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Remove o vínculo de benefício com endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.ListCategories(System.Int32)">
             <summary>
@@ -154,8 +166,9 @@
             </summary>
             <param name="id">id do benefício</param>
             <returns>Lista com as categorias encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.AddCategory(ias.Rebens.api.Models.BenefitCategoryModel)">
             <summary>
@@ -163,7 +176,8 @@
             </summary>
             <param name="model">{ IdBenefit: 0, IdCategory: 0 }</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Víncula um benefício com uma categoria</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveCategory(System.Int32,System.Int32)">
             <summary>
@@ -172,7 +186,8 @@
             <param name="id">id do benefício</param>
             <param name="idCategory">id da categoria</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Remove o vínculo de benefício com uma categoria</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.ListOperations(System.Int32)">
             <summary>
@@ -180,8 +195,9 @@
             </summary>
             <param name="id">id do benefício</param>
             <returns>Lista com as operações encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.AddOperation(ias.Rebens.api.Models.BenefitOperationModel)">
             <summary>
@@ -189,7 +205,8 @@
             </summary>
             <param name="model">{ IdBenefit: 0, id: 0 }</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Víncula um benefício com uma Operação</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveOperation(System.Int32,System.Int32)">
             <summary>
@@ -198,15 +215,17 @@
             <param name="id">id do benefício</param>
             <param name="idOperation">id da categoria</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Remove o vínculo de benefício com uma operação</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.ListPositions">
             <summary>
             Lista as posições
             </summary>
             <returns>Lista com as posições</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CategoryController.ListCategory(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -217,8 +236,9 @@
             <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com as categorias encontradas</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CategoryController.GetCategory(System.Int32)">
             <summary>
@@ -226,8 +246,9 @@
             </summary>
             <param name="id">Id da categoria desejada</param>
             <returns>Categoria</returns>
-            <response code="201">Retorna a categoria, ou algum erro caso interno</response>
+            <response code="200">Retorna a categoria, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CategoryController.Put(ias.Rebens.api.Models.CategoryModel)">
             <summary>
@@ -235,7 +256,8 @@
             </summary>
             <param name="category"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CategoryController.Post(ias.Rebens.api.Models.CategoryModel)">
             <summary>
@@ -243,7 +265,8 @@
             </summary>
             <param name="category"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da categoria criada</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CategoryController.Delete(System.Int32)">
             <summary>
@@ -251,17 +274,19 @@
             </summary>
             <param name="id">Id da categoria a ser apagada</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CategoryController.ListTree">
             <summary>
             Retorna a arvore de categorias 
             </summary>
             <returns>Lista com as categorias encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.ContactController.ListAddress(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.ContactController.ListContacts(System.Int32,System.Int32,System.String,System.String)">
             <summary>
             Retorna uma lista de contatos conforme os parametros
             </summary>
@@ -270,8 +295,9 @@
             <param name="sort">Ordenação campos (Id, Name, Email, JobTitle), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com os contatos encontradas</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.ContactController.GetContact(System.Int32)">
             <summary>
@@ -279,8 +305,9 @@
             </summary>
             <param name="id">Id do contato desejado</param>
             <returns>Contato</returns>
-            <response code="201">Retorna o contato, ou algum erro caso interno</response>
+            <response code="200">Retorna o contato, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.ContactController.Put(ias.Rebens.api.Models.ContactModel)">
             <summary>
@@ -288,6 +315,8 @@
             </summary>
             <param name="contact"></param>
             <returns></returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.ContactController.Post(ias.Rebens.api.Models.ContactModel)">
             <summary>
@@ -295,6 +324,8 @@
             </summary>
             <param name="contact"></param>
             <returns></returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.ContactController.Delete(System.Int32)">
             <summary>
@@ -302,7 +333,8 @@
             </summary>
             <param name="id">Id do contato a ser apagado</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.FaqController.ListFaq(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -313,8 +345,9 @@
             <param name="sort">Ordenação campos (Id, Question, Answer, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com as faqs encontradas</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.FaqController.GetFaq(System.Int32)">
             <summary>
@@ -322,8 +355,9 @@
             </summary>
             <param name="id">Id da pergunta desejada</param>
             <returns>FAQ</returns>
-            <response code="201">Retorna a faq, ou algum erro caso interno</response>
+            <response code="200">Retorna a faq, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.FaqController.Put(ias.Rebens.api.Models.FaqModel)">
             <summary>
@@ -331,7 +365,8 @@
             </summary>
             <param name="faq">FAQ</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.FaqController.Post(ias.Rebens.api.Models.FaqModel)">
             <summary>
@@ -339,7 +374,8 @@
             </summary>
             <param name="faq"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.FaqController.Delete(System.Int32)">
             <summary>
@@ -347,39 +383,44 @@
             </summary>
             <param name="id">Id da pergunta a ser apagada</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.HelperController.ListBenefitType">
             <summary>
             Lista os tipos de benefício
             </summary>
             <returns></returns>
-            <response code="201">Retorna a lista, ou algum erro, caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro, caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.HelperController.ListIntegrationType">
             <summary>
             Lista os tipos de integração
             </summary>
             <returns></returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.HelperController.ListOperationType">
             <summary>
             Lista os tipos de operação
             </summary>
             <returns></returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.HelperController.ListStaticTextType">
             <summary>
             Lista os tipos de textos estáticos
             </summary>
             <returns></returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.LogErrorController.Get(System.String,System.Int32,System.Int32)">
             <summary>
@@ -415,8 +456,9 @@
             <param name="sort">Ordenação campos (Id, Domain, Title, CompanyName, CompanyDoc), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com as operações encontradas</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.GetOperation(System.Int32)">
             <summary>
@@ -424,8 +466,9 @@
             </summary>
             <param name="id">Id da operação desejada</param>
             <returns>Operação</returns>
-            <response code="201">Retorna a operação, ou algum erro caso interno</response>
+            <response code="200">Retorna a operação, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.Put(ias.Rebens.api.Models.OperationModel)">
             <summary>
@@ -433,7 +476,8 @@
             </summary>
             <param name="operation"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.Post(ias.Rebens.api.Models.OperationModel)">
             <summary>
@@ -441,7 +485,8 @@
             </summary>
             <param name="operation"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da operação criada</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.ListContacts(System.Int32)">
             <summary>
@@ -449,8 +494,9 @@
             </summary>
             <param name="id">id da operação</param>
             <returns>Lista com os contatos encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.ListAddress(System.Int32)">
             <summary>
@@ -458,8 +504,9 @@
             </summary>
             <param name="id">id da operação</param>
             <returns>Lista com os endereços encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.AddContact(ias.Rebens.api.Models.OperationContactModel)">
             <summary>
@@ -467,7 +514,8 @@
             </summary>
             <param name="model">{ idOperation: 0, idContact: 0 }</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Víncula uma operação com um contato</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.RemoveContact(System.Int32,System.Int32)">
             <summary>
@@ -476,7 +524,8 @@
             <param name="id">id da operação</param>
             <param name="idContact">id do contato</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Remove o vínculo de benefício com endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.AddAddress(ias.Rebens.api.Models.OperationAddressModel)">
             <summary>
@@ -484,7 +533,8 @@
             </summary>
             <param name="model">{ idOperation: 0, idAddress: 0 }</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Víncula um parceiro com um endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.RemoveAddress(System.Int32,System.Int32)">
             <summary>
@@ -493,7 +543,8 @@
             <param name="id">id da operação</param>
             <param name="idAddress">id do endereço</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Remove o vínculo de benefício com endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.ListFaqs(System.Int32)">
             <summary>
@@ -501,8 +552,9 @@
             </summary>
             <param name="id">id da operação</param>
             <returns>lista das Perguntas da operação</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.#ctor(ias.Rebens.IPartnerRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IBenefitRepository)">
             <summary>
@@ -522,8 +574,9 @@
             <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com os parceiros encontrados</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.GetPartner(System.Int32)">
             <summary>
@@ -531,8 +584,9 @@
             </summary>
             <param name="id">Id do parceiro</param>
             <returns>Parceiros</returns>
-            <response code="201">Retorna o parceiro, ou algum erro caso interno</response>
+            <response code="200">Retorna o parceiro, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.Put(ias.Rebens.api.Models.PartnerModel)">
             <summary>
@@ -540,7 +594,8 @@
             </summary>
             <param name="partner"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.Post(ias.Rebens.api.Models.PartnerModel)">
             <summary>
@@ -548,7 +603,8 @@
             </summary>
             <param name="partner"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do parceiro criado</returns>
-            <response code="201"></response>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.ListContacts(System.Int32)">
             <summary>
@@ -556,8 +612,9 @@
             </summary>
             <param name="id">id do parceiro</param>
             <returns>Lista com os contatos encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.ListAddress(System.Int32)">
             <summary>
@@ -565,8 +622,9 @@
             </summary>
             <param name="id">id do parceiro</param>
             <returns>Lista com os endereços encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.AddContact(ias.Rebens.api.Models.PartnerContactModel)">
             <summary>
@@ -574,7 +632,8 @@
             </summary>
             <param name="model">{ idPartner: 0, idContact: 0 }</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Víncula um parceiro com um contato</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.RemoveContact(System.Int32,System.Int32)">
             <summary>
@@ -583,7 +642,8 @@
             <param name="id">id do parceiro</param>
             <param name="idContact">id do contato</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Remove o vínculo de benefício com endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.AddAddress(ias.Rebens.api.Models.PartnerAddressModel)">
             <summary>
@@ -591,7 +651,8 @@
             </summary>
             <param name="model">{ idPartner: 0, idAddress: 0 }</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Víncula um parceiro com um endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.RemoveAddress(System.Int32,System.Int32)">
             <summary>
@@ -600,7 +661,8 @@
             <param name="id">id do parceiro</param>
             <param name="idAddress">id do endereço</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="201"></response>
+            <response code="200">Remove o vínculo de benefício com endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.ListBenefits(System.Int32)">
             <summary>
@@ -608,8 +670,9 @@
             </summary>
             <param name="id">id do parceiro</param>
             <returns>Lista com os benefícios encontradas</returns>
-            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Models.AddressModel">
             <summary>
@@ -1118,6 +1181,26 @@
             </summary>
             <param name="type"></param>
         </member>
+        <member name="T:ias.Rebens.api.Models.JsonCreateResultModel">
+            <summary>
+            Modelo de resposta para criação de um item
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.JsonCreateResultModel.Status">
+            <summary>
+            Status da requisição
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.JsonCreateResultModel.Message">
+            <summary>
+            Mensagem de erro, alerta ou sucesso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.JsonCreateResultModel.Id">
+            <summary>
+            Id do item criado
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.JsonModel">
             <summary>
             Modelo de resposta Json
@@ -1151,6 +1234,46 @@
         <member name="P:ias.Rebens.api.Models.LoginModel.Password">
             <summary>
             Senha
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.LoginResultModel">
+            <summary>
+            Login 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.LoginResultModel.Token">
+            <summary>
+            Token de acesso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.LoginResultModel.User">
+            <summary>
+            Usuário
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.LoginResultModel.Role">
+            <summary>
+            Papel
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.UserModel">
+            <summary>
+            Usuário
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.UserModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.UserModel.Name">
+            <summary>
+            Name
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.UserModel.Email">
+            <summary>
+            Email
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.OperationAddressModel">
