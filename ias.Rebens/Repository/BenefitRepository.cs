@@ -39,7 +39,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool AddOperation(int idBenefit, int idOperation, out string error)
+        public bool AddOperation(int idBenefit, int idOperation, int idPostion, out string error)
         {
             bool ret = true;
             try
@@ -48,7 +48,7 @@ namespace ias.Rebens
                 {
                     if (!db.BenefitOperation.Any(o => o.IdBenefit == idBenefit && o.IdOperation == idOperation))
                     {
-                        db.BenefitOperation.Add(new BenefitOperation() { IdOperation = idOperation, IdBenefit = idBenefit });
+                        db.BenefitOperation.Add(new BenefitOperation() { IdOperation = idOperation, IdBenefit = idBenefit, Created = DateTime.UtcNow, Modified = DateTime.UtcNow, IdPosition = idPostion });
                         db.SaveChanges();
                     }
                     error = null;
@@ -436,6 +436,27 @@ namespace ias.Rebens
                 int idLog = logError.Create("BenefitRepository.DeleteCategory", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o categoria. (erro:" + idLog + ")";
                 ret = false;
+            }
+            return ret;
+        }
+
+        public List<BenefitOperationPosition> ListPositions(out string error)
+        {
+            List<BenefitOperationPosition> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.BenefitOperationPosition.OrderBy(a => a.Id).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ListPositions", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as posições. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

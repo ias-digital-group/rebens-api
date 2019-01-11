@@ -150,8 +150,6 @@ namespace ias.Rebens
 
             modelBuilder.Entity<Benefit>(entity =>
             {
-                entity.Property(e => e.Id).ValueGeneratedNever();
-
                 entity.Property(e => e.CpvpercentageOffline)
                     .HasColumnName("CPVPercentageOffline")
                     .HasColumnType("money");

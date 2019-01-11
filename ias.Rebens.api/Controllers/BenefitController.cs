@@ -12,6 +12,7 @@ namespace ias.Rebens.api.Controllers
         private IBenefitRepository repo;
         private IAddressRepository addressRepo;
         private ICategoryRepository categoryRepo;
+        private IOperationRepository operationRepo;
 
         /// <summary>
         /// Construtor
@@ -19,11 +20,13 @@ namespace ias.Rebens.api.Controllers
         /// <param name="benefitRepository">Injeção de dependencia do repositório de Benefício</param>
         /// <param name="addressRepository">Injeção de dependencia do repositório de Endereço</param>
         /// <param name="categoryRepository">Injeção de dependencia do repositório de Categoria</param>
-        public BenefitController(IBenefitRepository benefitRepository, IAddressRepository addressRepository, ICategoryRepository categoryRepository)
+        /// <param name="operationRepository">Injeção de dependencia do repositório de Operação</param>
+        public BenefitController(IBenefitRepository benefitRepository, IAddressRepository addressRepository, ICategoryRepository categoryRepository, IOperationRepository operationRepository)
         {
             this.repo = benefitRepository;
             this.addressRepo = addressRepository;
             this.categoryRepo = categoryRepository;
+            this.operationRepo = operationRepository;
         }
 
         /// <summary>
@@ -199,15 +202,16 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Remove um endereço de um parceiro
         /// </summary>
-        /// <param name="model">{ IdBenefit: 0, idAddress: 0 }</param>
+        /// <param name="id">id do benefídio</param>
+        /// <param name="idAddress">id do endereço</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
-        [HttpPost("RemoveAddress")]
-        public IActionResult RemoveAddress([FromBody]BenefitAddressModel model)
+        [HttpDelete("{id}/Address/{idAddress}")]
+        public IActionResult RemoveAddress(int id, int idAddress)
         {
             var resultModel = new JsonModel();
 
-            if (repo.DeleteAddress(model.IdBenefit, model.IdAddress, out string error))
+            if (repo.DeleteAddress(id, idAddress, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Endereço removido com sucesso!";
@@ -231,16 +235,16 @@ namespace ias.Rebens.api.Controllers
         [HttpGet("{id}/Category")]
         public IActionResult ListCategories(int id)
         {
-            var list = addressRepo.ListByBenefit(id, out string error);
+            var list = categoryRepo.ListByBenefit(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new List<AddressModel>();
-                foreach (var addr in list)
-                    ret.Add(new AddressModel(addr));
+                var ret = new List<CategoryModel>();
+                foreach (var cat in list)
+                    ret.Add(new CategoryModel(cat));
 
                 return Ok(new { data = ret });
             }
@@ -276,15 +280,16 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Remove uma categoria de um benefício
         /// </summary>
-        /// <param name="model">{ IdBenefit: 0, IdCategory: 0 }</param>
+        /// <param name="id">id do benefício</param>
+        /// <param name="idCategory">id da categoria</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
-        [HttpPost("RemoveCategory")]
-        public IActionResult RemoveCategory([FromBody]BenefitCategoryModel model)
+        [HttpDelete("{id}/Category/{idCategory}")]
+        public IActionResult RemoveCategory(int id, int idCategory)
         {
             var resultModel = new JsonModel();
 
-            if (repo.DeleteCategory(model.IdBenefit, model.IdCategory, out string error))
+            if (repo.DeleteCategory(id, idCategory, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Categoria removida com sucesso!";
@@ -296,6 +301,110 @@ namespace ias.Rebens.api.Controllers
             }
 
             return Ok(resultModel);
+        }
+
+        /// <summary>
+        /// Lista as operações de um benefício
+        /// </summary>
+        /// <param name="id">id do benefício</param>
+        /// <returns>Lista com as operações encontradas</returns>
+        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        [HttpGet("{id}/Operations")]
+        public IActionResult ListOperations(int id)
+        {
+            var list = operationRepo.ListByBenefit(id, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new List<OperationModel>();
+                foreach (var op in list)
+                    ret.Add(new OperationModel(op));
+
+                return Ok(new { data = ret });
+            }
+
+            return Ok(new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Adiciona uma operação a um benefício
+        /// </summary>
+        /// <param name="model">{ IdBenefit: 0, id: 0 }</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="201"></response>
+        [HttpPost("AddOperation")]
+        public IActionResult AddOperation([FromBody]BenefitOperationModel model)
+        {
+            var resultModel = new JsonModel();
+
+            if (repo.AddOperation(model.IdBenefit, model.IdOperation, model.IdPosition, out string error))
+            {
+                resultModel.Status = "ok";
+                resultModel.Message = "Operação adicionada com sucesso!";
+            }
+            else
+            {
+                resultModel.Status = "error";
+                resultModel.Message = error;
+            }
+
+            return Ok(resultModel);
+        }
+
+        /// <summary>
+        /// Remove uma operação de um benefício
+        /// </summary>
+        /// <param name="id">id do benefício</param>
+        /// <param name="idOperation">id da categoria</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="201"></response>
+        [HttpDelete("{id}/Operation/{idOperation}")]
+        public IActionResult RemoveOperation(int id, int idOperation)
+        {
+            var resultModel = new JsonModel();
+
+            if (repo.DeleteOperation(id, idOperation, out string error))
+            {
+                resultModel.Status = "ok";
+                resultModel.Message = "Operação removida com sucesso!";
+            }
+            else
+            {
+                resultModel.Status = "error";
+                resultModel.Message = error;
+            }
+
+            return Ok(resultModel);
+        }
+
+        /// <summary>
+        /// Lista as posições
+        /// </summary>
+        /// <returns>Lista com as posições</returns>
+        /// <response code="201">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        [HttpGet("Positions")]
+        public IActionResult ListPositions()
+        {
+            var list = repo.ListPositions(out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new List<PositionModel>();
+                foreach (var pos in list)
+                    ret.Add(new PositionModel(pos));
+
+                return Ok(new { data = ret });
+            }
+
+            return Ok(new JsonModel() { Status = "error", Message = error });
         }
     }
 }

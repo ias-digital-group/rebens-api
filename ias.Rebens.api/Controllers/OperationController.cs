@@ -14,6 +14,7 @@ namespace ias.Rebens.api.Controllers
         private IOperationRepository repo;
         private IAddressRepository addressRepo;
         private IContactRepository contactRepo;
+        private IFaqRepository faqRepo;
 
         /// <summary>
         /// Construtor
@@ -21,11 +22,13 @@ namespace ias.Rebens.api.Controllers
         /// <param name="operationRepository">Injeção de dependencia do repositório de operação</param>
         /// <param name="contactRepository">Injeção de dependencia do repositório de contato</param>
         /// <param name="addressRepository">Injeção de dependencia do repositório de endereço</param>
-        public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository)
+        /// <param name="faqRepository">Injeção de dependencia do repositório de faq</param>
+        public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, IFaqRepository faqRepository)
         {
             this.repo = operationRepository;
             this.addressRepo = addressRepository;
             this.contactRepo = contactRepository;
+            this.faqRepo = faqRepository;
         }
 
         /// <summary>
@@ -283,15 +286,16 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Remove um contato de uma operação
         /// </summary>
-        /// <param name="model">{ idOperation: 0, idContact: 0 }</param>
+        /// <param name="id">id da operação</param>
+        /// <param name="idContact">id do contato</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
-        [HttpPost("RemoveContact")]
-        public IActionResult RemoveContact([FromBody]OperationContactModel model)
+        [HttpDelete("{id}/Contact/{idContact}")]
+        public IActionResult RemoveContact(int id, int idContact)
         {
             var resultModel = new JsonModel();
 
-            if (repo.DeleteContact(model.IdOperation, model.IdContact, out string error))
+            if (repo.DeleteContact(id, idContact, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Contato removido com sucesso!";
@@ -333,15 +337,16 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Remove um endereço de uma operação
         /// </summary>
-        /// <param name="model">{ idOperation: 0, idAddress: 0 }</param>
+        /// <param name="id">id da operação</param>
+        /// <param name="idAddress">id do endereço</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
-        [HttpPost("RemoveAddress")]
-        public IActionResult RemoveAddress([FromBody]OperationAddressModel model)
+        [HttpDelete("{id}/Address/{idAddress}")]
+        public IActionResult RemoveAddress(int id, int idAddress)
         {
             var resultModel = new JsonModel();
 
-            if (repo.DeleteAddress(model.IdOperation, model.IdAddress, out string error))
+            if (repo.DeleteAddress(id, idAddress, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Endereço removido com sucesso!";
@@ -353,6 +358,39 @@ namespace ias.Rebens.api.Controllers
             }
 
             return Ok(resultModel);
+        }
+
+        /// <summary>
+        /// Lista as perguntas de uma operação 
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <returns>lista das Perguntas da operação</returns>
+        /// <response code="201">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        [HttpGet("{id}/Faqs")]
+        public IActionResult ListFaqs(int id)
+        {
+            var list = faqRepo.ListByOperation(id, out string error);
+
+            var model = new JsonModel();
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new List<FaqModel>();
+                list.ForEach(item => { ret.Add(new FaqModel(item)); });
+
+                model.Status = "ok";
+                model.Data = ret;
+            }
+            else
+            {
+                model.Status = "error";
+                model.Message = error;
+            }
+
+            return new JsonResult(model);
         }
     }
 }

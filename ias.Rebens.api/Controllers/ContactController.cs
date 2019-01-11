@@ -89,8 +89,8 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="contact"></param>
         /// <returns></returns>
-        [HttpPost]
-        public IActionResult Post([FromBody] ContactModel contact)
+        [HttpPut]
+        public IActionResult Put([FromBody] ContactModel contact)
         {
             var model = new JsonModel();
             var cont = contact.GetEntity();
@@ -129,8 +129,8 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="contact"></param>
         /// <returns></returns>
-        [HttpPut]
-        public IActionResult Put([FromBody] ContactModel contact)
+        [HttpPost]
+        public IActionResult Post([FromBody] ContactModel contact)
         {
             var model = new JsonModel();
             var cont = contact.GetEntity();

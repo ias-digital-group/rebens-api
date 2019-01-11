@@ -70,7 +70,7 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        [HttpGet("Clear")]
+        [HttpDelete]
         public JsonResult Clear([FromQuery]string token)
         {
             var model = new JsonModel();
@@ -102,46 +102,6 @@ namespace ias.Rebens.api.Controllers
                 }
             }
 
-            return new JsonResult(model);
-        }
-
-        /// <summary>
-        /// Apaga todos os logs mais antigos que a data enviada
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="date"></param>
-        /// <returns></returns>
-        [HttpGet("DeleteOlderThan")]
-        public JsonResult Delete([FromQuery]string token, [FromQuery]DateTime date)
-        {
-            var model = new JsonModel();
-            if (string.IsNullOrEmpty(token))
-            {
-                model.Status = "error";
-                model.Message = "wrong token";
-            }
-            else
-            {
-                var decryptedToken = Helper.SecurityHelper.SimpleDecryption(token);
-                if (decryptedToken.IndexOf('|') > 0 && decryptedToken.Split('|').Length == 2 && decryptedToken.Split('|')[0] == "ias_user" && decryptedToken.Split('|')[1] == "#K)YKb4B=&eN")
-                {
-                    try
-                    {
-                        repo.DeleteOlderThan(date);
-                        model.Status = "ok";
-                    }
-                    catch (Exception ex)
-                    {
-                        model.Status = "error";
-                        model.Message = ex.Message;
-                    }
-                }
-                else
-                {
-                    model.Status = "error";
-                    model.Message = "wrong token";
-                }
-            }
             return new JsonResult(model);
         }
     }

@@ -18,5 +18,11 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public int IdOperation { get; set; }
+
+        /// <summary>
+        /// Id da posição
+        /// </summary>
+        [Required]
+        public int IdPosition { get; set; }
     }
 }

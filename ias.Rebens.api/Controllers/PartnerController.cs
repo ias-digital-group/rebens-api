@@ -288,15 +288,16 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Remove um contato de um parceiro
         /// </summary>
-        /// <param name="model">{ idPartner: 0, idContact: 0 }</param>
+        /// <param name="id">id do parceiro</param>
+        /// <param name="idContact">id do contato</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
-        [HttpPost("RemoveContact")]
-        public IActionResult RemoveContact([FromBody]PartnerContactModel model)
+        [HttpDelete("{id}/Contacts/{idContact}")]
+        public IActionResult RemoveContact(int id, int idContact)
         {
             var resultModel = new JsonModel();
 
-            if (repo.DeleteContact(model.IdPartner, model.IdContact, out string error))
+            if (repo.DeleteContact(id, idContact, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Contato removido com sucesso!";
@@ -338,15 +339,16 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Remove um endereço de um parceiro
         /// </summary>
-        /// <param name="model">{ idPartner: 0, idAddress: 0 }</param>
+        /// <param name="id">id do parceiro</param>
+        /// <param name="idAddress">id do endereço</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="201"></response>
-        [HttpPost("RemoveAddress")]
-        public IActionResult RemoveAddress([FromBody]PartnerAddressModel model)
+        [HttpDelete("{Id}/Address/{idAddress}")]
+        public IActionResult RemoveAddress(int id, int idAddress)
         {
             var resultModel = new JsonModel();
 
-            if (repo.DeleteAddress(model.IdPartner, model.IdAddress, out string error))
+            if (repo.DeleteAddress(id, idAddress, out string error))
             {
                 resultModel.Status = "ok";
                 resultModel.Message = "Endereço removido com sucesso!";

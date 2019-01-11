@@ -76,13 +76,14 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
             <response code="201"></response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.BenefitController.#ctor(ias.Rebens.IBenefitRepository,ias.Rebens.IAddressRepository,ias.Rebens.ICategoryRepository)">
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.#ctor(ias.Rebens.IBenefitRepository,ias.Rebens.IAddressRepository,ias.Rebens.ICategoryRepository,ias.Rebens.IOperationRepository)">
             <summary>
             Construtor
             </summary>
             <param name="benefitRepository">Injeção de dependencia do repositório de Benefício</param>
             <param name="addressRepository">Injeção de dependencia do repositório de Endereço</param>
             <param name="categoryRepository">Injeção de dependencia do repositório de Categoria</param>
+            <param name="operationRepository">Injeção de dependencia do repositório de Operação</param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.ListBenefit(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -138,11 +139,12 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveAddress(ias.Rebens.api.Models.BenefitAddressModel)">
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveAddress(System.Int32,System.Int32)">
             <summary>
             Remove um endereço de um parceiro
             </summary>
-            <param name="model">{ IdBenefit: 0, idAddress: 0 }</param>
+            <param name="id">id do benefídio</param>
+            <param name="idAddress">id do endereço</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
@@ -163,13 +165,48 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveCategory(ias.Rebens.api.Models.BenefitCategoryModel)">
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveCategory(System.Int32,System.Int32)">
             <summary>
             Remove uma categoria de um benefício
             </summary>
-            <param name="model">{ IdBenefit: 0, IdCategory: 0 }</param>
+            <param name="id">id do benefício</param>
+            <param name="idCategory">id da categoria</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.ListOperations(System.Int32)">
+            <summary>
+            Lista as operações de um benefício
+            </summary>
+            <param name="id">id do benefício</param>
+            <returns>Lista com as operações encontradas</returns>
+            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.AddOperation(ias.Rebens.api.Models.BenefitOperationModel)">
+            <summary>
+            Adiciona uma operação a um benefício
+            </summary>
+            <param name="model">{ IdBenefit: 0, id: 0 }</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="201"></response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveOperation(System.Int32,System.Int32)">
+            <summary>
+            Remove uma operação de um benefício
+            </summary>
+            <param name="id">id do benefício</param>
+            <param name="idOperation">id da categoria</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="201"></response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.ListPositions">
+            <summary>
+            Lista as posições
+            </summary>
+            <returns>Lista com as posições</returns>
+            <response code="201">Retorna a list, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CategoryController.ListCategory(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -245,14 +282,14 @@
             <response code="201">Retorna o contato, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.ContactController.Post(ias.Rebens.api.Models.ContactModel)">
+        <member name="M:ias.Rebens.api.Controllers.ContactController.Put(ias.Rebens.api.Models.ContactModel)">
             <summary>
             Atualiza um contato
             </summary>
             <param name="contact"></param>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.ContactController.Put(ias.Rebens.api.Models.ContactModel)">
+        <member name="M:ias.Rebens.api.Controllers.ContactController.Post(ias.Rebens.api.Models.ContactModel)">
             <summary>
             Cria um novo contato
             </summary>
@@ -312,15 +349,6 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
             <response code="201"></response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.FaqController.ListByOperation(System.Int32)">
-            <summary>
-            Lista as perguntas de uma operação 
-            </summary>
-            <param name="idOperation">id da operação</param>
-            <returns>lista das Perguntas da operação</returns>
-            <response code="201">Retorna a lista, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-        </member>
         <member name="M:ias.Rebens.api.Controllers.HelperController.ListBenefitType">
             <summary>
             Lista os tipos de benefício
@@ -369,21 +397,14 @@
             <param name="token"></param>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.LogErrorController.Delete(System.String,System.DateTime)">
-            <summary>
-            Apaga todos os logs mais antigos que a data enviada
-            </summary>
-            <param name="token"></param>
-            <param name="date"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository)">
             <summary>
             Construtor
             </summary>
             <param name="operationRepository">Injeção de dependencia do repositório de operação</param>
             <param name="contactRepository">Injeção de dependencia do repositório de contato</param>
             <param name="addressRepository">Injeção de dependencia do repositório de endereço</param>
+            <param name="faqRepository">Injeção de dependencia do repositório de faq</param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.ListOperation(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -448,11 +469,12 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.RemoveContact(ias.Rebens.api.Models.OperationContactModel)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.RemoveContact(System.Int32,System.Int32)">
             <summary>
             Remove um contato de uma operação
             </summary>
-            <param name="model">{ idOperation: 0, idContact: 0 }</param>
+            <param name="id">id da operação</param>
+            <param name="idContact">id do contato</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
@@ -464,13 +486,23 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.RemoveAddress(ias.Rebens.api.Models.OperationAddressModel)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.RemoveAddress(System.Int32,System.Int32)">
             <summary>
             Remove um endereço de uma operação
             </summary>
-            <param name="model">{ idOperation: 0, idAddress: 0 }</param>
+            <param name="id">id da operação</param>
+            <param name="idAddress">id do endereço</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.ListFaqs(System.Int32)">
+            <summary>
+            Lista as perguntas de uma operação 
+            </summary>
+            <param name="id">id da operação</param>
+            <returns>lista das Perguntas da operação</returns>
+            <response code="201">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.#ctor(ias.Rebens.IPartnerRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IBenefitRepository)">
             <summary>
@@ -544,11 +576,12 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PartnerController.RemoveContact(ias.Rebens.api.Models.PartnerContactModel)">
+        <member name="M:ias.Rebens.api.Controllers.PartnerController.RemoveContact(System.Int32,System.Int32)">
             <summary>
             Remove um contato de um parceiro
             </summary>
-            <param name="model">{ idPartner: 0, idContact: 0 }</param>
+            <param name="id">id do parceiro</param>
+            <param name="idContact">id do contato</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
@@ -560,11 +593,12 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PartnerController.RemoveAddress(ias.Rebens.api.Models.PartnerAddressModel)">
+        <member name="M:ias.Rebens.api.Controllers.PartnerController.RemoveAddress(System.Int32,System.Int32)">
             <summary>
             Remove um endereço de um parceiro
             </summary>
-            <param name="model">{ idPartner: 0, idAddress: 0 }</param>
+            <param name="id">id do parceiro</param>
+            <param name="idAddress">id do endereço</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="201"></response>
         </member>
@@ -799,6 +833,42 @@
             <summary>
             Id da operação
             </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitOperationModel.IdPosition">
+            <summary>
+            Id da posição
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.PositionModel">
+            <summary>
+            Posição
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PositionModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PositionModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PositionModel.Active">
+            <summary>
+            Ativo
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.PositionModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.PositionModel.#ctor(ias.Rebens.BenefitOperationPosition)">
+            <summary>
+            Construtor que recebe um objeto e já popula os atributos.
+            </summary>
+            <param name="benefitOperationPosition"></param>
         </member>
         <member name="T:ias.Rebens.api.Models.BenefitTypeModel">
             <summary>

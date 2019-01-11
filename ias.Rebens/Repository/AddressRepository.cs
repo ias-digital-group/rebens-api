@@ -251,7 +251,7 @@ namespace ias.Rebens
                     }
                     else
                     {
-                        error = "Endereço não encontrada!";
+                        error = "Endereço não encontrado!";
                     }
                 }
             }

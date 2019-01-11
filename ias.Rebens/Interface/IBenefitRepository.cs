@@ -16,7 +16,7 @@ namespace ias.Rebens
 
         bool Update(Benefit benefit, out string error);
 
-        bool AddOperation(int idBenefit, int idOperation, out string error);
+        bool AddOperation(int idBenefit, int idOperation, int idPostion, out string error);
 
         bool AddAddress(int idBenefit, int idAddress, out string error);
 
@@ -40,5 +40,6 @@ namespace ias.Rebens
 
         List<Benefit> ListByIntegrationType(int idIntegrationType, out string error);
 
+        List<BenefitOperationPosition> ListPositions(out string error);
     }
 }

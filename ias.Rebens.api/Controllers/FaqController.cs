@@ -163,38 +163,5 @@ namespace ias.Rebens.api.Controllers
             return Ok(model);
 
         }
-
-        /// <summary>
-        /// Lista as perguntas de uma operação 
-        /// </summary>
-        /// <param name="idOperation">id da operação</param>
-        /// <returns>lista das Perguntas da operação</returns>
-        /// <response code="201">Retorna a lista, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        [HttpGet("ListByOperation")]
-        public IActionResult ListByOperation([FromQuery]int idOperation)
-        {
-            var list = repo.ListByOperation(idOperation, out string error);
-
-            var model = new JsonModel();
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.Count == 0)
-                    return NoContent();
-
-                var ret = new List<FaqModel>();
-                list.ForEach(item => { ret.Add(new FaqModel(item)); });
-
-                model.Status = "ok";
-                model.Data = ret;
-            }
-            else
-            {
-                model.Status = "error";
-                model.Message = error;
-            }
-
-            return new JsonResult(model);
-        }
     }
 }

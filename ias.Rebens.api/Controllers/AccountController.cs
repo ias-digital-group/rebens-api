@@ -121,7 +121,7 @@ namespace ias.Rebens.api.Controllers
             JsonModel resultModel;
 
             if (model == null || string.IsNullOrEmpty(model.accessToken))
-                resultModel = new Models.JsonModel() { Status = "error", Message = "no token" };
+                resultModel = new JsonModel() { Status = "error", Message = "no token" };
             else
             {
 
@@ -144,9 +144,9 @@ namespace ias.Rebens.api.Controllers
                         .ValidateToken(model.accessToken, validationParameters, out var rawValidatedToken);
 
                     if (((JwtSecurityToken)rawValidatedToken).ValidTo > DateTime.UtcNow.AddHours(4))
-                        resultModel = new Models.JsonModel() { Status = "ok" };
+                        resultModel = new JsonModel() { Status = "ok" };
                     else
-                        resultModel = new Models.JsonModel() { Status = "error", Message = "expiring in less than 4 hours" };
+                        resultModel = new JsonModel() { Status = "error", Message = "expiring in less than 4 hours" };
 
                     //return (JwtSecurityToken)rawValidatedToken;
                     // Or, you can return the ClaimsPrincipal
@@ -157,14 +157,14 @@ namespace ias.Rebens.api.Controllers
                     // The token failed validation!
                     // TODO: Log it or display an error.
                     //throw new Exception($"Token failed validation: {stvex.Message}");
-                    resultModel = new Models.JsonModel() { Status = "error", Message = "not valid", Data = stvex.Message };
+                    resultModel = new JsonModel() { Status = "error", Message = "not valid", Data = stvex.Message };
                 }
                 catch (ArgumentException argex)
                 {
                     // The token was not well-formed or was invalid for some other reason.
                     // TODO: Log it or display an error.
                     //throw new Exception($"Token was invalid: {argex.Message}");
-                    resultModel = new Models.JsonModel() { Status = "error", Message = "wrong format", Data = argex.Message };
+                    resultModel = new JsonModel() { Status = "error", Message = "wrong format", Data = argex.Message };
                 }
 
             }
@@ -189,7 +189,7 @@ namespace ias.Rebens.api.Controllers
                     if(model.NewPassword == model.NewPasswordConfirm)
                     {
                         var salt = Helper.SecurityHelper.GenerateSalt();
-                        var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.OldPassword, salt);
+                        var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.NewPassword, salt);
                         if (repo.ChangePassword(model.Id, encryptedPassword, salt, out error))
                             resultModel = new JsonModel() { Status = "ok" };
                         else
@@ -206,47 +206,6 @@ namespace ias.Rebens.api.Controllers
             
             return Ok(resultModel);
         }
-
-        //[AllowAnonymous]
-        //[HttpPut]
-        //public JsonResult Put([FromBody]Models.CreateAccountModel model)
-        //{
-        //    Models.JsonModel resultModel;
-
-        //    var user = new User();
-        //    user.Name = model.Name;
-        //    user.Email = model.Email;
-        //    user.Status = (int)Enums.UserStatus.New;
-        //    user.Created = user.Modified = DateTime.UtcNow;
-        //    user.Verified = user.Private = false;
-        //    if (!string.IsNullOrEmpty(model.Password))
-        //        user.SetPassword(model.Password);
-
-        //    user.fbAccessToken = model.fbToken;
-        //    user.fbUserId = model.fbUserId;
-        //    user.Picture = model.picture;
-
-        //    var repo = new UserRepository();
-        //    if (repo.Create(user, out string error))
-        //    {
-        //        model.Id = user.Id;
-        //        resultModel = new Models.JsonModel() { Status = "ok", Extra = model };
-        //    }
-        //    else
-        //        resultModel = new Models.JsonModel() { Status = "error", Message = error };
-
-        //    return new JsonResult(resultModel);
-        //}
-
-        //[AllowAnonymous]
-        //[HttpPost("CheckUsername")]
-        //public JsonResult CheckUsername([FromBody]Models.CheckUsernameModel model)
-        //{
-        //    var repo = new UserRepository();
-        //    var result = new Models.JsonModel();
-        //    result.Status = repo.CheckUserNameAvailable(model.Id, model.Username) ? "ok" : "nok";
-        //    return new JsonResult(result);
-        //}
 
         //[AllowAnonymous]
         //[HttpGet("RememberPassword")]
