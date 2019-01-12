@@ -143,7 +143,7 @@ namespace ias.Rebens.api.Controllers
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             
             if (repo.Create(cont, out error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Endereço criado com sucesso!", Id = cont.Id });
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Contato criado com sucesso!", Id = cont.Id });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

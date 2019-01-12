@@ -96,6 +96,7 @@ namespace ias.Rebens.api
 
             services.AddTransient<IAddressRepository, AddressRepository>();
             services.AddTransient<IAdminUserRepository, AdminUserRepository>();
+            services.AddTransient<IBannerRepository, BannerRepository>();
             services.AddTransient<IBenefitRepository, BenefitRepository>();
             services.AddTransient<IBenefitTypeRepository, BenefitTypeRepository>();
             services.AddTransient<ICategoryRepository, CategoryRepository>();

@@ -135,7 +135,7 @@ namespace ias.Rebens.api.Controllers
 
             var item = benefit.GetEntity();
             if (repo.Create(item, out error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "", Id = item.Id });
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Benefício criado com sucesso!", Id = item.Id });
             
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -329,17 +329,9 @@ namespace ias.Rebens.api.Controllers
             var resultModel = new JsonModel();
 
             if (repo.AddOperation(model.IdBenefit, model.IdOperation, model.IdPosition, out string error))
-            {
-                resultModel.Status = "ok";
-                resultModel.Message = "Operação adicionada com sucesso!";
-            }
-            else
-            {
-                resultModel.Status = "error";
-                resultModel.Message = error;
-            }
+                return Ok(new JsonModel() { Status = "ok", Message = "Operação adicionada com sucesso!" });
 
-            return Ok(resultModel);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>

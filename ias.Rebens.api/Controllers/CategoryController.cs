@@ -123,7 +123,7 @@ namespace ias.Rebens.api.Controllers
             var model = new JsonModel();
             var cat = category.GetEntity();
             if(repo.Create(cat, out string error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "", Id = cat.Id });
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Categoria criada com sucesso!", Id = cat.Id });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     {
         private IFaqRepository repo;
 
-        public FaqController(IFaqRepository faqRepository, IContactRepository contactRepository, IAddressRepository addressRepository)
+        public FaqController(IFaqRepository faqRepository)
         {
             this.repo = faqRepository;
         }

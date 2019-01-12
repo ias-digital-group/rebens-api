@@ -165,12 +165,32 @@ namespace ias.Rebens.api.Controllers
                 if (idContact > 0)
                 {
                     if (repo.AddContact(part.Id, idContact, out error))
-                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "", Id = part.Id });
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Parceiro criado com sucesso!", Id = part.Id });
 
                     return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 }
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "", Id = part.Id });
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Parceiro criado com sucesso!", Id = part.Id });
             }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Apaga um parceiro
+        /// </summary>
+        /// <param name="id">Id do parceiro a ser apagado</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+        /// <response code="200">Se o objeto for excluido com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Delete(int id)
+        {
+            var model = new JsonModel();
+
+            if (repo.Delete(id, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Parceiro apagado com sucesso!" });
+
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 

@@ -15,6 +15,8 @@ namespace ias.Rebens.api.Controllers
         private IAddressRepository addressRepo;
         private IContactRepository contactRepo;
         private IFaqRepository faqRepo;
+        private IStaticTextRepository staticTextRepo;
+        private IBannerRepository bannerRepo;
 
         /// <summary>
         /// Construtor
@@ -23,12 +25,16 @@ namespace ias.Rebens.api.Controllers
         /// <param name="contactRepository">Injeção de dependencia do repositório de contato</param>
         /// <param name="addressRepository">Injeção de dependencia do repositório de endereço</param>
         /// <param name="faqRepository">Injeção de dependencia do repositório de faq</param>
-        public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, IFaqRepository faqRepository)
+        /// <param name="staticTextRepository">Injeção de dependencia do repositório de Texto</param>
+        /// <param name="bannerRepository">Injeção de dependencia do repositório de Banner</param>
+        public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository)
         {
             this.repo = operationRepository;
             this.addressRepo = addressRepository;
             this.contactRepo = contactRepository;
             this.faqRepo = faqRepository;
+            this.staticTextRepo = staticTextRepository;
+            this.bannerRepo = bannerRepository;
         }
 
         /// <summary>
@@ -341,6 +347,98 @@ namespace ias.Rebens.api.Controllers
 
                 var ret = new JsonDataModel<List<FaqModel>>();
                 list.ForEach(item => { ret.Data.Add(new FaqModel(item)); });
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista os textos de uma operação 
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <returns>lista dos Textos da operação</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/StaticText")]
+        [ProducesResponseType(typeof(JsonDataModel<List<StaticTextModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListStaticText(int id)
+        {
+            var list = staticTextRepo.ListByOperation(id, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<StaticTextModel>>();
+                ret.Data = new List<StaticTextModel>();
+                list.ForEach(item => { ret.Data.Add(new StaticTextModel(item)); });
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna um texto pelo tipo e operação
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <param name="idType">id do tipo de texto</param>
+        /// <returns>Texto</returns>
+        /// <response code="200">Retorna o Texto, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/StaticText/{idType}")]
+        [ProducesResponseType(typeof(JsonDataModel<StaticTextModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ReadStaticText(int id, int idType)
+        {
+            var text = staticTextRepo.ReadByType(id, idType, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (text == null)
+                    return NoContent();
+
+                var ret = new JsonDataModel<StaticTextModel>();
+                ret.Data = new StaticTextModel(text); 
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista os banners de uma operação 
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <returns>lista dos banners da operação</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/Banners")]
+        [ProducesResponseType(typeof(JsonDataModel<List<BannerModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListBanners(int id)
+        {
+            var list = bannerRepo.ListByOperation(id, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<BannerModel>>();
+                list.ForEach(item => { ret.Data.Add(new BannerModel(item)); });
 
                 return Ok(ret);
             }

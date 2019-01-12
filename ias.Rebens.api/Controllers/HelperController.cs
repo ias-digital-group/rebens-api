@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,13 +21,15 @@ namespace ias.Rebens.api.Controllers
         private IIntegrationTypeRepository integrationRepo;
         private IOperationTypeRepository operationRepo;
         private IStaticTextTypeRepository staticTextRepo;
+        private IHostingEnvironment _hostingEnvironment;
 
-        public HelperController(IBenefitTypeRepository benefitTypeRepository, IIntegrationTypeRepository integrationTypeRepository, IOperationTypeRepository operationTypeRepository, IStaticTextTypeRepository staticTextTypeRepository)
+        public HelperController(IBenefitTypeRepository benefitTypeRepository, IIntegrationTypeRepository integrationTypeRepository, IOperationTypeRepository operationTypeRepository, IStaticTextTypeRepository staticTextTypeRepository, IHostingEnvironment hostingEnvironment)
         {
             this.benefitRepo = benefitTypeRepository;
             this.integrationRepo = integrationTypeRepository;
             this.operationRepo = operationTypeRepository;
             this.staticTextRepo = staticTextTypeRepository;
+            this._hostingEnvironment = hostingEnvironment;
         }
 
         /// <summary>
@@ -81,7 +86,7 @@ namespace ias.Rebens.api.Controllers
                 ret.Data = new List<IntegrationTypeModel>();
                 list.ForEach(item => { ret.Data.Add(new IntegrationTypeModel(item)); });
 
-                return Ok(new { Data = ret });
+                return Ok(ret);
             }
 
             return Ok(new JsonModel() { Status = "error", Message = error });
@@ -112,7 +117,7 @@ namespace ias.Rebens.api.Controllers
                 ret.Data = new List<OperationTypeModel>();
                 list.ForEach(item => { ret.Data.Add(new OperationTypeModel(item)); });
 
-                return Ok(new { Data = ret });
+                return Ok(ret);
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -142,10 +147,90 @@ namespace ias.Rebens.api.Controllers
                 ret.Data = new List<StaticTextTypeModel>();
                 list.ForEach(item => { ret.Data.Add(new StaticTextTypeModel(item)); });
 
-                return Ok(new { Data = ret });
+                return Ok(ret);
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista os tipos de banner
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListBannerType")]
+        [ProducesResponseType(typeof(JsonDataModel<List<BannerModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListBannerType()
+        {
+            var ret = new JsonDataModel<List<BannerTypeModel>>();
+            ret.Data = new List<BannerTypeModel>();
+            ret.Data.Add(new BannerTypeModel() { Id = 1, Name = "Home destaque" });
+            ret.Data.Add(new BannerTypeModel() { Id = 2, Name = "Categoria 1" });
+            ret.Data.Add(new BannerTypeModel() { Id = 3, Name = "Categorai 2" });
+
+            return Ok(ret);
+
+            //var list = staticTextRepo.ListActive(out string error);
+
+            //if (string.IsNullOrEmpty(error))
+            //{
+            //    if (list == null || list.Count() == 0)
+            //        return NoContent();
+
+            //    var ret = new JsonDataModel<List<BannerModel>>();
+            //    ret.Data = new List<StaticTextTypeModel>();
+            //    list.ForEach(item => { ret.Data.Add(new StaticTextTypeModel(item)); });
+
+            //    return Ok(new { Data = ret });
+            //}
+
+            //return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// recebe um arquivo e salva no servidor
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se ocorrer algum erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("UploadFile"), DisableRequestSizeLimit]
+        [ProducesResponseType(typeof(FileUploadResultModel), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult UploadFile()
+        {
+            try
+            {
+                var file = Request.Form.Files[0];
+                string webRootPath = _hostingEnvironment.WebRootPath;
+                string newPath = Path.Combine(webRootPath, "files");
+                if (!Directory.Exists(newPath))
+                    Directory.CreateDirectory(newPath);
+
+                if (file.Length > 0)
+                {
+                    string fileName = Guid.NewGuid().ToString("n") + Path.GetExtension(file.FileName);
+                    //string fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+                    string fullPath = Path.Combine(newPath, fileName);
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        file.CopyTo(stream);
+                    }
+                    return Ok(new FileUploadResultModel() { File = "ok", Url = "http://devrebens.iasdigitalgroup.com/files/" + fileName  });
+                }
+
+                return NoContent();
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+            }
         }
     }
 }

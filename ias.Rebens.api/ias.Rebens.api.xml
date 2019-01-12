@@ -81,6 +81,56 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.BannerController.ListBanner(System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista os banners conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os banners encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BannerController.GetBanner(System.Int32)">
+            <summary>
+            Retorna um banner
+            </summary>
+            <param name="id">Id do banner desejada</param>
+            <returns>Banner</returns>
+            <response code="200">Retorna o banner, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BannerController.Put(ias.Rebens.api.Models.BannerModel)">
+            <summary>
+            Atualiza um banner
+            </summary>
+            <param name="banner">Banner</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BannerController.Post(ias.Rebens.api.Models.BannerModel)">
+            <summary>
+            Cria um Banner
+            </summary>
+            <param name="banner">Banner</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BannerController.Delete(System.Int32)">
+            <summary>
+            Apaga um banner
+            </summary>
+            <param name="id">Id do banner a ser apagado</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.#ctor(ias.Rebens.IBenefitRepository,ias.Rebens.IAddressRepository,ias.Rebens.ICategoryRepository,ias.Rebens.IOperationRepository)">
             <summary>
             Construtor
@@ -422,6 +472,24 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.HelperController.ListBannerType">
+            <summary>
+            Lista os tipos de banner
+            </summary>
+            <returns></returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.HelperController.UploadFile">
+            <summary>
+            recebe um arquivo e salva no servidor
+            </summary>
+            <returns></returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se ocorrer algum erro</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.LogErrorController.Get(System.String,System.Int32,System.Int32)">
             <summary>
             Lista os logs com paginação
@@ -438,7 +506,7 @@
             <param name="token"></param>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.IBannerRepository)">
             <summary>
             Construtor
             </summary>
@@ -446,6 +514,8 @@
             <param name="contactRepository">Injeção de dependencia do repositório de contato</param>
             <param name="addressRepository">Injeção de dependencia do repositório de endereço</param>
             <param name="faqRepository">Injeção de dependencia do repositório de faq</param>
+            <param name="staticTextRepository">Injeção de dependencia do repositório de Texto</param>
+            <param name="bannerRepository">Injeção de dependencia do repositório de Banner</param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.ListOperation(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -556,6 +626,37 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.ListStaticText(System.Int32)">
+            <summary>
+            Lista os textos de uma operação 
+            </summary>
+            <param name="id">id da operação</param>
+            <returns>lista dos Textos da operação</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.ReadStaticText(System.Int32,System.Int32)">
+            <summary>
+            Retorna um texto pelo tipo e operação
+            </summary>
+            <param name="id">id da operação</param>
+            <param name="idType">id do tipo de texto</param>
+            <returns>Texto</returns>
+            <response code="200">Retorna o Texto, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.ListBanners(System.Int32)">
+            <summary>
+            Lista os banners de uma operação 
+            </summary>
+            <param name="id">id da operação</param>
+            <returns>lista dos banners da operação</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.#ctor(ias.Rebens.IPartnerRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IBenefitRepository)">
             <summary>
             Construtor
@@ -604,6 +705,15 @@
             <param name="partner"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do parceiro criado</returns>
             <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PartnerController.Delete(System.Int32)">
+            <summary>
+            Apaga um parceiro
+            </summary>
+            <param name="id">Id do parceiro a ser apagado</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.ListContacts(System.Int32)">
@@ -672,6 +782,56 @@
             <returns>Lista com os benefícios encontradas</returns>
             <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.StaticTextController.ListStaticText(System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista os textos conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Title, Order), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os textos encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.StaticTextController.GetStaticText(System.Int32)">
+            <summary>
+            Retorna um text
+            </summary>
+            <param name="id">Id do texto desejada</param>
+            <returns>StaticText</returns>
+            <response code="200">Retorna o texto, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.StaticTextController.Put(ias.Rebens.api.Models.StaticTextModel)">
+            <summary>
+            Atualiza um texto
+            </summary>
+            <param name="staticText">StaticText</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.StaticTextController.Post(ias.Rebens.api.Models.StaticTextModel)">
+            <summary>
+            Cria um Texto
+            </summary>
+            <param name="staticText">StaticText</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.StaticTextController.Delete(System.Int32)">
+            <summary>
+            Apaga um Texto
+            </summary>
+            <param name="id">Id do texto a ser apagado</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Models.AddressModel">
@@ -753,6 +913,83 @@
         <member name="M:ias.Rebens.api.Models.AddressModel.GetEntity">
             <summary>
             Retorna um objeto Address com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.BannerModel">
+            <summary>
+            Banner
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.Image">
+            <summary>
+            Imagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.Order">
+            <summary>
+            Ordem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.Link">
+            <summary>
+            Link
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.Type">
+            <summary>
+            Tipo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.BackgroundColor">
+            <summary>
+            Cor de fundo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.IdBenefit">
+            <summary>
+            Id do benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.Active">
+            <summary>
+            Ativo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.Start">
+            <summary>
+            Data de inicio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.End">
+            <summary>
+            Data fim
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BannerModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BannerModel.#ctor(ias.Rebens.Banner)">
+            <summary>
+            Construtor que recebe um Banner e popula os atributos
+            </summary>
+            <param name="banner"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BannerModel.GetEntity">
+            <summary>
+            Retorna um objeto Banner com as informações
             </summary>
             <returns></returns>
         </member>

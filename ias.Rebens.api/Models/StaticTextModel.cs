@@ -58,7 +58,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Tipo de texto estático
         /// </summary>
-        public virtual StaticTextType StaticTextType { get; set; }
+        public virtual StaticTextTypeModel StaticTextType { get; set; }
 
         /// <summary>
         /// Construtor
@@ -80,6 +80,8 @@ namespace ias.Rebens.api.Models
             this.IdStaticTextType = staticText.IdStaticTextType;
             this.IdOperation = staticText.IdOperation;
             this.Active = staticText.Active;
+            if (staticText.StaticTextType != null)
+                this.StaticTextType = new StaticTextTypeModel(staticText.StaticTextType);
         }
 
         /// <summary>

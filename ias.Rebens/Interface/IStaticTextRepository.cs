@@ -17,5 +17,7 @@ namespace ias.Rebens
         bool Update(StaticText staticText, out string error);
 
         StaticText ReadByType(int idOperation, int idType, out string error);
+
+        List<StaticText> ListByOperation(int idOperation, out string error);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -59,6 +60,27 @@ namespace ias.Rebens
             return ret;
         }
 
+        public List<StaticText> ListByOperation(int idOperation, out string error)
+        {
+            List<StaticText> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.StaticText.Where(a => a.IdOperation == idOperation).OrderBy(a => a.Title).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextRepository.ListByOperation", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os textos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<StaticText> ret;
@@ -74,6 +96,12 @@ namespace ias.Rebens
                             break;
                         case "title desc":
                             tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "order asc":
+                            tmpList = tmpList.OrderBy(f => f.Order);
+                            break;
+                        case "order desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Order);
                             break;
                         case "id asc":
                             tmpList = tmpList.OrderBy(f => f.Id);
