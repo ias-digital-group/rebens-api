@@ -34,6 +34,14 @@ namespace ias.Rebens.Enums
         December = 12
     }
 
+    public enum AdminUserStatus: int
+    {
+        [Description("Ativo")]
+        Active = 1,
+        [Description("Inativo")]
+        Inactive = 2
+    }
+
     public static class EnumHelper
     {
         public static string GetEnumDescription(Enum value)

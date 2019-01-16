@@ -22,6 +22,11 @@ namespace ias.Rebens.api.Models
         /// Papel
         /// </summary>
         public string Role { get; set; }
+
+        /// <summary>
+        /// Id da Operação
+        /// </summary>
+        public int OperationId { get; set; }
     }
 
     /// <summary>

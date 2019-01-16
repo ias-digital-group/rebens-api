@@ -30,6 +30,17 @@
             </summary>
             <param name="model">{ Id: id do usuário, OldPassword: senha antiga, NewPassword: nova senha, NewPasswordConfirm: confirmação da nova senha }</param>
             <returns></returns>
+            <respons code="200"></respons>
+            <respons code="400"></respons>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.AccountController.RememberPassword(System.String)">
+            <summary>
+            Lembrete de senha
+            </summary>
+            <param name="email">Email</param>
+            <returns></returns>
+            <respons code="200"></respons>
+            <respons code="400"></respons>
         </member>
         <member name="M:ias.Rebens.api.Controllers.AddressController.ListAddress(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -490,6 +501,15 @@
             <response code="204">Se ocorrer algum erro</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.HelperController.SendEmail(ias.Rebens.api.Models.EmailModel)">
+            <summary>
+            envia um email
+            </summary>
+            <param name="email">Email</param>
+            <returns></returns>
+            <response code="200">Retorna um modelo, ou algum erro caso interno</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.LogErrorController.Get(System.String,System.Int32,System.Int32)">
             <summary>
             Lista os logs com paginação
@@ -834,6 +854,48 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.UserController.ListAddress(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Retorna uma lista de usuários conforme os parametros
+            </summary>
+            <param name="operationId">id da operação (default=null)</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os usuários encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.UserController.GetCategory(System.Int32)">
+            <summary>
+            Retorna o usuário conforme o ID
+            </summary>
+            <param name="id">Id do usuário desejada</param>
+            <returns>Endereço</returns>
+            <response code="200">Retorna o usuário, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.UserController.Put(ias.Rebens.api.Models.AdminUserModel)">
+            <summary>
+            Atualiza um usuário
+            </summary>
+            <param name="user"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.UserController.Post(ias.Rebens.api.Models.AdminUserModel)">
+            <summary>
+            Cria um usuário
+            </summary>
+            <param name="user"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do usuário criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Models.AddressModel">
             <summary>
             Endereço
@@ -913,6 +975,58 @@
         <member name="M:ias.Rebens.api.Models.AddressModel.GetEntity">
             <summary>
             Retorna um objeto Address com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.Id">
+            <summary>
+            ID
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.Email">
+            <summary>
+            Email
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.LastLogin">
+            <summary>
+            Data Hora do último login do usuário
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.Status">
+            <summary>
+            Status do usuário (1 = ativo, 2 = inativo) 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.StatusName">
+            <summary>
+            Nome do Status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.IdOperation">
+            <summary>
+            Id da operação do usuário
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.Roles">
+            <summary>
+            Papéis do usuário
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.AdminUserModel.#ctor(ias.Rebens.AdminUser)">
+            <summary>
+            Construtor que recebe um AdminUser e popula os objetos
+            </summary>
+            <param name="adminUser"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.AdminUserModel.GetEntity">
+            <summary>
+            Retorna um objeto AdminUser com as informações
             </summary>
             <returns></returns>
         </member>
@@ -1340,6 +1454,36 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="P:ias.Rebens.api.Models.EmailModel.FromEmail">
+            <summary>
+            Email do destinatário
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.EmailModel.FromName">
+            <summary>
+            Nome do destinatário
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.EmailModel.ToEmail">
+            <summary>
+            Email do remetente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.EmailModel.ToName">
+            <summary>
+            Nome do remetente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.EmailModel.Subject">
+            <summary>
+            Assunto do e-mail
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.EmailModel.Message">
+            <summary>
+            Mensagem
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.FaqModel">
             <summary>
             FAQ
@@ -1491,6 +1635,11 @@
         <member name="P:ias.Rebens.api.Models.LoginResultModel.Role">
             <summary>
             Papel
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.LoginResultModel.OperationId">
+            <summary>
+            Id da Operação
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.UserModel">
@@ -1696,9 +1845,14 @@
             Ativo
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.PartnerModel.Contact">
+        <member name="P:ias.Rebens.api.Models.PartnerModel.Contacts">
             <summary>
-            Contato
+            Contatos do parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PartnerModel.Addresses">
+            <summary>
+            Endereços do parceiro
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.PartnerModel.#ctor">

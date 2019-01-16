@@ -85,14 +85,14 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<AdminUser> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<AdminUser> ListPage(int? operationId, int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<AdminUser> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.AdminUser.Where(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word));
+                    var tmpList = db.AdminUser.Where(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) && (!operationId.HasValue || (operationId.HasValue && a.IdOperation == operationId.Value)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -209,7 +209,6 @@ namespace ias.Rebens
                     {
                         update.Name = adminUser.Name;
                         update.Email = adminUser.Email;
-                        update.LastLogin = adminUser.LastLogin;
                         update.Modified = DateTime.UtcNow;
                         update.Status = adminUser.Status;
 

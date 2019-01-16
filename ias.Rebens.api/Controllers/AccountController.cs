@@ -36,7 +36,7 @@ namespace ias.Rebens.api.Controllers
         /// <respons code="404">se não encontrar o usuário ou a senha não estiver correta</respons>
         [AllowAnonymous]
         [HttpPost("Login")]
-        [ProducesResponseType(typeof(LoginResultModel), 201)]
+        [ProducesResponseType(typeof(TokenModel), 201)]
         [ProducesResponseType(typeof(JsonModel), 404)]
         public IActionResult Login([FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
@@ -53,19 +53,18 @@ namespace ias.Rebens.api.Controllers
                         }
                     );
 
-                    //foreach (var role in user.Roles)
-                    //{
-                    //identity.AddClaim(new Claim(ClaimTypes.Role, "test"));
-                    identity.AddClaim(new Claim(ClaimTypes.Role, "administrator"));
-                    //}
+                    var roles = user.Roles.Split(',');
+                    foreach (var role in roles)
+                    {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                    }
 
                     //foreach (var policy in user.Permissions)
-                    //{
                     //    identity.AddClaim(new Claim("permissions", "permission1"));
-                    //}
 
-                    identity.AddClaim(new Claim("operationId", "77"));
+                    identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
                     identity.AddClaim(new Claim("Id", user.Id.ToString()));
+                    identity.AddClaim(new Claim("Name", user.Name));
 
                     DateTime dataCriacao = DateTime.UtcNow;
                     DateTime dataExpiracao = dataCriacao.AddDays(2);
@@ -82,17 +81,12 @@ namespace ias.Rebens.api.Controllers
                     });
                     var token = handler.WriteToken(securityToken);
 
-                    var Data = new LoginResultModel()
+                    var Data = new TokenModel()
                     {
-                        Token = new TokenModel()
-                        {
-                            authenticated = true,
-                            created = dataCriacao,
-                            expiration = dataExpiracao,
-                            accessToken = token
-                        },
-                        User = new UserModel(){ Id = user.Id, Name = user.Name, Email = user.Email },
-                        Role = "administrator"
+                        authenticated = true,
+                        created = dataCriacao,
+                        expiration = dataExpiracao,
+                        accessToken = token
                     };
 
                     repo.SetLastLogin(user.Id, out error);
@@ -101,12 +95,19 @@ namespace ias.Rebens.api.Controllers
                 }
             }
 
-            var resultModel = new JsonModel()
+            return NotFound(new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
+
+            // TO READ CLAIMS
+            /*
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
             {
-                Status = "error",
-                Message = "O login ou a senha não conferem!"
-            };
-            return NotFound(resultModel);
+                foreach (var claim in principal.Claims)
+                {
+                    Console.WriteLine($"CLAIM TYPE: {claim.Type}; CLAIM VALUE: {claim.Value}");
+                }
+            }
+            */
         }
         
         /// <summary>
@@ -178,11 +179,14 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="model">{ Id: id do usuário, OldPassword: senha antiga, NewPassword: nova senha, NewPasswordConfirm: confirmação da nova senha }</param>
         /// <returns></returns>
+        /// <respons code="200"></respons>
+        /// <respons code="400"></respons>
         [HttpPost("ChangePassword")]
         [Authorize("Bearer")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
         {
-            JsonModel resultModel;
             var user = repo.Read(model.Id, out string error);
             if(user != null)
             {
@@ -193,52 +197,48 @@ namespace ias.Rebens.api.Controllers
                         var salt = Helper.SecurityHelper.GenerateSalt();
                         var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.NewPassword, salt);
                         if (repo.ChangePassword(model.Id, encryptedPassword, salt, out error))
-                            resultModel = new JsonModel() { Status = "ok" };
-                        else
-                            resultModel = new JsonModel() { Status = "error", Message = error };
+                            return Ok(new JsonModel() { Status = "ok" });
+                        
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                     }
-                    else
-                        resultModel = new JsonModel() { Status = "error", Message = "A nova senha e a confirmação da nova senha devem ser iguais!" };
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "A nova senha e a confirmação da nova senha devem ser iguais!" });
                 }
-                else
-                    resultModel = new JsonModel() { Status = "error", Message = "A senha atual não confere!" };
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "A senha atual não confere!" });
             }
-            else
-                resultModel = new JsonModel() { Status = "error", Message = string.IsNullOrEmpty(error) ? "Usuário não encontrado" : error };
-            
-            return Ok(resultModel);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = string.IsNullOrEmpty(error) ? "Usuário não encontrado" : error });
         }
 
-        //[AllowAnonymous]
-        //[HttpGet("RememberPassword")]
-        //public JsonResult RememberPassword([FromQuery]string email)
-        //{
-        //    var repo = new UserRepository();
-        //    var result = new JsonModel();
-        //    result.Status = "error";
-        //    var tmp = repo.ReadByLogin(email, out string error);
-        //    if (tmp != null)
-        //    {
-        //        string password = Helper.SecurityHelper.CreatePassword();
-        //        tmp.SetPassword(password);
-        //        if (repo.ChangePassword(tmp.Id, tmp.PasswordSalt, tmp.EncryptedPassword, out string errorSave))
-        //        {
-        //            if (Helper.EmailHelper.SendPasswordReminder(tmp, password))
-        //                result.Status = "ok";
-        //        }
-        //        else
-        //            result.Message = errorSave;
-
-        //    }
-        //    else
-        //    {
-        //        if (string.IsNullOrEmpty(error))
-        //            result.Message = Resources.Resource.UserRepositoryUserNotFound;
-        //        else
-        //            result.Message = error;
-        //    }
-
-        //    return new JsonResult(result);
-        //}
+        /// <summary>
+        /// Lembrete de senha
+        /// </summary>
+        /// <param name="email">Email</param>
+        /// <returns></returns>
+        /// <respons code="200"></respons>
+        /// <respons code="400"></respons>
+        [AllowAnonymous]
+        [HttpGet("RememberPassword")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult RememberPassword([FromQuery]string email)
+        {
+            var user = repo.ReadByEmail(email, out string error);
+            if (user != null)
+            {
+                string password = Helper.SecurityHelper.CreatePassword();
+                user.SetPassword(password);
+                if (repo.ChangePassword(user.Id, user.PasswordSalt, user.EncryptedPassword, out string errorSave))
+                {
+                    var sendingBlue = new Integration.SendinBlueHelper();
+                    string body = "<p><b>Nova Senha:</b>" + password + "</p>";
+                    var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", "Contato", "[Rebens] - Lembrete de Senha", body);
+                    if (result.Status)
+                        return Ok(new JsonModel() { Status = "ok", Message = result.Message });
+                    return StatusCode(400, new JsonModel() { Status = "ok", Message = result.Message });
+                }
+                return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
+            }
+            return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
+        }
     }
 }
+ 

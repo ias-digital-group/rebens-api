@@ -15,6 +15,8 @@ namespace ias.Rebens
         public int Status { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public int? IdOperation { get; set; }
+        public string Roles { get; set; }
 
         public void SetPassword(string password)
         {

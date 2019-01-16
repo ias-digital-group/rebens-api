@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace ias.Rebens.api.Models
@@ -26,9 +27,14 @@ namespace ias.Rebens.api.Models
         public bool Active { get; set; }
 
         /// <summary>
-        /// Contato
+        /// Contatos do parceiro
         /// </summary>
-        public ContactModel Contact { get; set; }
+        public List<ContactModel> Contacts { get; set; }
+
+        /// <summary>
+        /// Endereços do parceiro
+        /// </summary>
+        public List<AddressModel> Addresses { get; set; }
 
         /// <summary>
         /// Construtor

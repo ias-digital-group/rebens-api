@@ -7,7 +7,7 @@ namespace ias.Rebens.api.Models
 {
     public class FileUploadResultModel
     {
-        public string File { get; set; }
+        public string FileName { get; set; }
         public string Url { get; set; }
     }
 }

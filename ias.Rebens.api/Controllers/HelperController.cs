@@ -214,14 +214,19 @@ namespace ias.Rebens.api.Controllers
 
                 if (file.Length > 0)
                 {
-                    string fileName = Guid.NewGuid().ToString("n") + Path.GetExtension(file.FileName);
-                    //string fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+                    string extension = Path.GetExtension(file.FileName);
+                    string fileName = Guid.NewGuid().ToString("n") + extension;
                     string fullPath = Path.Combine(newPath, fileName);
                     using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
                         file.CopyTo(stream);
                     }
-                    return Ok(new FileUploadResultModel() { File = "ok", Url = "http://devrebens.iasdigitalgroup.com/files/" + fileName  });
+                    var cloudinary = new Integration.CloudinaryHelper();
+                    var ret = cloudinary.UploadFile(fullPath, "rebens");
+                    if(ret.Status)
+                        return Ok(new FileUploadResultModel() { FileName = ret.public_id + extension, Url = ret.secure_url });
+
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = ret.Message });
                 }
 
                 return NoContent();
@@ -231,6 +236,27 @@ namespace ias.Rebens.api.Controllers
             {
                 return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// envia um email
+        /// </summary>
+        /// <param name="email">Email</param>
+        /// <returns></returns>
+        /// <response code="200">Retorna um modelo, ou algum erro caso interno</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("SendEmail")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SendEmail([FromBody]EmailModel email)
+        {
+            var model = new JsonModel();
+            var sendingBlue = new Integration.SendinBlueHelper();
+            var result = sendingBlue.Send(email.ToEmail, email.ToName, email.FromEmail, email.FromName, email.Subject, email.Message);
+            if (result.Status)
+                return Ok(new JsonModel() { Status = "ok", Message = result.Message });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = result.Message });
         }
     }
 }

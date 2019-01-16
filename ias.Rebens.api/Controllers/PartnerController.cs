@@ -137,19 +137,22 @@ namespace ias.Rebens.api.Controllers
             int idContact = 0;
             var model = new JsonModel();
 
-            if (partner.Contact != null)
+            if (partner.Contacts != null && partner.Contacts.Count > 0)
             {
-                var contact = partner.Contact.GetEntity();
-
-                if (partner.Contact.Address != null)
+                foreach(var cont in partner.Contacts)
                 {
-                    var addr = partner.Contact.Address.GetEntity();
-                    if (addressRepo.Create(addr, out error))
+                    var contact = cont.GetEntity();
+
+                    if (cont.Address != null)
                     {
-                        contact.IdAddress = addr.Id;
-                        if (contactRepo.Create(contact, out error))
+                        var addr = cont.Address.GetEntity();
+                        if (addressRepo.Create(addr, out error))
                         {
-                            idContact = contact.Id;
+                            contact.IdAddress = addr.Id;
+                            if (contactRepo.Create(contact, out error))
+                            {
+                                idContact = contact.Id;
+                            }
                         }
                     }
                 }
