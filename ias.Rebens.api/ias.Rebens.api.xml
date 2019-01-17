@@ -854,7 +854,7 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.UserController.ListAddress(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+        <member name="M:ias.Rebens.api.Controllers.UserController.ListUser(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
             <summary>
             Retorna uma lista de usuários conforme os parametros
             </summary>
@@ -1454,6 +1454,93 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:ias.Rebens.api.Models.CustomerModel">
+            <summary>
+            Cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Gender">
+            <summary>
+            Sexo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Birthday">
+            <summary>
+            Data de nascimento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Email">
+            <summary>
+            Email
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.IdAddress">
+            <summary>
+            Id do Endereço
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Cpf">
+            <summary>
+            CPF
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.RG">
+            <summary>
+            RG
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Phone">
+            <summary>
+            Telefone
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Cellphone">
+            <summary>
+            Celular
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.CustomerType">
+            <summary>
+            Tipo de cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CustomerModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CustomerModel.#ctor(ias.Rebens.Customer)">
+            <summary>
+            Construtor que recebe um objeto Customer e já popula os atributos
+            </summary>
+            <param name="customer"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CustomerModel.GetEntity">
+            <summary>
+            Retorna um objeto Customer com as informações
+            </summary>
+            <returns></returns>
+        </member>
         <member name="P:ias.Rebens.api.Models.EmailModel.FromEmail">
             <summary>
             Email do destinatário
@@ -1956,6 +2043,11 @@
         <member name="P:ias.Rebens.api.Models.StaticTextModel.IdOperation">
             <summary>
             Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.StaticTextModel.IdBenefit">
+            <summary>
+            Id do benefício
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.StaticTextModel.Active">

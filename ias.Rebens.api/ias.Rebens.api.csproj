@@ -10,10 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cloudinary.Core" Version="1.31.0" />
-    <PackageReference Include="Cloudinary.Core.DependencyInjection" Version="1.31.0" />
-    <PackageReference Include="Cloudinary.Core.Html" Version="1.31.0" />
-    <PackageReference Include="Cloudinary.Core.Sync" Version="1.31.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
@@ -24,13 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ias.Rebens\ias.Rebens.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="mailinblue">
-      <HintPath>..\package\mailinblue.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
   </ItemGroup>
 
 </Project>

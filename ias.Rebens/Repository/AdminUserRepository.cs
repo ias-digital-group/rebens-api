@@ -47,6 +47,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     adminUser.Modified = adminUser.Created = DateTime.UtcNow;
+                    adminUser.EncryptedPassword = adminUser.PasswordSalt = "";
+
                     db.AdminUser.Add(adminUser);
                     db.SaveChanges();
                     error = null;

@@ -11,6 +11,7 @@ namespace ias.Rebens
             BenefitAddresses = new HashSet<BenefitAddress>();
             BenefitCategories = new HashSet<BenefitCategory>();
             BenefitOperations = new HashSet<BenefitOperation>();
+            StaticTexts = new HashSet<StaticText>();
         }
 
         public int Id { get; set; }
@@ -40,5 +41,6 @@ namespace ias.Rebens
         public virtual ICollection<BenefitAddress> BenefitAddresses { get; set; }
         public virtual ICollection<BenefitCategory> BenefitCategories { get; set; }
         public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }
+        public virtual ICollection<StaticText> StaticTexts { get; set; }
     }
 }

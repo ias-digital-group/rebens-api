@@ -47,8 +47,11 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Id da operação
         /// </summary>
-        [Required]
-        public int IdOperation { get; set; }
+        public int? IdOperation { get; set; }
+        /// <summary>
+        /// Id do benefício
+        /// </summary>
+        public int? IdBenefit { get; set; }
         /// <summary>
         /// Ativo
         /// </summary>
@@ -79,6 +82,7 @@ namespace ias.Rebens.api.Models
             this.Order = staticText.Order;
             this.IdStaticTextType = staticText.IdStaticTextType;
             this.IdOperation = staticText.IdOperation;
+            this.IdBenefit = staticText.IdBenefit;
             this.Active = staticText.Active;
             if (staticText.StaticTextType != null)
                 this.StaticTextType = new StaticTextTypeModel(staticText.StaticTextType);
@@ -100,6 +104,7 @@ namespace ias.Rebens.api.Models
                 Order = this.Order,
                 IdStaticTextType = this.IdStaticTextType,
                 IdOperation = this.IdOperation,
+                IdBenefit = this.IdBenefit,
                 Active = this.Active,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow

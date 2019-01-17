@@ -324,6 +324,46 @@ namespace ias.Rebens
                     .HasConstraintName("FK_Contact_Address");
             });
 
+            modelBuilder.Entity<Customer>(entity =>
+            {
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.Gender).IsRequired().HasMaxLength(1);
+
+                entity.Property(e => e.Birthday).HasColumnType("datetime");
+
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.Cpf).HasMaxLength(50);
+
+                entity.Property(e => e.RG).HasMaxLength(50);
+
+                entity.Property(e => e.Phone).HasMaxLength(50);
+
+                entity.Property(e => e.Cellphone).HasMaxLength(50);
+
+                entity.Property(e => e.EncryptedPassword).HasMaxLength(300);
+
+                entity.Property(e => e.PasswordSalt).HasMaxLength(300);
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+
+                entity.HasOne(e => e.Operation)
+                    .WithMany(e => e.Customers)
+                    .HasForeignKey(e => e.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Customer_Operation");
+
+                entity.HasOne(e => e.Address)
+                    .WithMany(e => e.Customers)
+                    .HasForeignKey(e => e.IdAddress)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Customer_Address");
+            });
+
             modelBuilder.Entity<Faq>(entity =>
             {
                 entity.Property(e => e.Answer)
@@ -540,6 +580,12 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_StaticText_Operation");
+
+                entity.HasOne(d => d.Benefit)
+                    .WithMany(p => p.StaticTexts)
+                    .HasForeignKey(d => d.IdBenefit)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_StaticText_Benefit");
 
                 entity.HasOne(d => d.StaticTextType)
                     .WithMany(p => p.StaticTexts)

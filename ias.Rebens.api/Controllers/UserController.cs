@@ -36,7 +36,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<AdminUserModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListAddress([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", int? operationId = null)
+        public IActionResult ListUser([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", int? operationId = null)
         {
             var list = repo.ListPage(operationId, page, pageItems, searchWord, sort, out string error);
 

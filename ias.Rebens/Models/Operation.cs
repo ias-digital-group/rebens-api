@@ -13,6 +13,7 @@ namespace ias.Rebens
             StaticTexts = new HashSet<StaticText>();
             OperationAddresses = new HashSet<OperationAddress>();
             OperationContacts = new HashSet<OperationContact>();
+            Customers = new HashSet<Customer>();
         }
 
         public int Id { get; set; }
@@ -34,5 +35,6 @@ namespace ias.Rebens
         public virtual ICollection<StaticText> StaticTexts { get; set; }
         public virtual ICollection<OperationAddress> OperationAddresses { get; set; }
         public virtual ICollection<OperationContact> OperationContacts { get; set; }
+        public virtual ICollection<Customer> Customers { get; set; }
     }
 }
