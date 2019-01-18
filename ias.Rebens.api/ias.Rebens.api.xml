@@ -1392,6 +1392,31 @@
             Confirmação da nova senha
             </summary>
         </member>
+        <member name="T:ias.Rebens.api.Models.ConfigurationModel">
+            <summary>
+            Configuration
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ConfigurationModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ConfigurationModel.IdOperation">
+            <summary>
+            Id Operation
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ConfigurationModel.ConfigurationType">
+            <summary>
+            Configuration Type
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ConfigurationModel.Config">
+            <summary>
+            Config info
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.ContactModel">
             <summary>
             Contato
@@ -1522,6 +1547,16 @@
         <member name="P:ias.Rebens.api.Models.CustomerModel.Status">
             <summary>
             Status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Configuration">
+            <summary>
+            Configuration
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Configurations">
+            <summary>
+            Lista de Configurações 
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.CustomerModel.#ctor">

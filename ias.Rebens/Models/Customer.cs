@@ -20,6 +20,7 @@ namespace ias.Rebens
         public int CustomerType { get; set; }
         public string EncryptedPassword { get; set; }
         public string PasswordSalt { get; set; }
+        public string Configuration { get; set; }
         public int Status { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }

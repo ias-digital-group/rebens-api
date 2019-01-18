@@ -31,6 +31,7 @@ namespace ias.Rebens
         public virtual DbSet<BenefitOperationPosition> BenefitOperationPosition { get; set; }
         public virtual DbSet<BenefitType> BenefitType { get; set; }
         public virtual DbSet<Category> Category { get; set; }
+        public virtual DbSet<Configuration> Configuration { get; set; }
         public virtual DbSet<Contact> Contact { get; set; }
         public virtual DbSet<Faq> Faq { get; set; }
         public virtual DbSet<IntegrationType> IntegrationType { get; set; }
@@ -300,6 +301,13 @@ namespace ias.Rebens
                     .HasConstraintName("FK_Category_Category");
             });
 
+            modelBuilder.Entity<Configuration>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+            });
+
             modelBuilder.Entity<Contact>(entity =>
             {
                 entity.Property(e => e.CellPhone).HasMaxLength(50);
@@ -362,6 +370,7 @@ namespace ias.Rebens
                     .HasForeignKey(e => e.IdAddress)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Customer_Address");
+
             });
 
             modelBuilder.Entity<Faq>(entity =>

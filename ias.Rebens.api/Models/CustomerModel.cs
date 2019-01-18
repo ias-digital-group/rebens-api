@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace ias.Rebens.api.Models
@@ -74,6 +75,14 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public int Status { get; set; }
+        /// <summary>
+        /// Configuration
+        /// </summary>
+        public string Configuration { get; set; }
+        /// <summary>
+        /// Lista de Configurações 
+        /// </summary>
+        public List<Helper.Config.ConfigurationValue> Configurations { get; set; }
 
         /// <summary>
         /// Construtor
@@ -99,6 +108,7 @@ namespace ias.Rebens.api.Models
             this.Cellphone = customer.Cellphone;
             this.CustomerType = customer.CustomerType;
             this.Status = customer.Status;
+            this.Configuration = customer.Configuration;
         }
 
         /// <summary>
@@ -121,6 +131,7 @@ namespace ias.Rebens.api.Models
                 Cellphone = this.Cellphone,
                 CustomerType = this.CustomerType,
                 Status = this.Status,
+                Configuration = this.Configuration,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };
