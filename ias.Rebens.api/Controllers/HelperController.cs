@@ -168,27 +168,35 @@ namespace ias.Rebens.api.Controllers
         {
             var ret = new JsonDataModel<List<BannerTypeModel>>();
             ret.Data = new List<BannerTypeModel>();
-            ret.Data.Add(new BannerTypeModel() { Id = 1, Name = "Home destaque" });
-            ret.Data.Add(new BannerTypeModel() { Id = 2, Name = "Categoria 1" });
-            ret.Data.Add(new BannerTypeModel() { Id = 3, Name = "Categorai 2" });
+            foreach (Enums.BannerType type in Enum.GetValues(typeof(Enums.BannerType)))
+            {
+                ret.Data.Add(new BannerTypeModel() { Id = (int)type, Name = Enums.EnumHelper.GetEnumDescription(type) });
+            }
 
             return Ok(ret);
+        }
 
-            //var list = staticTextRepo.ListActive(out string error);
+        /// <summary>
+        /// Lista os tipos de configuração
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListConfigurationType")]
+        [ProducesResponseType(typeof(JsonDataModel<List<ConfigurationTypeModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListConfigurationType()
+        {
+            var ret = new JsonDataModel<List<ConfigurationTypeModel>>();
+            ret.Data = new List<ConfigurationTypeModel>();
+            foreach (Enums.ConfigurationType type in Enum.GetValues(typeof(Enums.ConfigurationType)))
+            {
+                ret.Data.Add(new ConfigurationTypeModel() { Id = (int)type, Name = Enums.EnumHelper.GetEnumDescription(type) });
+            }
 
-            //if (string.IsNullOrEmpty(error))
-            //{
-            //    if (list == null || list.Count() == 0)
-            //        return NoContent();
-
-            //    var ret = new JsonDataModel<List<BannerModel>>();
-            //    ret.Data = new List<StaticTextTypeModel>();
-            //    list.ForEach(item => { ret.Data.Add(new StaticTextTypeModel(item)); });
-
-            //    return Ok(new { Data = ret });
-            //}
-
-            //return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            return Ok(ret);
         }
 
         /// <summary>

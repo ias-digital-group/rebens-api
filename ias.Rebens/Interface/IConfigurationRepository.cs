@@ -13,5 +13,9 @@ namespace ias.Rebens
         bool Create(Configuration configuration, out string error);
 
         bool Update(Configuration configuration, out string error);
+
+        string ReadConfigurationString(int idOperation, int type, out string error);
+
+        List<Helper.Config.Configuration> ListConfiguration(int idOperation, int type, out string error);
     }
 }

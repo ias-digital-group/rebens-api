@@ -44,7 +44,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<BenefitModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefit([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
 
@@ -82,7 +82,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<BenefitModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GetBenefit(int id)
+        public IActionResult Get(int id)
         {
             var benefit = repo.Read(id, out string error);
 

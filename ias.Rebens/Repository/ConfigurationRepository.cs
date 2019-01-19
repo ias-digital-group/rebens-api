@@ -111,5 +111,48 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public string ReadConfigurationString(int idOperation, int type, out string error)
+        {
+            string ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Configuration.Where(c => c.IdOperation == idOperation && c.ConfigurationType == type).Select(c => c.Config).First();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ConfigurationRepository.ReadConfigurationString", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler a configuração. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Helper.Config.Configuration> ListConfiguration(int idOperation, int type, out string error)
+        {
+            List<Helper.Config.Configuration> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    string tmp = db.Configuration.Where(c => c.IdOperation == idOperation && c.ConfigurationType == type).Select(c => c.Config).First();
+                    ret = Helper.Config.ConfigurationHelper.GetConfigurations(tmp);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ConfigurationRepository.ListConfiguration", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler a configuração. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

@@ -36,7 +36,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<AdminUserModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListUser([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", int? operationId = null)
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", int? operationId = null)
         {
             var list = repo.ListPage(operationId, page, pageItems, searchWord, sort, out string error);
 
@@ -74,7 +74,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<AdminUserModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GetCategory(int id)
+        public IActionResult Get(int id)
         {
             var addr = repo.Read(id, out string error);
 

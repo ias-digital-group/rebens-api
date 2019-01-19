@@ -33,6 +33,7 @@ namespace ias.Rebens
         public virtual DbSet<Category> Category { get; set; }
         public virtual DbSet<Configuration> Configuration { get; set; }
         public virtual DbSet<Contact> Contact { get; set; }
+        public virtual DbSet<Customer> Customer { get; set; }
         public virtual DbSet<Faq> Faq { get; set; }
         public virtual DbSet<IntegrationType> IntegrationType { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }

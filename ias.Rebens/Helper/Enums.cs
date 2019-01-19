@@ -34,6 +34,22 @@ namespace ias.Rebens.Enums
         December = 12
     }
 
+    public enum ConfigurationType
+    {
+        [Description("Cliente")]
+        Customer = 1
+    }
+
+    public enum BannerType
+    {
+        [Description("Home")]
+        Home = 1,
+        [Description("Categoria")]
+        Category = 2,
+        [Description("Destaque")]
+        Highlight = 3
+    }
+
     public enum AdminUserStatus: int
     {
         [Description("Ativo")]

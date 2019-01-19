@@ -33,7 +33,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<FaqModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListFaq([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Question ASC", [FromQuery]string searchWord = "")
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Question ASC", [FromQuery]string searchWord = "")
         {
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
 
@@ -71,7 +71,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<FaqModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GetFaq(int id)
+        public IActionResult Get(int id)
         {
             var faq = repo.Read(id, out string error);
 

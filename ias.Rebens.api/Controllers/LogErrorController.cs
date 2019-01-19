@@ -27,7 +27,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems"></param>
         /// <returns></returns>
         [HttpGet]
-        public JsonResult Get([FromQuery]string token, [FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        public JsonResult List([FromQuery]string token, [FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
             var model = new JsonModel();
             if (string.IsNullOrEmpty(token))
