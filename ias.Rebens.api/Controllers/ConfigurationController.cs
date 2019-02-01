@@ -1,10 +1,14 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using ias.Rebens.api.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ias.Rebens.api.Controllers
 {
-    [Route("api/[controller]")]
+    /// <summary>
+    /// Configuration Controller
+    /// </summary>
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class ConfigurationController : ControllerBase
     {

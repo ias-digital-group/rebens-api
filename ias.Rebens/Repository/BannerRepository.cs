@@ -63,14 +63,40 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Banner> ListByBenefit(int idBenefit, out string error)
+        public ResultPage<Banner> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Banner> ret;
+            ResultPage<Banner> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Banner.Where(b => b.IdBenefit == idBenefit && b.Active).OrderBy(f => f.Order).ToList();
+                    var tmpList = db.Banner.Where(b => b.IdBenefit == idBenefit && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "order asc":
+                            tmpList = tmpList.OrderBy(f => f.Order);
+                            break;
+                        case "order desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Order);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Banner.Count(b => b.IdBenefit == idBenefit && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
+
+                    ret = new ResultPage<Banner>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -84,14 +110,40 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Banner> ListByOperation(int idOperation, out string error)
+        public ResultPage<Banner> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Banner> ret;
+            ResultPage<Banner> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Banner.Where(b => b.BannerOperations.Any( o=>o.IdOperation == idOperation) && b.Active).OrderBy(f => f.Order).ToList();
+                    var tmpList = db.Banner.Where(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "order asc":
+                            tmpList = tmpList.OrderBy(f => f.Order);
+                            break;
+                        case "order desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Order);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Banner.Count(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
+
+                    ret = new ResultPage<Banner>(list, page, pageItems, total);
                     error = null;
                 }
             }

@@ -253,14 +253,52 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Operation> ListByBenefit(int idBenefit, out string error)
+        public ResultPage<Operation> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Operation> ret;
+            ResultPage<Operation> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Operation.Where(o => o.Active && o.BenefitOperations.Any(bo => bo.IdBenefit == idBenefit)).OrderBy(o => o.Title).ToList();
+                    var tmpList = db.Operation.Where(o => o.Active && o.BenefitOperations.Any(bo => bo.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "domain asc":
+                            tmpList = tmpList.OrderBy(f => f.Domain);
+                            break;
+                        case "domain desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Domain);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "companyname asc":
+                            tmpList = tmpList.OrderBy(f => f.CompanyName);
+                            break;
+                        case "companyname desc":
+                            tmpList = tmpList.OrderByDescending(f => f.CompanyName);
+                            break;
+                        case "companydoc asc":
+                            tmpList = tmpList.OrderBy(f => f.CompanyDoc);
+                            break;
+                        case "companydoc desc":
+                            tmpList = tmpList.OrderByDescending(f => f.CompanyDoc);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Operation.Count(o => o.Active && o.BenefitOperations.Any(bo => bo.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
+
+                    ret = new ResultPage<Operation>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -274,14 +312,52 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Operation> ListByBanner(int idBanner, out string error)
+        public ResultPage<Operation> ListByBanner(int idBanner, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Operation> ret;
+            ResultPage<Operation> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Operation.Where(o => o.Active && o.BannerOperations.Any(bo => bo.IdBanner == idBanner)).OrderBy(o => o.Title).ToList();
+                    var tmpList = db.Operation.Where(o => o.Active && o.BannerOperations.Any(bo => bo.IdBanner == idBanner) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "domain asc":
+                            tmpList = tmpList.OrderBy(f => f.Domain);
+                            break;
+                        case "domain desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Domain);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "companyname asc":
+                            tmpList = tmpList.OrderBy(f => f.CompanyName);
+                            break;
+                        case "companyname desc":
+                            tmpList = tmpList.OrderByDescending(f => f.CompanyName);
+                            break;
+                        case "companydoc asc":
+                            tmpList = tmpList.OrderBy(f => f.CompanyDoc);
+                            break;
+                        case "companydoc desc":
+                            tmpList = tmpList.OrderByDescending(f => f.CompanyDoc);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Operation.Count(o => o.Active && o.BannerOperations.Any(bo => bo.IdBanner == idBanner) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
+
+                    ret = new ResultPage<Operation>(list, page, pageItems, total);
                     error = null;
                 }
             }

@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Helper Controller
+    /// </summary>
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
@@ -23,6 +23,14 @@ namespace ias.Rebens.api.Controllers
         private IStaticTextTypeRepository staticTextRepo;
         private IHostingEnvironment _hostingEnvironment;
 
+        /// <summary>
+        /// Helper controller constructor that receive the dependency injection of the repositories of BenefiteType, IntegrationType, OperationType, StaticTextType and Hosting Enviroment
+        /// </summary>
+        /// <param name="benefitTypeRepository"></param>
+        /// <param name="integrationTypeRepository"></param>
+        /// <param name="operationTypeRepository"></param>
+        /// <param name="staticTextTypeRepository"></param>
+        /// <param name="hostingEnvironment"></param>
         public HelperController(IBenefitTypeRepository benefitTypeRepository, IIntegrationTypeRepository integrationTypeRepository, IOperationTypeRepository operationTypeRepository, IStaticTextTypeRepository staticTextTypeRepository, IHostingEnvironment hostingEnvironment)
         {
             this.benefitRepo = benefitTypeRepository;

@@ -6,13 +6,20 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// StaticText Controller
+    /// </summary>
     [Produces("application/json")]
-    [Route("api/StaticText")]
+    [Route("api/StaticText"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class StaticTextController : ControllerBase
     {
         private IStaticTextRepository repo;
 
+        /// <summary>
+        /// Static Text Controller Construction
+        /// </summary>
+        /// <param name="staticTextRepository"></param>
         public StaticTextController(IStaticTextRepository staticTextRepository)
         {
             this.repo = staticTextRepository;

@@ -16,10 +16,10 @@ namespace ias.Rebens
 
         bool Update(Address address, out string error);
 
-        List<Address> ListByOperation(int idOperation, out string error);
+        ResultPage<Address> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
 
-        List<Address> ListByPartner(int idPartner, out string error);
+        ResultPage<Address> ListByPartner(int idPartner, int page, int pageItems, string word, string sort, out string error);
 
-        List<Address> ListByBenefit(int idBenefit, out string error);
+        ResultPage<Address> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error);
     }
 }

@@ -18,6 +18,6 @@ namespace ias.Rebens
 
         StaticText ReadByType(int idOperation, int idType, out string error);
 
-        List<StaticText> ListByOperation(int idOperation, out string error);
+        ResultPage<StaticText> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
     }
 }

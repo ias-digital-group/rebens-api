@@ -6,8 +6,11 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Partner Controller
+    /// </summary>
     [Produces("application/json")]
-    [Route("api/Partner")]
+    [Route("api/Partner"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class PartnerController : ControllerBase
     {
@@ -201,6 +204,10 @@ namespace ias.Rebens.api.Controllers
         /// Lista os contatos de um parceiro
         /// </summary>
         /// <param name="id">id do parceiro</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Email, JobTitle), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com os contatos encontradas</returns>
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -209,19 +216,25 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<List<ContactModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListContacts(int id)
+        public IActionResult ListContacts(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
         {
-            var list = contactRepo.ListByPartner(id, out string error);
+            var list = contactRepo.ListByPartner(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<ContactModel>>();
+                var ret = new ResultPageModel<ContactModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
                 ret.Data = new List<ContactModel>();
-                foreach (var contact in list)
-                    ret.Data.Add(new ContactModel(contact));
+                foreach (var part in list.Page)
+                    ret.Data.Add(new ContactModel(part));
 
                 return Ok(ret);
             }
@@ -233,6 +246,10 @@ namespace ias.Rebens.api.Controllers
         /// Lista os endereço de um parceiro
         /// </summary>
         /// <param name="id">id do parceiro</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com os endereços encontradas</returns>
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -241,18 +258,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<List<AddressModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListAddress(int id)
+        public IActionResult ListAddress(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = addressRepo.ListByPartner(id, out string error);
+            var list = addressRepo.ListByPartner(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<AddressModel>>();
+                var ret = new ResultPageModel<AddressModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
                 ret.Data = new List<AddressModel>();
-                foreach (var addr in list)
+                foreach (var addr in list.Page)
                     ret.Data.Add(new AddressModel(addr));
 
                 return Ok(ret);
@@ -347,6 +370,10 @@ namespace ias.Rebens.api.Controllers
         /// Lista os endereço de um parceiro
         /// </summary>
         /// <param name="id">id do parceiro</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com os benefícios encontradas</returns>
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -355,19 +382,25 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<List<BenefitModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefits(int id)
+        public IActionResult ListBenefits(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = benefitRepo.ListByPartner(id, out string error);
+            var list = benefitRepo.ListByPartner(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<BenefitModel>>();
+                var ret = new ResultPageModel<BenefitModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
                 ret.Data = new List<BenefitModel>();
-                foreach (var benfit in list)
-                    ret.Data.Add(new BenefitModel(benfit));
+                foreach (var benefit in list.Page)
+                    ret.Data.Add(new BenefitModel(benefit));
 
                 return Ok(ret);
             }

@@ -196,14 +196,41 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Category> ListByBenefit(int idBenefit, out string error)
+        public ResultPage<Category> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Category> ret;
+            ResultPage<Category> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Category.Where(c => c.Active && c.BenefitCategories.Any(bc => bc.IdBenefit == idBenefit)).ToList();
+                    var tmpList = db.Category.Where(c => c.Active && c.BenefitCategories.Any(bc => bc.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || c.Name.Contains(word)));
+
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(c => c.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(c => c.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Id);
+                            break;
+                        case "order asc":
+                            tmpList = tmpList.OrderBy(c => c.Order);
+                            break;
+                        case "order desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Order);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Category.Count(c => c.Active && c.BenefitCategories.Any(bc => bc.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || c.Name.Contains(word)));
+
+                    ret = new ResultPage<Category>(list, page, pageItems, total);
                     error = null;
                 }
             }

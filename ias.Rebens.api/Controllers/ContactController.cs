@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Contact Controller
+    /// </summary>
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
@@ -13,6 +16,11 @@ namespace ias.Rebens.api.Controllers
         private IContactRepository repo;
         private IAddressRepository addrRepo;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="contactRepository"></param>
+        /// <param name="addressRepository"></param>
         public ContactController(IContactRepository contactRepository, IAddressRepository addressRepository)
         {
             this.repo = contactRepository;

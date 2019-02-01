@@ -16,6 +16,6 @@ namespace ias.Rebens
 
         bool Update(Faq category, out string error);
 
-        List<Faq> ListByOperation(int idOperation, out string error);
+        ResultPage<Faq> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
     }
 }

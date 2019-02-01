@@ -9,13 +9,20 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Account Controller
+    /// </summary>
     [Produces("application/json")]
-    [Route("api/Account")]
+    [Route("api/Account"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class AccountController : ControllerBase
     {
         private IAdminUserRepository repo;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="adminUserRepository"></param>
         public AccountController(IAdminUserRepository adminUserRepository)
         {
             this.repo = adminUserRepository;
@@ -178,7 +185,6 @@ namespace ias.Rebens.api.Controllers
         /// <respons code="200"></respons>
         /// <respons code="400"></respons>
         [HttpPost("ChangePassword")]
-        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)

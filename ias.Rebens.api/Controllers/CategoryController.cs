@@ -7,14 +7,22 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Category Controller
+    /// </summary>
     [Produces("application/json")]
-    [Route("api/Category"), Authorize("Bearer", Roles = "administrator,test")]
+    [Route("api/Category"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class CategoryController : ControllerBase
     {
         private ICategoryRepository repo;
         private ILogErrorRepository logRepo;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="categoryRepository"></param>
+        /// <param name="logErrorRepository"></param>
         public CategoryController(ICategoryRepository categoryRepository, ILogErrorRepository logErrorRepository) {
             this.repo = categoryRepository;
             this.logRepo = logErrorRepository;
@@ -41,7 +49,7 @@ namespace ias.Rebens.api.Controllers
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count() == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
                 var ret = new ResultPageModel<CategoryModel>();

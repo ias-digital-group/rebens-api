@@ -60,14 +60,40 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<StaticText> ListByOperation(int idOperation, out string error)
+        public ResultPage<StaticText> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error)
         {
-            List<StaticText> ret;
+            ResultPage<StaticText> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.StaticText.Where(a => a.IdOperation == idOperation).OrderBy(a => a.Title).ToList();
+                    var tmpList = db.StaticText.Where(s => s.IdOperation == idOperation && (string.IsNullOrEmpty(word) || s.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "order asc":
+                            tmpList = tmpList.OrderBy(f => f.Order);
+                            break;
+                        case "order desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Order);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.StaticText.Count(s => s.IdOperation == idOperation && (string.IsNullOrEmpty(word) || s.Title.Contains(word)));
+
+                    ret = new ResultPage<StaticText>(list, page, pageItems, total);
                     error = null;
                 }
             }

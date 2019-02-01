@@ -79,14 +79,52 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Address> ListByOperation(int idOperation, out string error)
+        public ResultPage<Address> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Address> ret;
+            ResultPage<Address> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Address.Where(a => a.OperationAddresses.Any(oa => oa.IdOperation == idOperation)).OrderBy(a => a.Name).ToList();
+                    var tmpList = db.Address.Where(a => a.OperationAddresses.Any(oa => oa.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "street asc":
+                            tmpList = tmpList.OrderBy(f => f.Street);
+                            break;
+                        case "street desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Street);
+                            break;
+                        case "city asc":
+                            tmpList = tmpList.OrderBy(f => f.City);
+                            break;
+                        case "city desc":
+                            tmpList = tmpList.OrderByDescending(f => f.City);
+                            break;
+                        case "state asc":
+                            tmpList = tmpList.OrderBy(f => f.State);
+                            break;
+                        case "state desc":
+                            tmpList = tmpList.OrderByDescending(f => f.State);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Address.Count(a => a.OperationAddresses.Any(oa => oa.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+
+                    ret = new ResultPage<Address>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -100,14 +138,52 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Address> ListByBenefit(int idBenefit, out string error)
+        public ResultPage<Address> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Address> ret;
+            ResultPage<Address> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Address.Where(a => a.BenefitAddresses.Any(oa => oa.IdBenefit == idBenefit)).OrderBy(a => a.Name).ToList();
+                    var tmpList = db.Address.Where(a => a.BenefitAddresses.Any(ba => ba.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "street asc":
+                            tmpList = tmpList.OrderBy(f => f.Street);
+                            break;
+                        case "street desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Street);
+                            break;
+                        case "city asc":
+                            tmpList = tmpList.OrderBy(f => f.City);
+                            break;
+                        case "city desc":
+                            tmpList = tmpList.OrderByDescending(f => f.City);
+                            break;
+                        case "state asc":
+                            tmpList = tmpList.OrderBy(f => f.State);
+                            break;
+                        case "state desc":
+                            tmpList = tmpList.OrderByDescending(f => f.State);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Address.Count(a => a.BenefitAddresses.Any(ba => ba.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+
+                    ret = new ResultPage<Address>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -121,14 +197,52 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Address> ListByPartner(int idPartner, out string error)
+        public ResultPage<Address> ListByPartner(int idPartner, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Address> ret;
+            ResultPage<Address> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Address.Where(a => a.PartnerAddresses.Any(pa => pa.IdPartner == idPartner)).OrderBy(a => a.Name).ToList();
+                    var tmpList = db.Address.Where(a => a.PartnerAddresses.Any(pa => pa.IdPartner == idPartner) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "street asc":
+                            tmpList = tmpList.OrderBy(f => f.Street);
+                            break;
+                        case "street desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Street);
+                            break;
+                        case "city asc":
+                            tmpList = tmpList.OrderBy(f => f.City);
+                            break;
+                        case "city desc":
+                            tmpList = tmpList.OrderByDescending(f => f.City);
+                            break;
+                        case "state asc":
+                            tmpList = tmpList.OrderBy(f => f.State);
+                            break;
+                        case "state desc":
+                            tmpList = tmpList.OrderByDescending(f => f.State);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Address.Count(a => a.PartnerAddresses.Any(pa => pa.IdPartner == idPartner) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+
+                    ret = new ResultPage<Address>(list, page, pageItems, total);
                     error = null;
                 }
             }

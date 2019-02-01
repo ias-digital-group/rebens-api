@@ -114,14 +114,46 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Faq> ListByOperation(int idOperation, out string error)
+        public ResultPage<Faq> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Faq> ret;
+            ResultPage<Faq> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Faq.Where(f => f.IdOperation == idOperation && f.Active).OrderBy(f => f.Order).ToList();
+                    var tmpList = db.Faq.Where(f => f.Active && f.IdOperation == idOperation && (string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "question asc":
+                            tmpList = tmpList.OrderBy(f => f.Question);
+                            break;
+                        case "question desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Question);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "answer asc":
+                            tmpList = tmpList.OrderBy(f => f.Answer);
+                            break;
+                        case "answer desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Answer);
+                            break;
+                        case "order asc":
+                            tmpList = tmpList.OrderBy(f => f.Order);
+                            break;
+                        case "order desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Order);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Faq.Count(f => f.Active && f.IdOperation == idOperation && (string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word)));
+
+                    ret = new ResultPage<Faq>(list, page, pageItems, total);
                     error = null;
                 }
             }

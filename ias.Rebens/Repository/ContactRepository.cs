@@ -74,14 +74,46 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Contact> ListByOperation(int idOperation, out string error)
+        public ResultPage<Contact> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Contact> ret;
+            ResultPage<Contact> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Contact.Where(c => c.OperationContacts.Any(oc => oc.IdOperation == idOperation)).OrderBy(c => c.Name).ToList();
+                    var tmpList = db.Contact.Include("Address").Where(c => c.OperationContacts.Any(oc => oc.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(c => c.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(c => c.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Id);
+                            break;
+                        case "email asc":
+                            tmpList = tmpList.OrderBy(c => c.Email);
+                            break;
+                        case "email desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Email);
+                            break;
+                        case "jobtitle asc":
+                            tmpList = tmpList.OrderBy(c => c.JobTitle);
+                            break;
+                        case "jobtitle desc":
+                            tmpList = tmpList.OrderByDescending(c => c.JobTitle);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Contact.Count(c => c.OperationContacts.Any(oc => oc.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word)));
+
+                    ret = new ResultPage<Contact>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -95,14 +127,46 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Contact> ListByPartner(int idPartner, out string error)
+        public ResultPage<Contact> ListByPartner(int idPartner, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Contact> ret;
+            ResultPage<Contact> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Contact.Where(c => c.PartnerContacts.Any(pc => pc.IdPartner == idPartner)).OrderBy(c => c.Name).ToList();
+                    var tmpList = db.Contact.Include("Address").Where(c => c.PartnerContacts.Any(pc => pc.IdPartner == idPartner) && (string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(c => c.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(c => c.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Id);
+                            break;
+                        case "email asc":
+                            tmpList = tmpList.OrderBy(c => c.Email);
+                            break;
+                        case "email desc":
+                            tmpList = tmpList.OrderByDescending(c => c.Email);
+                            break;
+                        case "jobtitle asc":
+                            tmpList = tmpList.OrderBy(c => c.JobTitle);
+                            break;
+                        case "jobtitle desc":
+                            tmpList = tmpList.OrderByDescending(c => c.JobTitle);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Contact.Count(c => c.PartnerContacts.Any(pc => pc.IdPartner == idPartner) && (string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word)));
+
+                    ret = new ResultPage<Contact>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -123,7 +187,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Contact.Where(c => string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word));
+                    var tmpList = db.Contact.Include("Address").Where(c => string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word));
                     switch (sort.ToLower())
                     {
                         case "name asc":

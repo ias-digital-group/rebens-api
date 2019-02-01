@@ -16,8 +16,8 @@ namespace ias.Rebens
 
         bool Update(Banner banner, out string error);
 
-        List<Banner> ListByOperation(int idOperation, out string error);
+        ResultPage<Banner> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
 
-        List<Banner> ListByBenefit(int idBenefit, out string error);
+        ResultPage<Banner> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error);
     }
 }

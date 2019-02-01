@@ -22,8 +22,8 @@ namespace ias.Rebens
 
         bool DeleteAddress(int idOperation, int idAddress, out string error);
 
-        List<Operation> ListByBenefit(int idBenefit, out string error);
+        ResultPage<Operation> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error);
 
-        List<Operation> ListByBanner(int idBanner, out string error);
+        ResultPage<Operation> ListByBanner(int idBanner, int page, int pageItems, string word, string sort, out string error);
     }
 }

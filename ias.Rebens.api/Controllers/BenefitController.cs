@@ -1,11 +1,15 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ias.Rebens.api.Models;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Benefit Controller
+    /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class BenefitController : ControllerBase
     {
@@ -144,26 +148,36 @@ namespace ias.Rebens.api.Controllers
         /// Lista os endereço de um benefício
         /// </summary>
         /// <param name="id">id do benefício</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com os endereços encontradas</returns>
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Address")]
-        [ProducesResponseType(typeof(JsonDataModel<List<AddressModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<AddressModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListAddress(int id)
+        public IActionResult ListAddress(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = addressRepo.ListByBenefit(id, out string error);
+            var list = addressRepo.ListByBenefit(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<AddressModel>>();
+                var ret = new ResultPageModel<AddressModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
                 ret.Data = new List<AddressModel>();
-                foreach (var addr in list)
+                foreach (var addr in list.Page)
                     ret.Data.Add(new AddressModel(addr));
 
                 return Ok(ret);
@@ -217,26 +231,36 @@ namespace ias.Rebens.api.Controllers
         /// Lista as categorias de um benefício
         /// </summary>
         /// <param name="id">id do benefício</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com as categorias encontradas</returns>
-        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Category")]
-        [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<CategoryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListCategories(int id)
+        public IActionResult ListCategories(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
         {
-            var list = categoryRepo.ListByBenefit(id, out string error);
+            var list = categoryRepo.ListByBenefit(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<CategoryModel>>();
+                var ret = new ResultPageModel<CategoryModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
                 ret.Data = new List<CategoryModel>();
-                foreach (var cat in list)
+                foreach (var cat in list.Page)
                     ret.Data.Add(new CategoryModel(cat));
 
                 return Ok(ret);
@@ -290,25 +314,39 @@ namespace ias.Rebens.api.Controllers
         /// Lista as operações de um benefício
         /// </summary>
         /// <param name="id">id do benefício</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Domain, Title, CompanyName, CompanyDoc), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com as operações encontradas</returns>
-        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Operations")]
-        public IActionResult ListOperations(int id)
+        [ProducesResponseType(typeof(ResultPageModel<OperationModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListOperations(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
         {
-            var list = operationRepo.ListByBenefit(id, out string error);
+            var list = operationRepo.ListByBenefit(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new List<OperationModel>();
-                foreach (var op in list)
-                    ret.Add(new OperationModel(op));
+                var ret = new ResultPageModel<OperationModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
+                ret.Data = new List<OperationModel>();
+                foreach (var operation in list.Page)
+                    ret.Data.Add(new OperationModel(operation));
 
-                return Ok(new { data = ret });
+                return Ok(ret);
             }
 
             return Ok(new JsonModel() { Status = "error", Message = error });
@@ -359,7 +397,7 @@ namespace ias.Rebens.api.Controllers
         /// Lista as posições
         /// </summary>
         /// <returns>Lista com as posições</returns>
-        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("Positions")]

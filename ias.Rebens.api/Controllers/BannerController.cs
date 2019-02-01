@@ -1,18 +1,25 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Banner Controller
+    /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class BannerController : ControllerBase
     {
         private IBannerRepository repo;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="bannerRepository"></param>
         public BannerController(IBannerRepository bannerRepository)
         {
             this.repo = bannerRepository;
@@ -39,7 +46,7 @@ namespace ias.Rebens.api.Controllers
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count() == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
                 var ret = new ResultPageModel<BannerModel>();

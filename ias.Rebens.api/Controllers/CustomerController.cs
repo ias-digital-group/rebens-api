@@ -11,13 +11,20 @@ using System.Security.Principal;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Customer Controller
+    /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class CustomerController : ControllerBase
     {
         private ICustomerRepository repo;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="customerRepository"></param>
         public CustomerController(ICustomerRepository customerRepository)
         {
             this.repo = customerRepository;

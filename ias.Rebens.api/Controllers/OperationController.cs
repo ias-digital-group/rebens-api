@@ -7,6 +7,9 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Operation Controller
+    /// </summary>
     [Produces("application/json")]
     [Route("api/Operation"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
@@ -184,26 +187,36 @@ namespace ias.Rebens.api.Controllers
         /// Lista os contatos de uma operação
         /// </summary>
         /// <param name="id">id da operação</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Email, JobTitle), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com os contatos encontradas</returns>
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Contacts")]
-        [ProducesResponseType(typeof(JsonDataModel<List<ContactModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<ContactModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListContacts(int id)
+        public IActionResult ListContacts(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = contactRepo.ListByOperation(id, out string error);
+            var list = contactRepo.ListByOperation(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<ContactModel>>();
+                var ret = new ResultPageModel<ContactModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
                 ret.Data = new List<ContactModel>();
-                foreach (var contact in list)
+                foreach (var contact in list.Page)
                     ret.Data.Add(new ContactModel(contact));
 
                 return Ok(ret);
@@ -216,25 +229,36 @@ namespace ias.Rebens.api.Controllers
         /// Lista os endereço de uma Operação
         /// </summary>
         /// <param name="id">id da operação</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com os endereços encontradas</returns>
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Address")]
-        [ProducesResponseType(typeof(JsonDataModel<List<AddressModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<AddressModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListAddress(int id)
+        public IActionResult ListAddress(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = addressRepo.ListByOperation(id, out string error);
+            var list = addressRepo.ListByOperation(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<AddressModel>>();
-                foreach (var addr in list)
+                var ret = new ResultPageModel<AddressModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
+                ret.Data = new List<AddressModel>();
+                foreach (var addr in list.Page)
                     ret.Data.Add(new AddressModel(addr));
 
                 return Ok(ret);
@@ -329,25 +353,37 @@ namespace ias.Rebens.api.Controllers
         /// Lista as perguntas de uma operação 
         /// </summary>
         /// <param name="id">id da operação</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Question, Answer, Order), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>lista das Perguntas da operação</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Faqs")]
-        [ProducesResponseType(typeof(JsonDataModel<List<FaqModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<FaqModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListFaqs(int id)
+        public IActionResult ListFaqs(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = faqRepo.ListByOperation(id, out string error);
+            var list = faqRepo.ListByOperation(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<FaqModel>>();
-                list.ForEach(item => { ret.Data.Add(new FaqModel(item)); });
+                var ret = new ResultPageModel<FaqModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
+                ret.Data = new List<FaqModel>();
+                foreach (var faq in list.Page)
+                    ret.Data.Add(new FaqModel(faq));
 
                 return Ok(ret);
             }
@@ -359,26 +395,37 @@ namespace ias.Rebens.api.Controllers
         /// Lista os textos de uma operação 
         /// </summary>
         /// <param name="id">id da operação</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Title, Order), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>lista dos Textos da operação</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/StaticText")]
-        [ProducesResponseType(typeof(JsonDataModel<List<StaticTextModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<StaticTextModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListStaticText(int id)
+        public IActionResult ListStaticText(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = staticTextRepo.ListByOperation(id, out string error);
+            var list = staticTextRepo.ListByOperation(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<StaticTextModel>>();
+                var ret = new ResultPageModel<StaticTextModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
                 ret.Data = new List<StaticTextModel>();
-                list.ForEach(item => { ret.Data.Add(new StaticTextModel(item)); });
+                foreach (var staticText in list.Page)
+                    ret.Data.Add(new StaticTextModel(staticText));
 
                 return Ok(ret);
             }
@@ -421,25 +468,37 @@ namespace ias.Rebens.api.Controllers
         /// Lista os banners de uma operação 
         /// </summary>
         /// <param name="id">id da operação</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>lista dos banners da operação</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Banners")]
-        [ProducesResponseType(typeof(JsonDataModel<List<BannerModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<BannerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBanners(int id)
+        public IActionResult ListBanners(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = bannerRepo.ListByOperation(id, out string error);
+            var list = bannerRepo.ListByOperation(id, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<BannerModel>>();
-                list.ForEach(item => { ret.Data.Add(new BannerModel(item)); });
+                var ret = new ResultPageModel<BannerModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
+                ret.Data = new List<BannerModel>();
+                foreach (var banner in list.Page)
+                    ret.Data.Add(new BannerModel(banner));
 
                 return Ok(ret);
             }

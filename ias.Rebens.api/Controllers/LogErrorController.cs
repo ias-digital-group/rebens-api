@@ -8,12 +8,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// LogError Controller
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class LogErrorController : ControllerBase
     {
         private ILogErrorRepository repo;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="logErrorRepository"></param>
         public LogErrorController(ILogErrorRepository logErrorRepository)
         {
             this.repo = logErrorRepository;

@@ -266,14 +266,35 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Benefit> ListByAddress(int idAddress, out string error)
+        public ResultPage<Benefit> ListByAddress(int idAddress, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Benefit> ret;
+            ResultPage<Benefit> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Benefit.Where(a => a.BenefitAddresses.Any(pa => pa.IdAddress == idAddress)).OrderBy(a => a.Title).ToList();
+                    var tmpList = db.Benefit.Where(b => b.BenefitAddresses.Any(pa => pa.IdAddress == idAddress) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Benefit.Count(b => b.BenefitAddresses.Any(pa => pa.IdAddress == idAddress) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+
+                    ret = new ResultPage<Benefit>(list, page, pageItems, total);
+
                     error = null;
                 }
             }
@@ -287,14 +308,34 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Benefit> ListByCategory(int idCategory, out string error)
+        public ResultPage<Benefit> ListByCategory(int idCategory, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Benefit> ret;
+            ResultPage<Benefit> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Benefit.Where(a => a.BenefitCategories.Any(pa => pa.IdCategory == idCategory)).OrderBy(a => a.Title).ToList();
+                    var tmpList = db.Benefit.Where(b => b.BenefitCategories.Any(bc => bc.IdCategory == idCategory) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Benefit.Count(b => b.BenefitCategories.Any(bc => bc.IdCategory == idCategory) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+
+                    ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -308,14 +349,34 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Benefit> ListByOperation(int idOperation, out string error)
+        public ResultPage<Benefit> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Benefit> ret;
+            ResultPage<Benefit> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Benefit.Where(a => a.BenefitOperations.Any(pa => pa.IdOperation == idOperation)).OrderBy(a => a.Title).ToList();
+                    var tmpList = db.Benefit.Where(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Benefit.Count(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+
+                    ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -329,14 +390,34 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Benefit> ListByType(int idType, out string error)
+        public ResultPage<Benefit> ListByType(int idType, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Benefit> ret;
+            ResultPage<Benefit> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Benefit.Where(b => b.IdBenefitType == idType).OrderBy(a => a.Title).ToList();
+                    var tmpList = db.Benefit.Where(b => b.IdBenefitType == idType && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Benefit.Count(b => b.IdBenefitType == idType && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+
+                    ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -350,14 +431,34 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Benefit> ListByPartner(int idPartner, out string error)
+        public ResultPage<Benefit> ListByPartner(int idPartner, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Benefit> ret;
+            ResultPage<Benefit> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Benefit.Where(b => b.IdPartner == idPartner).OrderBy(a => a.Title).ToList();
+                    var tmpList = db.Benefit.Where(b => b.IdPartner == idPartner && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Benefit.Count(b => b.IdPartner == idPartner && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+
+                    ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -371,14 +472,34 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Benefit> ListByIntegrationType(int idIntegrationType, out string error)
+        public ResultPage<Benefit> ListByIntegrationType(int idIntegrationType, int page, int pageItems, string word, string sort, out string error)
         {
-            List<Benefit> ret;
+            ResultPage<Benefit> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Benefit.Where(a => a.IdIntegrationType == idIntegrationType).OrderBy(a => a.Title).ToList();
+                    var tmpList = db.Benefit.Where(b => b.IdIntegrationType == idIntegrationType && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Benefit.Count(b => b.IdIntegrationType == idIntegrationType && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+
+                    ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
                 }
             }

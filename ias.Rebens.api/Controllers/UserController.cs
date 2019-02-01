@@ -1,20 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using ias.Rebens.api.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// User Controller
+    /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
     public class UserController : ControllerBase
     {
         private IAdminUserRepository repo;
 
+        /// <summary>
+        /// User Controller Constructor that receive an Dependency Injection of the Repository
+        /// </summary>
+        /// <param name="adminUserRepository"></param>
         public UserController(IAdminUserRepository adminUserRepository)
         {
             this.repo = adminUserRepository;

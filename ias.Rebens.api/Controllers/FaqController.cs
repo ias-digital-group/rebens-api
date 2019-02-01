@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// Faq Controller
+    /// </summary>
     [Produces("application/json")]
     [Route("api/Faq"), Authorize("Bearer", Roles = "administrator")]
     [ApiController]
@@ -13,6 +16,10 @@ namespace ias.Rebens.api.Controllers
     {
         private IFaqRepository repo;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="faqRepository"></param>
         public FaqController(IFaqRepository faqRepository)
         {
             this.repo = faqRepository;
