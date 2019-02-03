@@ -22,5 +22,9 @@ namespace ias.Rebens.api.Models
         /// Id do item criado
         /// </summary>
         public int Id { get; set; }
+        /// <summary>
+        /// Alguma informação extra
+        /// </summary>
+        public string Extra { get; set; }
     }
 }

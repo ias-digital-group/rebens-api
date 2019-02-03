@@ -71,6 +71,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    operation.Code = Guid.NewGuid();
                     operation.Modified = operation.Created = DateTime.UtcNow;
                     db.Operation.Add(operation);
                     db.SaveChanges();
@@ -253,52 +254,23 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Operation> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error)
+        public List<BenefitOperationItem> ListByBenefit(int idBenefit, out string error)
         {
-            ResultPage<Operation> ret;
+            List<BenefitOperationItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Operation.Where(o => o.Active && o.BenefitOperations.Any(bo => bo.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
-                    switch (sort.ToLower())
-                    {
-                        case "domain asc":
-                            tmpList = tmpList.OrderBy(f => f.Domain);
-                            break;
-                        case "domain desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Domain);
-                            break;
-                        case "id asc":
-                            tmpList = tmpList.OrderBy(f => f.Id);
-                            break;
-                        case "id desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Id);
-                            break;
-                        case "title asc":
-                            tmpList = tmpList.OrderBy(f => f.Title);
-                            break;
-                        case "title desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Title);
-                            break;
-                        case "companyname asc":
-                            tmpList = tmpList.OrderBy(f => f.CompanyName);
-                            break;
-                        case "companyname desc":
-                            tmpList = tmpList.OrderByDescending(f => f.CompanyName);
-                            break;
-                        case "companydoc asc":
-                            tmpList = tmpList.OrderBy(f => f.CompanyDoc);
-                            break;
-                        case "companydoc desc":
-                            tmpList = tmpList.OrderByDescending(f => f.CompanyDoc);
-                            break;
-                    }
-
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Operation.Count(o => o.Active && o.BenefitOperations.Any(bo => bo.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
-
-                    ret = new ResultPage<Operation>(list, page, pageItems, total);
+                    ret = (from o in db.Operation
+                           from b in db.BenefitOperation.Where(bo => bo.IdOperation == o.Id && bo.IdBenefit == idBenefit).DefaultIfEmpty()
+                           where o.Active
+                           select new BenefitOperationItem()
+                           {
+                               IdBenefit = b.IdBenefit,
+                               IdOperation = o.Id,
+                               IdPosition = b.IdPosition,
+                               OperationName = o.Title
+                           }).OrderBy(o => o.OperationName).ToList();
                     error = null;
                 }
             }

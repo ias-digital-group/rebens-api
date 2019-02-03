@@ -120,7 +120,7 @@ namespace ias.Rebens.api.Controllers
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
             if (repo.Update(cont, out error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Endereço atualizado com sucesso!" });
+                return Ok(new JsonModel() { Status = "ok", Message = "Contato atualizado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -169,7 +169,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Delete(int id)
         {
             if (repo.Delete(id, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Endereço apagado com sucesso!" });
+                return Ok(new JsonModel() { Status = "ok", Message = "Contato apagado com sucesso!" });
             
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

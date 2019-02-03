@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ias.Rebens.api", "ias.Rebens.api\ias.Rebens.api.csproj", "{D77C9B14-8EB0-4BE9-B4B8-C0B268A40167}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ias.Rebens", "ias.Rebens\ias.Rebens.csproj", "{C219C8D8-80CE-4C07-8D11-561607ADB763}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ias.Rebens", "ias.Rebens\ias.Rebens.csproj", "{C219C8D8-80CE-4C07-8D11-561607ADB763}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

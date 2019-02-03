@@ -102,7 +102,18 @@ namespace ias.Rebens
                     else
                     {
                         var partner = db.Partner.SingleOrDefault(c => c.Id == id);
+                        var parnerContacts = db.PartnerContact.Where(p => p.IdPartner == id);
+                        var contacts = db.Contact.Include("Address").Where(c => c.PartnerContacts.Any(p => p.IdPartner == id));
+                        var partnerAddresses = db.PartnerAddress.Where(p => p.IdPartner == id);
+                        var addresses = db.Address.Where(a => a.PartnerAddresses.Any(p => p.IdPartner == id));
+
+                        db.PartnerContact.RemoveRange(parnerContacts);
+                        db.PartnerAddress.RemoveRange(partnerAddresses);
+                        db.Contact.RemoveRange(contacts);
+                        db.Address.RemoveRange(addresses);
+
                         db.Partner.Remove(partner);
+
                         db.SaveChanges();
                         error = null;
                     }
@@ -149,6 +160,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmp = db.PartnerContact.SingleOrDefault(o => o.IdPartner == idPartner && o.IdContact == idContact);
+                    var contact = db.Contact.SingleOrDefault(c => c.Id == idContact);
+                    db.Contact.Remove(contact);
                     db.PartnerContact.Remove(tmp);
                     db.SaveChanges();
                     error = null;

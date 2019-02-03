@@ -94,4 +94,33 @@ namespace ias.Rebens.api.Models
             };
         }
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class CategoryItemModel : CategoryModel
+    {
+        /// <summary>
+        /// Retorna se a categoria está selecionada
+        /// </summary>
+        public bool Checked { get; set; }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public CategoryItemModel() { }
+
+        /// <summary>
+        /// Construtor que já popula as propriedades
+        /// </summary>
+        public CategoryItemModel(CategoryItem category) {
+            this.Id = category.Id;
+            this.Name = category.Name;
+            this.IdParent = category.IdParent;
+            this.Order = category.Order;
+            this.Icon = category.Icon;
+            this.Active = category.Active;
+            this.Checked = category.IdBenefit.HasValue;
+        }
+    }
 }

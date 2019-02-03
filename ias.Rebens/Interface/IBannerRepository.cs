@@ -19,5 +19,7 @@ namespace ias.Rebens
         ResultPage<Banner> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
 
         ResultPage<Banner> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error);
+
+        List<Banner> ListByTypeAndOperation(Guid operationCode, int type, out string error);
     }
 }

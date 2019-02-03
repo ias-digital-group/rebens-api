@@ -196,41 +196,29 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Category> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error)
+        public List<CategoryItem> ListByBenefit(int idBenefit, out string error)
         {
-            ResultPage<Category> ret;
+            List<CategoryItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Category.Where(c => c.Active && c.BenefitCategories.Any(bc => bc.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || c.Name.Contains(word)));
-
-                    switch (sort.ToLower())
-                    {
-                        case "name asc":
-                            tmpList = tmpList.OrderBy(c => c.Name);
-                            break;
-                        case "name desc":
-                            tmpList = tmpList.OrderByDescending(c => c.Name);
-                            break;
-                        case "id asc":
-                            tmpList = tmpList.OrderBy(c => c.Id);
-                            break;
-                        case "id desc":
-                            tmpList = tmpList.OrderByDescending(c => c.Id);
-                            break;
-                        case "order asc":
-                            tmpList = tmpList.OrderBy(c => c.Order);
-                            break;
-                        case "order desc":
-                            tmpList = tmpList.OrderByDescending(c => c.Order);
-                            break;
-                    }
-
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Category.Count(c => c.Active && c.BenefitCategories.Any(bc => bc.IdBenefit == idBenefit) && (string.IsNullOrEmpty(word) || c.Name.Contains(word)));
-
-                    ret = new ResultPage<Category>(list, page, pageItems, total);
+                    ret = (from c in db.Category
+                           from b in db.BenefitCategory.Where(bc => bc.IdBenefit == idBenefit && bc.IdCategory == c.Id).DefaultIfEmpty()
+                           where c.Active
+                           select new CategoryItem()
+                           {
+                               Id = c.Id,
+                               Active = c.Active,
+                               Created = c.Created,
+                               Icon = c.Icon,
+                               IdBenefit = b.IdBenefit,
+                               IdParent = c.IdParent,
+                               Modified = c.Modified,
+                               Name = c.Name,
+                               Order = c.Order
+                           }).OrderBy(c => c.Name).ToList();
+                        
                     error = null;
                 }
             }

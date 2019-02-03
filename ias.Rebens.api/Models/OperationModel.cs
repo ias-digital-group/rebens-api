@@ -66,7 +66,10 @@ namespace ias.Rebens.api.Models
         /// Lista de relacionamento de Operações com Contato
         /// </summary>
         public List<OperationContactModel> OperationContacts { get; set; }
-
+        /// <summary>
+        /// GUID gerado automáticamente
+        /// </summary>
+        public string Code { get; set; } 
         /// <summary>
         /// Construtor
         /// </summary>
@@ -86,6 +89,7 @@ namespace ias.Rebens.api.Models
             this.IdOperationType = operation.IdOperationType;
             this.CachbackPercentage = operation.CashbackPercentage;
             this.Active = operation.Active;
+            this.Code = operation.Code.ToString();
 
             if(operation.OperationContacts != null && operation.OperationContacts.Count >0)
             {

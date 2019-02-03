@@ -163,7 +163,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Benefit.Where(p => string.IsNullOrEmpty(word) || p.Title.Contains(word));
+                    var tmpList = db.Benefit.Include("BenefitType").Include("IntegrationType").Where(p => string.IsNullOrEmpty(word) || p.Title.Contains(word));
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -205,7 +205,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Benefit.Include("BenefitOperations").Include("BenefitAddresses").SingleOrDefault(c => c.Id == id);
+                    ret = db.Benefit.Include("BenefitOperations").Include("BenefitAddresses").Include("StaticTexts").SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }
@@ -580,6 +580,26 @@ namespace ias.Rebens
                 ret = null;
             }
             return ret;
+        }
+
+        public void ReadCallAndPartnerLogo(int idBenefit, out string call, out string logo, out string error)
+        {
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    call = db.StaticText.SingleOrDefault(s => s.IdBenefit == idBenefit && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall).Html;
+                    logo = db.Partner.SingleOrDefault(p => p.Benefits.Any(b => b.Id == idBenefit)).Logo;
+                    error = null;
+                }
+            }
+            catch(Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ReadCallAndPartnerLogo", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler a chamada e o logo do parceiro. (erro:" + idLog + ")";
+                logo = call = null;
+            }
         }
     }
 }

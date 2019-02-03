@@ -531,6 +531,10 @@ namespace ias.Rebens
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(200);
+
+                entity.Property(e => e.Logo)
+                   .IsRequired()
+                   .HasMaxLength(1000);
             });
 
             modelBuilder.Entity<PartnerAddress>(entity =>
@@ -581,9 +585,9 @@ namespace ias.Rebens
 
                 entity.Property(e => e.Title)
                     .IsRequired()
-                    .HasMaxLength(50);
+                    .HasMaxLength(500);
 
-                entity.Property(e => e.Url).HasMaxLength(200);
+                entity.Property(e => e.Url).HasMaxLength(500);
 
                 entity.HasOne(d => d.Operation)
                     .WithMany(p => p.StaticTexts)

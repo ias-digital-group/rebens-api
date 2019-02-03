@@ -113,9 +113,21 @@ namespace ias.Rebens.api.Models
         }
     }
 
+    /// <summary>
+    /// tipo de banner
+    /// </summary>
     public class BannerTypeModel
     {
+        /// <summary>
+        /// Id
+        /// </summary>
+        [Required]
         public int Id { get; set; }
+        /// <summary>
+        /// Nome
+        /// </summary>
+        [Required]
+        [MaxLength(50)]
         public string Name { get; set; }
     }
 }

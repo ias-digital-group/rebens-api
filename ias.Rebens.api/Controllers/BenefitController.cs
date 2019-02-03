@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ias.Rebens.api.Models;
+using System;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -15,6 +16,7 @@ namespace ias.Rebens.api.Controllers
     {
         private IBenefitRepository repo;
         private IAddressRepository addressRepo;
+        private IStaticTextRepository staticTextRepo;
         private ICategoryRepository categoryRepo;
         private IOperationRepository operationRepo;
 
@@ -25,12 +27,14 @@ namespace ias.Rebens.api.Controllers
         /// <param name="addressRepository">Injeção de dependencia do repositório de Endereço</param>
         /// <param name="categoryRepository">Injeção de dependencia do repositório de Categoria</param>
         /// <param name="operationRepository">Injeção de dependencia do repositório de Operação</param>
-        public BenefitController(IBenefitRepository benefitRepository, IAddressRepository addressRepository, ICategoryRepository categoryRepository, IOperationRepository operationRepository)
+        /// <param name="staticTextRepository">Injeção de dependencia do repositório de Texto Estático</param>
+        public BenefitController(IBenefitRepository benefitRepository, IAddressRepository addressRepository, ICategoryRepository categoryRepository, IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
         {
             this.repo = benefitRepository;
             this.addressRepo = addressRepository;
             this.categoryRepo = categoryRepository;
             this.operationRepo = operationRepository;
+            this.staticTextRepo = staticTextRepository;
         }
 
         /// <summary>
@@ -113,11 +117,38 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Put([FromBody]BenefitModel benefit)
         {
             var model = new JsonModel();
-            string error = null;
+
 
             var part = benefit.GetEntity();
-            if (repo.Update(part, out error))
+            if (repo.Update(part, out string error))
+            {
+                if (!string.IsNullOrEmpty(benefit.BenefitCall))
+                {
+                    var benefitCall = benefit.GetCall();
+                    staticTextRepo.Update(benefitCall, out error);
+                }
+                if (!string.IsNullOrEmpty(benefit.Teaser))
+                {
+                    var teaser = benefit.GetTeaser();
+                    staticTextRepo.Update(teaser, out error);
+                }
+                if (!string.IsNullOrEmpty(benefit.DescriptionOnLine))
+                {
+                    var online = benefit.GetDescriptionOnLine();
+                    staticTextRepo.Update(online, out error);
+                }
+                if (!string.IsNullOrEmpty(benefit.DescriptionOffLine))
+                {
+                    var offline = benefit.GetDescriptionOffLine();
+                    staticTextRepo.Update(offline, out error);
+                }
+                if (!string.IsNullOrEmpty(benefit.VoucherOperation))
+                {
+                    var voucher = benefit.GetVoucherOperation();
+                    staticTextRepo.Update(voucher, out error);
+                }
                 return Ok(new JsonModel() { Status = "ok", Message = "Benefício atualizado com sucesso!" });
+            }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -139,7 +170,41 @@ namespace ias.Rebens.api.Controllers
 
             var item = benefit.GetEntity();
             if (repo.Create(item, out error))
+            {
+                if (!string.IsNullOrEmpty(benefit.BenefitCall))
+                {
+                    var benefitCall = benefit.GetCall();
+                    benefitCall.IdBenefit = item.Id;
+                    staticTextRepo.Create(benefitCall, out error);
+                }
+                if (!string.IsNullOrEmpty(benefit.Teaser))
+                {
+                    var teaser = benefit.GetTeaser();
+                    teaser.IdBenefit = item.Id;
+                    staticTextRepo.Create(teaser, out error);
+                }
+                if (!string.IsNullOrEmpty(benefit.DescriptionOnLine))
+                {
+                    var online = benefit.GetDescriptionOnLine();
+                    online.IdBenefit = item.Id;
+                    staticTextRepo.Create(online, out error);
+                }
+                if (!string.IsNullOrEmpty(benefit.DescriptionOffLine))
+                {
+                    var offline = benefit.GetDescriptionOffLine();
+                    offline.IdBenefit = item.Id;
+                    staticTextRepo.Create(offline, out error);
+                }
+                if (!string.IsNullOrEmpty(benefit.VoucherOperation))
+                {
+                    var voucher = benefit.GetVoucherOperation();
+                    voucher.IdBenefit = item.Id;
+                    staticTextRepo.Create(voucher, out error);
+                }
+
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Benefício criado com sucesso!", Id = item.Id });
+            }
+                
             
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -228,40 +293,33 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Lista as categorias de um benefício
+        /// Lista todas categorias, e marca quais estão vinculadas ao benefício
         /// </summary>
         /// <param name="id">id do benefício</param>
-        /// <param name="page">página, não obrigatório (default=0)</param>
-        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
-        /// <param name="searchWord">Palavra à ser buscada</param>
-        /// <returns>Lista com as categorias encontradas</returns>
+        /// <returns>Lista com as categorias</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Category")]
-        [ProducesResponseType(typeof(ResultPageModel<CategoryModel>), 200)]
+        [ProducesResponseType(typeof(JsonDataModel<List<CategoryItemModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListCategories(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListCategories(int id)
         {
-            var list = categoryRepo.ListByBenefit(id, page, pageItems, searchWord, sort, out string error);
+            var list = categoryRepo.ListByBenefit(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.TotalItems == 0)
+                if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<CategoryModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<CategoryModel>();
-                foreach (var cat in list.Page)
-                    ret.Data.Add(new CategoryModel(cat));
+                var ret = new JsonDataModel<List<CategoryItemModel>>()
+                {
+                    Data = new List<CategoryItemModel>()
+                };
+
+                foreach (var cat in list)
+                    ret.Data.Add(new CategoryItemModel(cat));
 
                 return Ok(ret);
             }
@@ -284,7 +342,7 @@ namespace ias.Rebens.api.Controllers
             var resultModel = new JsonModel();
 
             if (repo.AddCategory(model.IdBenefit, model.IdCategory, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Categoria adicionado com sucesso!" });
+                return Ok(new JsonModel() { Status = "ok", Message = "Categoria adicionada com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -311,40 +369,30 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Lista as operações de um benefício
+        /// Lista todas operações, e marca quais estão vinculadas ao benefício
         /// </summary>
         /// <param name="id">id do benefício</param>
-        /// <param name="page">página, não obrigatório (default=0)</param>
-        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="sort">Ordenação campos (Id, Domain, Title, CompanyName, CompanyDoc), direção (ASC, DESC)</param>
-        /// <param name="searchWord">Palavra à ser buscada</param>
-        /// <returns>Lista com as operações encontradas</returns>
+        /// <returns>Lista com todas operações</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Operations")]
-        [ProducesResponseType(typeof(ResultPageModel<OperationModel>), 200)]
+        [ProducesResponseType(typeof(JsonDataModel<List<BenefitOperationItemModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListOperations(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListOperations(int id)
         {
-            var list = operationRepo.ListByBenefit(id, page, pageItems, searchWord, sort, out string error);
+            var list = operationRepo.ListByBenefit(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.TotalItems == 0)
+                if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<OperationModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<OperationModel>();
-                foreach (var operation in list.Page)
-                    ret.Data.Add(new OperationModel(operation));
+                var ret = new JsonDataModel<List<BenefitOperationItemModel>>();
+                ret.Data = new List<BenefitOperationItemModel>();
+                foreach (var item in list)
+                    ret.Data.Add(new BenefitOperationItemModel(item));
 
                 return Ok(ret);
             }

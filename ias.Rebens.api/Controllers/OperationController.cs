@@ -134,7 +134,7 @@ namespace ias.Rebens.api.Controllers
         /// Cria uma operação
         /// </summary>
         /// <param name="operation"></param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da operação criada</returns>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id e o Código da operação criada</returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost]
@@ -144,7 +144,6 @@ namespace ias.Rebens.api.Controllers
         {
             string error = null;
             int idContact = 0;
-            var model = new JsonModel();
 
             var op = operation.GetEntity();
             if(operation.Contact != null )
@@ -174,11 +173,11 @@ namespace ias.Rebens.api.Controllers
                 if (idContact > 0)
                 {
                     if (repo.AddContact(op.Id, idContact, out error))
-                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Operação criada com sucesso!", Id = op.Id });
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Operação criada com sucesso!", Id = op.Id, Extra = op.Code.ToString() });
 
                     return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 }
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Operação criada com sucesso!", Id = op.Id });
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Operação criada com sucesso!", Id = op.Id, Extra = op.Code.ToString() });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

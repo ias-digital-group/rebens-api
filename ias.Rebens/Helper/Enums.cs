@@ -46,8 +46,8 @@ namespace ias.Rebens.Enums
         Home = 1,
         [Description("Categoria")]
         Category = 2,
-        [Description("Destaque")]
-        Highlight = 3
+        [Description("Imperdíveis")]
+        Unmissable = 3
     }
 
     public enum AdminUserStatus: int
@@ -56,6 +56,24 @@ namespace ias.Rebens.Enums
         Active = 1,
         [Description("Inativo")]
         Inactive = 2
+    }
+
+    public enum StaticTextType : int
+    {
+        [Description("Operação Sobre")]
+        AboutOperation = 1,
+        [Description("Operação como funciona")]
+        HowOperationWork = 2,
+        [Description("Teaser do beneficio")]
+        BenefitTeaser = 3,
+        [Description("Chamada do beneficio")]
+        BenefitCall = 4,
+        [Description("Descrição de funcionamento online")]
+        BenefitOperationOnLine = 5,
+        [Description("Descrição de funcionamento offline")]
+        BenefitOperationOffLine = 6,
+        [Description("Funcionamento Voucher")]
+        VoucherOperation = 7
     }
 
     public static class EnumHelper

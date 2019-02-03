@@ -41,5 +41,7 @@ namespace ias.Rebens
         ResultPage<Benefit> ListByIntegrationType(int idIntegrationType, int page, int pageItems, string word, string sort, out string error);
 
         List<BenefitOperationPosition> ListPositions(out string error);
+
+        void ReadCallAndPartnerLogo(int idBenefit, out string call, out string logo, out string error);
     }
 }

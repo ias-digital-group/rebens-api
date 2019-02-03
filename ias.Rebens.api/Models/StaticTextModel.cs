@@ -17,12 +17,12 @@ namespace ias.Rebens.api.Models
         /// Título
         /// </summary>
         [Required]
-        [MaxLength(50)]
+        [MaxLength(500)]
         public string Title { get; set; }
         /// <summary>
         /// Url
         /// </summary>
-        [MaxLength(200)]
+        [MaxLength(500)]
         public string Url { get; set; }
         /// <summary>
         /// Html

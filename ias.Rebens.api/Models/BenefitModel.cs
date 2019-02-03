@@ -58,10 +58,14 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public DateTime? End { get; set; }
         /// <summary>
-        /// Tipo de benefício
+        /// Id Tipo de benefício
         /// </summary>
         [Required]
         public int IdBenefitType { get; set; }
+        /// <summary>
+        /// Tipo de benefício
+        /// </summary>
+        public string BenefitType { get; set; }
         /// <summary>
         /// É um benefício exclusivo
         /// </summary>
@@ -73,7 +77,7 @@ namespace ias.Rebens.api.Models
         [Required]
         public bool Active { get; set; }
         /// <summary>
-        /// Tipo de Integração
+        /// Id Tipo de Integração
         /// </summary>
         [Required]
         public int IdIntegrationType { get; set; }
@@ -82,6 +86,32 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public int IdPartner { get; set; }
+
+        /// <summary>
+        /// Tipo de Integração
+        /// </summary>
+        public string IntegrationType { get; set; }
+
+        /// <summary>
+        /// Chamada do Benefício
+        /// </summary>
+        public string BenefitCall { get; set; }
+        /// <summary>
+        /// Teaser do beneficio
+        /// </summary>
+        public string Teaser { get; set; }
+        /// <summary>
+        /// Descrição de funcionamento online
+        /// </summary>
+        public string DescriptionOnLine { get; set; }
+        /// <summary>
+        /// Descrição de funcionamento offline
+        /// </summary>
+        public string DescriptionOffLine { get; set; }
+        /// <summary>
+        /// Funcionamento Voucher
+        /// </summary>
+        public string VoucherOperation { get; set; }
 
         /// <summary>
         /// Construtor
@@ -110,8 +140,40 @@ namespace ias.Rebens.api.Models
             this.Active = benefit.Active;
             this.IdIntegrationType = benefit.IdIntegrationType;
             this.IdPartner = benefit.IdPartner;
+            if (benefit.BenefitType != null)
+                this.BenefitType = benefit.BenefitType.Name;
+            if (benefit.IntegrationType != null)
+                this.IntegrationType = benefit.IntegrationType.Name;
+            if(benefit.StaticTexts != null)
+            {
+                foreach(var text in benefit.StaticTexts)
+                {
+                    switch((Enums.StaticTextType)text.IdStaticTextType)
+                    {
+                        case Enums.StaticTextType.BenefitCall:
+                            this.BenefitCall = text.Html;
+                            break;
+                        case Enums.StaticTextType.BenefitOperationOnLine:
+                            this.DescriptionOnLine = text.Html;
+                            break;
+                        case Enums.StaticTextType.BenefitOperationOffLine:
+                            this.DescriptionOffLine = text.Html;
+                            break;
+                        case Enums.StaticTextType.BenefitTeaser:
+                            this.Teaser = text.Html;
+                            break;
+                        case Enums.StaticTextType.VoucherOperation:
+                            this.VoucherOperation = text.Html;
+                            break;
+                    }
+                }
+            }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public Benefit GetEntity()
         {
             return new Benefit()
@@ -132,7 +194,102 @@ namespace ias.Rebens.api.Models
                 Active = this.Active,
                 IdIntegrationType = this.IdIntegrationType,
                 IdPartner = this.IdPartner
-        };
+            };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public StaticText GetCall()
+        {
+            return new StaticText()
+            {
+                Active = true,
+                Created = DateTime.Now,
+                Html = this.BenefitCall,
+                IdBenefit = this.Id,
+                IdStaticTextType = (int)Enums.StaticTextType.BenefitCall,
+                Modified = DateTime.Now,
+                Order = 1,
+                Title = "Chamada - " + this.Title
+            };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public StaticText GetTeaser()
+        {
+            return new StaticText()
+            {
+                Active = true,
+                Created = DateTime.Now,
+                Html = this.Teaser,
+                IdBenefit = this.Id,
+                IdStaticTextType = (int)Enums.StaticTextType.BenefitTeaser,
+                Modified = DateTime.Now,
+                Order = 1,
+                Title = "Teaser - " + this.Title
+            };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public StaticText GetDescriptionOnLine()
+        {
+            return new StaticText()
+            {
+                Active = true,
+                Created = DateTime.Now,
+                Html = this.DescriptionOnLine,
+                IdBenefit = this.Id,
+                IdStaticTextType = (int)Enums.StaticTextType.BenefitOperationOnLine,
+                Modified = DateTime.Now,
+                Order = 1,
+                Title = "Descrição de funcionamento online - " + this.Title
+            };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public StaticText GetDescriptionOffLine()
+        {
+            return new StaticText()
+            {
+                Active = true,
+                Created = DateTime.Now,
+                Html = this.DescriptionOffLine,
+                IdBenefit = this.Id,
+                IdStaticTextType = (int)Enums.StaticTextType.BenefitOperationOffLine,
+                Modified = DateTime.Now,
+                Order = 1,
+                Title = "Descrição de funcionamento offline - " + this.Title
+            };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public StaticText GetVoucherOperation()
+        {
+            return new StaticText()
+            {
+                Active = true,
+                Created = DateTime.Now,
+                Html = this.VoucherOperation,
+                IdBenefit = this.Id,
+                IdStaticTextType = (int)Enums.StaticTextType.VoucherOperation,
+                Modified = DateTime.Now,
+                Order = 1,
+                Title = "Funcionamento do Voucher - " + this.Title
+            };
         }
     }
 }

@@ -25,6 +25,7 @@ namespace ias.Rebens
         public int IdOperationType { get; set; }
         public decimal? CashbackPercentage { get; set; }
         public bool Active { get; set; }
+        public Guid Code { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
