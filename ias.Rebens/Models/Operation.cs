@@ -10,6 +10,8 @@ namespace ias.Rebens
             BannerOperations = new HashSet<BannerOperation>();
             BenefitOperations = new HashSet<BenefitOperation>();
             Faqs = new HashSet<Faq>();
+            FormContacts = new HashSet<FormContact>();
+            FormEstablishments = new HashSet<FormEstablishment>();
             StaticTexts = new HashSet<StaticText>();
             OperationAddresses = new HashSet<OperationAddress>();
             OperationContacts = new HashSet<OperationContact>();
@@ -33,6 +35,8 @@ namespace ias.Rebens
         public virtual ICollection<BannerOperation> BannerOperations { get; set; }
         public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }
         public virtual ICollection<Faq> Faqs { get; set; }
+        public virtual ICollection<FormContact> FormContacts { get; set; }
+        public virtual ICollection<FormEstablishment> FormEstablishments { get; set; }
         public virtual ICollection<StaticText> StaticTexts { get; set; }
         public virtual ICollection<OperationAddress> OperationAddresses { get; set; }
         public virtual ICollection<OperationContact> OperationContacts { get; set; }

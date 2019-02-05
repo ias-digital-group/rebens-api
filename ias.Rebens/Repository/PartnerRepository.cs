@@ -252,6 +252,7 @@ namespace ias.Rebens
                     {
                         update.Active = partner.Active;
                         update.Name = partner.Name;
+                        update.Logo = partner.Logo;
                         update.Modified = DateTime.UtcNow;
 
                         db.SaveChanges();

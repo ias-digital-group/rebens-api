@@ -25,6 +25,12 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public bool Active { get; set; }
+        /// <summary>
+        /// Logo do parceiro
+        /// </summary>
+        [Required]
+        [MaxLength(500)]
+        public string Logo { get; set; }
 
         /// <summary>
         /// Contatos do parceiro
@@ -49,6 +55,7 @@ namespace ias.Rebens.api.Models
             this.Id = partner.Id;
             this.Name = partner.Name;
             this.Active = partner.Active;
+            this.Logo = partner.Logo;
         }
 
         /// <summary>
@@ -61,6 +68,7 @@ namespace ias.Rebens.api.Models
                 Id = this.Id,
                 Name = this.Name,
                 Active = this.Active,
+                Logo = this.Logo,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };

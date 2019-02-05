@@ -1078,12 +1078,16 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository)">
             <summary>
             Constructor
             </summary>
             <param name="bannerRepository"></param>
             <param name="benefitRepository"></param>
+            <param name="faqRepository"></param>
+            <param name="formContactRepository"></param>
+            <param name="operationRepository"></param>
+            <param name="formEstablishmentRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1093,6 +1097,36 @@
             <returns>Retorna os items necessários para montar a home não logada</returns>
             <response code="200">Retorna o model com os items da home não logada, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListFaq(System.String)">
+            <summary>
+            Retorna uma lista com as perguntas frequentes
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <returns>Lista das perguntas frequentes</returns>
+            <response code="200">Retorna a lista das perguntas frequentes, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ContactForm(System.String,ias.Rebens.api.Models.FormContactModel)">
+            <summary>
+            Salvar um contato
+            </summary>
+            <param name="operationCode"></param>
+            <param name="formContact"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.EstablishmentForm(System.String,ias.Rebens.api.Models.FormEstablishmentModel)">
+            <summary>
+            Salvar um formulário de indicação de benefícios
+            </summary>
+            <param name="operationCode"></param>
+            <param name="formEstablishment"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
@@ -2135,6 +2169,114 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:ias.Rebens.api.Models.FormContactModel">
+            <summary>
+            Formulário de Contato
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormContactModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormContactModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormContactModel.Email">
+            <summary>
+            Email
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormContactModel.Phone">
+            <summary>
+            Telefone
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormContactModel.Message">
+            <summary>
+            Mensagem
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FormContactModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FormContactModel.#ctor(ias.Rebens.FormContact)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="contact"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FormContactModel.GetEntity">
+            <summary>
+            Retorna um contato
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.FormEstablishmentModel">
+            <summary>
+            Formulário de indicação de estabelecimento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.Email">
+            <summary>
+            Email
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.Establishment">
+            <summary>
+            Nome estabelecimento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.WebSite">
+            <summary>
+            Website estabelecimento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.Responsible">
+            <summary>
+            Nome responsável
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.ResponsibleEmail">
+            <summary>
+            Email responsável
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.City">
+            <summary>
+            Cidade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FormEstablishmentModel.State">
+            <summary>
+            Estado
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FormEstablishmentModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FormEstablishmentModel.#ctor(ias.Rebens.FormEstablishment)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="formEstablishment"></param>
+        </member>
         <member name="T:ias.Rebens.api.Models.IntegrationTypeModel">
             <summary>
             Tipo de integração
@@ -2452,6 +2594,11 @@
         <member name="P:ias.Rebens.api.Models.PartnerModel.Active">
             <summary>
             Ativo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PartnerModel.Logo">
+            <summary>
+            Logo do parceiro
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.PartnerModel.Contacts">

@@ -223,5 +223,35 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public List<Faq> ListByOperation(Guid operationCode, out string error)
+        {
+            List<Faq> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var operation = db.Operation.SingleOrDefault(o => o.Code == operationCode);
+                    if (operation != null)
+                    {
+                        ret = db.Faq.Where(f => f.Active && f.IdOperation == operation.Id).OrderBy(f => f.Order).ToList();
+                        error = null;
+                    }
+                    else
+                    {
+                        error = "Operação não encontrada!";
+                        ret = null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FaqRepository.ListByOperatiion", ex.Message, $"operationCode: {operationCode}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as perguntas. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

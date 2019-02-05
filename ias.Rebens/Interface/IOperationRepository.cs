@@ -8,6 +8,8 @@ namespace ias.Rebens
     {
         Operation Read(int id, out string error);
 
+        Operation Read(Guid code, out string error);
+
         ResultPage<Operation> ListPage(int page, int pageItems, string word, string sort, out string error);
 
         bool Create(Operation operation, out string error);

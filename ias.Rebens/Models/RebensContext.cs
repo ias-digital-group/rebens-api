@@ -35,6 +35,8 @@ namespace ias.Rebens
         public virtual DbSet<Contact> Contact { get; set; }
         public virtual DbSet<Customer> Customer { get; set; }
         public virtual DbSet<Faq> Faq { get; set; }
+        public virtual DbSet<FormContact> FormContact { get; set; }
+        public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
         public virtual DbSet<IntegrationType> IntegrationType { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }
         public virtual DbSet<Permission> Permission { get; set; }
@@ -393,6 +395,53 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Faq_Operation");
+            });
+
+            modelBuilder.Entity<FormContact>(entity => {
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(300);
+
+                entity.Property(e => e.Email)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Message)
+                    .IsRequired()
+                    .HasMaxLength(2000);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.FormContacts)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FormContact_Operation");
+            });
+
+            modelBuilder.Entity<FormEstablishment>(entity => {
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(300);
+
+                entity.Property(e => e.Email)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Establishment).HasMaxLength(500);
+                entity.Property(e => e.WebSite).HasMaxLength(500);
+                entity.Property(e => e.Responsible).HasMaxLength(300);
+                entity.Property(e => e.ResponsibleEmail).HasMaxLength(500);
+                entity.Property(e => e.City).HasMaxLength(300);
+                entity.Property(e => e.State).HasMaxLength(50);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.FormEstablishments)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FormEstablishment_Operation");
             });
 
             modelBuilder.Entity<IntegrationType>(entity =>

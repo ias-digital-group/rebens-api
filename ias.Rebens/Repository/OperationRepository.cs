@@ -215,6 +215,27 @@ namespace ias.Rebens
             return ret;
         }
 
+        public Operation Read(Guid code, out string error)
+        {
+            Operation ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Operation.SingleOrDefault(c => c.Code == code);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar ler a operação. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public bool Update(Operation operation, out string error)
         {
             bool ret = true;
