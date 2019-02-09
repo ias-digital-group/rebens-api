@@ -158,14 +158,14 @@ namespace ias.Rebens
             return ret;
         }
 
-        public Customer ReadByEmail(string email, out string error)
+        public Customer ReadByEmail(string email, int idOperation, out string error)
         {
             Customer ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Customer.SingleOrDefault(c => c.Email == email);
+                    ret = db.Customer.SingleOrDefault(c => c.Email == email && c.IdOperation == idOperation);
                     error = null;
                 }
             }
@@ -237,6 +237,31 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CustomerRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o cliente. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool ChangePassword(int id, string passwordEncrypted, string passwordSalt, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var user = db.Customer.SingleOrDefault(s => s.Id == id);
+                    user.EncryptedPassword = passwordEncrypted;
+                    user.PasswordSalt = passwordSalt;
+                    user.Modified = DateTime.UtcNow;
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ChangePassword", ex.Message, $"id:{id}", ex.StackTrace);
+                error = $"Ocorreu um erro ao tentar alterar a senha do cliente. (erro:{idLog})";
                 ret = false;
             }
             return ret;

@@ -58,6 +58,22 @@ namespace ias.Rebens.Enums
         Inactive = 2
     }
 
+    public enum CustomerStatus : int
+    {
+        [Description("Ativo")]
+        Active = 1,
+        [Description("Inativo")]
+        Inactive = 2
+    }
+
+    public enum CustomerType : int
+    {
+        [Description("Aluno")]
+        Student = 1,
+        [Description("Indicação")]
+        indication = 2
+    }
+
     public enum StaticTextType : int
     {
         [Description("Operação Sobre")]
@@ -74,6 +90,14 @@ namespace ias.Rebens.Enums
         BenefitOperationOffLine = 6,
         [Description("Funcionamento Voucher")]
         VoucherOperation = 7
+    }
+
+    public enum BankAccountType
+    {
+        [Description("Conta Corrente")]
+        debt,
+        [Description("Poupança")]
+        savings
     }
 
     public static class EnumHelper

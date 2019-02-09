@@ -79,6 +79,10 @@ namespace ias.Rebens.api.Models
         /// Lista de Configurações 
         /// </summary>
         public List<Helper.Config.ConfigurationValue> Configurations { get; set; }
+        /// <summary>
+        /// Endereço
+        /// </summary>
+        public AddressModel Address { get; set; }
 
         /// <summary>
         /// Construtor
@@ -104,7 +108,10 @@ namespace ias.Rebens.api.Models
             this.Cellphone = customer.Cellphone;
             this.CustomerType = customer.CustomerType;
             this.Status = customer.Status;
-            this.Configurations = Helper.Config.ConfigurationHelper.GetConfigurationValues(customer.Configuration);
+            if(!string.IsNullOrEmpty(customer.Configuration))
+                this.Configurations = Helper.Config.ConfigurationHelper.GetConfigurationValues(customer.Configuration);
+            if (customer.IdAddress.HasValue && customer.Address != null)
+                this.Address = new AddressModel(customer.Address);
         }
 
         /// <summary>
@@ -127,7 +134,7 @@ namespace ias.Rebens.api.Models
                 Cellphone = this.Cellphone,
                 CustomerType = this.CustomerType,
                 Status = this.Status,
-                Configuration = Helper.Config.ConfigurationHelper.GetConfigurationValueString(this.Configurations),
+                Configuration = this.Configurations != null && this.Configurations.Count > 0 ? null : Helper.Config.ConfigurationHelper.GetConfigurationValueString(this.Configurations),
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };

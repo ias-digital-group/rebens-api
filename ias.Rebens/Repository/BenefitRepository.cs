@@ -376,6 +376,55 @@ namespace ias.Rebens
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
 
+                    list.ForEach(i => { i.StaticTexts.Add(db.StaticText.SingleOrDefault(s => s.IdBenefit == i.Id && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall)); });
+
+                    ret = new ResultPage<Benefit>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ListByOperation", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, int? idBenefitType, int page, int pageItems, string word, string sort, out string error)
+        {
+            ResultPage<Benefit> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Benefit.Where(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) 
+                                    && (string.IsNullOrEmpty(word) || b.Title.Contains(word))
+                                    && (!idBenefitType.HasValue || (idBenefitType.HasValue && idBenefitType.Value == b.IdBenefitType))
+                                    && b.Active 
+                                    && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value))));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Benefit.Count(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+
+                    list.ForEach(i => { i.StaticTexts.Add(db.StaticText.SingleOrDefault(s => s.IdBenefit == i.Id && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall)); });
+
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
                 }

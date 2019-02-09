@@ -6,6 +6,11 @@ namespace ias.Rebens
 {
     public partial class Customer
     {
+        public Customer()
+        {
+            BankAccounts = new HashSet<BankAccount>();
+        }
+
         public int Id { get; set; }
         public string Name { get; set; }
         public int IdOperation { get; set; }
@@ -27,6 +32,7 @@ namespace ias.Rebens
 
         public virtual Operation Operation { get; set; }
         public virtual Address Address { get; set; }
+        public virtual ICollection<BankAccount> BankAccounts { get; set; }
 
 
         public void SetPassword(string password)

@@ -20,6 +20,8 @@ namespace ias.Rebens
 
         bool Delete(int id, out string error);
 
-        Customer ReadByEmail(string email, out string error);
+        Customer ReadByEmail(string email, int idOperation, out string error);
+
+        bool ChangePassword(int id, string passwordEncrypted, string passwordSalt, out string error);
     }
 }

@@ -114,6 +114,76 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="T:ias.Rebens.api.Controllers.BankAccountController">
+            <summary>
+            Bank Account Controller
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BankAccountController.#ctor(ias.Rebens.IBankAccountRepository)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="bankAccountRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BankAccountController.List(System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista todos as contas de um cliente com paginação
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Branch, Account, Type), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com as contas encontrados</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BankAccountController.Get(System.Int32)">
+            <summary>
+            Retorna a conta conforme o ID
+            </summary>
+            <param name="id">Id da conta</param>
+            <returns>Conta</returns>
+            <response code="200">Retorna a conta, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BankAccountController.Put(ias.Rebens.api.Models.BankAccountModel)">
+            <summary>
+            Atualiza uma conta
+            </summary>
+            <param name="account"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BankAccountController.Post(ias.Rebens.api.Models.BankAccountModel)">
+            <summary>
+            Cria uma conta
+            </summary>
+            <param name="account"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da conta criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BankAccountController.Delete(System.Int32)">
+            <summary>
+            Apaga uma conta
+            </summary>
+            <param name="id">Id da conta a ser apagado</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BankAccountController.ListBanks">
+            <summary>
+            Lista os Bancos
+            </summary>
+            <returns></returns>
+            <response code="200">Retorna a lista, ou algum erro, caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.BannerController">
             <summary>
             Banner Controller
@@ -566,17 +636,6 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
             <response code="200">Se o objeto for atualizado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.CustomerController.Login(ias.Rebens.api.Models.LoginModel,ias.Rebens.api.helper.SigningConfigurations,ias.Rebens.api.helper.TokenOptions)">
-            <summary>
-            Autentica um usuário na api
-            </summary>
-            <param name="model"></param>
-            <param name="signingConfigurations"></param>
-            <param name="tokenConfigurations"></param>
-            <returns>O token e o usuário</returns>
-            <respons code="200">se o usuário logar</respons>
-            <respons code="404">se não encontrar o usuário ou a senha não estiver correta</respons>
         </member>
         <member name="T:ias.Rebens.api.Controllers.FaqController">
             <summary>
@@ -1078,7 +1137,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository)">
             <summary>
             Constructor
             </summary>
@@ -1088,6 +1147,7 @@
             <param name="formContactRepository"></param>
             <param name="operationRepository"></param>
             <param name="formEstablishmentRepository"></param>
+            <param name="customerRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1128,6 +1188,76 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.Login(System.String,ias.Rebens.api.Models.LoginModel,ias.Rebens.api.helper.SigningConfigurations,ias.Rebens.api.helper.TokenOptions)">
+            <summary>
+            Autentica um usuário na api
+            </summary>
+            <param name="operationCode"></param>
+            <param name="model"></param>
+            <param name="signingConfigurations"></param>
+            <param name="tokenConfigurations"></param>
+            <returns>O token e o usuário</returns>
+            <respons code="200">se o usuário logar</respons>
+            <respons code="404">se não encontrar o usuário ou a senha não estiver correta</respons>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.Home">
+            <summary>
+            Retorna os items da home logada
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista todos os benefícios da operação com paginação
+            </summary>
+            <param name="idCategory">categoria, não obrigatório (default=null)</param>
+            <param name="idBenefitType">tipo de benefício, não obrigatório (default=null)</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os benefícios encontrados</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.Get(System.Int32)">
+            <summary>
+            Retorna o benefício conforme o ID
+            </summary>
+            <param name="id">Id do benefício</param>
+            <returns>Parceiros</returns>
+            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.CustomerCreate(ias.Rebens.api.Models.CustomerModel)">
+            <summary>
+            Cria um novo cliente
+            </summary>
+            <param name="customer"></param>
+            <returns></returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.CustomerUpdate(ias.Rebens.api.Models.CustomerModel)">
+            <summary>
+            Atualiza um cliente
+            </summary>
+            <param name="customer"></param>
+            <returns></returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ChangePassword(ias.Rebens.api.Models.ChangePasswordModel)">
+            <summary>
+            Altera a senha do cliente
+            </summary>
+            <param name="model">{ Id: id do cliente, OldPassword: senha antiga, NewPassword: nova senha, NewPasswordConfirm: confirmação da nova senha }</param>
+            <returns></returns>
+            <respons code="200"></respons>
+            <respons code="400"></respons>
         </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
             <summary>
@@ -1376,6 +1506,93 @@
             Retorna um objeto AdminUser com as informações
             </summary>
             <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.BankAccountModel">
+            <summary>
+            Bank Account Model
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankAccountModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankAccountModel.IdBank">
+            <summary>
+            Id do Banco
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankAccountModel.Type">
+            <summary>
+            Tipo de conta
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankAccountModel.Branch">
+            <summary>
+            Agência
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankAccountModel.AccountNumber">
+            <summary>
+            Conta Corrente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankAccountModel.Active">
+            <summary>
+            Ativo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankAccountModel.BankName">
+            <summary>
+            Nome do Banco
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BankAccountModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BankAccountModel.#ctor(ias.Rebens.BankAccount)">
+            <summary>
+            Construtor que recebe um BankAccount e popula os atributos
+            </summary>
+            <param name="account"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BankAccountModel.GetEntity">
+            <summary>
+            Retorna um objeto BankAccount com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.BankModel">
+            <summary>
+            Bank model
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankModel.Code">
+            <summary>
+            Código
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BankModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BankModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BankModel.#ctor(ias.Rebens.Bank)">
+            <summary>
+            Construtor que recebe um objeto Bank e popula os atributos
+            </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.BannerModel">
             <summary>
@@ -2070,6 +2287,11 @@
             Lista de Configurações 
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Address">
+            <summary>
+            Endereço
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.CustomerModel.#ctor">
             <summary>
             Construtor
@@ -2691,6 +2913,47 @@
             <param name="benefitCall"></param>
             <param name="partnerLogo"></param>
         </member>
+        <member name="T:ias.Rebens.api.Models.PortalBenefitModel">
+            <summary>
+            Benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalBenefitModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalBenefitModel.Title">
+            <summary>
+            Título
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalBenefitModel.Image">
+            <summary>
+            Imagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalBenefitModel.WebSite">
+            <summary>
+            Site do benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalBenefitModel.BenefitCall">
+            <summary>
+            Chamada do Benefício
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.PortalBenefitModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.PortalBenefitModel.#ctor(ias.Rebens.Benefit)">
+            <summary>
+            Construtor que recebe um Benefício e já popula os atributos
+            </summary>
+            <param name="benefit"></param>
+        </member>
         <member name="T:ias.Rebens.api.Models.PortalHomeLockedModel">
             <summary>
             Portal não logado model
@@ -2704,6 +2967,26 @@
         <member name="P:ias.Rebens.api.Models.PortalHomeLockedModel.BannerUnmissable">
             <summary>
             Lista dos banners imperdíveis
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.PortalHomeModel">
+            <summary>
+            Portal logado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalHomeModel.BannerFullList">
+            <summary>
+            Lista dos banners full
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalHomeModel.BannerUnmissable">
+            <summary>
+            Lista dos banners imperdíveis
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalHomeModel.Benefits">
+            <summary>
+            Lista com os benefícios da home
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.ResultPageModel`1">

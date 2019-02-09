@@ -22,6 +22,8 @@ namespace ias.Rebens
 
         public virtual DbSet<Address> Address { get; set; }
         public virtual DbSet<AdminUser> AdminUser { get; set; }
+        public virtual DbSet<Bank> Bank { get; set; }
+        public virtual DbSet<BankAccount> BankAccount { get; set; }
         public virtual DbSet<Banner> Banner { get; set; }
         public virtual DbSet<BannerOperation> BannerOperation { get; set; }
         public virtual DbSet<Benefit> Benefit { get; set; }
@@ -103,6 +105,34 @@ namespace ias.Rebens
                 entity.Property(e => e.Modified).HasColumnType("datetime");
 
                 entity.Property(e => e.Created).HasColumnType("datetime");
+            });
+
+            modelBuilder.Entity<Bank>(entity => {
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(10);
+                entity.Property(e => e.Initials).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                
+            });
+
+            modelBuilder.Entity<BankAccount>(entity => {
+                entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Branch).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.AccountNumber).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Bank)
+                    .WithMany(p => p.BankAccounts)
+                    .HasForeignKey(d => d.IdBank)
+                    .HasConstraintName("FK_BankAccount_Bank");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.BankAccounts)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .HasConstraintName("FK_BankAccount_Customer");
             });
 
             modelBuilder.Entity<Banner>(entity =>

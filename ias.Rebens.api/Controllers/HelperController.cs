@@ -47,6 +47,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro, caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
         [HttpGet("ListBenefitType")]
         [ProducesResponseType(typeof(JsonDataModel<List<BenefitTypeModel>>), 200)]
         [ProducesResponseType(204)]

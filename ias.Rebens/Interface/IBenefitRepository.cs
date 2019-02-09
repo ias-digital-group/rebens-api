@@ -28,17 +28,19 @@ namespace ias.Rebens
 
         bool DeleteCategory(int idBenefit, int idCategory, out string error);
 
-        ResultPage<Benefit> ListByAddress(int idBenefit, int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Benefit> ListByAddress(int idAddress, int page, int pageItems, string word, string sort, out string error);
 
-        ResultPage<Benefit> ListByCategory(int idBenefit, int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Benefit> ListByCategory(int idCategory, int page, int pageItems, string word, string sort, out string error);
 
-        ResultPage<Benefit> ListByOperation(int idBenefit, int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Benefit> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
 
         ResultPage<Benefit> ListByType(int idType, int page, int pageItems, string word, string sort, out string error);
 
         ResultPage<Benefit> ListByPartner(int idPartner, int page, int pageItems, string word, string sort, out string error);
 
         ResultPage<Benefit> ListByIntegrationType(int idIntegrationType, int page, int pageItems, string word, string sort, out string error);
+
+        ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, int? idBenefitType, int page, int pageItems, string word, string sort, out string error);
 
         List<BenefitOperationPosition> ListPositions(out string error);
 

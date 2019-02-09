@@ -175,7 +175,32 @@ namespace ias.Rebens
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BannerRepository.ListByOperation", ex.Message, $"operationCode: {operationCode}, type: {type}", ex.StackTrace);
+                int idLog = logError.Create("BannerRepository.ListByTypeAndOperation", ex.Message, $"operationCode: {operationCode}, type: {type}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os banners. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Banner> ListByTypeAndOperation(int idOperation, int type, out string error)
+        {
+            List<Banner> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Type == type &&
+                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now &&
+                                b.Benefit.Active && b.Benefit.Start < DateTime.Now && b.Benefit.End > DateTime.Now)
+                                .OrderBy(b => b.Order).ToList();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BannerRepository.ListByTypeAndOperation", ex.Message, $"idOperation: {idOperation}, type: {type}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os banners. (erro:" + idLog + ")";
                 ret = null;
             }
