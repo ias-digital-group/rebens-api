@@ -1259,6 +1259,16 @@
             <respons code="200"></respons>
             <respons code="400"></respons>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.RememberPassword(System.String,System.String)">
+            <summary>
+            Lembrete de senha
+            </summary>
+            <param name="operationCode"></param>
+            <param name="email">Email</param>
+            <returns></returns>
+            <respons code="200"></respons>
+            <respons code="400"></respons>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
             <summary>
             StaticText Controller

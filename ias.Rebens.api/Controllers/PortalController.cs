@@ -556,5 +556,51 @@ namespace ias.Rebens.api.Controllers
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = string.IsNullOrEmpty(error) ? "Cliente não encontrado" : error });
         }
+
+        /// <summary>
+        /// Lembrete de senha
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="email">Email</param>
+        /// <returns></returns>
+        /// <respons code="200"></respons>
+        /// <respons code="400"></respons>
+        [AllowAnonymous]
+        [HttpGet("RememberPassword")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult RememberPassword([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]string email)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.Read(operationGuid, out string error);
+
+            if (operation != null)
+            {
+                var user = customerRepo.ReadByEmail(email, operation.Id, out error);
+                if (user != null)
+                {
+                    string password = Helper.SecurityHelper.CreatePassword();
+                    user.SetPassword(password);
+                    if (customerRepo.ChangePassword(user.Id, user.PasswordSalt, user.EncryptedPassword, out string errorSave))
+                    {
+                        var sendingBlue = new Integration.SendinBlueHelper();
+                        string body = "<p><b>Nova Senha:</b>" + password + "</p>";
+                        var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", "Contato", "[Rebens] - Lembrete de Senha", body);
+                        if (result.Status)
+                            return Ok(new JsonModel() { Status = "ok", Message = result.Message });
+                        return StatusCode(400, new JsonModel() { Status = "ok", Message = result.Message });
+                    }
+                    return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
+                }
+                return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+        }
     }
 }
