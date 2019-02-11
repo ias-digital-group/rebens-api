@@ -292,4 +292,38 @@ namespace ias.Rebens.api.Models
             };
         }
     }
+
+    /// <summary>
+    /// Item simplificado
+    /// </summary>
+    public class BenefitItem
+    {
+        /// <summary>
+        /// Id
+        /// </summary>
+        [Required]
+        public int Id { get; set; }
+        /// <summary>
+        /// Título
+        /// </summary>
+        [Required]
+        [MaxLength(400)]
+        public string Title { get; set; }
+        
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public BenefitItem() { }
+
+        /// <summary>
+        /// Construtor que recebe um Benefício e já popula os atributos
+        /// </summary>
+        /// <param name="benefit"></param>
+        public BenefitItem(Benefit benefit)
+        {
+            this.Id = benefit.Id;
+            this.Title = benefit.Title;
+        }
+    }
 }

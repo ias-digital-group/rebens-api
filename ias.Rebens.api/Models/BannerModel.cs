@@ -37,10 +37,14 @@ namespace ias.Rebens.api.Models
         [MaxLength(500)]
         public string Link { get; set; }
         /// <summary>
-        /// Tipo
+        /// id Tipo
         /// </summary>
         [Required]
-        public int Type { get; set; }
+        public int IdType { get; set; }
+        /// <summary>
+        /// Tipo
+        /// </summary>
+        public string Type { get; set; }
         /// <summary>
         /// Cor de fundo
         /// </summary>
@@ -80,7 +84,8 @@ namespace ias.Rebens.api.Models
             this.Image = banner.Image;
             this.Order = banner.Order;
             this.Link = banner.Link;
-            this.Type = banner.Type;
+            this.IdType = banner.Type;
+            this.Type = Enums.EnumHelper.GetEnumDescription((Enums.BannerType)banner.Type);
             this.BackgroundColor = banner.BackgroundColor;
             this.IdBenefit = banner.IdBenefit;
             this.Active = banner.Active;
@@ -101,7 +106,7 @@ namespace ias.Rebens.api.Models
                 Image = this.Image,
                 Order = this.Order,
                 Link = this.Link,
-                Type = this.Type,
+                Type = this.IdType,
                 BackgroundColor = this.BackgroundColor,
                 IdBenefit = this.IdBenefit,
                 Active = this.Active,

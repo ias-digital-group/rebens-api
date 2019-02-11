@@ -25,6 +25,7 @@ namespace ias.Rebens.api.Models
         /// Tipo de conta
         /// </summary>
         [Required]
+        [MaxLength(50)]
         public string Type { get; set; }
         /// <summary>
         /// Agência
@@ -47,6 +48,10 @@ namespace ias.Rebens.api.Models
         /// Nome do Banco
         /// </summary>
         public string BankName { get; set; }
+        /// <summary>
+        /// Código do Banco
+        /// </summary>
+        public string BankCode { get; set; }
 
         /// <summary>
         /// Construtor
@@ -66,7 +71,10 @@ namespace ias.Rebens.api.Models
             this.Type = account.Type;
 
             if (account.Bank != null)
+            {
                 this.BankName = account.Bank.Name;
+                this.BankCode = account.Bank.Code;
+            }
         }
 
         /// <summary>

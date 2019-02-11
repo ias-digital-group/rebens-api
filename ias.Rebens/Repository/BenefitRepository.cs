@@ -650,5 +650,26 @@ namespace ias.Rebens
                 logo = call = null;
             }
         }
+
+        public List<Benefit> ListActive(out string error)
+        {
+            List<Benefit> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Benefit.Where(b => b.Active).OrderBy(b => b.Title).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ListActive", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

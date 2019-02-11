@@ -42,7 +42,7 @@ namespace ias.Rebens.Enums
 
     public enum BannerType
     {
-        [Description("Home")]
+        [Description("Home Full")]
         Home = 1,
         [Description("Categoria")]
         Category = 2,

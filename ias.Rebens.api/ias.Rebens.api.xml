@@ -401,6 +401,15 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.ListActive">
+            <summary>
+            Lista os benefícios ativos
+            </summary>
+            <returns>Lista com os benefícios</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.CategoryController">
             <summary>
             Category Controller
@@ -1557,6 +1566,11 @@
             Nome do Banco
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.BankAccountModel.BankCode">
+            <summary>
+            Código do Banco
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.BankAccountModel.#ctor">
             <summary>
             Construtor
@@ -1632,6 +1646,11 @@
         <member name="P:ias.Rebens.api.Models.BannerModel.Link">
             <summary>
             Link
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.IdType">
+            <summary>
+            id Tipo
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.BannerModel.Type">
@@ -1892,6 +1911,32 @@
             
             </summary>
             <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.BenefitItem">
+            <summary>
+            Item simplificado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitItem.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitItem.Title">
+            <summary>
+            Título
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitItem.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitItem.#ctor(ias.Rebens.Benefit)">
+            <summary>
+            Construtor que recebe um Benefício e já popula os atributos
+            </summary>
+            <param name="benefit"></param>
         </member>
         <member name="T:ias.Rebens.api.Models.BenefitOperationModel">
             <summary>

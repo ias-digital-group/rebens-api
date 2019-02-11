@@ -113,8 +113,6 @@ namespace ias.Rebens
                 entity.Property(e => e.Initials).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Modified).HasColumnType("datetime");
                 entity.Property(e => e.Created).HasColumnType("datetime");
-
-                
             });
 
             modelBuilder.Entity<BankAccount>(entity => {

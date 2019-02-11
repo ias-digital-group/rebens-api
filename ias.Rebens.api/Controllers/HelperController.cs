@@ -13,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     /// Helper Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/[controller]")]
     [ApiController]
     public class HelperController : ControllerBase
     {
@@ -78,6 +78,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [Authorize("Bearer", Roles = "administrator")]
         [HttpGet("ListIntegrationType")]
         [ProducesResponseType(typeof(JsonDataModel<List<BenefitTypeModel>>), 200)]
         [ProducesResponseType(204)]
@@ -109,6 +110,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [Authorize("Bearer", Roles = "administrator")]
         [HttpGet("ListOperationType")]
         [ProducesResponseType(typeof(JsonDataModel<List<OperationTypeModel>>), 200)]
         [ProducesResponseType(204)]
@@ -139,6 +141,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [Authorize("Bearer", Roles = "administrator")]
         [HttpGet("ListStaticTextType")]
         [ProducesResponseType(typeof(JsonDataModel<List<StaticTextTypeModel>>), 200)]
         [ProducesResponseType(204)]
@@ -169,8 +172,9 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [Authorize("Bearer", Roles = "administrator, customer")]
         [HttpGet("ListBannerType")]
-        [ProducesResponseType(typeof(JsonDataModel<List<BannerModel>>), 200)]
+        [ProducesResponseType(typeof(JsonDataModel<List<BannerTypeModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListBannerType()
@@ -192,6 +196,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [Authorize("Bearer", Roles = "administrator")]
         [HttpGet("ListConfigurationType")]
         [ProducesResponseType(typeof(JsonDataModel<List<ConfigurationTypeModel>>), 200)]
         [ProducesResponseType(204)]
@@ -215,6 +220,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se ocorrer algum erro</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [Authorize("Bearer", Roles = "administrator")]
         [HttpPost("UploadFile"), DisableRequestSizeLimit]
         [ProducesResponseType(typeof(FileUploadResultModel), 200)]
         [ProducesResponseType(204)]
@@ -262,6 +268,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         /// <response code="200">Retorna um modelo, ou algum erro caso interno</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [Authorize("Bearer", Roles = "administrator, customer")]
         [HttpPost("SendEmail")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]

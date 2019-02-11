@@ -45,5 +45,7 @@ namespace ias.Rebens
         List<BenefitOperationPosition> ListPositions(out string error);
 
         void ReadCallAndPartnerLogo(int idBenefit, out string call, out string logo, out string error);
+
+        List<Benefit> ListActive(out string error);
     }
 }

@@ -471,5 +471,36 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+
+        /// <summary>
+        /// Lista os benefícios ativos
+        /// </summary>
+        /// <returns>Lista com os benefícios</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("Active")]
+        [ProducesResponseType(typeof(JsonDataModel<List<BenefitItem>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListActive()
+        {
+            var list = repo.ListActive(out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<BenefitItem>>();
+                ret.Data = new List<BenefitItem>();
+                foreach (var benefit in list)
+                    ret.Data.Add(new BenefitItem(benefit));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
     }
 }
