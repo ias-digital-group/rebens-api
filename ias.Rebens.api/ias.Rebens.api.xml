@@ -1283,10 +1283,38 @@
             <summary>
             Retorna o benefício conforme o ID
             </summary>
-            <param name="id">Id do benefício</param>
             <returns>Parceiros</returns>
             <response code="200">Retorna o benefício, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.GetWithdrawSummary">
+            <summary>
+            Retorna as informações necessárias para a página de Resgate
+            </summary>
+            <returns></returns>
+            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefitHistory(System.Int32,System.Int32)">
+            <summary>
+            Retorna o histórico de Benefícios
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <returns></returns>
+            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.Withdraw(ias.Rebens.api.Models.WithdrawModel)">
+            <summary>
+            Registra um resgate
+            </summary>
+            <param name="withdraw"></param>
+            <returns></returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
@@ -1537,6 +1565,26 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:ias.Rebens.api.Models.BalanceSummaryModel">
+            <summary>
+            Model da tela de Resgate
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BalanceSummaryModel.BlokedBalance">
+            <summary>
+            Saldo Bloqueado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BalanceSummaryModel.Total">
+            <summary>
+            Total
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BalanceSummaryModel.AvailableBalance">
+            <summary>
+            Saldo Disponível
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.BankAccountModel">
             <summary>
             Bank Account Model
@@ -1754,6 +1802,46 @@
         <member name="P:ias.Rebens.api.Models.BenefitCategoryModel.IdCategory">
             <summary>
             Id da categoria
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.BenefitHistoryModel">
+            <summary>
+            Model Hisórico de Benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.Date">
+            <summary>
+            Data
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.IdBenefit">
+            <summary>
+            Id do benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.BenefitName">
+            <summary>
+            Nome do Benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.Amount">
+            <summary>
+            Valor da compra
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.Cashback">
+            <summary>
+            Valor do retorno (cashback)
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.status">
+            <summary>
+            Status
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.BenefitModel">
@@ -3222,6 +3310,51 @@
         <member name="P:ias.Rebens.api.Models.TokenModel.accessToken">
             <summary>
             Access Token
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.PortalTokenModel">
+            <summary>
+            Token Portal
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalTokenModel.authenticated">
+            <summary>
+            Se está autenticado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalTokenModel.created">
+            <summary>
+            Data da criação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalTokenModel.expiration">
+            <summary>
+            Data que o token irá expirar
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalTokenModel.accessToken">
+            <summary>
+            Access Token
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalTokenModel.balance">
+            <summary>
+            Saldo de cashback do cliente
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.WithdrawModel">
+            <summary>
+            Model de resgate
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WithdrawModel.IdBankAccount">
+            <summary>
+            Id da conta para onde será transferido o dinheiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WithdrawModel.Amount">
+            <summary>
+            Valor do resgate
             </summary>
         </member>
     </members>

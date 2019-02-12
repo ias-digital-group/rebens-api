@@ -244,7 +244,7 @@ namespace ias.Rebens.api.Controllers
         /// <respons code="400">se não encontrar o usuário ou a senha não estiver correta</respons>
         [AllowAnonymous]
         [HttpPost("Login")]
-        [ProducesResponseType(typeof(TokenModel), 201)]
+        [ProducesResponseType(typeof(PortalTokenModel), 201)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Login([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
@@ -295,12 +295,15 @@ namespace ias.Rebens.api.Controllers
                         });
                         var token = handler.WriteToken(securityToken);
 
-                        var Data = new TokenModel()
+                        decimal balance = (decimal)(new Random().NextDouble() * 499);
+
+                        var Data = new PortalTokenModel()
                         {
                             authenticated = true,
                             created = dataCriacao,
                             expiration = dataExpiracao,
-                            accessToken = token
+                            accessToken = token,
+                            balance = Math.Round(balance, 2)
                         };
 
                         return Ok(Data);
@@ -628,7 +631,6 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Retorna o benefício conforme o ID
         /// </summary>
-        /// <param name="id">Id do benefício</param>
         /// <returns>Parceiros</returns>
         /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -660,6 +662,124 @@ namespace ias.Rebens.api.Controllers
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna as informações necessárias para a página de Resgate
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("GetWithdrawSummary")]
+        [ProducesResponseType(typeof(JsonDataModel<BalanceSummaryModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetWithdrawSummary()
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            decimal blocked = Math.Round((decimal)(new Random().NextDouble() * 499), 2);
+            decimal available = Math.Round((decimal)(new Random().NextDouble() * 499), 2);
+
+            return Ok(new JsonDataModel<BalanceSummaryModel>() { Data = new BalanceSummaryModel() { AvailableBalance = available, BlokedBalance = blocked, Total = (available + blocked) } });
+        }
+
+        /// <summary>
+        /// Retorna o histórico de Benefícios
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <returns></returns>
+        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListBenefitHistory")]
+        [ProducesResponseType(typeof(JsonDataModel<List<BenefitHistoryModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListBenefitHistory([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var rnd = new Random();
+
+            string[] benefits = { "Asus", "Avon Store", "Natura Center", "Yázigi", "YouCom", "Submarino", "Americanas", "Box do Churrasco", "Avon", "Colombo" };
+            string[] status = { "Cashback em Processamento", "Cashback Disponível", "Não Possuí Cashback", "Reemetir" };
+
+            int itemsCount = rnd.Next(0, 11);
+            var ret = new JsonDataModel<List<BenefitHistoryModel>>() { Data = new List<BenefitHistoryModel>() };
+            var temp = new List<BenefitHistoryModel>();
+
+
+            for (int i = 0; i < itemsCount; i++)
+            {
+                var benefitIdx = rnd.Next(0, 9);
+                var amount = Math.Round((decimal)(new Random().NextDouble() * 499), 2);
+                var st = status[rnd.Next(0, 4)];
+                decimal cashback = 0;
+                if (st == "Cashback em Processamento" || st == "Cashback Disponível")
+                    cashback = Math.Round((amount * (decimal)(rnd.NextDouble() * .19)), 2);
+                temp.Add(new BenefitHistoryModel()
+                {
+                    Id = rnd.Next(),
+                    BenefitName = benefits[benefitIdx],
+                    IdBenefit = (benefitIdx + 1),
+                    Amount = amount,
+                    status = st,
+                    Cashback = cashback,
+                    Date = DateTime.Now.AddDays(-rnd.Next(1,60)).Date
+                });
+            }
+
+            ret.Data = temp;
+
+
+            return Ok(ret);
+        }
+
+        /// <summary>
+        /// Registra um resgate
+        /// </summary>
+        /// <param name="withdraw"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("Withdraw")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Withdraw([FromBody]WithdrawModel withdraw)
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Resgate registrado com sucesso!", Id = new Random().Next(0, 10000) });
         }
     }
 }
