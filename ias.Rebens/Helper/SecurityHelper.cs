@@ -14,7 +14,7 @@ namespace ias.Rebens.Helper
         static string VIKey { get { return "GVL6H]#*d&xteL8a"; } }
         static int SaltLength { get { return 32; } }
         static int Pbkdf2Iterations { get { return 5000; } }
-        static int DefaultPasswordLength { get { return 12; } }
+        static int DefaultPasswordLength { get { return 10; } }
 
         public static string GenerateSalt()
         {

@@ -144,7 +144,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Customer.SingleOrDefault(c => c.Id == id);
+                    ret = db.Customer.Include("Address").SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }

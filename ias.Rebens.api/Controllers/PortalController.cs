@@ -40,7 +40,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="operationRepository"></param>
         /// <param name="formEstablishmentRepository"></param>
         /// <param name="customerRepository"></param>
-        public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, ICustomerRepository customerRepository)
+        public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, ICustomerRepository customerRepository, IAddressRepository addressRepository)
         {
             this.bannerRepo = bannerRepository;
             this.benefitRepo = benefitRepository;
@@ -49,6 +49,7 @@ namespace ias.Rebens.api.Controllers
             this.operationRepo = operationRepository;
             this.formEstablishmentRepo = formEstablishmentRepository;
             this.customerRepo = customerRepository;
+            this.addrRepo = addressRepository;
         }
 
         /// <summary>
@@ -240,11 +241,11 @@ namespace ias.Rebens.api.Controllers
         /// <param name="tokenConfigurations"></param>
         /// <returns>O token e o usuário</returns>
         /// <respons code="200">se o usuário logar</respons>
-        /// <respons code="404">se não encontrar o usuário ou a senha não estiver correta</respons>
+        /// <respons code="400">se não encontrar o usuário ou a senha não estiver correta</respons>
         [AllowAnonymous]
         [HttpPost("Login")]
         [ProducesResponseType(typeof(TokenModel), 201)]
-        [ProducesResponseType(typeof(JsonModel), 404)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Login([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
             Guid operationGuid = Guid.Empty;
@@ -464,6 +465,7 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Cria um novo cliente
         /// </summary>
+        /// <param name="operationCode"></param>
         /// <param name="customer"></param>
         /// <returns></returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
@@ -472,25 +474,45 @@ namespace ias.Rebens.api.Controllers
         [HttpPost("CustomerCreate")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult CustomerCreate([FromBody]CustomerModel customer)
+        public IActionResult CustomerCreate([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]CustomerModel customer)
         {
-            var cust = customer.GetEntity();
-            string error = null;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
 
-            if (cust.Address != null)
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.Read(operationGuid, out string error);
+
+            if (operation != null)
             {
-                var addr = customer.Address.GetEntity();
-                if (addrRepo.Create(addr, out error))
-                    cust.IdAddress = addr.Id;
-            }
+                var cust = customer.GetEntity();
+                cust.IdOperation = operation.Id;
 
-            if (!string.IsNullOrEmpty(error))
+                if (customer.Address != null)
+                {
+                    var addr = customer.Address.GetEntity();
+                    if (addrRepo.Create(addr, out error))
+                        cust.IdAddress = addr.Id;
+                }
+
+                if (!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+
+                string password = Helper.SecurityHelper.CreatePassword();
+                cust.SetPassword(password);
+                if (customerRepo.Create(cust, out error))
+                {
+                    var sendingBlue = new Integration.SendinBlueHelper();
+                    var body = $"<p>Seu cadastro foi realizado com sucesso!</p><p>Segue a sua senha temporária, sugerimos que você troque essa senha imediatamente:<br />Senha:<b>{password}</b></p>";
+                    var result = sendingBlue.Send(cust.Email, cust.Name, "contato@rebens.com.br", operation.Title, "Cadatro realizado com sucesso", body);
+
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = cust.Id });
+                }
+
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-
-            if (customerRepo.Create(cust, out error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = cust.Id });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
         }
 
         /// <summary>
@@ -601,6 +623,43 @@ namespace ias.Rebens.api.Controllers
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
+        }
+
+        /// <summary>
+        /// Retorna o benefício conforme o ID
+        /// </summary>
+        /// <param name="id">Id do benefício</param>
+        /// <returns>Parceiros</returns>
+        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("GetCustomer")]
+        [ProducesResponseType(typeof(JsonDataModel<CustomerModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetCustomer()
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var customer = customerRepo.Read(idCustomer, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (customer == null || customer.Id == 0)
+                    return NoContent();
+                return Ok(new JsonDataModel<CustomerModel>() { Data = new CustomerModel(customer) });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }

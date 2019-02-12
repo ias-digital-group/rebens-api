@@ -30,7 +30,7 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         [MaxLength(1)]
-        public char Gender { get; set; }
+        public string Gender { get; set; }
         /// <summary>
         /// Data de nascimento
         /// </summary>
@@ -98,7 +98,7 @@ namespace ias.Rebens.api.Models
             this.Id = customer.Id;
             this.Name = customer.Name;
             this.IdOperation = customer.IdOperation;
-            this.Gender = customer.Gender;
+            this.Gender = customer.Gender.ToString();
             this.Birthday = customer.Birthday;
             this.Email = customer.Email;
             this.IdAddress = customer.IdAddress;
@@ -124,7 +124,7 @@ namespace ias.Rebens.api.Models
                 Id = this.Id,
                 Name = this.Name,
                 IdOperation = this.IdOperation,
-                Gender = this.Gender,
+                Gender = this.Gender[0],
                 Birthday = this.Birthday,
                 Email = this.Email,
                 IdAddress = this.IdAddress,
