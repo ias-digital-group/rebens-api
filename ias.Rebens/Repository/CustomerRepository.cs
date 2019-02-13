@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using ias.Rebens.Enums;
 
 namespace ias.Rebens
 {
@@ -242,7 +243,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool ChangePassword(int id, string passwordEncrypted, string passwordSalt, out string error)
+        public bool ChangePassword(int id, string passwordEncrypted, string passwordSalt, int? status, out string error)
         {
             bool ret = true;
             try
@@ -252,6 +253,8 @@ namespace ias.Rebens
                     var user = db.Customer.SingleOrDefault(s => s.Id == id);
                     user.EncryptedPassword = passwordEncrypted;
                     user.PasswordSalt = passwordSalt;
+                    if (status.HasValue)
+                        user.Status = status.Value;
                     user.Modified = DateTime.UtcNow;
                     db.SaveChanges();
                     error = null;
@@ -261,6 +264,72 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CustomerRepository.ChangePassword", ex.Message, $"id:{id}", ex.StackTrace);
+                error = $"Ocorreu um erro ao tentar alterar a senha do cliente. (erro:{idLog})";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public Customer ReadByCode(string code, int idOperation, out string error)
+        {
+            Customer ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Customer.SingleOrDefault(c => c.IdOperation == idOperation && c.Code == code);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ReadByCode", ex.Message, $"code:{code}, idOperation:{idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o cliente. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public bool ChangeStatus(int id, CustomerStatus status, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var user = db.Customer.SingleOrDefault(s => s.Id == id);
+                    user.Status = (int)status;
+                    user.Modified = DateTime.UtcNow;
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ChangeStatus", ex.Message, $"id:{id}, status:{status.ToString()}", ex.StackTrace);
+                error = $"Ocorreu um erro ao tentar alterar o status do cliente. (erro:{idLog})";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool CheckEmailAndCpf(string email, string cpf, int idOperation, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Customer.Any(c => c.IdOperation == idOperation && (c.Email == email || c.Cpf == cpf));
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.CheckEmailAndCpf", ex.Message, $"email:'{email}', cpf:'{cpf}', idOperation:{idOperation}", ex.StackTrace);
                 error = $"Ocorreu um erro ao tentar alterar a senha do cliente. (erro:{idLog})";
                 ret = false;
             }

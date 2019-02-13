@@ -1146,7 +1146,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository)">
             <summary>
             Constructor
             </summary>
@@ -1157,6 +1157,8 @@
             <param name="operationRepository"></param>
             <param name="formEstablishmentRepository"></param>
             <param name="customerRepository"></param>
+            <param name="addressRepository"></param>
+            <param name="withdrawRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1251,6 +1253,26 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.SignUp(System.String,ias.Rebens.api.Controllers.SignUpModel)">
+            <summary>
+            Cria um novo cliente
+            </summary>
+            <param name="operationCode"></param>
+            <param name="signUp"></param>
+            <returns></returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ValidateCustomer(System.String,ias.Rebens.api.Models.ValidateCustomerModel,ias.Rebens.api.helper.SigningConfigurations,ias.Rebens.api.helper.TokenOptions)">
+            <summary>
+            Cria um novo cliente
+            </summary>
+            <param name="operationCode"></param>
+            <param name="validateCustomer"></param>
+            <returns></returns>
+            <response code="200">Se o cliente for validado com sucesso já é retornado o token</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.CustomerUpdate(ias.Rebens.api.Models.CustomerModel)">
             <summary>
             Atualiza um cliente
@@ -1316,6 +1338,21 @@
             <returns></returns>
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="T:ias.Rebens.api.Controllers.SignUpModel">
+            <summary>
+            Model de cadastro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Controllers.SignUpModel.Cpf">
+            <summary>
+            CPF
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Controllers.SignUpModel.Email">
+            <summary>
+            E-mail
+            </summary>
         </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
             <summary>
@@ -3340,6 +3377,21 @@
         <member name="P:ias.Rebens.api.Models.PortalTokenModel.balance">
             <summary>
             Saldo de cashback do cliente
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.ValidateCustomerModel">
+            <summary>
+            Model de validação de cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ValidateCustomerModel.Code">
+            <summary>
+            Código do cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ValidateCustomerModel.Password">
+            <summary>
+            Senha
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.WithdrawModel">

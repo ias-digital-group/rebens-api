@@ -29,6 +29,7 @@ namespace ias.Rebens.api.Controllers
         private IFormEstablishmentRepository formEstablishmentRepo;
         private IOperationRepository operationRepo;
         private ICustomerRepository customerRepo;
+        private IWithdrawRepository withdrawRepo;
 
         /// <summary>
         /// Constructor
@@ -40,7 +41,9 @@ namespace ias.Rebens.api.Controllers
         /// <param name="operationRepository"></param>
         /// <param name="formEstablishmentRepository"></param>
         /// <param name="customerRepository"></param>
-        public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, ICustomerRepository customerRepository, IAddressRepository addressRepository)
+        /// <param name="addressRepository"></param>
+        /// <param name="withdrawRepository"></param>
+        public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository)
         {
             this.bannerRepo = bannerRepository;
             this.benefitRepo = benefitRepository;
@@ -50,6 +53,7 @@ namespace ias.Rebens.api.Controllers
             this.formEstablishmentRepo = formEstablishmentRepository;
             this.customerRepo = customerRepository;
             this.addrRepo = addressRepository;
+            this.withdrawRepo = withdrawRepository;
         }
 
         /// <summary>
@@ -244,7 +248,7 @@ namespace ias.Rebens.api.Controllers
         /// <respons code="400">se não encontrar o usuário ou a senha não estiver correta</respons>
         [AllowAnonymous]
         [HttpPost("Login")]
-        [ProducesResponseType(typeof(PortalTokenModel), 201)]
+        [ProducesResponseType(typeof(PortalTokenModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Login([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
@@ -519,6 +523,141 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Cria um novo cliente
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="signUp"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpPost("SignUp")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SignUp([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]SignUpModel signUp)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.Read(operationGuid, out string error);
+
+            if (operation != null)
+            {
+                if(!customerRepo.CheckEmailAndCpf(signUp.Email, signUp.Cpf, operation.Id, out error))
+                {
+                    var customer = new Customer()
+                    {
+                        Email = signUp.Email,
+                        Cpf = signUp.Cpf,
+                        Created = DateTime.Now,
+                        Modified = DateTime.Now,
+                        Status = (int)Enums.CustomerStatus.Validation,
+                        CustomerType = (int)Enums.CustomerType.Student,
+                        Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
+                        IdOperation = operation.Id
+                    };
+
+                    if (customerRepo.Create(customer, out error))
+                    {
+                        var sendingBlue = new Integration.SendinBlueHelper();
+                        var link = "http://hmlrebens.iasdigitalgroup.com/unicap/c=" + customer.Code;
+                        var result = sendingBlue.SendCustomerValidate(customer.Email, link);
+
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = customer.Id });
+                    }
+
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Email ou CPF já cadastrado!" });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
+        /// Cria um novo cliente
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="validateCustomer"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o cliente for validado com sucesso já é retornado o token</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpPost("ValidateCustomer")]
+        [ProducesResponseType(typeof(PortalTokenModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ValidateCustomer([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]ValidateCustomerModel validateCustomer, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.Read(operationGuid, out string error);
+
+            if (operation != null)
+            {
+                var customer = customerRepo.ReadByCode(validateCustomer.Code, operation.Id, out error);
+
+                if(customer != null)
+                {
+                    customer.SetPassword(validateCustomer.Password);
+                    if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Active, out error))
+                    {
+                        ClaimsIdentity identity = new ClaimsIdentity(
+                            new GenericIdentity(customer.Email),
+                            new[] {
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+                            new Claim(JwtRegisteredClaimNames.UniqueName, customer.Email)
+                            }
+                        );
+
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "customer"));
+                        //foreach (var policy in user.Permissions)
+                        //    identity.AddClaim(new Claim("permissions", "permission1"));
+
+                        identity.AddClaim(new Claim("operationId", operation.Id.ToString()));
+                        identity.AddClaim(new Claim("Id", customer.Id.ToString()));
+                        identity.AddClaim(new Claim("Name", ""));
+                        identity.AddClaim(new Claim("Email", customer.Email));
+
+                        DateTime dataCriacao = DateTime.UtcNow;
+                        DateTime dataExpiracao = dataCriacao.AddDays(2);
+
+                        var handler = new JwtSecurityTokenHandler();
+                        var securityToken = handler.CreateToken(new SecurityTokenDescriptor
+                        {
+                            Issuer = tokenConfigurations.Issuer,
+                            Audience = tokenConfigurations.Audience,
+                            SigningCredentials = signingConfigurations.SigningCredentials,
+                            Subject = identity,
+                            NotBefore = dataCriacao,
+                            Expires = dataExpiracao
+                        });
+                        var token = handler.WriteToken(securityToken);
+
+                        var Data = new PortalTokenModel()
+                        {
+                            authenticated = true,
+                            created = dataCriacao,
+                            expiration = dataExpiracao,
+                            accessToken = token,
+                            balance = 0
+                        };
+
+                        return Ok(Data);
+                    }
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
         /// Atualiza um cliente
         /// </summary>
         /// <param name="customer"></param>
@@ -570,7 +709,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         var salt = Helper.SecurityHelper.GenerateSalt();
                         var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.NewPassword, salt);
-                        if (customerRepo.ChangePassword(model.Id, encryptedPassword, salt, out error))
+                        if (customerRepo.ChangePassword(model.Id, encryptedPassword, salt, null, out error))
                             return Ok(new JsonModel() { Status = "ok" });
 
                         return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -591,7 +730,7 @@ namespace ias.Rebens.api.Controllers
         /// <respons code="200"></respons>
         /// <respons code="400"></respons>
         [AllowAnonymous]
-        [HttpGet("RememberPassword")]
+        [HttpPost("RememberPassword")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RememberPassword([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]string email)
@@ -609,23 +748,20 @@ namespace ias.Rebens.api.Controllers
                 var user = customerRepo.ReadByEmail(email, operation.Id, out error);
                 if (user != null)
                 {
-                    string password = Helper.SecurityHelper.CreatePassword();
-                    user.SetPassword(password);
-                    if (customerRepo.ChangePassword(user.Id, user.PasswordSalt, user.EncryptedPassword, out string errorSave))
-                    {
+                    if(customerRepo.ChangeStatus(user.Id, Enums.CustomerStatus.ChangePassword, out error))
+                    { 
                         var sendingBlue = new Integration.SendinBlueHelper();
-                        string body = "<p><b>Nova Senha:</b>" + password + "</p>";
-                        var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", "Contato", "[Rebens] - Lembrete de Senha", body);
+                        var link = "http://hmlrebens.iasdigitalgroup.com/unicap/c=" + user.Code;
+                        var result = sendingBlue.SendPasswordRecover(user, link);
                         if (result.Status)
                             return Ok(new JsonModel() { Status = "ok", Message = result.Message });
-                        return StatusCode(400, new JsonModel() { Status = "ok", Message = result.Message });
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = result.Message });
                     }
-                    return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
                 }
-                return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
         }
 
         /// <summary>
@@ -779,7 +915,25 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
             }
 
-            return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Resgate registrado com sucesso!", Id = new Random().Next(0, 10000) });
+            if (idCustomer > 0)
+            {
+
+                var draw = new Withdraw()
+                {
+                    IdBankAccount = withdraw.IdBankAccount,
+                    IdCustomer = idCustomer,
+                    Amount = withdraw.Amount,
+                    Date = DateTime.Now.Date,
+                    Status = (int)Enums.WithdrawStatus.New,
+                    Created = DateTime.Now,
+                    Modified = DateTime.Now
+                };
+
+                if (withdrawRepo.Create(draw, out string error))
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Resgate registrado com sucesso!", Id = draw.Id });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
         }
     }
 }

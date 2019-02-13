@@ -9,6 +9,7 @@ namespace ias.Rebens
         public Customer()
         {
             BankAccounts = new HashSet<BankAccount>();
+            Withdraws = new HashSet<Withdraw>();
         }
 
         public int Id { get; set; }
@@ -26,6 +27,7 @@ namespace ias.Rebens
         public string EncryptedPassword { get; set; }
         public string PasswordSalt { get; set; }
         public string Configuration { get; set; }
+        public string Code { get; set; }
         public int Status { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
@@ -33,6 +35,7 @@ namespace ias.Rebens
         public virtual Operation Operation { get; set; }
         public virtual Address Address { get; set; }
         public virtual ICollection<BankAccount> BankAccounts { get; set; }
+        public virtual ICollection<Withdraw> Withdraws { get; set; }
 
 
         public void SetPassword(string password)

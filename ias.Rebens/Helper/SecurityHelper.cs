@@ -102,5 +102,26 @@ namespace ias.Rebens.Helper
             cryptoStream.Close();
             return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount).TrimEnd("\0".ToCharArray());
         }
+
+        public static string HMACSHA1(string key, string dataToSign)
+        {
+            byte[] secretBytes = Encoding.UTF8.GetBytes(key);
+            HMACSHA1 hmac = new HMACSHA1(secretBytes);
+
+            byte[] dataBytes = Encoding.UTF8.GetBytes(dataToSign);
+            byte[] calcHash = hmac.ComputeHash(dataBytes);
+
+            return Convert.ToBase64String(calcHash);
+        }
+
+        public static string GenerateNonce(int size)
+        {
+            var ByteArray = new byte[size];
+            using (var Rnd = RandomNumberGenerator.Create())
+            {
+                Rnd.GetBytes(ByteArray);
+            }
+            return Convert.ToBase64String(ByteArray);
+        }
     }
 }

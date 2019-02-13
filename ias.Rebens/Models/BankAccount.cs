@@ -6,6 +6,11 @@ namespace ias.Rebens
 {
     public partial class BankAccount
     {
+        public BankAccount()
+        {
+            Withdraws = new HashSet<Withdraw>();
+        }
+
         public int Id { get; set; }
         public int IdBank { get; set; }
         public int IdCustomer { get; set; }
@@ -18,6 +23,6 @@ namespace ias.Rebens
 
         public virtual Bank Bank { get; set; }
         public virtual Customer Customer { get; set; }
-
+        public virtual ICollection<Withdraw> Withdraws { get; set; }
     }
 }

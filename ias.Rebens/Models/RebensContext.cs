@@ -52,6 +52,8 @@ namespace ias.Rebens
         public virtual DbSet<PartnerContact> PartnerContact { get; set; }
         public virtual DbSet<StaticText> StaticText { get; set; }
         public virtual DbSet<StaticTextType> StaticTextType { get; set; }
+        public virtual DbSet<Withdraw> Withdraw { get; set; }
+        public virtual DbSet<ZanoxSale> ZanoxSale { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -365,9 +367,9 @@ namespace ias.Rebens
 
             modelBuilder.Entity<Customer>(entity =>
             {
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+                entity.Property(e => e.Name).HasMaxLength(300);
 
-                entity.Property(e => e.Gender).IsRequired().HasMaxLength(1);
+                entity.Property(e => e.Gender).HasMaxLength(1);
 
                 entity.Property(e => e.Birthday).HasColumnType("datetime");
 
@@ -382,6 +384,8 @@ namespace ias.Rebens
                 entity.Property(e => e.Cellphone).HasMaxLength(50);
 
                 entity.Property(e => e.EncryptedPassword).HasMaxLength(300);
+
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
 
                 entity.Property(e => e.PasswordSalt).HasMaxLength(300);
 
@@ -401,7 +405,6 @@ namespace ias.Rebens
                     .HasForeignKey(e => e.IdAddress)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Customer_Address");
-
             });
 
             modelBuilder.Entity<Faq>(entity =>
@@ -696,6 +699,48 @@ namespace ias.Rebens
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(200);
+            });
+
+            modelBuilder.Entity<Withdraw>(entity => {
+                entity.Property(e => e.Date).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Customer)
+                   .WithMany(p => p.Withdraws)
+                   .HasForeignKey(d => d.IdCustomer)
+                   .OnDelete(DeleteBehavior.ClientSetNull)
+                   .HasConstraintName("FK_Withdraw_Customer");
+
+                entity.HasOne(d => d.BankAccount)
+                   .WithMany(p => p.Withdraws)
+                   .HasForeignKey(d => d.IdBankAccount)
+                   .OnDelete(DeleteBehavior.ClientSetNull)
+                   .HasConstraintName("FK_Withdraw_BankAccount");
+            });
+
+            modelBuilder.Entity<ZanoxSale>(entity => {
+                entity.Property(e => e.TrackingDate).HasColumnType("datetime");
+                entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+                entity.Property(e => e.ClickDate).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.ClickId).HasColumnType("bigint");
+                entity.Property(e => e.ClickInId).HasColumnType("bigint");
+
+                entity.Property(e => e.Amount).HasColumnType("money");
+                entity.Property(e => e.Commission).HasColumnType("money");
+
+                entity.Property(e => e.ZanoxId).HasMaxLength(50);
+                entity.Property(e => e.ReviewState).HasMaxLength(50);
+                entity.Property(e => e.Currency).HasMaxLength(50);
+                entity.Property(e => e.AdspaceValue).HasMaxLength(300);
+                entity.Property(e => e.AdmediumValue).HasMaxLength(300);
+                entity.Property(e => e.ProgramValue).HasMaxLength(300);
+                entity.Property(e => e.Gpps).HasMaxLength(4000);
+                entity.Property(e => e.ReviewNote).HasMaxLength(1000);
+                entity.Property(e => e.Zpar).IsRequired().HasMaxLength(200);
             });
         }
     }

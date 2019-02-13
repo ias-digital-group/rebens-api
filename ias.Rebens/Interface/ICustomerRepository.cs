@@ -22,6 +22,12 @@ namespace ias.Rebens
 
         Customer ReadByEmail(string email, int idOperation, out string error);
 
-        bool ChangePassword(int id, string passwordEncrypted, string passwordSalt, out string error);
+        bool ChangePassword(int id, string passwordEncrypted, string passwordSalt, int? status, out string error);
+
+        Customer ReadByCode(string code, int idOperation, out string error);
+
+        bool ChangeStatus(int id, Enums.CustomerStatus status, out string error);
+
+        bool CheckEmailAndCpf(string email, string cpf, int idOperation, out string error);
     }
 }

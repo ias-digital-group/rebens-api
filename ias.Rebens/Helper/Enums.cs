@@ -63,7 +63,11 @@ namespace ias.Rebens.Enums
         [Description("Ativo")]
         Active = 1,
         [Description("Inativo")]
-        Inactive = 2
+        Inactive = 2,
+        [Description("Validação")]
+        Validation = 3,
+        [Description("Trocar Senha")]
+        ChangePassword = 4
     }
 
     public enum CustomerType : int
@@ -98,6 +102,28 @@ namespace ias.Rebens.Enums
         debt,
         [Description("Poupança")]
         savings
+    }
+
+    public enum WithdrawStatus : int
+    {
+        [Description("Novo")]
+        New = 1,
+        [Description("Pendente")]
+        Pendent = 2,
+        [Description("Finalizado")]
+        Done = 3
+    }
+
+    public enum ZanoxState : int
+    {
+        [Description("Confirmado")]
+        confirmed = 1,
+        [Description("Aberto")]
+        open = 2,
+        [Description("Rejeitado")]
+        rejected = 3,
+        [Description("Aprovado")]
+        approved = 4
     }
 
     public static class EnumHelper
