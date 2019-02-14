@@ -646,6 +646,69 @@
             <response code="200">Se o objeto for atualizado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.List(System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista as Indicações conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Email, Status), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com as Indicações encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.ListByCustomer(System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista as Indicações conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Email, Status), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com as Indicações encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.Get(System.Int32)">
+            <summary>
+            Retorna uma Indicação
+            </summary>
+            <param name="id">Id do banner desejada</param>
+            <returns>Banner</returns>
+            <response code="200">Retorna o banner, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.Put(ias.Rebens.api.Models.CustomerReferalModel)">
+            <summary>
+            Atualiza uma indicação
+            </summary>
+            <param name="customerReferal">indicação</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.Post(ias.Rebens.api.Models.CustomerReferalModel)">
+            <summary>
+            Cria uma Indicação
+            </summary>
+            <param name="customerReferal">Indicação</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da indicação criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.Delete(System.Int32)">
+            <summary>
+            Apaga uma indicação
+            </summary>
+            <param name="id">Id da indicação a ser apagado</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.FaqController">
             <summary>
             Faq Controller
@@ -1337,6 +1400,17 @@
             <param name="withdraw"></param>
             <returns></returns>
             <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListWithdraw(System.Int32,System.Int32)">
+            <summary>
+            Retorna o histórico de Resgates
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <returns></returns>
+            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Controllers.SignUpModel">
@@ -2500,6 +2574,68 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:ias.Rebens.api.Models.CustomerReferalModel">
+            <summary>
+            Model Customer Referal
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.IdCustomer">
+            <summary>
+            Id Cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.CustomerName">
+            <summary>
+            Nome do Cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.Name">
+            <summary>
+            Nome do indicado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.Email">
+            <summary>
+            Email do indicado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.IdStatus">
+            <summary>
+            id do Status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.Date">
+            <summary>
+            Data
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CustomerReferalModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CustomerReferalModel.#ctor(ias.Rebens.CustomerReferal)">
+            <summary>
+            Construtor que popula 
+            </summary>
+            <param name="customerReferal"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CustomerReferalModel.GetEntity">
+            <summary>
+            Retorna um objeto CustomerReferal
+            </summary>
+            <returns></returns>
+        </member>
         <member name="P:ias.Rebens.api.Models.EmailModel.FromEmail">
             <summary>
             Email do destinatário
@@ -3393,6 +3529,52 @@
             <summary>
             Senha
             </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.WithdrawItemModel">
+            <summary>
+            Model de Resgate
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WithdrawItemModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WithdrawItemModel.IdBankAccount">
+            <summary>
+            IdBankAccount
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WithdrawItemModel.BankAccount">
+            <summary>
+            Conta do resgate
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WithdrawItemModel.Date">
+            <summary>
+            Data
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WithdrawItemModel.Amount">
+            <summary>
+            Valor
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WithdrawItemModel.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.WithdrawItemModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.WithdrawItemModel.#ctor(ias.Rebens.Withdraw)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="withdraw"></param>
         </member>
         <member name="T:ias.Rebens.api.Models.WithdrawModel">
             <summary>

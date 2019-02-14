@@ -36,6 +36,7 @@ namespace ias.Rebens
         public virtual DbSet<Configuration> Configuration { get; set; }
         public virtual DbSet<Contact> Contact { get; set; }
         public virtual DbSet<Customer> Customer { get; set; }
+        public virtual DbSet<CustomerReferal> CustomerReferal { get; set; }
         public virtual DbSet<Faq> Faq { get; set; }
         public virtual DbSet<FormContact> FormContact { get; set; }
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
@@ -393,7 +394,6 @@ namespace ias.Rebens
 
                 entity.Property(e => e.Created).HasColumnType("datetime");
 
-
                 entity.HasOne(e => e.Operation)
                     .WithMany(e => e.Customers)
                     .HasForeignKey(e => e.IdOperation)
@@ -405,6 +405,23 @@ namespace ias.Rebens
                     .HasForeignKey(e => e.IdAddress)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Customer_Address");
+            });
+
+            modelBuilder.Entity<CustomerReferal>(entity =>
+            {
+                entity.Property(e => e.Name).HasMaxLength(300);
+
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(500);
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(e => e.Customer)
+                    .WithMany(e => e.CustomerReferals)
+                    .HasForeignKey(e => e.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CustomerReferal_Customer");
             });
 
             modelBuilder.Entity<Faq>(entity =>

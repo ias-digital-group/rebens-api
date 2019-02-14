@@ -67,7 +67,9 @@ namespace ias.Rebens.Enums
         [Description("Validação")]
         Validation = 3,
         [Description("Trocar Senha")]
-        ChangePassword = 4
+        ChangePassword = 4,
+        [Description("Imcompleto")]
+        Incomplete = 5
     }
 
     public enum CustomerType : int
@@ -76,6 +78,14 @@ namespace ias.Rebens.Enums
         Student = 1,
         [Description("Indicação")]
         indication = 2
+    }
+
+    public enum CustomerReferalStatus : int
+    {
+        [Description("Pendente")]
+        pending = 1,
+        [Description("Assinado")]
+        Signed = 2
     }
 
     public enum StaticTextType : int

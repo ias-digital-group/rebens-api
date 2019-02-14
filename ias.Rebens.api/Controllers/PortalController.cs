@@ -17,7 +17,7 @@ namespace ias.Rebens.api.Controllers
     /// Portal Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer")]
     [ApiController]
     public class PortalController : ControllerBase
     {
@@ -262,10 +262,10 @@ namespace ias.Rebens.api.Controllers
 
             if (operation != null)
             {
-                var user = customerRepo.ReadByEmail(model.Email, operation.Id, out error);
-                if (user != null)
+                var customer = customerRepo.ReadByEmail(model.Email, operation.Id, out error);
+                if (customer != null)
                 {
-                    if (user.CheckPassword(model.Password))
+                    if (customer.CheckPassword(model.Password))
                     {
                         ClaimsIdentity identity = new ClaimsIdentity(
                             new GenericIdentity(model.Email),
@@ -279,10 +279,11 @@ namespace ias.Rebens.api.Controllers
                         //foreach (var policy in user.Permissions)
                         //    identity.AddClaim(new Claim("permissions", "permission1"));
 
-                        identity.AddClaim(new Claim("operationId", user.IdOperation.ToString()));
-                        identity.AddClaim(new Claim("Id", user.Id.ToString()));
-                        identity.AddClaim(new Claim("Name", user.Name));
-                        identity.AddClaim(new Claim("Email", user.Email));
+                        identity.AddClaim(new Claim("operationId", customer.IdOperation.ToString()));
+                        identity.AddClaim(new Claim("Id", customer.Id.ToString()));
+                        identity.AddClaim(new Claim("Name", customer.Name));
+                        identity.AddClaim(new Claim("Email", customer.Email));
+                        identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
 
                         DateTime dataCriacao = DateTime.UtcNow;
                         DateTime dataExpiracao = dataCriacao.AddDays(2);
@@ -623,6 +624,8 @@ namespace ias.Rebens.api.Controllers
                         identity.AddClaim(new Claim("Id", customer.Id.ToString()));
                         identity.AddClaim(new Claim("Name", ""));
                         identity.AddClaim(new Claim("Email", customer.Email));
+                        identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
+
 
                         DateTime dataCriacao = DateTime.UtcNow;
                         DateTime dataExpiracao = dataCriacao.AddDays(2);
@@ -934,6 +937,48 @@ namespace ias.Rebens.api.Controllers
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+        }
+
+        /// <summary>
+        /// Retorna o histórico de Resgates
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <returns></returns>
+        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListBenefitHistory")]
+        [ProducesResponseType(typeof(JsonDataModel<List<WithdrawItemModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListWithdraw([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var list = withdrawRepo.ListPage(idCustomer, page, pageItems, "date desc", out string error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var model = new JsonDataModel<List<WithdrawItemModel>>() { Data = new List<WithdrawItemModel>() };
+                foreach (var item in list)
+                    model.Data.Add(new WithdrawItemModel(item));
+
+                return Ok(model);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }

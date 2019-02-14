@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,7 +68,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Withdraw.Where(w => !idCustomer.HasValue  || (idCustomer.HasValue && w.IdCustomer == idCustomer));
+                    var tmpList = db.Withdraw.Include("BankAccount").Where(w => !idCustomer.HasValue  || (idCustomer.HasValue && w.IdCustomer == idCustomer));
                     switch (sort.ToLower())
                     {
                         case "date asc":
