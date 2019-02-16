@@ -24,6 +24,7 @@ namespace ias.Rebens.api.Controllers
         private IAddressRepository addrRepo;
         private IBannerRepository bannerRepo;
         private IBenefitRepository benefitRepo;
+        private IBenefitUseRepository benefitUseRepo;
         private IFaqRepository faqRepo;
         private IFormContactRepository formContactRepo;
         private IFormEstablishmentRepository formEstablishmentRepo;
@@ -34,16 +35,20 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="addressRepository"></param>
         /// <param name="bannerRepository"></param>
         /// <param name="benefitRepository"></param>
+        /// <param name="benefitUseRepository"></param>
+        /// <param name="customerRepository"></param>
         /// <param name="faqRepository"></param>
         /// <param name="formContactRepository"></param>
-        /// <param name="operationRepository"></param>
         /// <param name="formEstablishmentRepository"></param>
-        /// <param name="customerRepository"></param>
-        /// <param name="addressRepository"></param>
+        /// <param name="operationRepository"></param>
         /// <param name="withdrawRepository"></param>
-        public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository)
+        public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
+            IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
+            ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
+            IBenefitUseRepository benefitUseRepository)
         {
             this.bannerRepo = bannerRepository;
             this.benefitRepo = benefitRepository;
@@ -54,6 +59,7 @@ namespace ias.Rebens.api.Controllers
             this.customerRepo = customerRepository;
             this.addrRepo = addressRepository;
             this.withdrawRepo = withdrawRepository;
+            this.benefitUseRepo = benefitUseRepository;
         }
 
         /// <summary>
@@ -281,7 +287,7 @@ namespace ias.Rebens.api.Controllers
 
                         identity.AddClaim(new Claim("operationId", customer.IdOperation.ToString()));
                         identity.AddClaim(new Claim("Id", customer.Id.ToString()));
-                        identity.AddClaim(new Claim("Name", customer.Name));
+                        identity.AddClaim(new Claim("Name", string.IsNullOrEmpty(customer.Name) ? "" : customer.Name));
                         identity.AddClaim(new Claim("Email", customer.Email));
                         identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
 
@@ -564,15 +570,14 @@ namespace ias.Rebens.api.Controllers
                     if (customerRepo.Create(customer, out error))
                     {
                         var sendingBlue = new Integration.SendinBlueHelper();
-                        var link = "http://hmlrebens.iasdigitalgroup.com/unicap/c=" + customer.Code;
+                        var link = "http://admin.rebens.com.br/unicap/c=" + customer.Code;
                         var result = sendingBlue.SendCustomerValidate(customer.Email, link);
 
                         return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = customer.Id });
                     }
-
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Email ou CPF já cadastrado!" });
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Email ou CPF já cadastrado!" });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
         }
@@ -678,7 +683,12 @@ namespace ias.Rebens.api.Controllers
             if (customer.Address != null)
             {
                 var addr = customer.Address.GetEntity();
-                if (addrRepo.Update(addr, out error))
+                if (addr.Id > 0)
+                {
+                    if (addrRepo.Update(addr, out error))
+                        cust.IdAddress = addr.Id;
+                }
+                else if (addrRepo.Create(addr, out error))
                     cust.IdAddress = addr.Id;
             }
 
@@ -703,7 +713,18 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
         {
-            var customer = customerRepo.Read(model.Id, out string error);
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var customer = customerRepo.Read(idCustomer, out string error);
             if (customer != null)
             {
                 if (customer.CheckPassword(model.OldPassword))
@@ -712,7 +733,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         var salt = Helper.SecurityHelper.GenerateSalt();
                         var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.NewPassword, salt);
-                        if (customerRepo.ChangePassword(model.Id, encryptedPassword, salt, null, out error))
+                        if (customerRepo.ChangePassword(idCustomer, encryptedPassword, salt, null, out error))
                             return Ok(new JsonModel() { Status = "ok" });
 
                         return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -768,10 +789,10 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Retorna o benefício conforme o ID
+        /// Retorna o cliente conforme o ID
         /// </summary>
         /// <returns>Parceiros</returns>
-        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="200">Retorna o cliente, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("GetCustomer")]
@@ -807,7 +828,7 @@ namespace ias.Rebens.api.Controllers
         /// Retorna as informações necessárias para a página de Resgate
         /// </summary>
         /// <returns></returns>
-        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="200">Retorna o resumo para página de resgate, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("GetWithdrawSummary")]
@@ -839,11 +860,11 @@ namespace ias.Rebens.api.Controllers
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <returns></returns>
-        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="200">Retorna o histórico de benefícios, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("ListBenefitHistory")]
-        [ProducesResponseType(typeof(JsonDataModel<List<BenefitHistoryModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<BenefitUseModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListBenefitHistory([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
@@ -859,40 +880,27 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
             }
 
-            var rnd = new Random();
-
-            string[] benefits = { "Asus", "Avon Store", "Natura Center", "Yázigi", "YouCom", "Submarino", "Americanas", "Box do Churrasco", "Avon", "Colombo" };
-            string[] status = { "Cashback em Processamento", "Cashback Disponível", "Não Possuí Cashback", "Reemetir" };
-
-            int itemsCount = rnd.Next(0, 11);
-            var ret = new JsonDataModel<List<BenefitHistoryModel>>() { Data = new List<BenefitHistoryModel>() };
-            var temp = new List<BenefitHistoryModel>();
-
-
-            for (int i = 0; i < itemsCount; i++)
+            var list = benefitUseRepo.ListByCustomer(idCustomer, page, pageItems, null, "date desc", out string error);
+            if (string.IsNullOrEmpty(error))
             {
-                var benefitIdx = rnd.Next(0, 9);
-                var amount = Math.Round((decimal)(new Random().NextDouble() * 499), 2);
-                var st = status[rnd.Next(0, 4)];
-                decimal cashback = 0;
-                if (st == "Cashback em Processamento" || st == "Cashback Disponível")
-                    cashback = Math.Round((amount * (decimal)(rnd.NextDouble() * .19)), 2);
-                temp.Add(new BenefitHistoryModel()
-                {
-                    Id = rnd.Next(),
-                    BenefitName = benefits[benefitIdx],
-                    IdBenefit = (benefitIdx + 1),
-                    Amount = amount,
-                    status = st,
-                    Cashback = cashback,
-                    Date = DateTime.Now.AddDays(-rnd.Next(1,60)).Date
-                });
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<BenefitUseModel>();
+                ret.CurrentPage = list.CurrentPage;
+                ret.HasNextPage = list.HasNextPage;
+                ret.HasPreviousPage = list.HasPreviousPage;
+                ret.ItemsPerPage = list.ItemsPerPage;
+                ret.TotalItems = list.TotalItems;
+                ret.TotalPages = list.TotalPages;
+                ret.Data = new List<BenefitUseModel>();
+                foreach (var benefitUse in list.Page)
+                    ret.Data.Add(new BenefitUseModel(benefitUse));
+
+                return Ok(ret);
             }
 
-            ret.Data = temp;
-
-
-            return Ok(ret);
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -945,11 +953,11 @@ namespace ias.Rebens.api.Controllers
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <returns></returns>
-        /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+        /// <response code="200">Retorna o histórico de resgates do cliente, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("ListBenefitHistory")]
-        [ProducesResponseType(typeof(JsonDataModel<List<WithdrawItemModel>>), 200)]
+        [HttpGet("ListWithdraw")]
+        [ProducesResponseType(typeof(ResultPageModel<WithdrawItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListWithdraw([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
@@ -971,11 +979,20 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var model = new JsonDataModel<List<WithdrawItemModel>>() { Data = new List<WithdrawItemModel>() };
-                foreach (var item in list)
-                    model.Data.Add(new WithdrawItemModel(item));
+                var ret = new ResultPageModel<WithdrawItemModel>() {
+                    Data = new List<WithdrawItemModel>(),
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
 
-                return Ok(model);
+                };
+                foreach (var benefitUse in list.Page)
+                    ret.Data.Add(new WithdrawItemModel(benefitUse));
+
+                return Ok(ret);
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

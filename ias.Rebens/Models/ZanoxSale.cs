@@ -29,5 +29,8 @@ namespace ias.Rebens
         public int Status { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public int IdCustomer { get; set; }
+
+        public virtual Customer Customer { get; set; }
     }
 }

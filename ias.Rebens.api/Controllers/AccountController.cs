@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using ias.Rebens.api.Models;
@@ -189,7 +190,18 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
         {
-            var user = repo.Read(model.Id, out string error);
+            int idAmin = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idAmin))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var user = repo.Read(idAmin, out string error);
             if(user != null)
             {
                 if(user.CheckPassword(model.OldPassword))
@@ -198,7 +210,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         var salt = Helper.SecurityHelper.GenerateSalt();
                         var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.NewPassword, salt);
-                        if (repo.ChangePassword(model.Id, encryptedPassword, salt, out error))
+                        if (repo.ChangePassword(idAmin, encryptedPassword, salt, out error))
                             return Ok(new JsonModel() { Status = "ok" });
                         
                         return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -228,10 +240,10 @@ namespace ias.Rebens.api.Controllers
             {
                 string password = Helper.SecurityHelper.CreatePassword();
                 user.SetPassword(password);
-                if (repo.ChangePassword(user.Id, user.PasswordSalt, user.EncryptedPassword, out string errorSave))
+                if (repo.ChangePassword(user.Id, user.EncryptedPassword, user.PasswordSalt, out string errorSave))
                 {
                     var sendingBlue = new Integration.SendinBlueHelper();
-                    string body = "<p><b>Nova Senha:</b>" + password + "</p>";
+                    string body = "<p><b>Nova Senha:</b> " + password + "</p>";
                     var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", "Contato", "[Rebens] - Lembrete de Senha", body);
                     if (result.Status)
                         return Ok(new JsonModel() { Status = "ok", Message = result.Message });

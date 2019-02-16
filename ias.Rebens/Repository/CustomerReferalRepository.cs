@@ -105,7 +105,7 @@ namespace ias.Rebens
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("AddressRepository.ListPage", ex.Message, "", ex.StackTrace);
+                int idLog = logError.Create("CustomerReferalRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os endereços. (erro:" + idLog + ")";
                 ret = null;
             }

@@ -40,6 +40,18 @@ namespace ias.Rebens.Enums
         Customer = 1
     }
 
+    public enum BenefitUseStatus : int
+    {
+        [Description("Reemetir")]
+        Reemit = 1,
+        [Description("Não Possuí Cashback")]
+        NoCashBack = 2,
+        [Description("Cashback Disponível")]
+        Cashback = 3,
+        [Description("Cashback em Processamento")]
+        ProcessingCashback = 4
+    }
+
     public enum BannerType
     {
         [Description("Home Full")]
@@ -136,6 +148,14 @@ namespace ias.Rebens.Enums
         approved = 4
     }
 
+    public enum ZanoxStatus : int
+    {
+        [Description("Pendent")]
+        pendent = 1,
+        [Description("Tratado")]
+        treat = 2
+    }
+
     public static class EnumHelper
     {
         public static string GetEnumDescription(Enum value)
@@ -147,6 +167,7 @@ namespace ias.Rebens.Enums
             return value.ToString();
         }
     }
+
     public class StyleClass : Attribute
     {
         private string _value;
@@ -172,5 +193,4 @@ namespace ias.Rebens.Enums
             get { return _value; }
         }
     }
-
 }

@@ -1209,18 +1209,19 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository)">
             <summary>
             Constructor
             </summary>
+            <param name="addressRepository"></param>
             <param name="bannerRepository"></param>
             <param name="benefitRepository"></param>
+            <param name="benefitUseRepository"></param>
+            <param name="customerRepository"></param>
             <param name="faqRepository"></param>
             <param name="formContactRepository"></param>
-            <param name="operationRepository"></param>
             <param name="formEstablishmentRepository"></param>
-            <param name="customerRepository"></param>
-            <param name="addressRepository"></param>
+            <param name="operationRepository"></param>
             <param name="withdrawRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
@@ -1366,10 +1367,10 @@
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetCustomer">
             <summary>
-            Retorna o benefício conforme o ID
+            Retorna o cliente conforme o ID
             </summary>
             <returns>Parceiros</returns>
-            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="200">Retorna o cliente, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
@@ -1378,7 +1379,7 @@
             Retorna as informações necessárias para a página de Resgate
             </summary>
             <returns></returns>
-            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="200">Retorna o resumo para página de resgate, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
@@ -1389,7 +1390,7 @@
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <returns></returns>
-            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="200">Retorna o histórico de benefícios, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
@@ -1409,7 +1410,7 @@
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <returns></returns>
-            <response code="200">Retorna o benefício, ou algum erro caso interno</response>
+            <response code="200">Retorna o histórico de resgates do cliente, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
@@ -1915,46 +1916,6 @@
             Id da categoria
             </summary>
         </member>
-        <member name="T:ias.Rebens.api.Models.BenefitHistoryModel">
-            <summary>
-            Model Hisórico de Benefício
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.Id">
-            <summary>
-            Id
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.Date">
-            <summary>
-            Data
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.IdBenefit">
-            <summary>
-            Id do benefício
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.BenefitName">
-            <summary>
-            Nome do Benefício
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.Amount">
-            <summary>
-            Valor da compra
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.Cashback">
-            <summary>
-            Valor do retorno (cashback)
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitHistoryModel.status">
-            <summary>
-            Status
-            </summary>
-        </member>
         <member name="T:ias.Rebens.api.Models.BenefitModel">
             <summary>
             Benefício
@@ -2256,6 +2217,83 @@
             </summary>
             <param name="type"></param>
         </member>
+        <member name="T:ias.Rebens.api.Models.BenefitUseModel">
+            <summary>
+            Model Uso Benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.IdCustomer">
+            <summary>
+            Id do Cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.IdBenefit">
+            <summary>
+            Id do Benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.Name">
+            <summary>
+            Nome do Benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.IdBenefitType">
+            <summary>
+            Id do Typo de benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.BenefitType">
+            <summary>
+            Typo de benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.Amount">
+            <summary>
+            Valor da compra
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.Comission">
+            <summary>
+            Comissão
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.IdStatus">
+            <summary>
+            Id do Status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitUseModel.Date">
+            <summary>
+            Data
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitUseModel.#ctor">
+            <summary>
+            Contrutor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitUseModel.#ctor(ias.Rebens.BenefitUse)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="benefitUse"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitUseModel.GetEntity">
+            <summary>
+            Get the object
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:ias.Rebens.api.Models.CategoryModel">
             <summary>
             Categoria
@@ -2336,11 +2374,6 @@
         <member name="T:ias.Rebens.api.Models.ChangePasswordModel">
             <summary>
             Alteração de senha
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.ChangePasswordModel.Id">
-            <summary>
-            Id do Usuário
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.ChangePasswordModel.OldPassword">

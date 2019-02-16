@@ -6,7 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ias.Rebens">
+      <HintPath>..\ias.Rebens\bin\Debug\netcoreapp2.2\ias.Rebens.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

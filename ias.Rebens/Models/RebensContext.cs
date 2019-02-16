@@ -32,6 +32,7 @@ namespace ias.Rebens
         public virtual DbSet<BenefitOperation> BenefitOperation { get; set; }
         public virtual DbSet<BenefitOperationPosition> BenefitOperationPosition { get; set; }
         public virtual DbSet<BenefitType> BenefitType { get; set; }
+        public virtual DbSet<BenefitUse> BenefitUse { get; set; }
         public virtual DbSet<Category> Category { get; set; }
         public virtual DbSet<Configuration> Configuration { get; set; }
         public virtual DbSet<Contact> Contact { get; set; }
@@ -315,6 +316,35 @@ namespace ias.Rebens
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(200);
+            });
+
+            modelBuilder.Entity<BenefitUse>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.HasOne(d => d.BenefitType)
+                    .WithMany(p => p.BenefitUses)
+                    .HasForeignKey(d => d.IdBenefitType)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_BenefitUse_BenefitType");
+
+                entity.HasOne(d => d.Benefit)
+                    .WithMany(p => p.BenefitUses)
+                    .HasForeignKey(d => d.IdBenefit)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_BenefitUse_Benefit");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.BenefitUses)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_BenefitUse_Customer");
             });
 
             modelBuilder.Entity<Category>(entity =>
@@ -758,6 +788,12 @@ namespace ias.Rebens
                 entity.Property(e => e.Gpps).HasMaxLength(4000);
                 entity.Property(e => e.ReviewNote).HasMaxLength(1000);
                 entity.Property(e => e.Zpar).IsRequired().HasMaxLength(200);
+
+                entity.HasOne(d => d.Customer)
+                  .WithMany(p => p.ZanoxSales)
+                  .HasForeignKey(d => d.IdCustomer)
+                  .OnDelete(DeleteBehavior.ClientSetNull)
+                  .HasConstraintName("FK_Withdraw_Customer");
             });
         }
     }

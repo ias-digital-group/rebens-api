@@ -9,12 +9,6 @@ namespace ias.Rebens.api.Models
     public class ChangePasswordModel
     {
         /// <summary>
-        /// Id do Usuário
-        /// </summary>
-        [Required]
-        public int Id { get; set; }
-
-        /// <summary>
         /// Senha antiga
         /// </summary>
         [Required]

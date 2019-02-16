@@ -18,7 +18,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Conta do resgate
         /// </summary>
-        public BankAccount BankAccount { get; set; }
+        public BankAccountModel BankAccount { get; set; }
         /// <summary>
         /// Data
         /// </summary>
@@ -48,7 +48,7 @@ namespace ias.Rebens.api.Models
             this.Amount = withdraw.Amount;
             this.Status = Enums.EnumHelper.GetEnumDescription((Enums.WithdrawStatus)withdraw.Status);
             if (withdraw.BankAccount != null)
-                this.BankAccount = withdraw.BankAccount;
+                this.BankAccount = new BankAccountModel(withdraw.BankAccount);
         }
     }
 }

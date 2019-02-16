@@ -9,8 +9,10 @@ namespace ias.Rebens
         public Customer()
         {
             BankAccounts = new HashSet<BankAccount>();
-            Withdraws = new HashSet<Withdraw>();
+            BenefitUses = new HashSet<BenefitUse>();
             CustomerReferals = new HashSet<CustomerReferal>();
+            Withdraws = new HashSet<Withdraw>();
+            ZanoxSales = new HashSet<ZanoxSale>();
         }
 
         public int Id { get; set; }
@@ -36,8 +38,10 @@ namespace ias.Rebens
         public virtual Operation Operation { get; set; }
         public virtual Address Address { get; set; }
         public virtual ICollection<BankAccount> BankAccounts { get; set; }
-        public virtual ICollection<Withdraw> Withdraws { get; set; }
+        public virtual ICollection<BenefitUse> BenefitUses { get; set; }
         public virtual ICollection<CustomerReferal> CustomerReferals { get; set; }
+        public virtual ICollection<Withdraw> Withdraws { get; set; }
+        public virtual ICollection<ZanoxSale> ZanoxSales { get; set; }
 
 
         public void SetPassword(string password)

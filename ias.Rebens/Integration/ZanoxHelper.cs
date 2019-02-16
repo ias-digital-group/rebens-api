@@ -88,17 +88,13 @@ namespace ias.Rebens.Integration
                     if (item["gpps"] != null)
                     {
                         sale.Gpps = item["gpps"].ToString();
-                        if (item["gpps"]["gpp"] != null && item["gpps"]["gpp"] != null)
+                        if (item["gpps"]["gpp"] != null && item["gpps"]["gpp"] != null && item["gpps"]["gpp"]["@id"] != null)
                         {
-                            var gppItems = item["gpps"]["gpp"].Children();
-                            foreach(var gpp in gppItems)
-                            {
-                                if (gpp["@id"].ToString() == "zpar0")
-                                    sale.Zpar = gpp["$"].ToString();
-                            }
+                            if (item["gpps"]["gpp"]["@id"].ToString() == "zpar0")
+                                sale.Zpar = item["gpps"]["gpp"]["$"].ToString();
                         }
                     }
-                    sale.Status = (int)((Enums.ZanoxState)Enum.Parse(typeof(Enums.ZanoxState),sale.ReviewState));
+                    sale.Status = (int)Enums.ZanoxStatus.pendent;
 
                     list.Add(sale);
                 }
@@ -159,7 +155,5 @@ namespace ias.Rebens.Integration
             }
             return ret;
         }
-
-        
     }
 }

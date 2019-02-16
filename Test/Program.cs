@@ -6,6 +6,8 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using ias.Rebens;
+using System.Threading;
 
 namespace Test
 {
@@ -20,29 +22,10 @@ namespace Test
 
         static void Main(string[] args)
         {
-            var temp = HMACSHA1("israel@iasdigitalgroup.com", "israel@iasdigitalgroup.com|294.661.038-14");
+            Console.WriteLine(ias.Rebens.Helper.SecurityHelper.HMACSHA1("israel-unicap@iasdigitalgroup.com", "israel-unicap@iasdigitalgroup.com|987.977.111-00"));
 
-            var encrypted = SimpleEncryption(temp + "||4||5");
+            Console.WriteLine("DONE");
 
-            Console.WriteLine(encrypted);
-
-            var decrypt = SimpleDecryption(encrypted);
-
-            Console.WriteLine(decrypt);
-
-            var arr = decrypt.Split("||");
-
-            foreach( var s in arr)
-                Console.WriteLine(s);
-
-            //ZanoxTest();
-
-            //int i = 0;
-            //while (i < 100) 
-            //{
-            //    Console.WriteLine(HMACSHA1("israellow@outlook.com", "israellow@outlook.com|294.661.038-14"));
-            //    i++;
-            //}
             Console.ReadLine();
         }
 
@@ -88,25 +71,19 @@ namespace Test
         }
 
         #region Zanox Test
-        static void ZanoxTest()
+        static void ZanoxTest(DateTime date)
         {
             string connectID = "D9D188F49CB8521B5157";
             string secrteKey = "6a741684831e4C+cacc8cf147aD893/30a9dc94A";
-            string uri = "/reports/sales/date/2019-02-08";
+            string uri = "/reports/sales/date/" + date.ToString("yyyy-MM-dd");
             string method = "GET";
             string timestamp = DateTime.UtcNow.ToString("r");
             string nonce = CreateNounce(28);
 
-            Console.WriteLine("timestamp: {0}", timestamp);
-            Console.WriteLine("nonce: {0}", nonce);
-
             var stringToSign = method + uri + timestamp + nonce;
-            Console.WriteLine("stringToSign: {0}", stringToSign);
 
             var signature = HMACSHA1(secrteKey, stringToSign);
-            Console.WriteLine("signature: {0}", signature);
             string autorization = $"ZXWS {connectID}:{signature}";
-            Console.WriteLine("Authorization: {0}", autorization);
 
             string apiroot = "https://api.zanox.com/json/2011-03-01" + uri;
             var request = (HttpWebRequest)WebRequest.Create(apiroot);
@@ -118,38 +95,13 @@ namespace Test
             request.Headers.Add("date", timestamp);
             request.Headers.Add("nonce", nonce);
 
-            //if (serializedObject != null)
-            //{
-            //    request.AllowWriteStreamBuffering = false;
-            //    request.SendChunked = false;
-
-            //    UTF8Encoding encoding = new UTF8Encoding();
-            //    byte[] bytes = encoding.GetBytes(serializedObject);
-            //    request.ContentLength = bytes.Length;
-            //    using (Stream writeStream = request.GetRequestStream())
-            //    {
-            //        writeStream.Write(bytes, 0, bytes.Length);
-            //    }
-            //}
+            string ret = null;
 
             try
             {
                 using (var response = (HttpWebResponse)request.GetResponse())
                 {
-                    //if (!(response.Headers["Status"].StartsWith("200") || response.Headers["Status"].StartsWith("201") || response.Headers["Status"].StartsWith("202") || response.Headers["Status"].StartsWith("204")))
-                    //    return false;
-
-                    var ret = new StreamReader(response.GetResponseStream()).ReadToEnd();
-                    Console.WriteLine("DONE: " + ret);
-
-                    var jObj = JObject.Parse(ret);
-                    var list = jObj["saleItems"]["saleItem"].Children();
-                    
-
-                    foreach (var item in list)
-                        Console.WriteLine("id: {0} - amount: {1} - comission: {2} - zpar0: {3}", item["@id"].ToString(), item["amount"].ToString(), item["commission"].ToString(), item["gpps"]["gpp"]["$"].ToString());
-
-
+                    ret = new StreamReader(response.GetResponseStream()).ReadToEnd();
                 }
             }
             catch (Exception ex)
@@ -157,6 +109,122 @@ namespace Test
                 Console.WriteLine(ex.Message);
             }
 
+            if (ret == null)
+                return;
+
+            var jObj = JObject.Parse(ret);
+            Console.WriteLine("Items: {0}", jObj["items"].ToString());
+            if (jObj["items"].ToString() == "0")
+                return;
+
+            var list = jObj["saleItems"]["saleItem"].Children();
+
+            using (StreamWriter w = File.AppendText(@"C:\ias\Projects\Rebens\CODE\API\Test\zanox.sql"))
+            {
+                foreach (var item in list)
+                {
+                    var sale = new ZanoxSale();
+                    try
+                    {
+                        sale.ZanoxId = item["@id"].ToString();
+                        sale.ReviewState = item["reviewState"].ToString();
+                        if (item["trackingDate"] != null)
+                        {
+                            if (DateTime.TryParse(item["trackingDate"].ToString(), out DateTime dt))
+                                sale.TrackingDate = dt;
+                        }
+                        if (item["modifiedDate"] != null)
+                        {
+                            if (DateTime.TryParse(item["modifiedDate"].ToString(), out DateTime dt))
+                                sale.ModifiedDate = dt;
+                        }
+                        if (item["clickDate"] != null)
+                        {
+                            if (DateTime.TryParse(item["clickDate"].ToString(), out DateTime dt))
+                                sale.ClickDate = dt;
+                        }
+                        sale.ClickId = long.Parse(item["clickId"].ToString());
+                        sale.ClickInId = long.Parse(item["clickInId"].ToString());
+                        sale.Amount = decimal.Parse(item["amount"].ToString());
+                        sale.Commission = decimal.Parse(item["commission"].ToString());
+                        sale.Currency = item["currency"].ToString();
+                        sale.Created = sale.Modified = DateTime.Now;
+
+                        if (item["adspace"] != null)
+                        {
+                            if (item["adspace"]["@id"] != null)
+                            {
+                                if (int.TryParse(item["adspace"]["@id"].ToString(), out int tmpId))
+                                    sale.AdspaceId = tmpId;
+                            }
+                            if (item["adspace"]["$"] != null)
+                                sale.AdspaceValue = item["adspace"]["$"].ToString();
+                        }
+                        if (item["admedium"] != null)
+                        {
+                            if (item["admedium"]["@id"] != null)
+                            {
+                                if (int.TryParse(item["admedium"]["@id"].ToString(), out int tmpId))
+                                    sale.AdmediumId = tmpId;
+                            }
+                            if (item["admedium"]["$"] != null)
+                                sale.AdmediumValue = item["admedium"]["$"].ToString();
+                        }
+                        if (item["program"] != null)
+                        {
+                            if (item["program"]["@id"] != null)
+                            {
+                                if (int.TryParse(item["program"]["@id"].ToString(), out int tmpId))
+                                    sale.ProgramId = tmpId;
+                            }
+                            if (item["program"]["$"] != null)
+                                sale.ProgramValue = item["program"]["$"].ToString();
+                        }
+                        if (item["reviewNote"] != null)
+                            sale.ReviewNote = item["reviewNote"].ToString();
+                        if (item["gpps"] != null)
+                        {
+                            sale.Gpps = item["gpps"].ToString();
+                            if (item["gpps"]["gpp"] != null && item["gpps"]["gpp"] != null && item["gpps"]["gpp"]["@id"] != null)
+                            {
+                                if (item["gpps"]["gpp"]["@id"].ToString() == "zpar0")
+                                    sale.Zpar = item["gpps"]["gpp"]["$"].ToString();
+
+                                //    var gppItems = item["gpps"]["gpp"].Children();
+                                //foreach (var gpp in gppItems)
+                                //{
+                                //    if (gpp["@id"].ToString() == "zpar0")
+                                //        sale.Zpar = gpp["$"].ToString();
+                                //}
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(sale.Gpps) || string.IsNullOrEmpty(sale.Zpar))
+                            continue;
+
+                        sale.Status = (int)((ias.Rebens.Enums.ZanoxState)Enum.Parse(typeof(ias.Rebens.Enums.ZanoxState), sale.ReviewState));
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+
+                    try { 
+                        w.WriteLine($"INSERT INTO ZanoxSale VALUES('{sale.ZanoxId}','{sale.ReviewState}','{(sale.TrackingDate.HasValue ? sale.TrackingDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "NULL")}',"
+                            + $"'{(sale.ModifiedDate.HasValue ? sale.ModifiedDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "NULL")}','{(sale.ClickDate.HasValue ? sale.ClickDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "NULL")}',"
+                            + $"{sale.ClickId},{sale.ClickInId},{sale.Amount},{sale.Commission},'{sale.Currency}',{(sale.AdspaceId.HasValue ? sale.AdspaceId.Value.ToString() : "NULL")},"
+                            + $"{(string.IsNullOrEmpty(sale.AdspaceValue) ? "NULL" : "'" + sale.AdspaceValue + "'")},{(sale.AdmediumId.HasValue ? sale.AdmediumId.Value.ToString() : "NULL")},"
+                            + $"{(string.IsNullOrEmpty(sale.AdmediumValue) ? "NULL" : "'" + sale.AdmediumValue + "'")},{(sale.ProgramId.HasValue ? sale.ProgramId.Value.ToString() : "NULL")},"
+                            + $"{(string.IsNullOrEmpty(sale.ProgramValue) ? "NULL" : "'" + sale.ProgramValue + "'")},{(string.IsNullOrEmpty(sale.ReviewNote) ? "NULL" : "'" + sale.ReviewNote + "'")},"
+                            + $"'{sale.Gpps}','{sale.Zpar}',{sale.Status},GETDATE(),GETDATE(),1)");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+                    
+            }
         }
 
         static string CreateNounce(int DefaultPasswordLength)
