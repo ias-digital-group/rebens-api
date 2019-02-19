@@ -15,14 +15,17 @@ namespace ias.Rebens.api.Controllers
     public class BannerController : ControllerBase
     {
         private IBannerRepository repo;
+        private IOperationRepository operationRepo;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="bannerRepository"></param>
-        public BannerController(IBannerRepository bannerRepository)
+        /// <param name="operationRepository"></param>
+        public BannerController(IBannerRepository bannerRepository, IOperationRepository operationRepository)
         {
             this.repo = bannerRepository;
+            this.operationRepo = operationRepository;
         }
 
         /// <summary>
@@ -152,5 +155,79 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+
+        /// <summary>
+        /// Adiciona um banner a uma operação
+        /// </summary>
+        /// <param name="model">{ IdBanner: 0, IdOperation: 0 }</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Víncula um banner com uma Operação</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("AddOperation")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult AddOperation([FromBody]BannerOperationModel model)
+        {
+            var resultModel = new JsonModel();
+
+            if (repo.AddOperation(model.IdBanner, model.IdOperation, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Operação adicionada com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Remove um banner de uma operação
+        /// </summary>
+        /// <param name="id">id do banner</param>
+        /// <param name="idOperation">id da operação</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Remove o vínculo de banner com uma operação</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpDelete("{id}/Operation/{idOperation}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult RemoveOperation(int id, int idOperation)
+        {
+            var resultModel = new JsonModel();
+
+            if (repo.DeleteOperation(id, idOperation, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Operação removida com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista todas operações, e marca quais estão vinculadas ao banner
+        /// </summary>
+        /// <param name="id">id do banner</param>
+        /// <returns>Lista com todas operações</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/Operations")]
+        [ProducesResponseType(typeof(JsonDataModel<List<BannerOperationItemModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListOperations(int id)
+        {
+            var list = operationRepo.ListByBanner(id, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<BannerOperationItemModel>>();
+                ret.Data = new List<BannerOperationItemModel>();
+                foreach (var item in list)
+                    ret.Data.Add(new BannerOperationItemModel(item));
+
+                return Ok(ret);
+            }
+
+            return Ok(new JsonModel() { Status = "error", Message = error });
+        }
+
     }
 }

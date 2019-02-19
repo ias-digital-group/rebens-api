@@ -23,5 +23,9 @@ namespace ias.Rebens
         List<Banner> ListByTypeAndOperation(Guid operationCode, int type, out string error);
 
         List<Banner> ListByTypeAndOperation(int idOperation, int type, out string error);
+
+        bool AddOperation(int idBanner, int idOperation, out string error);
+
+        bool DeleteOperation(int idBanner, int idOperation, out string error);
     }
 }

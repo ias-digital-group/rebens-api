@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace ias.Rebens.api.Models
 {
@@ -86,32 +87,26 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public int IdPartner { get; set; }
-
+        /// <summary>
+        /// Logo do Parceiro
+        /// </summary>
+        public string PartnerImage { get; set; }
         /// <summary>
         /// Tipo de Integração
         /// </summary>
         public string IntegrationType { get; set; }
-
         /// <summary>
         /// Chamada do Benefício
         /// </summary>
         public string BenefitCall { get; set; }
         /// <summary>
-        /// Teaser do beneficio
+        /// Detalhes
         /// </summary>
-        public string Teaser { get; set; }
+        public string Detail { get; set; }
         /// <summary>
-        /// Descrição de funcionamento online
+        /// Como Utilizar
         /// </summary>
-        public string DescriptionOnLine { get; set; }
-        /// <summary>
-        /// Descrição de funcionamento offline
-        /// </summary>
-        public string DescriptionOffLine { get; set; }
-        /// <summary>
-        /// Funcionamento Voucher
-        /// </summary>
-        public string VoucherOperation { get; set; }
+        public string HowToUse { get; set; }
 
         /// <summary>
         /// Construtor
@@ -153,17 +148,11 @@ namespace ias.Rebens.api.Models
                         case Enums.StaticTextType.BenefitCall:
                             this.BenefitCall = text.Html;
                             break;
-                        case Enums.StaticTextType.BenefitOperationOnLine:
-                            this.DescriptionOnLine = text.Html;
+                        case Enums.StaticTextType.BenefitDetail:
+                            this.Detail = text.Html;
                             break;
-                        case Enums.StaticTextType.BenefitOperationOffLine:
-                            this.DescriptionOffLine = text.Html;
-                            break;
-                        case Enums.StaticTextType.BenefitTeaser:
-                            this.Teaser = text.Html;
-                            break;
-                        case Enums.StaticTextType.VoucherOperation:
-                            this.VoucherOperation = text.Html;
+                        case Enums.StaticTextType.BenefitHowToUse:
+                            this.HowToUse = text.Html;
                             break;
                     }
                 }
@@ -220,18 +209,18 @@ namespace ias.Rebens.api.Models
         /// 
         /// </summary>
         /// <returns></returns>
-        public StaticText GetTeaser()
+        public StaticText GetDetail()
         {
             return new StaticText()
             {
                 Active = true,
                 Created = DateTime.Now,
-                Html = this.Teaser,
+                Html = this.Detail,
                 IdBenefit = this.Id,
-                IdStaticTextType = (int)Enums.StaticTextType.BenefitTeaser,
+                IdStaticTextType = (int)Enums.StaticTextType.BenefitDetail,
                 Modified = DateTime.Now,
                 Order = 1,
-                Title = "Teaser - " + this.Title
+                Title = "Detalhe - " + this.Title
             };
         }
 
@@ -239,57 +228,74 @@ namespace ias.Rebens.api.Models
         /// 
         /// </summary>
         /// <returns></returns>
-        public StaticText GetDescriptionOnLine()
+        public StaticText GetHowToUse()
         {
             return new StaticText()
             {
                 Active = true,
                 Created = DateTime.Now,
-                Html = this.DescriptionOnLine,
+                Html = this.HowToUse,
                 IdBenefit = this.Id,
-                IdStaticTextType = (int)Enums.StaticTextType.BenefitOperationOnLine,
+                IdStaticTextType = (int)Enums.StaticTextType.BenefitHowToUse,
                 Modified = DateTime.Now,
                 Order = 1,
-                Title = "Descrição de funcionamento online - " + this.Title
+                Title = "Como Utilizar - " + this.Title
             };
         }
+    }
 
+    /// <summary>
+    /// Benefit List Item
+    /// </summary>
+    public class BenefitListItem
+    {
         /// <summary>
-        /// 
+        /// Id
         /// </summary>
-        /// <returns></returns>
-        public StaticText GetDescriptionOffLine()
-        {
-            return new StaticText()
-            {
-                Active = true,
-                Created = DateTime.Now,
-                Html = this.DescriptionOffLine,
-                IdBenefit = this.Id,
-                IdStaticTextType = (int)Enums.StaticTextType.BenefitOperationOffLine,
-                Modified = DateTime.Now,
-                Order = 1,
-                Title = "Descrição de funcionamento offline - " + this.Title
-            };
-        }
-
+        public int Id { get; set; }
         /// <summary>
-        /// 
+        /// Título
         /// </summary>
-        /// <returns></returns>
-        public StaticText GetVoucherOperation()
+        public string Title { get; set; }
+        /// <summary>
+        /// Imagem
+        /// </summary>
+        public string Image { get; set; }
+        /// <summary>
+        /// Id Tipo de benefício
+        /// </summary>
+        public int IdBenefitType { get; set; }
+        /// <summary>
+        /// Tipo de benefício
+        /// </summary>
+        public string BenefitType { get; set; }
+        /// <summary>
+        /// Chamada do Benefício
+        /// </summary>
+        public string BenefitCall { get; set; }
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public BenefitListItem() { }
+        /// <summary>
+        /// Construtor que recebe um Benefício e já popula os atributos
+        /// </summary>
+        /// <param name="benefit"></param>
+        public BenefitListItem(Benefit benefit)
         {
-            return new StaticText()
+            this.Id = benefit.Id;
+            this.Title = benefit.Title;
+            this.IdBenefitType = benefit.IdBenefitType;
+            if (benefit.StaticTexts != null)
             {
-                Active = true,
-                Created = DateTime.Now,
-                Html = this.VoucherOperation,
-                IdBenefit = this.Id,
-                IdStaticTextType = (int)Enums.StaticTextType.VoucherOperation,
-                Modified = DateTime.Now,
-                Order = 1,
-                Title = "Funcionamento do Voucher - " + this.Title
-            };
+                var staticText = benefit.StaticTexts.SingleOrDefault(s => s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall);
+                if(staticText != null && staticText.Id > 0)
+                    this.BenefitCall = staticText.Html;
+            }
+            if(benefit.BenefitType != null)
+                this.BenefitType = benefit.BenefitType.Name;
+            if (benefit.Partner != null)
+                this.Image = benefit.Partner.Logo;
         }
     }
 

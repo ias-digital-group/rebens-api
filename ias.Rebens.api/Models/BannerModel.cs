@@ -119,6 +119,56 @@ namespace ias.Rebens.api.Models
     }
 
     /// <summary>
+    /// Associação Banner Operação
+    /// </summary>
+    public class BannerOperationModel
+    {
+        /// <summary>
+        /// Id do banner
+        /// </summary>
+        public int IdBanner { get; set; }
+        /// <summary>
+        /// Id da operação
+        /// </summary>
+        public int IdOperation { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class BannerOperationItemModel : BannerOperationModel
+    {
+        /// <summary>
+        /// Nome da operação
+        /// </summary>
+        public string OperationName { get; set; }
+
+        /// <summary>
+        /// Se a operação está vinculada com o benefício
+        /// </summary>
+        public bool Checked { get; set; }
+
+        /// <summary>
+        /// Construtor 
+        /// </summary>
+        public BannerOperationItemModel()
+        {
+        }
+
+        /// <summary>
+        /// Construtor que já populas as propriedades
+        /// </summary>
+        /// <param name="item"></param>
+        public BannerOperationItemModel(BannerOperationItem item)
+        {
+            this.IdBanner = item.IdBanner ?? 0;
+            this.IdOperation = item.IdOperation;
+            this.OperationName = item.OperationName;
+            this.Checked = item.IdBanner.HasValue;
+        }
+    }
+
+    /// <summary>
     /// tipo de banner
     /// </summary>
     public class BannerTypeModel

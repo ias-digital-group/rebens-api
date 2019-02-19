@@ -400,7 +400,7 @@ namespace ias.Rebens.api.Controllers
         /// Lista todos os benefícios da operação com paginação
         /// </summary>
         /// <param name="idCategory">categoria, não obrigatório (default=null)</param>
-        /// <param name="idBenefitType">tipo de benefício, não obrigatório (default=null)</param>
+        /// <param name="benefitTypes">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
@@ -410,10 +410,10 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("Benefits")]
-        [ProducesResponseType(typeof(ResultPageModel<BenefitModel>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<BenefitListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefits([FromQuery]int? idCategory = null, [FromQuery]int? idBenefitType = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListBenefits([FromQuery]int? idCategory = null, [FromQuery]string benefitTypes = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
             int idOperation = 0;
             var principal = HttpContext.User;
@@ -426,23 +426,23 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
             }
 
-            var list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, page, pageItems, searchWord, sort, out string error);
+            var list = benefitRepo.ListByOperation(idOperation, idCategory, benefitTypes, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<BenefitModel>();
+                var ret = new ResultPageModel<BenefitListItem>();
                 ret.CurrentPage = list.CurrentPage;
                 ret.HasNextPage = list.HasNextPage;
                 ret.HasPreviousPage = list.HasPreviousPage;
                 ret.ItemsPerPage = list.ItemsPerPage;
                 ret.TotalItems = list.TotalItems;
                 ret.TotalPages = list.TotalPages;
-                ret.Data = new List<BenefitModel>();
+                ret.Data = new List<BenefitListItem>();
                 foreach (var benefit in list.Page)
-                    ret.Data.Add(new BenefitModel(benefit));
+                    ret.Data.Add(new BenefitListItem(benefit));
 
                 return Ok(ret);
             }
@@ -570,7 +570,7 @@ namespace ias.Rebens.api.Controllers
                     if (customerRepo.Create(customer, out error))
                     {
                         var sendingBlue = new Integration.SendinBlueHelper();
-                        var link = "http://admin.rebens.com.br/unicap/c=" + customer.Code;
+                        string link = operation.Domain + "#/?c=" + customer.Code;
                         var result = sendingBlue.SendCustomerValidate(customer.Email, link);
 
                         return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = customer.Id });
@@ -606,12 +606,12 @@ namespace ias.Rebens.api.Controllers
 
             if (operation != null)
             {
-                var customer = customerRepo.ReadByCode(validateCustomer.Code, operation.Id, out error);
+                var customer = customerRepo.ReadByCode(validateCustomer.Code.Replace(" ", "+"), operation.Id, out error);
 
                 if(customer != null)
                 {
                     customer.SetPassword(validateCustomer.Password);
-                    if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Active, out error))
+                    if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
                     {
                         ClaimsIdentity identity = new ClaimsIdentity(
                             new GenericIdentity(customer.Email),
@@ -658,11 +658,11 @@ namespace ias.Rebens.api.Controllers
 
                         return Ok(Data);
                     }
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
                 }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "reading customer - " + validateCustomer.Code, Data = error });
             }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida! (code: " + operationCode + ")" });
         }
 
         /// <summary>

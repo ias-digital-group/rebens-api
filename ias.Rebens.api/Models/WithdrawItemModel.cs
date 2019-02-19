@@ -22,7 +22,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Data
         /// </summary>
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
         /// <summary>
         /// Valor
         /// </summary>
@@ -44,7 +44,7 @@ namespace ias.Rebens.api.Models
         {
             this.Id = withdraw.Id;
             this.IdBankAccount = withdraw.IdBankAccount;
-            this.Date = withdraw.Date;
+            this.Date = withdraw.Date.ToString("dd/MM/yyyy");
             this.Amount = withdraw.Amount;
             this.Status = Enums.EnumHelper.GetEnumDescription((Enums.WithdrawStatus)withdraw.Status);
             if (withdraw.BankAccount != null)

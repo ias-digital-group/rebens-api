@@ -189,11 +189,12 @@
             Banner Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.BannerController.#ctor(ias.Rebens.IBannerRepository)">
+        <member name="M:ias.Rebens.api.Controllers.BannerController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IOperationRepository)">
             <summary>
             Constructor
             </summary>
             <param name="bannerRepository"></param>
+            <param name="operationRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BannerController.List(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -243,6 +244,35 @@
             <param name="id">Id do banner a ser apagado</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
             <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BannerController.AddOperation(ias.Rebens.api.Models.BannerOperationModel)">
+            <summary>
+            Adiciona um banner a uma operação
+            </summary>
+            <param name="model">{ IdBanner: 0, IdOperation: 0 }</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Víncula um banner com uma Operação</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BannerController.RemoveOperation(System.Int32,System.Int32)">
+            <summary>
+            Remove um banner de uma operação
+            </summary>
+            <param name="id">id do banner</param>
+            <param name="idOperation">id da operação</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Remove o vínculo de banner com uma operação</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BannerController.ListOperations(System.Int32)">
+            <summary>
+            Lista todas operações, e marca quais estão vinculadas ao banner
+            </summary>
+            <param name="id">id do banner</param>
+            <returns>Lista com todas operações</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Controllers.BenefitController">
@@ -1282,12 +1312,12 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.Nullable{System.Int32},System.String,System.Int32,System.Int32,System.String,System.String)">
             <summary>
             Lista todos os benefícios da operação com paginação
             </summary>
             <param name="idCategory">categoria, não obrigatório (default=null)</param>
-            <param name="idBenefitType">tipo de benefício, não obrigatório (default=null)</param>
+            <param name="benefitTypes">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
@@ -1871,6 +1901,47 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:ias.Rebens.api.Models.BannerOperationModel">
+            <summary>
+            Associação Banner Operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerOperationModel.IdBanner">
+            <summary>
+            Id do banner
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerOperationModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.BannerOperationItemModel">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerOperationItemModel.OperationName">
+            <summary>
+            Nome da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerOperationItemModel.Checked">
+            <summary>
+            Se a operação está vinculada com o benefício
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BannerOperationItemModel.#ctor">
+            <summary>
+            Construtor 
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BannerOperationItemModel.#ctor(ias.Rebens.BannerOperationItem)">
+            <summary>
+            Construtor que já populas as propriedades
+            </summary>
+            <param name="item"></param>
+        </member>
         <member name="T:ias.Rebens.api.Models.BannerTypeModel">
             <summary>
             tipo de banner
@@ -2006,6 +2077,11 @@
             Id do parceiro
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.PartnerImage">
+            <summary>
+            Logo do Parceiro
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.BenefitModel.IntegrationType">
             <summary>
             Tipo de Integração
@@ -2016,24 +2092,14 @@
             Chamada do Benefício
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.Teaser">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.Detail">
             <summary>
-            Teaser do beneficio
+            Detalhes
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.DescriptionOnLine">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.HowToUse">
             <summary>
-            Descrição de funcionamento online
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.DescriptionOffLine">
-            <summary>
-            Descrição de funcionamento offline
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.VoucherOperation">
-            <summary>
-            Funcionamento Voucher
+            Como Utilizar
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.BenefitModel.#ctor">
@@ -2059,29 +2125,63 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Models.BenefitModel.GetTeaser">
+        <member name="M:ias.Rebens.api.Models.BenefitModel.GetDetail">
             <summary>
             
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Models.BenefitModel.GetDescriptionOnLine">
+        <member name="M:ias.Rebens.api.Models.BenefitModel.GetHowToUse">
             <summary>
             
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Models.BenefitModel.GetDescriptionOffLine">
+        <member name="T:ias.Rebens.api.Models.BenefitListItem">
             <summary>
-            
+            Benefit List Item
             </summary>
-            <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Models.BenefitModel.GetVoucherOperation">
+        <member name="P:ias.Rebens.api.Models.BenefitListItem.Id">
             <summary>
-            
+            Id
             </summary>
-            <returns></returns>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListItem.Title">
+            <summary>
+            Título
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListItem.Image">
+            <summary>
+            Imagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListItem.IdBenefitType">
+            <summary>
+            Id Tipo de benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListItem.BenefitType">
+            <summary>
+            Tipo de benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListItem.BenefitCall">
+            <summary>
+            Chamada do Benefício
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitListItem.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitListItem.#ctor(ias.Rebens.Benefit)">
+            <summary>
+            Construtor que recebe um Benefício e já popula os atributos
+            </summary>
+            <param name="benefit"></param>
         </member>
         <member name="T:ias.Rebens.api.Models.BenefitItem">
             <summary>

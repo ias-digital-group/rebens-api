@@ -63,7 +63,7 @@ namespace ias.Rebens.api.Models
         /// Data
         /// </summary>
         [Required]
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
 
         /// <summary>
         /// Contrutor
@@ -85,7 +85,7 @@ namespace ias.Rebens.api.Models
             this.Comission = benefitUse.Comission;
             this.IdStatus = benefitUse.Status;
             this.Status = Enums.EnumHelper.GetEnumDescription((Enums.BenefitUseStatus)benefitUse.Status);
-            this.Date = benefitUse.Created.Date;
+            this.Date = benefitUse.Created.ToString("dd/MM/yyyy");
             if (benefitUse.BenefitType != null)
                 this.BenefitType = benefitUse.BenefitType.Name;
         }

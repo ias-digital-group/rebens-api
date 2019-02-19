@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace ias.Rebens.api.Models
 {
@@ -34,7 +35,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Data de nascimento
         /// </summary>
-        public DateTime? Birthday { get; set; }
+        public string Birthday { get; set; }
         /// <summary>
         /// Email
         /// </summary>
@@ -99,7 +100,7 @@ namespace ias.Rebens.api.Models
             this.Name = customer.Name;
             this.IdOperation = customer.IdOperation;
             this.Gender = customer.Gender.ToString();
-            this.Birthday = customer.Birthday;
+            this.Birthday = customer.Birthday.HasValue ? customer.Birthday.Value.ToString("dd/MM/yyyy") : null;
             this.Email = customer.Email;
             this.IdAddress = customer.IdAddress;
             this.Cpf = customer.Cpf;
@@ -119,13 +120,12 @@ namespace ias.Rebens.api.Models
         /// </summary>
         /// <returns></returns>
         public Customer GetEntity() {
-            return new Customer()
+            var ret = new Customer()
             {
                 Id = this.Id,
                 Name = this.Name,
                 IdOperation = this.IdOperation,
                 Gender = this.Gender[0],
-                Birthday = this.Birthday,
                 Email = this.Email,
                 IdAddress = this.IdAddress,
                 Cpf = this.Cpf,
@@ -138,6 +138,17 @@ namespace ias.Rebens.api.Models
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };
+
+            if(!string.IsNullOrEmpty(this.Birthday))
+            {
+                try
+                {
+                    var culture = new CultureInfo("pt-BR");
+                    ret.Birthday = Convert.ToDateTime(this.Birthday, culture);
+                }
+                catch { }
+            }
+            return ret;
         }
     }
 }

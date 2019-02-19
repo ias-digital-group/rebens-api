@@ -363,5 +363,34 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public List<BannerOperationItem> ListByBanner(int idBanner, out string error)
+        {
+            List<BannerOperationItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = (from o in db.Operation
+                           from b in db.BannerOperation.Where(bo => bo.IdOperation == o.Id && bo.IdBanner == idBanner).DefaultIfEmpty()
+                           where o.Active
+                           select new BannerOperationItem()
+                           {
+                               IdBanner = b.IdBanner,
+                               IdOperation = o.Id,
+                               OperationName = o.Title
+                           }).OrderBy(o => o.OperationName).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ListByBanner", ex.Message, $"idBanner: {idBanner}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as operações. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

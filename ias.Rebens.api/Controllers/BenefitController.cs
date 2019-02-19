@@ -127,25 +127,15 @@ namespace ias.Rebens.api.Controllers
                     var benefitCall = benefit.GetCall();
                     staticTextRepo.Update(benefitCall, out error);
                 }
-                if (!string.IsNullOrEmpty(benefit.Teaser))
+                if (!string.IsNullOrEmpty(benefit.Detail))
                 {
-                    var teaser = benefit.GetTeaser();
-                    staticTextRepo.Update(teaser, out error);
+                    var detail = benefit.GetDetail();
+                    staticTextRepo.Update(detail, out error);
                 }
-                if (!string.IsNullOrEmpty(benefit.DescriptionOnLine))
+                if (!string.IsNullOrEmpty(benefit.HowToUse))
                 {
-                    var online = benefit.GetDescriptionOnLine();
-                    staticTextRepo.Update(online, out error);
-                }
-                if (!string.IsNullOrEmpty(benefit.DescriptionOffLine))
-                {
-                    var offline = benefit.GetDescriptionOffLine();
-                    staticTextRepo.Update(offline, out error);
-                }
-                if (!string.IsNullOrEmpty(benefit.VoucherOperation))
-                {
-                    var voucher = benefit.GetVoucherOperation();
-                    staticTextRepo.Update(voucher, out error);
+                    var howToUse = benefit.GetHowToUse();
+                    staticTextRepo.Update(howToUse, out error);
                 }
                 return Ok(new JsonModel() { Status = "ok", Message = "Benefício atualizado com sucesso!" });
             }
@@ -177,29 +167,17 @@ namespace ias.Rebens.api.Controllers
                     benefitCall.IdBenefit = item.Id;
                     staticTextRepo.Create(benefitCall, out error);
                 }
-                if (!string.IsNullOrEmpty(benefit.Teaser))
+                if (!string.IsNullOrEmpty(benefit.Detail))
                 {
-                    var teaser = benefit.GetTeaser();
-                    teaser.IdBenefit = item.Id;
-                    staticTextRepo.Create(teaser, out error);
+                    var detail = benefit.GetDetail();
+                    detail.IdBenefit = item.Id;
+                    staticTextRepo.Create(detail, out error);
                 }
-                if (!string.IsNullOrEmpty(benefit.DescriptionOnLine))
+                if (!string.IsNullOrEmpty(benefit.HowToUse))
                 {
-                    var online = benefit.GetDescriptionOnLine();
-                    online.IdBenefit = item.Id;
-                    staticTextRepo.Create(online, out error);
-                }
-                if (!string.IsNullOrEmpty(benefit.DescriptionOffLine))
-                {
-                    var offline = benefit.GetDescriptionOffLine();
-                    offline.IdBenefit = item.Id;
-                    staticTextRepo.Create(offline, out error);
-                }
-                if (!string.IsNullOrEmpty(benefit.VoucherOperation))
-                {
-                    var voucher = benefit.GetVoucherOperation();
-                    voucher.IdBenefit = item.Id;
-                    staticTextRepo.Create(voucher, out error);
+                    var howToUse = benefit.GetHowToUse();
+                    howToUse.IdBenefit = item.Id;
+                    staticTextRepo.Create(howToUse, out error);
                 }
 
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Benefício criado com sucesso!", Id = item.Id });

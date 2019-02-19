@@ -392,18 +392,29 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, int? idBenefitType, int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Benefit> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Benefit.Where(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) 
+                    List<int> types = new List<int>();
+                    if(!string.IsNullOrEmpty(benefitTypes))
+                    {
+                        var tmp = benefitTypes.Split(',');
+                        foreach (var t in tmp)
+                        {
+                            if(int.TryParse(t, out int i))
+                                types.Add(i);
+                        }
+                    }
+                    var tmpList = db.Benefit.Include("BenefitType").Include("Partner").Where(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) 
                                     && (string.IsNullOrEmpty(word) || b.Title.Contains(word))
-                                    && (!idBenefitType.HasValue || (idBenefitType.HasValue && idBenefitType.Value == b.IdBenefitType))
+                                    && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
                                     && b.Active 
                                     && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value))));
+
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -423,7 +434,11 @@ namespace ias.Rebens
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
 
-                    list.ForEach(i => { i.StaticTexts.Add(db.StaticText.SingleOrDefault(s => s.IdBenefit == i.Id && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall)); });
+                    list.ForEach(i => {
+                        var text = db.StaticText.SingleOrDefault(s => s.IdBenefit == i.Id && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall);
+                        if(text != null && text.Id > 0)
+                            i.StaticTexts.Add(text);
+                    });
 
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;

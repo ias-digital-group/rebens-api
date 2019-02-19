@@ -40,7 +40,7 @@ namespace ias.Rebens
 
         ResultPage<Benefit> ListByIntegrationType(int idIntegrationType, int page, int pageItems, string word, string sort, out string error);
 
-        ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, int? idBenefitType, int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, int page, int pageItems, string word, string sort, out string error);
 
         List<BenefitOperationPosition> ListPositions(out string error);
 

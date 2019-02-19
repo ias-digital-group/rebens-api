@@ -13,6 +13,31 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public bool AddOperation(int idBanner, int idOperation, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (!db.BannerOperation.Any(o => o.IdBanner == idBanner && o.IdOperation == idOperation))
+                    {
+                        db.BannerOperation.Add(new BannerOperation() { IdOperation = idOperation, IdBanner = idBanner });
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BannerRepository.AddOperation", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar adicionar a operação. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
         public bool Create(Banner banner, out string error)
         {
             bool ret = true;
@@ -58,6 +83,29 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("BannerRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir o banner. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool DeleteOperation(int idBanner, int idOperation, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmp = db.BannerOperation.SingleOrDefault(o => o.IdBanner == idBanner && o.IdOperation == idOperation);
+                    db.BannerOperation.Remove(tmp);
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BannerRepository.DeleteOperation", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar excluir a Operação. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
@@ -165,8 +213,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.Operation.Code == operationCode) && b.Type == type && 
-                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && 
-                                b.Benefit.Active && b.Benefit.Start < DateTime.Now && b.Benefit.End > DateTime.Now)
+                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && b.Benefit.Active)
                                 .OrderBy(b => b.Order).ToList();
                    
                     error = null;
@@ -190,8 +237,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Type == type &&
-                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now &&
-                                b.Benefit.Active && b.Benefit.Start < DateTime.Now && b.Benefit.End > DateTime.Now)
+                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && b.Benefit.Active)
                                 .OrderBy(b => b.Order).ToList();
 
                     error = null;

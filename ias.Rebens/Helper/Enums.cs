@@ -106,16 +106,12 @@ namespace ias.Rebens.Enums
         AboutOperation = 1,
         [Description("Operação como funciona")]
         HowOperationWork = 2,
-        [Description("Teaser do beneficio")]
-        BenefitTeaser = 3,
+        [Description("Detalhes")]
+        BenefitDetail = 3,
         [Description("Chamada do beneficio")]
         BenefitCall = 4,
-        [Description("Descrição de funcionamento online")]
-        BenefitOperationOnLine = 5,
-        [Description("Descrição de funcionamento offline")]
-        BenefitOperationOffLine = 6,
-        [Description("Funcionamento Voucher")]
-        VoucherOperation = 7
+        [Description("Como Utilizar")]
+        BenefitHowToUse = 5
     }
 
     public enum BankAccountType
