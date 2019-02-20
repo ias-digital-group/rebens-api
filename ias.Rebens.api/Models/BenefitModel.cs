@@ -137,6 +137,8 @@ namespace ias.Rebens.api.Models
             this.IdPartner = benefit.IdPartner;
             if (benefit.BenefitType != null)
                 this.BenefitType = benefit.BenefitType.Name;
+            if (benefit.Partner != null)
+                this.PartnerImage = benefit.Partner.Logo;
             if (benefit.IntegrationType != null)
                 this.IntegrationType = benefit.IntegrationType.Name;
             if(benefit.StaticTexts != null)

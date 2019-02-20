@@ -8,6 +8,8 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 using ias.Rebens;
 using System.Threading;
+using System.Collections.Specialized;
+using System.Web;
 
 namespace Test
 {
@@ -22,7 +24,8 @@ namespace Test
 
         static void Main(string[] args)
         {
-            Console.WriteLine(ias.Rebens.Helper.SecurityHelper.HMACSHA1("israel-unicap@iasdigitalgroup.com", "israel-unicap@iasdigitalgroup.com|987.977.111-00"));
+
+            ListCampaigns();
 
             Console.WriteLine("DONE");
 
@@ -68,6 +71,65 @@ namespace Test
             memoryStream.Close();
             cryptoStream.Close();
             return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount).TrimEnd("\0".ToCharArray());
+        }
+
+        public static void ListCampaigns()
+        {
+            string CLIENT_ID = "2292342788435322989231952429692";
+            string CLIENT_SECRET = "QuWLSvP2GKM9QYGdkXUU8f4khEJpM9b";
+
+            var postData = "campaign=cam_1010508";
+            postData += "&firstname=Israel";
+            postData += "&lastname=Silva";
+            postData += "&email=israellow@outlook.com";
+            postData += "&customid=1854445";
+            postData += "&customvalcode=m5d3vhc0c45ky683a5sarect7";
+            var data = Encoding.ASCII.GetBytes(postData);
+
+            ASCIIEncoding encoding = new ASCIIEncoding();
+            HttpWebRequest request = WebRequest.Create("https://api4coupons.com/v3/singleuse/create") as HttpWebRequest;
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = data.Length;
+            request.Timeout = 30000;
+            request.Headers.Add("X-Client-id", CLIENT_ID);
+            request.Headers.Add("X-Client-secret", CLIENT_SECRET);
+
+
+            using (var stream = request.GetRequestStream())
+            {
+                stream.Write(data, 0, data.Length);
+            }
+
+            try
+            {
+                HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    var stream = response.GetResponseStream() as Stream;
+                    byte[] buffer = new byte[32 * 1024];
+                    int nRead = 0;
+                    MemoryStream successMs = new MemoryStream();
+                    do
+                    {
+                        nRead = stream.Read(buffer, 0, buffer.Length);
+                        successMs.Write(buffer, 0, nRead);
+                    } while (nRead > 0);
+                    // convert read bytes into string
+                    var responseString = encoding.GetString(successMs.ToArray());
+                    var jObj = JObject.Parse(responseString);
+
+                    var status = jObj["status"]["status"].ToString() == "OK";
+                    Console.WriteLine("Campaing: {0} - Action:{1} - Code:{2} - url:{3} - Widget:{4} - CustomCode:{5} - CustomId:{6}",
+                        jObj["campaign"].ToString(), jObj["action"].ToString(), jObj["single_use_code"].ToString(), jObj["single_use_url"].ToString(), 
+                        jObj["widget_validation_code"].ToString(), jObj["custom_validation_code"].ToString(), jObj["customid"].ToString());
+                    
+                }
+            }
+            catch (WebException ex)
+            {
+                
+            }
         }
 
         #region Zanox Test
@@ -253,5 +315,18 @@ namespace Test
 
 
 
+    }
+
+    class CouponCampaign
+    {
+        public int Id { get; set; }
+        public string CampaignId { get; set; }
+        public string Code { get; set; }
+        public string Url { get; set; }
+        public string Name { get; set; }
+        public string Status { get; set; }
+        public string Title { get; set; }
+        public DateTime Created { get; set; }
+        public DateTime Modified { get; set; }
     }
 }

@@ -31,6 +31,7 @@ namespace ias.Rebens.api.Controllers
         private IOperationRepository operationRepo;
         private ICustomerRepository customerRepo;
         private IWithdrawRepository withdrawRepo;
+        private IStaticTextRepository staticTextRepo;
 
         /// <summary>
         /// Constructor
@@ -45,10 +46,11 @@ namespace ias.Rebens.api.Controllers
         /// <param name="formEstablishmentRepository"></param>
         /// <param name="operationRepository"></param>
         /// <param name="withdrawRepository"></param>
+        /// <param name="staticTextRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
-            IBenefitUseRepository benefitUseRepository)
+            IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository)
         {
             this.bannerRepo = bannerRepository;
             this.benefitRepo = benefitRepository;
@@ -60,6 +62,7 @@ namespace ias.Rebens.api.Controllers
             this.addrRepo = addressRepository;
             this.withdrawRepo = withdrawRepository;
             this.benefitUseRepo = benefitUseRepository;
+            this.staticTextRepo = staticTextRepository;
         }
 
         /// <summary>
@@ -400,7 +403,7 @@ namespace ias.Rebens.api.Controllers
         /// Lista todos os benefícios da operação com paginação
         /// </summary>
         /// <param name="idCategory">categoria, não obrigatório (default=null)</param>
-        /// <param name="benefitTypes">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
+        /// <param name="idBenefitType">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
@@ -413,7 +416,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<BenefitListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefits([FromQuery]int? idCategory = null, [FromQuery]string benefitTypes = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListBenefits([FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
             int idOperation = 0;
             var principal = HttpContext.User;
@@ -426,7 +429,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
             }
 
-            var list = benefitRepo.ListByOperation(idOperation, idCategory, benefitTypes, page, pageItems, searchWord, sort, out string error);
+            var list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, page, pageItems, searchWord, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -569,9 +572,14 @@ namespace ias.Rebens.api.Controllers
 
                     if (customerRepo.Create(customer, out error))
                     {
-                        var sendingBlue = new Integration.SendinBlueHelper();
-                        string link = operation.Domain + "#/?c=" + customer.Code;
-                        var result = sendingBlue.SendCustomerValidate(customer.Email, link);
+                        var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.EmailCustomerValidation, out error);
+                        if(staticText != null)
+                        {
+                            var sendingBlue = new Integration.SendinBlueHelper();
+                            string link = operation.Domain + "#/?c=" + customer.Code;
+                            var body = staticText.Html.Replace("##LINK##", link);
+                            var result = sendingBlue.Send(customer.Email, "", "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
+                        }
 
                         return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = customer.Id });
                     }
@@ -773,13 +781,18 @@ namespace ias.Rebens.api.Controllers
                 if (user != null)
                 {
                     if(customerRepo.ChangeStatus(user.Id, Enums.CustomerStatus.ChangePassword, out error))
-                    { 
-                        var sendingBlue = new Integration.SendinBlueHelper();
-                        var link = "http://hmlrebens.iasdigitalgroup.com/unicap/c=" + user.Code;
-                        var result = sendingBlue.SendPasswordRecover(user, link);
-                        if (result.Status)
-                            return Ok(new JsonModel() { Status = "ok", Message = result.Message });
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = result.Message });
+                    {
+                        var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.EmailPasswordRecovery, out error);
+                        if (staticText != null)
+                        {
+                            var sendingBlue = new Integration.SendinBlueHelper();
+                            var link = operation.Domain + "#/?c=" + user.Code;
+                            var body = staticText.Html.Replace("##NAME##", user.Name).Replace("##LINK##", link);
+                            var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
+                            if (result.Status)
+                                return Ok(new JsonModel() { Status = "ok", Message = result.Message });
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = result.Message });
+                        }
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
                 }

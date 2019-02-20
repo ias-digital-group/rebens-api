@@ -31,6 +31,10 @@ namespace ias.Rebens.api.Models
         [Required]
         [MaxLength(500)]
         public string Logo { get; set; }
+        /// <summary>
+        /// Descrição do Parceiro
+        /// </summary>
+        public string Description { get; set; }
 
         /// <summary>
         /// Contatos do parceiro
@@ -41,6 +45,7 @@ namespace ias.Rebens.api.Models
         /// Endereços do parceiro
         /// </summary>
         public List<AddressModel> Addresses { get; set; }
+
 
         /// <summary>
         /// Construtor

@@ -111,7 +111,13 @@ namespace ias.Rebens.Enums
         [Description("Chamada do beneficio")]
         BenefitCall = 4,
         [Description("Como Utilizar")]
-        BenefitHowToUse = 5
+        BenefitHowToUse = 5,
+        [Description("Descrição do Parceiro")]
+        PartnerDescription = 6,
+        [Description("E-mail de recuperação de senha")]
+        EmailPasswordRecovery = 7,
+        [Description("E-mail de validação de cliente")]
+        EmailCustomerValidation = 8
     }
 
     public enum BankAccountType

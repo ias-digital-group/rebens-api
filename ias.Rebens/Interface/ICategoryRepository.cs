@@ -18,7 +18,7 @@ namespace ias.Rebens
 
         List<Category> ListTree(out string error);
 
-        List<CategoryItem> ListByBenefit(int idBenefit, out string error);
+        List<int> ListByBenefit(int idBenefit, out string error);
 
         List<Category> ListChildren(int idParent, out string error);
     }

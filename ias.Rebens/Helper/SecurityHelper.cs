@@ -123,5 +123,14 @@ namespace ias.Rebens.Helper
             }
             return Convert.ToBase64String(ByteArray);
         }
+
+        public static string GenerateString()
+        {
+            Guid g = Guid.NewGuid();
+            string guidString = Convert.ToBase64String(g.ToByteArray());
+            guidString = guidString.Replace("=", "");
+            guidString = guidString.Replace("+", "");
+            return guidString;
+        }
     }
 }

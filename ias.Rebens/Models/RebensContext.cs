@@ -36,6 +36,8 @@ namespace ias.Rebens
         public virtual DbSet<Category> Category { get; set; }
         public virtual DbSet<Configuration> Configuration { get; set; }
         public virtual DbSet<Contact> Contact { get; set; }
+        public virtual DbSet<Coupon> Coupon { get; set; }
+        public virtual DbSet<CouponCampaign> CouponCampaign { get; set; }
         public virtual DbSet<Customer> Customer { get; set; }
         public virtual DbSet<CustomerReferal> CustomerReferal { get; set; }
         public virtual DbSet<Faq> Faq { get; set; }
@@ -396,6 +398,65 @@ namespace ias.Rebens
                     .HasConstraintName("FK_Contact_Address");
             });
 
+            modelBuilder.Entity<Coupon>(entity =>
+            {
+                entity.Property(e => e.ValidationCode).IsRequired().HasMaxLength(50);
+
+                entity.Property(e => e.Campaign).IsRequired().HasMaxLength(50);
+
+                entity.Property(e => e.SingleUseCode).HasMaxLength(50);
+
+                entity.Property(e => e.SingleUseUrl).HasMaxLength(300);
+
+                entity.Property(e => e.WidgetValidationCode).HasMaxLength(50);
+
+                entity.Property(e => e.OpenDate).HasColumnType("datetime");
+
+                entity.Property(e => e.PlayedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.ClaimDate).HasColumnType("datetime");
+
+                entity.Property(e => e.ClaimType).HasMaxLength(50);
+
+                entity.Property(e => e.ValidationDate).HasColumnType("datetime");
+
+                entity.Property(e => e.ValidationValue).HasMaxLength(500);
+
+                entity.Property(e => e.ValidationDate).HasColumnType("datetime");
+
+                entity.Property(e => e.Value).HasMaxLength(500);
+
+                entity.Property(e => e.VerifiedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.HasOne(d => d.CouponCampaign)
+                    .WithMany(p => p.Coupons)
+                    .HasForeignKey(d => d.IdCouponCampaign)
+                    .HasConstraintName("FK_Coupon_CouponCampaign");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.Coupons)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .HasConstraintName("FK_Coupon_Customer");
+            });
+
+            modelBuilder.Entity<CouponCampaign>(entity =>
+            {
+                entity.Property(e => e.CampaignId).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Url).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+            });
+
             modelBuilder.Entity<Customer>(entity =>
             {
                 entity.Property(e => e.Name).HasMaxLength(300);
@@ -662,6 +723,12 @@ namespace ias.Rebens
                 entity.Property(e => e.Logo)
                    .IsRequired()
                    .HasMaxLength(1000);
+
+                entity.HasOne(d => d.StaticText)
+                    .WithMany(p => p.Partners)
+                    .HasForeignKey(d => d.IdStaticText)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Partner_StaticText");
             });
 
             modelBuilder.Entity<PartnerAddress>(entity =>

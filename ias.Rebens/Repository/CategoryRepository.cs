@@ -196,28 +196,14 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<CategoryItem> ListByBenefit(int idBenefit, out string error)
+        public List<int> ListByBenefit(int idBenefit, out string error)
         {
-            List<CategoryItem> ret;
+            List<int> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = (from c in db.Category
-                           from b in db.BenefitCategory.Where(bc => bc.IdBenefit == idBenefit && bc.IdCategory == c.Id).DefaultIfEmpty()
-                           where c.Active
-                           select new CategoryItem()
-                           {
-                               Id = c.Id,
-                               Active = c.Active,
-                               Created = c.Created,
-                               Icon = c.Icon,
-                               IdBenefit = b.IdBenefit,
-                               IdParent = c.IdParent,
-                               Modified = c.Modified,
-                               Name = c.Name,
-                               Order = c.Order
-                           }).OrderBy(c => c.Name).ToList();
+                    ret = db.BenefitCategory.Where(bc => bc.IdBenefit == idBenefit).Select(bc => bc.IdCategory).ToList();
                         
                     error = null;
                 }
@@ -226,7 +212,7 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CategoryRepository.ListByBenefit", ex.Message, $"idBenefit: {idBenefit}", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
+                error = "Ocorreu um erro ao tentar listar as categorias vinculadas ao benefício. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;

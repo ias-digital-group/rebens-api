@@ -271,15 +271,15 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Lista todas categorias, e marca quais estão vinculadas ao benefício
+        /// Lista os ids das categorias vínculadas ao benefício
         /// </summary>
         /// <param name="id">id do benefício</param>
-        /// <returns>Lista com as categorias</returns>
+        /// <returns>Lista com os Ids das categorias</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}/Category")]
-        [ProducesResponseType(typeof(JsonDataModel<List<CategoryItemModel>>), 200)]
+        [ProducesResponseType(typeof(JsonDataModel<List<int>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCategories(int id)
@@ -291,13 +291,10 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<CategoryItemModel>>()
+                var ret = new JsonDataModel<List<int>>()
                 {
-                    Data = new List<CategoryItemModel>()
+                    Data = list
                 };
-
-                foreach (var cat in list)
-                    ret.Data.Add(new CategoryItemModel(cat));
 
                 return Ok(ret);
             }

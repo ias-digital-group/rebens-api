@@ -50,20 +50,16 @@ namespace ias.Rebens.api.Models
         {
             this.Id = benefit.Id;
             this.Title = benefit.Title;
-            this.Image = benefit.Image;
             this.WebSite = benefit.WebSite;
+
             if (benefit.StaticTexts != null)
             {
-                foreach (var text in benefit.StaticTexts)
-                {
-                    switch ((Enums.StaticTextType)text.IdStaticTextType)
-                    {
-                        case Enums.StaticTextType.BenefitCall:
-                            this.BenefitCall = text.Html;
-                            break;
-                    }
-                }
+                var staticText = benefit.StaticTexts.SingleOrDefault(s => s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall);
+                if (staticText != null && staticText.Id > 0)
+                    this.BenefitCall = staticText.Html;
             }
+            if (benefit.Partner != null)
+                this.Image = benefit.Partner.Logo;
         }
     }
 }

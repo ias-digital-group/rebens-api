@@ -5,6 +5,11 @@ namespace ias.Rebens
 {
     public partial class StaticText
     {
+        public StaticText()
+        {
+            Partners = new HashSet<Partner>();
+        }
+
         public int Id { get; set; }
         public string Title { get; set; }
         public string Url { get; set; }
@@ -21,5 +26,7 @@ namespace ias.Rebens
         public virtual Operation Operation { get; set; }
         public virtual Benefit Benefit { get; set; }
         public virtual StaticTextType StaticTextType { get; set; }
+
+        public virtual ICollection<Partner> Partners { get; set; }
     }
 }

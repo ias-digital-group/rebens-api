@@ -366,10 +366,10 @@
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.ListCategories(System.Int32)">
             <summary>
-            Lista todas categorias, e marca quais estão vinculadas ao benefício
+            Lista os ids das categorias vínculadas ao benefício
             </summary>
             <param name="id">id do benefício</param>
-            <returns>Lista com as categorias</returns>
+            <returns>Lista com os Ids das categorias</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
@@ -1239,7 +1239,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository)">
             <summary>
             Constructor
             </summary>
@@ -1253,6 +1253,7 @@
             <param name="formEstablishmentRepository"></param>
             <param name="operationRepository"></param>
             <param name="withdrawRepository"></param>
+            <param name="staticTextRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1317,7 +1318,7 @@
             Lista todos os benefícios da operação com paginação
             </summary>
             <param name="idCategory">categoria, não obrigatório (default=null)</param>
-            <param name="benefitTypes">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
+            <param name="idBenefitType">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
@@ -3281,6 +3282,11 @@
         <member name="P:ias.Rebens.api.Models.PartnerModel.Logo">
             <summary>
             Logo do parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PartnerModel.Description">
+            <summary>
+            Descrição do Parceiro
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.PartnerModel.Contacts">

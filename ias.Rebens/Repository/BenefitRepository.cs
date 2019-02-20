@@ -205,7 +205,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Benefit.Include("BenefitOperations").Include("BenefitAddresses").Include("StaticTexts").SingleOrDefault(c => c.Id == id);
+                    ret = db.Benefit.Include("BenefitOperations").Include("BenefitAddresses").Include("StaticTexts").Include("Partner").SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }
@@ -409,11 +409,13 @@ namespace ias.Rebens
                                 types.Add(i);
                         }
                     }
-                    var tmpList = db.Benefit.Include("BenefitType").Include("Partner").Where(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) 
+                    var tmpList = db.Benefit.Include("BenefitType").Include("Partner")
+                                    .Where(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)
                                     && (string.IsNullOrEmpty(word) || b.Title.Contains(word))
                                     && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
-                                    && b.Active 
-                                    && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value))));
+                                    && b.Active
+                                    && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
+                                    );
 
                     switch (sort.ToLower())
                     {
