@@ -32,65 +32,31 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet, Authorize("Bearer", Roles = "administrator")]
+        [HttpGet, Authorize("Bearer", Roles = "administrator, customer")]
         [ProducesResponseType(typeof(ResultPageModel<CustomerReferalModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
-
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.TotalItems == 0)
-                    return NoContent();
-
-                var ret = new ResultPageModel<CustomerReferalModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<CustomerReferalModel>();
-                foreach (var cr in list.Page)
-                    ret.Data.Add(new CustomerReferalModel(cr));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Lista as Indicações conforme os parametros
-        /// </summary>
-        /// <param name="page">página, não obrigatório (default=0)</param>
-        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="sort">Ordenação campos (Id, Name, Email, Status), direção (ASC, DESC)</param>
-        /// <param name="searchWord">Palavra à ser buscada</param>
-        /// <returns>Lista com as Indicações encontradas</returns>
-        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("ListByCustomer"), Authorize("Bearer", Roles = "customer")]
-        [ProducesResponseType(typeof(ResultPageModel<CustomerReferalModel>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListByCustomer([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
-        {
+            ResultPage<CustomerReferal> list;
+            string error;
             int idCustomer = 0;
             var principal = HttpContext.User;
-            if (principal?.Claims != null)
+            if (principal != null && principal.IsInRole("customer"))
             {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
 
-            var list = repo.ListByCustomer(idCustomer, page, pageItems, searchWord, sort, out string error);
+                if (principal?.Claims != null)
+                {
+                    var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                    if (customerId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                    if (!int.TryParse(customerId.Value, out idCustomer))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                }
+                list = repo.ListByCustomer(idCustomer, page, pageItems, searchWord, sort, out error);
+            }
+            else 
+                list = repo.ListPage(page, pageItems, searchWord, sort, out error);
 
             if (string.IsNullOrEmpty(error))
             {

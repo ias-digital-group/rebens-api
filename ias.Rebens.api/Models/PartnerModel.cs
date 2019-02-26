@@ -61,6 +61,8 @@ namespace ias.Rebens.api.Models
             this.Name = partner.Name;
             this.Active = partner.Active;
             this.Logo = partner.Logo;
+            if (partner.StaticText != null)
+                this.Description = partner.StaticText.Html;
         }
 
         /// <summary>

@@ -205,8 +205,10 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.StaticText.SingleOrDefault(c => c.Id == staticText.Id);
-                    if (update == null)
-                        update = db.StaticText.SingleOrDefault(c => c.IdBenefit == staticText.IdBenefit && c.IdOperation == staticText.IdOperation && c.IdStaticTextType == staticText.IdStaticTextType);
+                    if (update == null && staticText.IdBenefit.HasValue)
+                        update = db.StaticText.SingleOrDefault(c => c.IdBenefit == staticText.IdBenefit && c.IdStaticTextType == staticText.IdStaticTextType);
+                    if (update == null && staticText.IdOperation.HasValue)
+                        update = db.StaticText.SingleOrDefault(c => c.IdOperation == staticText.IdOperation && c.IdStaticTextType == staticText.IdStaticTextType);
 
                     if (update != null)
                     {

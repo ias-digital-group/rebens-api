@@ -23,5 +23,7 @@ namespace ias.Rebens
         bool DeleteContact(int idPartner, int idContact, out string error);
 
         bool DeleteAddress(int idPartner, int idAddress, out string error);
+
+        bool SetTextId(int id, int idText, out string error);
     }
 }

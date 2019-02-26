@@ -226,7 +226,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Partner.Include("PartnerContacts").Include("PartnerAddresses").SingleOrDefault(c => c.Id == id);
+                    ret = db.Partner.Include("StaticText").SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }
@@ -254,6 +254,7 @@ namespace ias.Rebens
                         update.Name = partner.Name;
                         update.Logo = partner.Logo;
                         update.Modified = DateTime.UtcNow;
+                        partner.IdStaticText = update.IdStaticText;
 
                         db.SaveChanges();
                         error = null;
@@ -268,6 +269,38 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("PartnerRepository.Update", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o parceiro. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool SetTextId(int id, int idText, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Partner.SingleOrDefault(c => c.Id == id);
+                    if (update != null)
+                    {
+                        update.Modified = DateTime.UtcNow;
+                        update.IdStaticText = idText;
+
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        error = "Parceiro não encontrado!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("PartnerRepository.SetTextId", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o parceiro. (erro:" + idLog + ")";
                 ret = false;
             }

@@ -220,16 +220,20 @@ namespace ias.Rebens
                         update.Gender = customer.Gender;
                         update.Modified = DateTime.UtcNow;
                         update.Name = customer.Name;
+                        update.Surname = customer.Surname;
                         update.Phone = customer.Phone;
                         update.RG = customer.RG;
-                        update.Status = update.Status;
+                        update.Status = customer.Status;
+
+                        if (customer.IdAddress.HasValue)
+                            update.IdAddress = customer.IdAddress.Value;
 
                         db.SaveChanges();
                         error = null;
                     }
                     else
                     {
-                        error = "Endereço não encontrado!";
+                        error = "Cliente não encontrado!";
                     }
                 }
             }

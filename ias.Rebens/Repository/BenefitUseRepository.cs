@@ -20,6 +20,15 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    while (true)
+                    {
+                        benefitUse.Code = Helper.SecurityHelper.GenerateCode(12);
+                        if (db.BenefitUse.Any(b => b.Code == benefitUse.Code))
+                            benefitUse.Code = Helper.SecurityHelper.GenerateCode(12);
+                        else
+                            break;
+                    }
+
                     benefitUse.Modified = benefitUse.Created = DateTime.UtcNow;
                     db.BenefitUse.Add(benefitUse);
                     db.SaveChanges();
@@ -163,6 +172,27 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("BenefitUseRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o uso. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public BenefitUse ReadByCode(string code, out string error)
+        {
+            BenefitUse ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.BenefitUse.SingleOrDefault(c => c.Code == code);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitUseRepository.ReadByCode", ex.Message, "{code: "+code+"}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler o uso. (erro:" + idLog + ")";
                 ret = null;
             }

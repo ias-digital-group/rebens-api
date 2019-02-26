@@ -18,6 +18,7 @@ namespace ias.Rebens.api.Controllers
         private IAddressRepository addressRepo;
         private IContactRepository contactRepo;
         private IBenefitRepository benefitRepo;
+        private IStaticTextRepository staticTextRepo;
 
         /// <summary>
         /// Construtor
@@ -26,12 +27,14 @@ namespace ias.Rebens.api.Controllers
         /// <param name="contactRepository">Injeção de dependencia do repositório de contato</param>
         /// <param name="addressRepository">Injeção de dependencia do repositório de endereço</param>
         /// <param name="benefitRepository">Injeção de dependencia do repositório de benefício</param>
-        public PartnerController(IPartnerRepository partnerRepository, IContactRepository contactRepository, IAddressRepository addressRepository, IBenefitRepository benefitRepository)
+        /// <param name="staticTextRepository">Injeção de dependencia do repositório de benefício</param>
+        public PartnerController(IPartnerRepository partnerRepository, IContactRepository contactRepository, IAddressRepository addressRepository, IBenefitRepository benefitRepository, IStaticTextRepository staticTextRepository)
         {
             this.repo = partnerRepository;
             this.addressRepo = addressRepository;
             this.contactRepo = contactRepository;
             this.benefitRepo = benefitRepository;
+            this.staticTextRepo = staticTextRepository;
         }
 
         /// <summary>
@@ -119,7 +122,32 @@ namespace ias.Rebens.api.Controllers
 
             var part = partner.GetEntity();
             if (repo.Update(part, out error))
+            {
+                if (!string.IsNullOrEmpty(partner.Description))
+                {
+                    var text = new StaticText()
+                    {
+                        Active = true,
+                        Created = DateTime.Now,
+                        Html = partner.Description,
+                        IdStaticTextType = (int)Enums.StaticTextType.PartnerDescription,
+                        Title = "Descrição parceiros - " + partner.Name,
+                        Order = 1
+                    };
+                    if (part.IdStaticText.HasValue)
+                    {
+                        text.Id = part.IdStaticText.Value;
+                        staticTextRepo.Update(text, out error);
+                    }
+                    else
+                    {
+                        if(staticTextRepo.Create(text, out error))
+                            repo.SetTextId(part.Id, text.Id, out error);
+                    }
+                }
+
                 return Ok(new JsonModel() { Status = "ok", Message = "Parceiro atualizado com sucesso!" });
+            }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -166,6 +194,22 @@ namespace ias.Rebens.api.Controllers
             
 
             var part = partner.GetEntity();
+            if (!string.IsNullOrEmpty(partner.Description))
+            {
+                var text = new StaticText()
+                {
+                    Active = true,
+                    Created = DateTime.Now,
+                    Html = partner.Description,
+                    IdStaticTextType = (int)Enums.StaticTextType.PartnerDescription,
+                    Title = "Descrição parceiros - " + partner.Name,
+                    Order = 1
+                };
+                if (staticTextRepo.Create(text, out error))
+                    part.IdStaticText = text.Id;
+            }
+
+
             if (repo.Create(part, out error))
             {
                 if (idContact > 0)

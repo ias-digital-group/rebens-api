@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 
 namespace ias.Rebens
 {
@@ -33,6 +35,34 @@ namespace ias.Rebens
                 int idLog = logError.Create("CouponRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o cupom. (erro:" + idLog + ")";
                 ret = false;
+            }
+            return ret;
+        }
+
+        public ResultPage<Coupon> ListPageByCustomer(int idCustomer, int page, int pageItems, out string error)
+        {
+            ResultPage<Coupon> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var list = db.Coupon.Include("CouponCampaign")
+                        .Where(c => c.IdCustomer == idCustomer)
+                        .OrderByDescending(c => c.Created)
+                        .Skip(page * pageItems)
+                        .Take(pageItems).ToList();
+                    var total = db.Coupon.Count(c => c.IdCustomer == idCustomer);
+
+                    ret = new ResultPage<Coupon>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CouponRepository.ListPage", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os cupons. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

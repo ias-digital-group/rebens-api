@@ -12,5 +12,6 @@ namespace ias.Rebens
         ResultPage<BenefitUse> ListPage(int page, int pageItems, string word, string sort, out string error);
         BenefitUse Read(int id, out string error);
         bool Update(BenefitUse benefitUse, out string error);
+        BenefitUse ReadByCode(string code, out string error);
     }
 }

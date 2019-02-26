@@ -11,5 +11,7 @@ namespace ias.Rebens
         bool Update(Coupon coupon, out string error);
 
         Coupon Read(int id, out string error);
+
+        ResultPage<Coupon> ListPageByCustomer(int idCustomer, int page, int pageItems, out string error);
     }
 }

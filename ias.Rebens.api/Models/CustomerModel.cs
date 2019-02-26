@@ -22,6 +22,12 @@ namespace ias.Rebens.api.Models
         [MaxLength(300)]
         public string Name { get; set; }
         /// <summary>
+        /// Sobrenome
+        /// </summary>
+        [Required]
+        [MaxLength(200)]
+        public string Surname { get; set; }
+        /// <summary>
         /// Id da operação
         /// </summary>
         [Required]
@@ -98,6 +104,7 @@ namespace ias.Rebens.api.Models
         {
             this.Id = customer.Id;
             this.Name = customer.Name;
+            this.Surname = customer.Surname;
             this.IdOperation = customer.IdOperation;
             this.Gender = customer.Gender.ToString();
             this.Birthday = customer.Birthday.HasValue ? customer.Birthday.Value.ToString("dd/MM/yyyy") : null;
@@ -124,6 +131,7 @@ namespace ias.Rebens.api.Models
             {
                 Id = this.Id,
                 Name = this.Name,
+                Surname = this.Surname,
                 IdOperation = this.IdOperation,
                 Gender = this.Gender[0],
                 Email = this.Email,

@@ -32,6 +32,8 @@ namespace ias.Rebens.api.Controllers
         private ICustomerRepository customerRepo;
         private IWithdrawRepository withdrawRepo;
         private IStaticTextRepository staticTextRepo;
+        private ICouponRepository couponRepo;
+        private IMoipRepository moipRepo;
 
         /// <summary>
         /// Constructor
@@ -47,10 +49,13 @@ namespace ias.Rebens.api.Controllers
         /// <param name="operationRepository"></param>
         /// <param name="withdrawRepository"></param>
         /// <param name="staticTextRepository"></param>
+        /// <param name="couponRepository"></param>
+        /// <param name="moipRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
-            IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository)
+            IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository, ICouponRepository couponRepository, 
+            IMoipRepository moipRepository)
         {
             this.bannerRepo = bannerRepository;
             this.benefitRepo = benefitRepository;
@@ -63,6 +68,8 @@ namespace ias.Rebens.api.Controllers
             this.withdrawRepo = withdrawRepository;
             this.benefitUseRepo = benefitUseRepository;
             this.staticTextRepo = staticTextRepository;
+            this.couponRepo = couponRepository;
+            this.moipRepo = moipRepository;
         }
 
         /// <summary>
@@ -120,48 +127,7 @@ namespace ias.Rebens.api.Controllers
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
-        /// <summary>
-        /// Retorna uma lista com as perguntas frequentes
-        /// </summary>
-        /// <param name="operationCode">código da operação</param>
-        /// <returns>Lista das perguntas frequentes</returns>
-        /// <response code="200">Retorna a lista das perguntas frequentes, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpGet("ListFaq")]
-        [ProducesResponseType(typeof(JsonDataModel<List<FaqModel>>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListFaq([FromHeader(Name = "x-operation-code")]string operationCode)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-
-            var list = faqRepo.ListByOperation(operationGuid, out string error);
-
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.Count == 0)
-                    return NoContent();
-
-                var ret = new JsonDataModel<List<FaqModel>>()
-                {
-                    Data = new List<FaqModel>()
-                };
-
-                foreach (var item in list)
-                    ret.Data.Add(new FaqModel(item));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
+        
 
         /// <summary>
         /// Salvar um contato
@@ -323,21 +289,10 @@ namespace ias.Rebens.api.Controllers
                         return Ok(Data);
                     }
                 }
-                return NotFound(new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-            // TO READ CLAIMS
-            /*
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                foreach (var claim in principal.Claims)
-                {
-                    Console.WriteLine($"CLAIM TYPE: {claim.Type}; CLAIM VALUE: {claim.Value}");
-                }
-            }
-            */
         }
 
         /// <summary>
@@ -465,15 +420,25 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<BenefitModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Get(int id)
+        public IActionResult GetBenefit(int id)
         {
-            var benefit = benefitRepo.Read(id, out string error);
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
 
+            var benefit = benefitRepo.Read(id, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (benefit == null || benefit.Id == 0)
                     return NoContent();
-                return Ok(new JsonDataModel<BenefitModel>() { Data = new BenefitModel(benefit) });
+                return Ok(new JsonDataModel<BenefitModel>() { Data = new BenefitModel(benefit, idCustomer) });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -868,7 +833,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Retorna o histórico de Benefícios
+        /// Retorna o histórico de Benefícios do usuário logado
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
@@ -961,7 +926,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Retorna o histórico de Resgates
+        /// Retorna o histórico de Resgates do cliente logado
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
@@ -1004,6 +969,188 @@ namespace ias.Rebens.api.Controllers
                 };
                 foreach (var benefitUse in list.Page)
                     ret.Data.Add(new WithdrawItemModel(benefitUse));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna o histórico de Cupons do cliente logado
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <returns></returns>
+        /// <response code="200">Retorna o histórico de cupons do cliente, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("Coupons")]
+        [ProducesResponseType(typeof(ResultPageModel<CouponModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListCoupons([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var list = couponRepo.ListPageByCustomer(idCustomer, page, pageItems, out string error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<CouponModel>()
+                {
+                    Data = new List<CouponModel>(),
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+
+                };
+                foreach (var coupon in list.Page)
+                    ret.Data.Add(new CouponModel(coupon));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna a lista com os banners imperdíveis
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Retorna a lista com os banners Imperdíveis, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("UnmissableBanners")]
+        [ProducesResponseType(typeof(ResultPageModel<BannerModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListUnmissableBanners()
+        {
+            int idOperation = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (operationId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                if (!int.TryParse(operationId.Value, out idOperation))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
+            var list = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, out string error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<BannerModel>>()
+                {
+                    Data = new List<BannerModel>()
+                };
+                foreach (var banner in list)
+                    ret.Data.Add(new BannerModel(banner));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna as perguntas e respostas da página faq
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Retorna as perguntas e respostas da página faq, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("Faq")]
+        [ProducesResponseType(typeof(JsonDataModel<List<FaqModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Faq([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            if (operationGuid != null && operationGuid != Guid.Empty)
+            {
+                var list = faqRepo.ListByOperation(operationGuid, out string error);
+                if (string.IsNullOrEmpty(error))
+                {
+                    if (list == null || list.Count == 0)
+                        return NoContent();
+
+                    var ret = new JsonDataModel<List<FaqModel>>() { Data = new List<FaqModel>() };
+                    foreach (var faq in list)
+                        ret.Data.Add(new FaqModel(faq));
+
+                    return Ok(ret);
+                }
+
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
+        /// Retorna uma lista com o histórico de pagamento do cliente
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <returns>Lista com o histórico de pagamento</returns>
+        /// <response code="200">Retorna a lista com o histórico de pagamento, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListPayments")]
+        [ProducesResponseType(typeof(JsonDataModel<List<PaymentModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListPayments([FromQuery]int page = 0, int pageItems = 30)
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var list = moipRepo.ListPaymentsByCustomer(idCustomer, page, pageItems, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<PaymentModel>>()
+                {
+                    Data = new List<PaymentModel>()
+                };
+
+                foreach (var item in list)
+                    ret.Data.Add(new PaymentModel(item));
 
                 return Ok(ret);
             }

@@ -689,19 +689,6 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.ListByCustomer(System.Int32,System.Int32,System.String,System.String)">
-            <summary>
-            Lista as Indicações conforme os parametros
-            </summary>
-            <param name="page">página, não obrigatório (default=0)</param>
-            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-            <param name="sort">Ordenação campos (Id, Name, Email, Status), direção (ASC, DESC)</param>
-            <param name="searchWord">Palavra à ser buscada</param>
-            <returns>Lista com as Indicações encontradas</returns>
-            <response code="200">Retorna a lista, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
         <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.Get(System.Int32)">
             <summary>
             Retorna uma Indicação
@@ -914,6 +901,14 @@
             <param name="token"></param>
             <returns></returns>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.MoipNotificationController.Post(System.String,ias.Rebens.api.Models.MoipNotificationModel)">
+            <summary>
+            Webhook
+            </summary>
+            <param name="notification"></param>
+            <param name="Authorization"></param>
+            <returns></returns>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.OperationController">
             <summary>
             Operation Controller
@@ -1095,7 +1090,7 @@
             Partner Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PartnerController.#ctor(ias.Rebens.IPartnerRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IBenefitRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PartnerController.#ctor(ias.Rebens.IPartnerRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IStaticTextRepository)">
             <summary>
             Construtor
             </summary>
@@ -1103,6 +1098,7 @@
             <param name="contactRepository">Injeção de dependencia do repositório de contato</param>
             <param name="addressRepository">Injeção de dependencia do repositório de endereço</param>
             <param name="benefitRepository">Injeção de dependencia do repositório de benefício</param>
+            <param name="staticTextRepository">Injeção de dependencia do repositório de benefício</param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PartnerController.List(System.Int32,System.Int32,System.String,System.String)">
             <summary>
@@ -1239,7 +1235,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository)">
             <summary>
             Constructor
             </summary>
@@ -1254,6 +1250,8 @@
             <param name="operationRepository"></param>
             <param name="withdrawRepository"></param>
             <param name="staticTextRepository"></param>
+            <param name="couponRepository"></param>
+            <param name="moipRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1262,16 +1260,6 @@
             <param name="operationCode">código da operação</param>
             <returns>Retorna os items necessários para montar a home não logada</returns>
             <response code="200">Retorna o model com os items da home não logada, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.ListFaq(System.String)">
-            <summary>
-            Retorna uma lista com as perguntas frequentes
-            </summary>
-            <param name="operationCode">código da operação</param>
-            <returns>Lista das perguntas frequentes</returns>
-            <response code="200">Retorna a lista das perguntas frequentes, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
@@ -1328,7 +1316,7 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.Get(System.Int32)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.GetBenefit(System.Int32)">
             <summary>
             Retorna o benefício conforme o ID
             </summary>
@@ -1348,7 +1336,7 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.SignUp(System.String,ias.Rebens.api.Controllers.SignUpModel)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.SignUp(System.String,ias.Rebens.api.Models.SignUpModel)">
             <summary>
             Cria um novo cliente
             </summary>
@@ -1416,7 +1404,7 @@
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefitHistory(System.Int32,System.Int32)">
             <summary>
-            Retorna o histórico de Benefícios
+            Retorna o histórico de Benefícios do usuário logado
             </summary>
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
@@ -1436,7 +1424,7 @@
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.ListWithdraw(System.Int32,System.Int32)">
             <summary>
-            Retorna o histórico de Resgates
+            Retorna o histórico de Resgates do cliente logado
             </summary>
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
@@ -1445,20 +1433,45 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="T:ias.Rebens.api.Controllers.SignUpModel">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListCoupons(System.Int32,System.Int32)">
             <summary>
-            Model de cadastro
+            Retorna o histórico de Cupons do cliente logado
             </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <returns></returns>
+            <response code="200">Retorna o histórico de cupons do cliente, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="P:ias.Rebens.api.Controllers.SignUpModel.Cpf">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListUnmissableBanners">
             <summary>
-            CPF
+            Retorna a lista com os banners imperdíveis
             </summary>
+            <returns></returns>
+            <response code="200">Retorna a lista com os banners Imperdíveis, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="P:ias.Rebens.api.Controllers.SignUpModel.Email">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.Faq(System.String)">
             <summary>
-            E-mail
+            Retorna as perguntas e respostas da página faq
             </summary>
+            <returns></returns>
+            <response code="200">Retorna as perguntas e respostas da página faq, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListPayments(System.Int32,System.Int32)">
+            <summary>
+            Retorna uma lista com o histórico de pagamento do cliente
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <returns>Lista com o histórico de pagamento</returns>
+            <response code="200">Retorna a lista com o histórico de pagamento, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
             <summary>
@@ -2103,16 +2116,22 @@
             Como Utilizar
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.Link">
+            <summary>
+            Link do benefício
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.BenefitModel.#ctor">
             <summary>
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.BenefitModel.#ctor(ias.Rebens.Benefit)">
+        <member name="M:ias.Rebens.api.Models.BenefitModel.#ctor(ias.Rebens.Benefit,System.Nullable{System.Int32})">
             <summary>
             Construtor que recebe um Benefício e já popula os atributos
             </summary>
             <param name="benefit"></param>
+            <param name="idCustomer"></param>
         </member>
         <member name="M:ias.Rebens.api.Models.BenefitModel.GetEntity">
             <summary>
@@ -2611,6 +2630,61 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:ias.Rebens.api.Models.CouponModel">
+            <summary>
+            Model de cupom
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CouponModel.Id">
+            <summary>
+            Id 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CouponModel.Campaign">
+            <summary>
+            Campanha
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CouponModel.Code">
+            <summary>
+            Código
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CouponModel.Url">
+            <summary>
+            Url
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CouponModel.PlayedDate">
+            <summary>
+            Data que foi jogado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CouponModel.ValidationDate">
+            <summary>
+            Data de validação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CouponModel.Prize">
+            <summary>
+            Prêmio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CouponModel.Date">
+            <summary>
+            Data do Cupom
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CouponModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CouponModel.#ctor(ias.Rebens.Coupon)">
+            <summary>
+            Construtor
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.CustomerModel">
             <summary>
             Cliente
@@ -2624,6 +2698,11 @@
         <member name="P:ias.Rebens.api.Models.CustomerModel.Name">
             <summary>
             Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Surname">
+            <summary>
+            Sobrenome
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CustomerModel.IdOperation">
@@ -3316,6 +3395,46 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:ias.Rebens.api.Models.PaymentModel">
+            <summary>
+            Modelo do histórico de pagamento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PaymentModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PaymentModel.DueDate">
+            <summary>
+            Data de vencimento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PaymentModel.PayDate">
+            <summary>
+            Data de pagamento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PaymentModel.Receipt">
+            <summary>
+            Número do recibo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PaymentModel.PaymentMethod">
+            <summary>
+            Forma de pagamento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PaymentModel.Amount">
+            <summary>
+            Valor
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PaymentModel.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.PortalBannerModel">
             <summary>
             Portal Banner model 
@@ -3494,6 +3613,21 @@
         <member name="P:ias.Rebens.api.Models.ResultPageModel`1.HasPreviousPage">
             <summary>
             Possui página anterior
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.SignUpModel">
+            <summary>
+            Model de cadastro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.SignUpModel.Cpf">
+            <summary>
+            CPF
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.SignUpModel.Email">
+            <summary>
+            E-mail
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.StaticTextModel">

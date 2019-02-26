@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.IO;
 using Microsoft.DotNet.PlatformAbstractions;
 
+
 namespace ias.Rebens.api
 {
     public class Startup
@@ -94,8 +95,6 @@ namespace ias.Rebens.api
                 }
             });
 
-            
-
             services.AddTransient<IAddressRepository, AddressRepository>();
             services.AddTransient<IAdminUserRepository, AdminUserRepository>();
             services.AddTransient<IBankAccountRepository, BankAccountRepository>();
@@ -106,6 +105,8 @@ namespace ias.Rebens.api
             services.AddTransient<ICategoryRepository, CategoryRepository>();
             services.AddTransient<IConfigurationRepository, ConfigurationRepository>();
             services.AddTransient<IContactRepository, ContactRepository>();
+            services.AddTransient<ICouponCampaignRepository, CouponCampaignRepository>();
+            services.AddTransient<ICouponRepository, CouponRepository>();
             services.AddTransient<ICustomerRepository, CustomerRepository>();
             services.AddTransient<ICustomerReferalRepository, CustomerReferalRepository>();
             services.AddTransient<IFaqRepository, FaqRepository>();
@@ -113,6 +114,7 @@ namespace ias.Rebens.api
             services.AddTransient<IFormEstablishmentRepository, FormEstablishmentRepository>();
             services.AddTransient<IIntegrationTypeRepository, IntegrationTypeRepository>();
             services.AddTransient<ILogErrorRepository, LogErrorRepository>();
+            services.AddTransient<IMoipRepository, MoipRepository>();
             services.AddTransient<IOperationRepository, OperationRepository>();
             services.AddTransient<IOperationTypeRepository, OperationTypeRepository>();
             services.AddTransient<IPartnerRepository, PartnerRepository>();
@@ -122,9 +124,7 @@ namespace ias.Rebens.api
             services.AddTransient<IWithdrawRepository, WithdrawRepository>();
             services.AddTransient<IZanoxSaleRepository, ZanoxSaleRepository>();
 
-            services.AddDbContext<RebensContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-
+            services.AddDbContext<RebensContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -162,7 +162,15 @@ namespace ias.Rebens.api
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().AllowCredentials());
 
             // MVC
-            app.UseMvc();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute("Voucher", "Voucher/{code}", defaults: new { controller = "Voucher", action = "Index" });
+                routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
+            });
+
+            FluentScheduler.JobManager.Initialize(new SchedulerRegistry());
+
+            Rotativa.AspNetCore.RotativaConfiguration.Setup(env);
         }
     }
 }

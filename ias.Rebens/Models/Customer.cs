@@ -14,10 +14,12 @@ namespace ias.Rebens
             Coupons = new HashSet<Coupon>();
             Withdraws = new HashSet<Withdraw>();
             ZanoxSales = new HashSet<ZanoxSale>();
+            Signatures = new HashSet<MoipSignature>();
         }
 
         public int Id { get; set; }
         public string Name { get; set; }
+        public string Surname { get; set; }
         public int IdOperation { get; set; }
         public char Gender { get; set; }
         public DateTime? Birthday { get; set; }
@@ -42,6 +44,7 @@ namespace ias.Rebens
         public virtual ICollection<BenefitUse> BenefitUses { get; set; }
         public virtual ICollection<Coupon> Coupons { get; set; }
         public virtual ICollection<CustomerReferal> CustomerReferals { get; set; }
+        public virtual ICollection<MoipSignature> Signatures { get; set; }
         public virtual ICollection<Withdraw> Withdraws { get; set; }
         public virtual ICollection<ZanoxSale> ZanoxSales { get; set; }
 

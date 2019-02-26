@@ -107,6 +107,10 @@ namespace ias.Rebens.api.Models
         /// Como Utilizar
         /// </summary>
         public string HowToUse { get; set; }
+        /// <summary>
+        /// Link do benefício
+        /// </summary>
+        public string Link { get; set; }
 
         /// <summary>
         /// Construtor
@@ -117,7 +121,8 @@ namespace ias.Rebens.api.Models
         /// Construtor que recebe um Benefício e já popula os atributos
         /// </summary>
         /// <param name="benefit"></param>
-        public BenefitModel(Benefit benefit)
+        /// <param name="idCustomer"></param>
+        public BenefitModel(Benefit benefit, int? idCustomer = null)
         {
             this.Id = benefit.Id;
             this.Title = benefit.Title;
@@ -135,6 +140,12 @@ namespace ias.Rebens.api.Models
             this.Active = benefit.Active;
             this.IdIntegrationType = benefit.IdIntegrationType;
             this.IdPartner = benefit.IdPartner;
+
+            if (this.IdBenefitType == (int)Enums.BenefitType.OffLine && idCustomer.HasValue)
+                this.Link = "/Voucher/?code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+            if (this.IdBenefitType == (int)Enums.BenefitType.OnLine && idCustomer.HasValue)
+                this.Link = benefit.WebSite + (benefit.WebSite.IndexOf('?') > 0 ? "&" : "?") + "zpar0=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+
             if (benefit.BenefitType != null)
                 this.BenefitType = benefit.BenefitType.Name;
             if (benefit.Partner != null)

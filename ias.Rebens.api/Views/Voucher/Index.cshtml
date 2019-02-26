@@ -1,0 +1,76 @@
+﻿@model ias.Rebens.api.Models.VoucherModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <style>
+        .box{width:798px;height:398px;border:1px solid #f1f1f1;border-radius:20px;font-family:Arial, Helvetica, sans-serif;}
+        .box .top{width:100%;height:140px;border-bottom:1px solid #f1f1f1;}
+        .box .top .logo{width:200px;height:140px;float:left;text-align:center;position:relative;}
+        .box .top .logo img{max-width:160px;top:0;left:0;position:absolute;right:0;bottom:0;margin:auto;}
+        .box .top .infoes{width:598px;float:left;}
+        .box .top .infoes h3{margin:30px 0 0 50px;font-size:16px;}
+        .box .top .infoes h4{margin:4px 0 0 50px;font-size:16px;font-weight:400;}
+        .box .top .infoes p{margin:20px 0 0 50px;font-size:14px;}
+        .box .middle{width:100%;height:108px;padding:20px 0;}
+        .box .middle .logo{width:188px;height:108px;border-right:1px solid #f1f1f1;float:left;position:relative;}
+        .box .middle .logo img{position:absolute;max-width:150px;max-height:100px;top:0;left:0;right:0;bottom:0;margin:auto;}
+        .box .middle .discount{width:170px;height:108px;border-right:1px solid #f1f1f1;float:left;text-align:center;}
+        .box .middle .discount h1{font-size:60px;font-weight:500;margin:10px 0 0 0;}
+        .box .middle .discount h2{font-weight:600;margin:0;}
+        .box .middle .description{width:408px;height:150px;float:left;padding:0 15px;}
+        .box .middle .description p{margin:0 0 6px 0;font-size:13px;}
+        .box .bottom{width:100%;height:109px;background-color:#f1f1f1;border-radius:0 0 20px 20px;}
+        .box .bottom .store-msg{width:620px;float:left;}
+        .box .bottom .store-msg p{margin:0;font-size:13px;line-height:19px;padding-left:30px;}
+        .box .bottom .expire-date{width:178px;float:left;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="top">
+            <div class="logo">
+                <img src="@Model.ClubLogo" alt="@Model.ClubName" />
+            </div>
+            <div class="infoes">
+                <h3>@Model.CustomerName</h3>
+                <h4>CPF: @Model.CustomerDoc | Código: <b>@Model.Code</b></h4>
+                <p><i>Apresente o seu documento na hora de pagar a conta para obter o desconto.</i></p>
+            </div>
+        </div>
+        <div class="middle">
+            <div class="logo">
+                <img src="@Model.PartnerLogo" alt="@Model.PartnerName" />
+            </div>
+            <div class="discount">
+                <h1>@Model.Discount</h1>
+                <h2>DESCONTO</h2>
+            </div>
+            <div class="description">
+                <p><b>Como Utilizar:</b></p>
+                <p>@Model.HowToUse</p>
+            </div>
+        </div>
+        <div class="bottom">
+            <div class="store-msg">
+                <p><b>Logista</b><br />
+                <i>
+                    Verifique se a indentificação confere com a a presentada no cartão <br />
+                    Certifique-se que o voucher está dentro da data de validade.
+                </i>
+                </p>
+            </div>
+            <div class="expire-date">
+                <p>Validade: <b>@Model.ExpireDate</b></p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

@@ -45,8 +45,9 @@ namespace ias.Rebens
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
         public virtual DbSet<IntegrationType> IntegrationType { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }
-        public virtual DbSet<Permission> Permission { get; set; }
-        public virtual DbSet<Profile> Profile { get; set; }
+        public virtual DbSet<MoipInvoice> MoipInvoice { get; set; }
+        public virtual DbSet<MoipPayment> MoipPayment { get; set; }
+        public virtual DbSet<MoipSignature> MoipSignature { get; set; }
         public virtual DbSet<Operation> Operation { get; set; }
         public virtual DbSet<OperationAddress> OperationAddress { get; set; }
         public virtual DbSet<OperationContact> OperationContact { get; set; }
@@ -54,6 +55,8 @@ namespace ias.Rebens
         public virtual DbSet<Partner> Partner { get; set; }
         public virtual DbSet<PartnerAddress> PartnerAddress { get; set; }
         public virtual DbSet<PartnerContact> PartnerContact { get; set; }
+        public virtual DbSet<Permission> Permission { get; set; }
+        public virtual DbSet<Profile> Profile { get; set; }
         public virtual DbSet<StaticText> StaticText { get; set; }
         public virtual DbSet<StaticTextType> StaticTextType { get; set; }
         public virtual DbSet<Withdraw> Withdraw { get; set; }
@@ -326,9 +329,9 @@ namespace ias.Rebens
 
                 entity.Property(e => e.Modified).HasColumnType("datetime");
 
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(200);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
 
                 entity.HasOne(d => d.BenefitType)
                     .WithMany(p => p.BenefitUses)
@@ -460,6 +463,8 @@ namespace ias.Rebens
             modelBuilder.Entity<Customer>(entity =>
             {
                 entity.Property(e => e.Name).HasMaxLength(300);
+
+                entity.Property(e => e.Surname).HasMaxLength(300);
 
                 entity.Property(e => e.Gender).HasMaxLength(1);
 
@@ -609,6 +614,89 @@ namespace ias.Rebens
                     .HasMaxLength(500);
 
                 entity.Property(e => e.StackTrace).HasColumnType("text");
+            });
+
+            modelBuilder.Entity<MoipInvoice>(entity =>
+            {
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(500);
+
+                entity.Property(e => e.Amount).IsRequired().HasColumnType("money");
+
+                entity.Property(e => e.Created).IsRequired().HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).IsRequired().HasColumnType("datetime");
+
+                entity.HasOne(d => d.MoipSignature)
+                       .WithMany(p => p.Invoices)
+                       .HasForeignKey(d => d.IdMoipSignature)
+                       .OnDelete(DeleteBehavior.ClientSetNull)
+                       .HasConstraintName("FK_MoipInvoice_MoipSignature");
+            });
+
+            modelBuilder.Entity<MoipPayment>(entity =>
+            {
+                entity.Property(e => e.MoipId).IsRequired().HasColumnType("bigint");
+
+                entity.Property(e => e.Amount).IsRequired().HasColumnType("money");
+
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(500);
+
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+
+                entity.Property(e => e.Brand).HasMaxLength(50);
+
+                entity.Property(e => e.HolderName).HasMaxLength(300);
+
+                entity.Property(e => e.FirstSixDigits).HasMaxLength(50);
+
+                entity.Property(e => e.LastFourDigits).HasMaxLength(50);
+
+                entity.Property(e => e.Vault).HasMaxLength(50);
+
+                entity.Property(e => e.Created).IsRequired().HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).IsRequired().HasColumnType("datetime");
+
+                entity.HasOne(d => d.Invoice)
+                       .WithMany(p => p.Payments)
+                       .HasForeignKey(d => d.IdMoipInvoice)
+                       .OnDelete(DeleteBehavior.ClientSetNull)
+                       .HasConstraintName("FK_MoipPayment_MoipInvoice");
+
+                entity.HasOne(d => d.Signature)
+                       .WithMany(p => p.Payments)
+                       .HasForeignKey(d => d.IdMoipSignature)
+                       .OnDelete(DeleteBehavior.ClientSetNull)
+                       .HasConstraintName("FK_MoipPayment_MoipSignature");
+            });
+
+            modelBuilder.Entity<MoipSignature>(entity =>
+            {
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+
+                entity.Property(e => e.PlanCode).IsRequired().HasMaxLength(50);
+
+                entity.Property(e => e.CreationDate).HasColumnType("date");
+
+                entity.Property(e => e.ExpirationDate).HasColumnType("date");
+
+                entity.Property(e => e.NextInvoiceDate).HasColumnType("date");
+
+                entity.Property(e => e.PaymentMethod).HasMaxLength(50);
+
+                entity.Property(e => e.Status).HasMaxLength(50);
+
+                entity.Property(e => e.Amount).IsRequired().HasColumnType("money");
+
+                entity.Property(e => e.Created).IsRequired().HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).IsRequired().HasColumnType("datetime");
+
+                entity.HasOne(d => d.Customer)
+                   .WithMany(p => p.Signatures)
+                   .HasForeignKey(d => d.IdCustomer)
+                   .OnDelete(DeleteBehavior.ClientSetNull)
+                   .HasConstraintName("FK_MoipSignature_Customer");
             });
 
             modelBuilder.Entity<Permission>(entity =>

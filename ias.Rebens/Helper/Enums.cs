@@ -62,6 +62,13 @@ namespace ias.Rebens.Enums
         Unmissable = 3
     }
 
+    public enum BenefitType : int
+    {
+        OnLine = 1,
+        OffLine = 2,
+        Cashback = 3
+    }
+
     public enum AdminUserStatus: int
     {
         [Description("Ativo")]
@@ -156,6 +163,44 @@ namespace ias.Rebens.Enums
         pendent = 1,
         [Description("Tratado")]
         treat = 2
+    }
+
+    public enum CouponStatus : int
+    {
+        [Description("Novo")]
+        pendent = 1,
+        [Description("Aberto")]
+        opened = 2,
+        [Description("Raspado")]
+        played = 3,
+        [Description("Reivindicado")]
+        claimed = 4,
+        [Description("Validado")]
+        validated = 5,
+        [Description("Sem Prêmio")]
+        noprize = 6
+    }
+
+    public enum MoipPaymentStatus : int
+    {
+        [Description("Autorizado")]
+        authorized = 1,
+        [Description("Iniciado")]
+        started = 2,
+        [Description("Boleto impresso")]
+        billet_printed = 3,
+        [Description("Concluído")]
+        done = 4,
+        [Description("Cancelado")]
+        canceled = 5,
+        [Description("Em análise")]
+        in_analises = 6,
+        [Description("Estornado")]
+        reversed = 7,
+        [Description("Reembolsado")]
+        refunded = 9,
+        [Description("Aguardando")]
+        waiting = 10
     }
 
     public static class EnumHelper

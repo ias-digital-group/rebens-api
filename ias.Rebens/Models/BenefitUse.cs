@@ -10,6 +10,7 @@ namespace ias.Rebens
         public int IdBenefit { get; set; }
         public int IdCustomer { get; set; }
         public string Name { get; set; }
+        public string Code { get; set; }
         public int IdBenefitType { get; set; }
         public decimal? Amount { get; set; }
         public decimal? Comission { get; set; }

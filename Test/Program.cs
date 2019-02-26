@@ -24,12 +24,45 @@ namespace Test
 
         static void Main(string[] args)
         {
+            var encoding = Encoding.Unicode;
 
-            ListCampaigns();
+
+            int length = 12;
+            var list = new List<string>();
+            for (int i=0;i<100;i++)
+            {
+                string tmp = GenerateOTP(length);
+                Console.WriteLine(tmp);
+
+                if (list.Any(l => l == tmp))
+                    Console.WriteLine("############################## ERROR ###############################");
+                else
+                    list.Add(tmp);
+
+                Thread.Sleep(10);
+            }
 
             Console.WriteLine("DONE");
 
             Console.ReadLine();
+        }
+
+        public static string GenerateOTP(int length)
+        {
+            string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
+            string otp = string.Empty;
+            for (int i = 0; i < length; i++)
+            {
+                string character = string.Empty;
+                do
+                {
+                    int index = new Random().Next(0, characters.Length);
+                    character = characters.ToCharArray()[index].ToString();
+                } while (otp.IndexOf(character) != -1);
+                otp += character;
+            }
+            return otp;
         }
 
         public static string SimpleEncryption(string plainText)
@@ -79,15 +112,10 @@ namespace Test
             string CLIENT_SECRET = "QuWLSvP2GKM9QYGdkXUU8f4khEJpM9b";
 
             var postData = "campaign=cam_1010508";
-            postData += "&firstname=Israel";
-            postData += "&lastname=Silva";
-            postData += "&email=israellow@outlook.com";
-            postData += "&customid=1854445";
-            postData += "&customvalcode=m5d3vhc0c45ky683a5sarect7";
             var data = Encoding.ASCII.GetBytes(postData);
 
             ASCIIEncoding encoding = new ASCIIEncoding();
-            HttpWebRequest request = WebRequest.Create("https://api4coupons.com/v3/singleuse/create") as HttpWebRequest;
+            HttpWebRequest request = WebRequest.Create("https://api4coupons.com/v3/campaign/data") as HttpWebRequest;
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = data.Length;
@@ -106,6 +134,7 @@ namespace Test
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
+                    var list = new List<Coupon>();
                     var stream = response.GetResponseStream() as Stream;
                     byte[] buffer = new byte[32 * 1024];
                     int nRead = 0;
@@ -119,17 +148,118 @@ namespace Test
                     var responseString = encoding.GetString(successMs.ToArray());
                     var jObj = JObject.Parse(responseString);
 
-                    var status = jObj["status"]["status"].ToString() == "OK";
-                    Console.WriteLine("Campaing: {0} - Action:{1} - Code:{2} - url:{3} - Widget:{4} - CustomCode:{5} - CustomId:{6}",
-                        jObj["campaign"].ToString(), jObj["action"].ToString(), jObj["single_use_code"].ToString(), jObj["single_use_url"].ToString(), 
-                        jObj["widget_validation_code"].ToString(), jObj["custom_validation_code"].ToString(), jObj["customid"].ToString());
-                    
+                    if (jObj["status"]["status"].ToString() == "OK")
+                    {
+                        if(jObj["amount_of_results"].ToString() != "0")
+                        {
+                            var items = jObj["data"].Children();
+                            foreach(var item in items)
+                            {
+                                if (item["status"] != null && item["status"]["own_validation_code"] != null && item["status"]["own_validation_code"].ToString() == "")
+                                    continue;
+
+                                var coupon = new Coupon();
+                                coupon.SequenceId = Convert.ToInt64(item["sequenceid"].ToString());
+                                if (item["status"]["open_date_utc"] != null && !string.IsNullOrEmpty(item["status"]["open_date_utc"].ToString()))
+                                {
+                                    if (DateTime.TryParse(item["status"]["open_date_utc"].ToString(), out DateTime dt))
+                                        coupon.OpenDate = dt;
+                                }
+                                if (item["status"]["played_date_utc"] != null && !string.IsNullOrEmpty(item["status"]["played_date_utc"].ToString()))
+                                {
+                                    if (DateTime.TryParse(item["status"]["played_date_utc"].ToString(), out DateTime dt))
+                                        coupon.PlayedDate = dt;
+                                }
+                                if (item["status"]["claim_date_utc"] != null && !string.IsNullOrEmpty(item["status"]["claim_date_utc"].ToString()))
+                                {
+                                    if (DateTime.TryParse(item["status"]["claim_date_utc"].ToString(), out DateTime dt))
+                                        coupon.ClaimDate = dt;
+                                }
+                                if (item["status"]["validation_date_utc"] != null && !string.IsNullOrEmpty(item["status"]["validation_date_utc"].ToString()))
+                                {
+                                    if (DateTime.TryParse(item["status"]["validation_date_utc"].ToString(), out DateTime dt))
+                                        coupon.ValidationDate = dt;
+                                }
+                                if (item["status"]["voided_date_utc"] != null && !string.IsNullOrEmpty(item["status"]["voided_date_utc"].ToString()))
+                                {
+                                    if (DateTime.TryParse(item["status"]["voided_date_utc"].ToString(), out DateTime dt))
+                                        coupon.VoidedDate = dt;
+                                }
+                                if (item["status"]["locked"] != null && !string.IsNullOrEmpty(item["status"]["locked"].ToString()))
+                                    coupon.Locked = item["status"]["locked"].ToString() == "1";
+                                if (item["status"]["claimtype"] != null && !string.IsNullOrEmpty(item["status"]["claimtype"].ToString()))
+                                    coupon.ClaimType = item["status"]["claimtype"].ToString();
+                                if (item["status"]["validation_value"] != null && !string.IsNullOrEmpty(item["status"]["validation_value"].ToString()))
+                                    coupon.ValidationValue = item["status"]["validation_value"].ToString();
+                                if (item["status"]["value"] != null && !string.IsNullOrEmpty(item["status"]["value"].ToString()))
+                                    coupon.Value = item["status"]["value"].ToString();
+                                if (item["status"]["own_validation_code"] != null && !string.IsNullOrEmpty(item["status"]["value"].ToString()))
+                                    coupon.ValidationCode = item["status"]["own_validation_code"].ToString();
+                                if (item["session"] != null && !string.IsNullOrEmpty(item["session"].ToString()))
+                                    coupon.SingleUseCode = item["session"].ToString();
+                                list.Add(coupon);
+                            }
+                        }
+                    }
+
+                    foreach (var coupon in list) {
+                        Console.WriteLine("INSERT INTO Coupon VALUES(30, 1, '{0}', 'Raspadinha Unicap', '{1}', 'https://digicpn.com/p/uzsdqq/{2}', null, {3}, {4}, {5}, '{6}', {7}, '{8}', {9}, 0, '{10}', {11}, 1, GETDATE(), GETDATE() , GETDATE())",                            coupon.ValidationCode, coupon.SingleUseCode, coupon.SingleUseCode,
+                            coupon.OpenDate.HasValue ? "'" + coupon.OpenDate.Value.ToString("yyyy-MM-dd HH:mm:ss") + "'" : "NULL",
+                            coupon.PlayedDate.HasValue ? "'" + coupon.PlayedDate.Value.ToString("yyyy-MM-dd HH:mm:ss") + "'" : "NULL",
+                            coupon.ClaimDate.HasValue ? "'" + coupon.ClaimDate.Value.ToString("yyyy-MM-dd HH:mm:ss") + "'" : "NULL",
+                            coupon.ClaimType,
+                            coupon.ValidationDate.HasValue ? "'" + coupon.ValidationDate.Value.ToString("yyyy-MM-dd HH:mm:ss") + "'" : "NULL",
+                            coupon.ValidationValue,
+                            coupon.VoidedDate.HasValue ? "'" + coupon.VoidedDate.Value.ToString("yyyy-MM-dd HH:mm:ss") + "'" : "NULL",
+                            coupon.Value,
+                            coupon.SequenceId
+                            );
+                    }
+
+                    /*
+ValidationCode = 0
+SingleUseCode = 1
+SingleUseUrl = 2
+OpenDate = 3
+PlayedDate = 4
+ClaimDate = 5
+ClaimType = 6
+ValidationDate = 7
+ValidationValue = 8
+VoidedDate = 9
+Value = 10
+SequenceId = 11*/
+
                 }
             }
             catch (WebException ex)
             {
                 
             }
+        }
+
+        public static string GenerateSalt()
+        {
+            using (var randomNumberGenerator = new RNGCryptoServiceProvider())
+            {
+                var randomNumber = new byte[SaltLength];
+                randomNumberGenerator.GetBytes(randomNumber);
+
+                return Convert.ToBase64String(randomNumber);
+            }
+        }
+
+        public static string EncryptPassword(string password, string salt)
+        {
+            var sha = SHA512.Create();
+            byte[] pwd512;
+            string encryptedPassword = password;
+            for (int i = 0; i < Pbkdf2Iterations; i++)
+            {
+                pwd512 = sha.ComputeHash(Encoding.UTF8.GetBytes(encryptedPassword + salt));
+                encryptedPassword = Convert.ToBase64String(pwd512);
+            }
+            return encryptedPassword;
         }
 
         #region Zanox Test
@@ -311,21 +441,30 @@ namespace Test
             return calcHashString;
         }
         #endregion Zanox Test
-
-
-
-
     }
 
-    class CouponCampaign
+    class Coupon
     {
         public int Id { get; set; }
-        public string CampaignId { get; set; }
-        public string Code { get; set; }
-        public string Url { get; set; }
-        public string Name { get; set; }
-        public string Status { get; set; }
-        public string Title { get; set; }
+        public int IdCustomer { get; set; }
+        public int IdCouponCampaign { get; set; }
+        public string ValidationCode { get; set; }
+        public string Campaign { get; set; }
+        public string SingleUseCode { get; set; }
+        public string SingleUseUrl { get; set; }
+        public string WidgetValidationCode { get; set; }
+        public DateTime? OpenDate { get; set; }
+        public DateTime? PlayedDate { get; set; }
+        public DateTime? ClaimDate { get; set; }
+        public string ClaimType { get; set; }
+        public DateTime? ValidationDate { get; set; }
+        public string ValidationValue { get; set; }
+        public DateTime? VoidedDate { get; set; }
+        public bool Locked { get; set; }
+        public string Value { get; set; }
+        public long SequenceId { get; set; }
+        public int Status { get; set; }
+        public DateTime VerifiedDate { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
     }
