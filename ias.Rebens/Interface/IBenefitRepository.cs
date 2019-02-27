@@ -47,5 +47,7 @@ namespace ias.Rebens
         void ReadCallAndPartnerLogo(int idBenefit, out string call, out string logo, out string error);
 
         List<Benefit> ListActive(out string error);
+
+        bool SaveCategories(int idBenefit, string categoryIds, out string error);
     }
 }

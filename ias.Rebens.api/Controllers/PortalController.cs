@@ -158,8 +158,9 @@ namespace ias.Rebens.api.Controllers
                 f.IdOperation = operation.Id;
                 if (formContactRepo.Create(f, out error))
                 {
-                    //var sendingBlue = new Integration.SendinBlueHelper();
-                    //sendingBlue.Send(email.ToEmail, email.ToName, email.FromEmail, email.FromName, email.Subject, email.Message);
+                    var sendingBlue = new Integration.SendinBlueHelper();
+                    var body = $"<p>Nome: {formContact.Name}<br />Email: {formContact.Email}<br />Telefone: {formContact.Phone}<br />Mensagem: {formContact.Message}</p>";
+                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", "Novo Contato [{operation.Title}]", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Contato enviado com sucesso!", Id = f.Id });
                 }
@@ -199,8 +200,9 @@ namespace ias.Rebens.api.Controllers
                 f.IdOperation = operation.Id;
                 if (formEstablishmentRepo.Create(f, out error))
                 {
-                    //var sendingBlue = new Integration.SendinBlueHelper();
-                    //sendingBlue.Send(email.ToEmail, email.ToName, email.FromEmail, email.FromName, email.Subject, email.Message);
+                    var sendingBlue = new Integration.SendinBlueHelper();
+                    string body = $"<p>Nome: {formEstablishment.Name}<br />Email: {formEstablishment.Email}<br />Estabelecimento: {formEstablishment.Establishment}<br />Site: {formEstablishment.WebSite}<br />Responsável: {formEstablishment.Responsible}<br />Email Responsável: {formEstablishment.ResponsibleEmail}<br />Cidade: {formEstablishment.City}<br />Estado: {formEstablishment.State}</p>";
+                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", "Novo Contato [{operation.Title}]", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Indicação enviada com sucesso!", Id = f.Id });
                 }
@@ -668,6 +670,7 @@ namespace ias.Rebens.api.Controllers
             if (!string.IsNullOrEmpty(error))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
+            cust.Status = (int)Enums.CustomerStatus.Active;
             if (customerRepo.Update(cust, out error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Cliente atualizado com sucesso!" });
 

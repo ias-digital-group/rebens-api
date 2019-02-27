@@ -92,6 +92,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string PartnerImage { get; set; }
         /// <summary>
+        /// Descrição do Parceiro
+        /// </summary>
+        public string PartnerDescription { get; set; }
+        /// <summary>
         /// Tipo de Integração
         /// </summary>
         public string IntegrationType { get; set; }
@@ -149,7 +153,11 @@ namespace ias.Rebens.api.Models
             if (benefit.BenefitType != null)
                 this.BenefitType = benefit.BenefitType.Name;
             if (benefit.Partner != null)
+            {
                 this.PartnerImage = benefit.Partner.Logo;
+                if(benefit.Partner.StaticText != null)
+                    this.PartnerDescription = benefit.Partner.StaticText.Html;
+            }
             if (benefit.IntegrationType != null)
                 this.IntegrationType = benefit.IntegrationType.Name;
             if(benefit.StaticTexts != null)

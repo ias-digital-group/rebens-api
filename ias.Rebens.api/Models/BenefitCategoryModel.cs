@@ -19,4 +19,22 @@ namespace ias.Rebens.api.Models
         [Required]
         public int IdCategory { get; set; }
     }
+
+    /// <summary>
+    /// Relacionamento Beneficio com Categoria
+    /// </summary>
+    public class BenefitCategoriesModel
+    {
+        /// <summary>
+        /// Id do benefício
+        /// </summary>
+        [Required]
+        public int IdBenefit { get; set; }
+
+        /// <summary>
+        /// ids das categorias selecionadas separado por ','
+        /// </summary>
+        [Required]
+        public string CategoryIds { get; set; }
+    }
 }

@@ -206,6 +206,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Benefit.Include("BenefitOperations").Include("BenefitAddresses").Include("StaticTexts").Include("Partner").SingleOrDefault(c => c.Id == id);
+                    if (ret.Partner != null && ret.Partner.IdStaticText.HasValue)
+                        ret.Partner.StaticText = db.StaticText.SingleOrDefault(s => s.Id == ret.Partner.IdStaticText.Value);
                     error = null;
                 }
             }
@@ -685,6 +687,35 @@ namespace ias.Rebens
                 int idLog = logError.Create("BenefitRepository.ListActive", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public bool SaveCategories(int idBenefit, string categoryIds, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var categories = db.BenefitCategory.Where(b => b.IdBenefit == idBenefit);
+                    db.BenefitCategory.RemoveRange(categories);
+                    db.SaveChanges();
+
+                    var ids = categoryIds.Split(',');
+                    foreach(var id in ids)
+                        db.BenefitCategory.Add(new BenefitCategory() { IdCategory = int.Parse(id), IdBenefit = idBenefit });
+
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.SaveCategories", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar salvar as categorias. (erro:" + idLog + ")";
+                ret = false;
             }
             return ret;
         }

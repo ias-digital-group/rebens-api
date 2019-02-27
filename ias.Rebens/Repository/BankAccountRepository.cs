@@ -45,7 +45,10 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var item = db.BankAccount.SingleOrDefault(c => c.Id == id);
-                    db.BankAccount.Remove(item);
+                    if (db.Withdraw.Any(w => w.IdBankAccount == item.Id))
+                        item.Active = false;
+                    else
+                        db.BankAccount.Remove(item);
                     db.SaveChanges();
                     error = null;
                 }
@@ -88,7 +91,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.BankAccount.Include("Bank").Where(b => idCustomer == b.IdCustomer && (string.IsNullOrEmpty(word) || b.Type  == word || b.Bank.Name.Contains(word) || b.Branch.Contains(word) || b.AccountNumber.Contains(word)));
+                    var tmpList = db.BankAccount.Include("Bank").Where(b => idCustomer == b.IdCustomer && b.Active && (string.IsNullOrEmpty(word) || b.Type  == word || b.Bank.Name.Contains(word) || b.Branch.Contains(word) || b.AccountNumber.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "name asc":

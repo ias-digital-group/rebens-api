@@ -13,29 +13,6 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public bool Create(ZanoxSale zanoxSale, out string error)
-        {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    zanoxSale.Modified = zanoxSale.Created = DateTime.UtcNow;
-                    db.ZanoxSale.Add(zanoxSale);
-                    db.SaveChanges();
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("ZanoxSaleRepository.Create", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar criar um pedidos zanox. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
         public bool Delete(int id, out string error)
         {
             bool ret = true;
@@ -176,7 +153,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(ZanoxSale zanoxSale, out string error)
+        public bool Save(ZanoxSale zanoxSale, out string error)
         {
             bool ret = true;
             try
@@ -184,6 +161,10 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.ZanoxSale.SingleOrDefault(c => c.Id == zanoxSale.Id);
+
+                    if(update == null)
+                        update = db.ZanoxSale.SingleOrDefault(c => c.ZanoxId == zanoxSale.ZanoxId);
+
                     if (update != null)
                     {
                         update.ZanoxId = zanoxSale.ZanoxId;
@@ -213,14 +194,20 @@ namespace ias.Rebens
                         error = null;
                     }
                     else
-                        error = "Pedido não encontrado!";
+                    {
+                        zanoxSale.Created = zanoxSale.Modified = DateTime.Now;
+                        db.ZanoxSale.Add(zanoxSale);
+                        db.SaveChanges();
+                        error = null;
+                    }
+                        
                 }
             }
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("ZanoxSaleRepository.Update", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar atualizar o pedido. (erro:" + idLog + ")";
+                int idLog = logError.Create("ZanoxSaleRepository.Save", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar salvar o pedido. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;

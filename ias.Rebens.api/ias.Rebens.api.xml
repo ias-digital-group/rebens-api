@@ -383,6 +383,15 @@
             <response code="200">Víncula um benefício com uma categoria</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.SaveCategories(ias.Rebens.api.Models.BenefitCategoriesModel)">
+            <summary>
+            Adiciona uma categoria a um benefício
+            </summary>
+            <param name="model">{ IdBenefit: 0, IdCategory: 0 }</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Víncula um benefício com uma categoria</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.RemoveCategory(System.Int32,System.Int32)">
             <summary>
             Remove uma categoria de um benefício
@@ -2001,6 +2010,21 @@
             Id da categoria
             </summary>
         </member>
+        <member name="T:ias.Rebens.api.Models.BenefitCategoriesModel">
+            <summary>
+            Relacionamento Beneficio com Categoria
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitCategoriesModel.IdBenefit">
+            <summary>
+            Id do benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitCategoriesModel.CategoryIds">
+            <summary>
+            ids das categorias selecionadas separado por ','
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.BenefitModel">
             <summary>
             Benefício
@@ -2094,6 +2118,11 @@
         <member name="P:ias.Rebens.api.Models.BenefitModel.PartnerImage">
             <summary>
             Logo do Parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.PartnerDescription">
+            <summary>
+            Descrição do Parceiro
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.BenefitModel.IntegrationType">

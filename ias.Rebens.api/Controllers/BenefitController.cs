@@ -323,6 +323,26 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Adiciona uma categoria a um benefício
+        /// </summary>
+        /// <param name="model">{ IdBenefit: 0, IdCategory: 0 }</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Víncula um benefício com uma categoria</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("SaveCategories")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SaveCategories([FromBody]BenefitCategoriesModel model)
+        {
+            var resultModel = new JsonModel();
+
+            if (repo.SaveCategories(model.IdBenefit, model.CategoryIds, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Categorias salvas com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
         /// Remove uma categoria de um benefício
         /// </summary>
         /// <param name="id">id do benefício</param>
