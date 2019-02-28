@@ -94,6 +94,25 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    var benefitAddress = db.BenefitAddress.Where(a => a.IdBenefit == id);
+                    var addresses = db.Address.Where(a => a.BenefitAddresses.Any(b => b.IdBenefit == id));
+                    var categories = db.BenefitCategory.Where(c => c.IdBenefit == id);
+                    var operations = db.BenefitOperation.Where(o => o.IdBenefit == id);
+                    var staticTexts = db.StaticText.Where(s => s.IdBenefit == id);
+                    var banners = db.Banner.Where(b => b.IdBenefit == id);
+                    var bannerOperations = db.BannerOperation.Where(o => o.Banner.IdBenefit == id);
+
+                    db.BenefitAddress.RemoveRange(benefitAddress);
+                    db.BenefitCategory.RemoveRange(categories);
+                    db.BenefitOperation.RemoveRange(operations);
+                    db.StaticText.RemoveRange(staticTexts);
+                    db.BannerOperation.RemoveRange(bannerOperations);
+                    db.SaveChanges();
+
+                    db.Banner.RemoveRange(banners);
+                    db.Address.RemoveRange(addresses);
+                    db.SaveChanges();
+
                     var benefit = db.Benefit.SingleOrDefault(c => c.Id == id);
                     db.Benefit.Remove(benefit);
                     db.SaveChanges();
@@ -118,8 +137,11 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmp = db.BenefitAddress.SingleOrDefault(o => o.IdBenefit == idBenefit && o.IdAddress == idAddress);
-                    db.BenefitAddress.Remove(tmp);
-                    db.SaveChanges();
+                    if (tmp != null)
+                    {
+                        db.BenefitAddress.Remove(tmp);
+                        db.SaveChanges();
+                    }
                     error = null;
                 }
             }
@@ -141,8 +163,11 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmp = db.BenefitOperation.SingleOrDefault(o => o.IdBenefit == idBenefit && o.IdOperation == idOperation);
-                    db.BenefitOperation.Remove(tmp);
-                    db.SaveChanges();
+                    if (tmp != null)
+                    {
+                        db.BenefitOperation.Remove(tmp);
+                        db.SaveChanges();
+                    }
                     error = null;
                 }
             }
@@ -614,8 +639,11 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmp = db.BenefitCategory.SingleOrDefault(o => o.IdBenefit == idBenefit && o.IdCategory == idCategory);
-                    db.BenefitCategory.Remove(tmp);
-                    db.SaveChanges();
+                    if (tmp != null)
+                    {
+                        db.BenefitCategory.Remove(tmp);
+                        db.SaveChanges();
+                    }
                     error = null;
                 }
             }
@@ -650,14 +678,18 @@ namespace ias.Rebens
             return ret;
         }
 
-        public void ReadCallAndPartnerLogo(int idBenefit, out string call, out string logo, out string error)
+        public void ReadCallAndPartnerLogo(int idBenefit, out string title, out string call, out string logo, out string error)
         {
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    call = db.StaticText.SingleOrDefault(s => s.IdBenefit == idBenefit && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall).Html;
-                    logo = db.Partner.SingleOrDefault(p => p.Benefits.Any(b => b.Id == idBenefit)).Logo;
+                    var staticCall = db.StaticText.SingleOrDefault(s => s.IdBenefit == idBenefit && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall);
+                    call = staticCall != null ? staticCall.Html : "";
+                    var partner = db.Partner.SingleOrDefault(p => p.Benefits.Any(b => b.Id == idBenefit));
+                    logo = partner != null ? partner.Logo : "";
+                    var benefit = db.Benefit.SingleOrDefault(s => s.Id == idBenefit);
+                    title = benefit != null ? benefit.Title : "";
                     error = null;
                 }
             }
@@ -666,7 +698,7 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("BenefitRepository.ReadCallAndPartnerLogo", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler a chamada e o logo do parceiro. (erro:" + idLog + ")";
-                logo = call = null;
+                title = logo = call = null;
             }
         }
 
@@ -702,11 +734,17 @@ namespace ias.Rebens
                     db.BenefitCategory.RemoveRange(categories);
                     db.SaveChanges();
 
-                    var ids = categoryIds.Split(',');
-                    foreach(var id in ids)
-                        db.BenefitCategory.Add(new BenefitCategory() { IdCategory = int.Parse(id), IdBenefit = idBenefit });
+                    if (!string.IsNullOrEmpty(categoryIds))
+                    {
+                        var ids = categoryIds.Split(',');
+                        if (ids.Length > 0)
+                        {
+                            foreach (var id in ids)
+                                db.BenefitCategory.Add(new BenefitCategory() { IdCategory = int.Parse(id), IdBenefit = idBenefit });
 
-                    db.SaveChanges();
+                            db.SaveChanges();
+                        }
+                    }
                     error = null;
                 }
             }

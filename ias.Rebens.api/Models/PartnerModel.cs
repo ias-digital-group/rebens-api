@@ -35,7 +35,10 @@ namespace ias.Rebens.api.Models
         /// Descrição do Parceiro
         /// </summary>
         public string Description { get; set; }
-
+        /// <summary>
+        /// Status
+        /// </summary>
+        public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
         /// <summary>
         /// Contatos do parceiro
         /// </summary>

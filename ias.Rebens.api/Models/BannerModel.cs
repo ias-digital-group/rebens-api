@@ -33,7 +33,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Link
         /// </summary>
-        [Required]
         [MaxLength(500)]
         public string Link { get; set; }
         /// <summary>
@@ -55,6 +54,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public int? IdBenefit { get; set; }
         /// <summary>
+        /// é de benefício
+        /// </summary>
+        public bool IsBenefit { get { return this.IdBenefit.HasValue; } }
+        /// <summary>
         /// Ativo
         /// </summary>
         [Required]
@@ -62,11 +65,17 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Data de inicio
         /// </summary>
-        public DateTime? Start { get; set; }
+        [Required]
+        public DateTime Start { get; set; }
         /// <summary>
         /// Data fim
         /// </summary>
-        public DateTime? End { get; set; }
+        [Required]
+        public DateTime End { get; set; }
+        /// <summary>
+        /// Status
+        /// </summary>
+        public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
 
         /// <summary>
         /// Construtor
@@ -89,8 +98,8 @@ namespace ias.Rebens.api.Models
             this.BackgroundColor = banner.BackgroundColor;
             this.IdBenefit = banner.IdBenefit;
             this.Active = banner.Active;
-            this.Start = banner.Start;
-            this.End = banner.End;
+            this.Start = banner.Start.Value;
+            this.End = banner.End.Value;
         }
 
         /// <summary>

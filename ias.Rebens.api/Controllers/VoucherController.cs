@@ -12,7 +12,7 @@ namespace ias.Rebens.api.Controllers
         private IBenefitUseRepository benefitUseRepo;
         private IBenefitRepository benefitRepo;
         private ICustomerRepository customerRepo;
-        public IOperationRepository operationRepo;
+        private IOperationRepository operationRepo;
 
         public VoucherController(IBenefitUseRepository benefitUseRepository, IBenefitRepository benefitRepository, ICustomerRepository customerRepository, IOperationRepository operationRepository)
         {
@@ -69,7 +69,7 @@ namespace ias.Rebens.api.Controllers
                             HowToUse = howToUse
                         };
 
-                        return new ViewAsPdf("Index", model);
+                        return new ViewAsPdf("Index", "voucher.pdf", model);
                     }
                 }
             }

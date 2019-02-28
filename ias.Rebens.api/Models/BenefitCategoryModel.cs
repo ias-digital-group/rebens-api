@@ -34,7 +34,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// ids das categorias selecionadas separado por ','
         /// </summary>
-        [Required]
         public string CategoryIds { get; set; }
     }
 }

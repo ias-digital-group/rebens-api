@@ -114,6 +114,68 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="T:ias.Rebens.api.Controllers.AdminUserController">
+            <summary>
+            AdminUser Controller
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IAdminUserRepository)">
+            <summary>
+            Consturctor
+            </summary>
+            <param name="operationRepository"></param>
+            <param name="adminUserRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.List(System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Retorna uma lista de usuários conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os usuários encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.Get(System.Int32)">
+            <summary>
+            Retorna Usuário conforme o ID
+            </summary>
+            <param name="id">Id do usuário desejada</param>
+            <returns>Categoria</returns>
+            <response code="200">Retorna o usuário, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.Put(ias.Rebens.api.Models.AdminUserModel)">
+            <summary>
+            Atualiza um usuário
+            </summary>
+            <param name="user"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.Post(ias.Rebens.api.Models.AdminUserModel)">
+            <summary>
+            Cria um usuário
+            </summary>
+            <param name="user"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do usuário criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.Delete(System.Int32)">
+            <summary>
+            Apaga um usuário
+            </summary>
+            <param name="id">Id do usuário a ser apagada</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.BankAccountController">
             <summary>
             Bank Account Controller
@@ -329,6 +391,15 @@
             <param name="benefit"></param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do benefício criado</returns>
             <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.Delete(System.Int32)">
+            <summary>
+            Remove um Benefício
+            </summary>
+            <param name="id">id do benefídio</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Remove o benefício</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.BenefitController.ListAddress(System.Int32,System.Int32,System.Int32,System.String,System.String)">
@@ -1892,6 +1963,11 @@
             Id do benefício
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.IsBenefit">
+            <summary>
+            é de benefício
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.BannerModel.Active">
             <summary>
             Ativo
@@ -1905,6 +1981,11 @@
         <member name="P:ias.Rebens.api.Models.BannerModel.End">
             <summary>
             Data fim
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.StatusName">
+            <summary>
+            Status
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.BannerModel.#ctor">
@@ -2148,6 +2229,11 @@
         <member name="P:ias.Rebens.api.Models.BenefitModel.Link">
             <summary>
             Link do benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.StatusName">
+            <summary>
+            Status
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.BenefitModel.#ctor">
@@ -2481,6 +2567,11 @@
         <member name="P:ias.Rebens.api.Models.CategoryModel.Categories">
             <summary>
             Lista de categorias filhas, caso seja uma categoria pai
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CategoryModel.StatusName">
+            <summary>
+            Status
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.CategoryModel.#ctor">
@@ -2943,6 +3034,11 @@
             Ativo
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.FaqModel.StatusName">
+            <summary>
+            Status
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.FaqModel.#ctor">
             <summary>
             Construtor
@@ -3397,6 +3493,11 @@
             Descrição do Parceiro
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.PartnerModel.StatusName">
+            <summary>
+            Status
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.PartnerModel.Contacts">
             <summary>
             Contatos do parceiro
@@ -3504,9 +3605,19 @@
             Cor de fundo
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.PortalBannerModel.Title">
+            <summary>
+            Título
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.PortalBannerModel.BenefitCall">
             <summary>
             Chamada do Benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalBannerModel.IdBenefit">
+            <summary>
+            Id do benefício
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.PortalBannerModel.PartnerLogo">
@@ -3519,11 +3630,12 @@
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.PortalBannerModel.#ctor(ias.Rebens.Banner,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Models.PortalBannerModel.#ctor(ias.Rebens.Banner,System.String,System.String,System.String)">
             <summary>
             Construtor que recebe um Banner e popula os atributos
             </summary>
             <param name="banner"></param>
+            <param name="title"></param>
             <param name="benefitCall"></param>
             <param name="partnerLogo"></param>
         </member>

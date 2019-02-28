@@ -115,7 +115,10 @@ namespace ias.Rebens.api.Models
         /// Link do benefício
         /// </summary>
         public string Link { get; set; }
-
+        /// <summary>
+        /// Status
+        /// </summary>
+        public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
         /// <summary>
         /// Construtor
         /// </summary>
@@ -144,11 +147,13 @@ namespace ias.Rebens.api.Models
             this.Active = benefit.Active;
             this.IdIntegrationType = benefit.IdIntegrationType;
             this.IdPartner = benefit.IdPartner;
+            this.Link = benefit.WebSite;
 
             if (this.IdBenefitType == (int)Enums.BenefitType.OffLine && idCustomer.HasValue)
-                this.Link = "/Voucher/?code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
-            if (this.IdBenefitType == (int)Enums.BenefitType.OnLine && idCustomer.HasValue)
+                this.Link = "http://admin.rebens.com.br/Voucher/?code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+            if (this.IdBenefitType == (int)Enums.BenefitType.Cashback && idCustomer.HasValue)
                 this.Link = benefit.WebSite + (benefit.WebSite.IndexOf('?') > 0 ? "&" : "?") + "zpar0=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+
 
             if (benefit.BenefitType != null)
                 this.BenefitType = benefit.BenefitType.Name;

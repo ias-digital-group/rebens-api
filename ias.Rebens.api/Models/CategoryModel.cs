@@ -50,7 +50,10 @@ namespace ias.Rebens.api.Models
         /// Lista de categorias filhas, caso seja uma categoria pai
         /// </summary>
         public List<CategoryModel> Categories { get; set; }
-
+        /// <summary>
+        /// Status
+        /// </summary>
+        public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
         /// <summary>
         /// Construtor
         /// </summary>

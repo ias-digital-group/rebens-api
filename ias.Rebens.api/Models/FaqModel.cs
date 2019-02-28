@@ -45,7 +45,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public bool Active { get; set; }
-
+        /// <summary>
+        /// Status
+        /// </summary>
+        public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
         /// <summary>
         /// Construtor
         /// </summary>

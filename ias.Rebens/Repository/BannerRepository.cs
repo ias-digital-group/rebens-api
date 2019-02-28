@@ -96,8 +96,11 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmp = db.BannerOperation.SingleOrDefault(o => o.IdBanner == idBanner && o.IdOperation == idOperation);
-                    db.BannerOperation.Remove(tmp);
-                    db.SaveChanges();
+                    if (tmp != null)
+                    {
+                        db.BannerOperation.Remove(tmp);
+                        db.SaveChanges();
+                    }
                     error = null;
                 }
             }
@@ -212,8 +215,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.Operation.Code == operationCode) && b.Type == type && 
-                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && b.Benefit.Active)
+                    ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.Operation.Code == operationCode) && b.Type == type &&
+                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && (!b.IdBenefit.HasValue  || (b.IdBenefit.HasValue && b.Benefit.Active)))
                                 .OrderBy(b => b.Order).ToList();
                    
                     error = null;
@@ -237,7 +240,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Type == type &&
-                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && b.Benefit.Active)
+                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && b.Benefit.Active)))
                                 .OrderBy(b => b.Order).ToList();
 
                     error = null;

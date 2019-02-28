@@ -42,7 +42,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Papéis do usuário
         /// </summary>
-        [Required]
         [MaxLength(500)]
         public string Roles { get; set; }
 

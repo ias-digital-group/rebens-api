@@ -111,14 +111,14 @@ namespace ias.Rebens.api.Controllers
                     }
                 };
                 foreach (var banner in listUnmissable)
-                    ret.Data.BannerUnmissable.Add(new PortalBannerModel(banner, null, null));
+                    ret.Data.BannerUnmissable.Add(new PortalBannerModel(banner, null, null, null));
 
                 foreach (var banner in listFull)
                 {
-                    string call = null, logo = null;
+                    string call = null, logo = null, title = null;
                     if (banner.IdBenefit.HasValue)
-                        benefitRepo.ReadCallAndPartnerLogo(banner.IdBenefit.Value, out call, out logo, out error);
-                    ret.Data.BannerFullList.Add(new PortalBannerModel(banner, call, logo));
+                        benefitRepo.ReadCallAndPartnerLogo(banner.IdBenefit.Value, out title, out call, out logo, out error);
+                    ret.Data.BannerFullList.Add(new PortalBannerModel(banner, title, call, logo));
                 }
 
                 return Ok(ret);
@@ -337,14 +337,14 @@ namespace ias.Rebens.api.Controllers
                     }
                 };
                 foreach (var banner in listUnmissable)
-                    ret.Data.BannerUnmissable.Add(new PortalBannerModel(banner, null, null));
+                    ret.Data.BannerUnmissable.Add(new PortalBannerModel(banner, null, null, null));
 
                 foreach (var banner in listFull)
                 {
-                    string call = null, logo = null;
+                    string call = null, logo = null, title = null;
                     if (banner.IdBenefit.HasValue)
-                        benefitRepo.ReadCallAndPartnerLogo(banner.IdBenefit.Value, out call, out logo, out error);
-                    ret.Data.BannerFullList.Add(new PortalBannerModel(banner, call, logo));
+                        benefitRepo.ReadCallAndPartnerLogo(banner.IdBenefit.Value, out title, out call, out logo, out error);
+                    ret.Data.BannerFullList.Add(new PortalBannerModel(banner, title, call, logo));
                 }
 
                 foreach (var item in listBenefits)
@@ -425,6 +425,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult GetBenefit(int id)
         {
             int idCustomer = 0;
+            int idOperation = 0;
             var principal = HttpContext.User;
             if (principal?.Claims != null)
             {
@@ -433,13 +434,21 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
                 if (!int.TryParse(customerId.Value, out idCustomer))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+
+                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                if (operationId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                if (!int.TryParse(operationId.Value, out idOperation))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            var benefit = benefitRepo.Read(id, out string error);
+            var operation = operationRepo.Read(idOperation, out string error);
+            var benefit = benefitRepo.Read(id, out error);
             if (string.IsNullOrEmpty(error))
             {
                 if (benefit == null || benefit.Id == 0)
                     return NoContent();
+
                 return Ok(new JsonDataModel<BenefitModel>() { Data = new BenefitModel(benefit, idCustomer) });
             }
 
@@ -548,7 +557,7 @@ namespace ias.Rebens.api.Controllers
                             var result = sendingBlue.Send(customer.Email, "", "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
                         }
 
-                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = customer.Id });
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 }
@@ -758,7 +767,7 @@ namespace ias.Rebens.api.Controllers
                             var body = staticText.Html.Replace("##NAME##", user.Name).Replace("##LINK##", link);
                             var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
                             if (result.Status)
-                                return Ok(new JsonModel() { Status = "ok", Message = result.Message });
+                                return Ok(new JsonModel() { Status = "ok", Message = "Enviamos um link com as instruções para definir uma nova senha." });
                             return StatusCode(400, new JsonModel() { Status = "error", Message = result.Message });
                         }
                     }

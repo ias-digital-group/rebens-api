@@ -47,9 +47,17 @@ namespace ias.Rebens.api.Models
         [MaxLength(50)]
         public string BackgroundColor { get; set; }
         /// <summary>
+        /// Título
+        /// </summary>
+        public string Title { get; set; }
+        /// <summary>
         /// Chamada do Benefício
         /// </summary>
         public string BenefitCall { get; set; }
+        /// <summary>
+        /// Id do benefício
+        /// </summary>
+        public int? IdBenefit { get; set; }
         /// <summary>
         /// Logo do Parceiro
         /// </summary>
@@ -64,9 +72,10 @@ namespace ias.Rebens.api.Models
         /// Construtor que recebe um Banner e popula os atributos
         /// </summary>
         /// <param name="banner"></param>
+        /// <param name="title"></param>
         /// <param name="benefitCall"></param>
         /// <param name="partnerLogo"></param>
-        public PortalBannerModel(Banner banner, string benefitCall, string partnerLogo)
+        public PortalBannerModel(Banner banner, string title, string benefitCall, string partnerLogo)
         {
             this.Id = banner.Id;
             this.Name = banner.Name;
@@ -74,9 +83,11 @@ namespace ias.Rebens.api.Models
             this.Order = banner.Order;
             this.Link = banner.Link;
             this.Type = banner.Type;
+            this.Title = string.IsNullOrEmpty(benefitCall) ? title : (string.IsNullOrEmpty(title) ? "" : title + " | ");
             this.BackgroundColor = banner.BackgroundColor;
             this.BenefitCall = benefitCall;
             this.PartnerLogo = partnerLogo;
+            this.IdBenefit = banner.IdBenefit;
         }
     }
 }

@@ -56,8 +56,6 @@ namespace ias.Rebens.Enums
     {
         [Description("Home Full")]
         Home = 1,
-        [Description("Categoria")]
-        Category = 2,
         [Description("Imperdíveis")]
         Unmissable = 3
     }

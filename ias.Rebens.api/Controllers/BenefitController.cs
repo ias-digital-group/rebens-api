@@ -188,6 +188,26 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Remove um Benefício
+        /// </summary>
+        /// <param name="id">id do benefídio</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Remove o benefício</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Delete(int id)
+        {
+            var resultModel = new JsonModel();
+
+            if (repo.Delete(id, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Benefício removido com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
         /// Lista os endereço de um benefício
         /// </summary>
         /// <param name="id">id do benefício</param>
