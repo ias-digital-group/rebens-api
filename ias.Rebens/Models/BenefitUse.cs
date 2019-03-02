@@ -20,6 +20,5 @@ namespace ias.Rebens
 
         public virtual Customer Customer { get; set; }
         public virtual Benefit Benefit { get; set; }
-        public virtual BenefitType BenefitType { get; set; }
     }
 }

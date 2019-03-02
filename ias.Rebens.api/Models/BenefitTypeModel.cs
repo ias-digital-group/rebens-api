@@ -31,10 +31,10 @@ namespace ias.Rebens.api.Models
         /// Construtor que recebe um BenefitType e popula os atributos
         /// </summary>
         /// <param name="type"></param>
-        public BenefitTypeModel(BenefitType type)
+        public BenefitTypeModel(Enums.BenefitType type)
         {
-            this.Id = type.Id;
-            this.Name = type.Name;
+            this.Id = (int)type;
+            this.Name = Enums.EnumHelper.GetEnumDescription(type);
         }
     }
 }

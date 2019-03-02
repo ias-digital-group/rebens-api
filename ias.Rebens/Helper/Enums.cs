@@ -6,6 +6,134 @@ using System.Text;
 
 namespace ias.Rebens.Enums
 {
+    public enum AdminUserStatus : int
+    {
+        [Description("Ativo")]
+        Active = 1,
+        [Description("Inativo")]
+        Inactive = 2
+    }
+
+    public enum BankAccountType
+    {
+        [Description("Conta Corrente")]
+        debt,
+        [Description("Poupança")]
+        savings
+    }
+
+    public enum BannerType
+    {
+        [Description("Home Full")]
+        Home = 1,
+        [Description("Imperdíveis")]
+        Unmissable = 3
+    }
+
+    public enum BenefitType : int
+    {
+        [Description("Ecommerce")]
+        OnLine = 1,
+        [Description("Varejo Local")]
+        OffLine = 2,
+        [Description("Cashback")]
+        Cashback = 3
+    }
+
+    public enum BenefitUseStatus : int
+    {
+        [Description("Reemetir")]
+        Reemit = 1,
+        [Description("Não Possuí Cashback")]
+        NoCashBack = 2,
+        [Description("Cashback Disponível")]
+        Cashback = 3,
+        [Description("Cashback em Processamento")]
+        ProcessingCashback = 4
+    }
+
+    public enum ConfigurationType
+    {
+        [Description("Cliente")]
+        Customer = 1
+    }
+
+    public enum CouponStatus : int
+    {
+        [Description("Novo")]
+        pendent = 1,
+        [Description("Aberto")]
+        opened = 2,
+        [Description("Raspado")]
+        played = 3,
+        [Description("Reivindicado")]
+        claimed = 4,
+        [Description("Validado")]
+        validated = 5,
+        [Description("Sem Prêmio")]
+        noprize = 6
+    }
+
+    public enum CustomerReferalStatus : int
+    {
+        [Description("Pendente")]
+        pending = 1,
+        [Description("Assinado")]
+        Signed = 2
+    }
+
+    public enum CustomerStatus : int
+    {
+        [Description("Ativo")]
+        Active = 1,
+        [Description("Inativo")]
+        Inactive = 2,
+        [Description("Validação")]
+        Validation = 3,
+        [Description("Trocar Senha")]
+        ChangePassword = 4,
+        [Description("Imcompleto")]
+        Incomplete = 5
+    }
+
+    public enum CustomerType : int
+    {
+        [Description("Cliente")]
+        Customer = 1,
+        [Description("Indicação")]
+        indication = 2
+    }
+
+    public enum IntegrationType : int
+    {
+        [Description("Rebens")]
+        Rebens = 1,
+        [Description("Zanox")]
+        Zanox = 2
+    }
+
+    public enum MoipPaymentStatus : int
+    {
+        [Description("Autorizado")]
+        authorized = 1,
+        [Description("Iniciado")]
+        started = 2,
+        [Description("Boleto impresso")]
+        billet_printed = 3,
+        [Description("Concluído")]
+        done = 4,
+        [Description("Cancelado")]
+        canceled = 5,
+        [Description("Em análise")]
+        in_analises = 6,
+        [Description("Estornado")]
+        reversed = 7,
+        [Description("Reembolsado")]
+        refunded = 9,
+        [Description("Aguardando")]
+        waiting = 10
+    }
+
     public enum Months : int
     {
         [Description("Janeiro")]
@@ -34,77 +162,18 @@ namespace ias.Rebens.Enums
         December = 12
     }
 
-    public enum ConfigurationType
+    public enum OperationType : int
     {
-        [Description("Cliente")]
-        Customer = 1
+        [Description("IES")]
+        ies = 1,
+        [Description("Clube")]
+        club = 2,
+        [Description("Franquias")]
+        franchise = 3,
+        [Description("Aluguel")]
+        rent = 4
     }
-
-    public enum BenefitUseStatus : int
-    {
-        [Description("Reemetir")]
-        Reemit = 1,
-        [Description("Não Possuí Cashback")]
-        NoCashBack = 2,
-        [Description("Cashback Disponível")]
-        Cashback = 3,
-        [Description("Cashback em Processamento")]
-        ProcessingCashback = 4
-    }
-
-    public enum BannerType
-    {
-        [Description("Home Full")]
-        Home = 1,
-        [Description("Imperdíveis")]
-        Unmissable = 3
-    }
-
-    public enum BenefitType : int
-    {
-        OnLine = 1,
-        OffLine = 2,
-        Cashback = 3
-    }
-
-    public enum AdminUserStatus: int
-    {
-        [Description("Ativo")]
-        Active = 1,
-        [Description("Inativo")]
-        Inactive = 2
-    }
-
-    public enum CustomerStatus : int
-    {
-        [Description("Ativo")]
-        Active = 1,
-        [Description("Inativo")]
-        Inactive = 2,
-        [Description("Validação")]
-        Validation = 3,
-        [Description("Trocar Senha")]
-        ChangePassword = 4,
-        [Description("Imcompleto")]
-        Incomplete = 5
-    }
-
-    public enum CustomerType : int
-    {
-        [Description("Aluno")]
-        Student = 1,
-        [Description("Indicação")]
-        indication = 2
-    }
-
-    public enum CustomerReferalStatus : int
-    {
-        [Description("Pendente")]
-        pending = 1,
-        [Description("Assinado")]
-        Signed = 2
-    }
-
+    
     public enum StaticTextType : int
     {
         [Description("Operação Sobre")]
@@ -113,8 +182,8 @@ namespace ias.Rebens.Enums
         HowOperationWork = 2,
         [Description("Detalhes")]
         BenefitDetail = 3,
-        [Description("Chamada do beneficio")]
-        BenefitCall = 4,
+        [Description("Textos")]
+        Text = 4,
         [Description("Como Utilizar")]
         BenefitHowToUse = 5,
         [Description("Descrição do Parceiro")]
@@ -123,14 +192,6 @@ namespace ias.Rebens.Enums
         EmailPasswordRecovery = 7,
         [Description("E-mail de validação de cliente")]
         EmailCustomerValidation = 8
-    }
-
-    public enum BankAccountType
-    {
-        [Description("Conta Corrente")]
-        debt,
-        [Description("Poupança")]
-        savings
     }
 
     public enum WithdrawStatus : int
@@ -161,44 +222,6 @@ namespace ias.Rebens.Enums
         pendent = 1,
         [Description("Tratado")]
         treat = 2
-    }
-
-    public enum CouponStatus : int
-    {
-        [Description("Novo")]
-        pendent = 1,
-        [Description("Aberto")]
-        opened = 2,
-        [Description("Raspado")]
-        played = 3,
-        [Description("Reivindicado")]
-        claimed = 4,
-        [Description("Validado")]
-        validated = 5,
-        [Description("Sem Prêmio")]
-        noprize = 6
-    }
-
-    public enum MoipPaymentStatus : int
-    {
-        [Description("Autorizado")]
-        authorized = 1,
-        [Description("Iniciado")]
-        started = 2,
-        [Description("Boleto impresso")]
-        billet_printed = 3,
-        [Description("Concluído")]
-        done = 4,
-        [Description("Cancelado")]
-        canceled = 5,
-        [Description("Em análise")]
-        in_analises = 6,
-        [Description("Estornado")]
-        reversed = 7,
-        [Description("Reembolsado")]
-        refunded = 9,
-        [Description("Aguardando")]
-        waiting = 10
     }
 
     public static class EnumHelper

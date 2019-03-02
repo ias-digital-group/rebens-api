@@ -122,11 +122,6 @@ namespace ias.Rebens.api.Controllers
             var part = benefit.GetEntity();
             if (repo.Update(part, out string error))
             {
-                if (!string.IsNullOrEmpty(benefit.BenefitCall))
-                {
-                    var benefitCall = benefit.GetCall();
-                    staticTextRepo.Update(benefitCall, out error);
-                }
                 if (!string.IsNullOrEmpty(benefit.Detail))
                 {
                     var detail = benefit.GetDetail();
@@ -161,12 +156,6 @@ namespace ias.Rebens.api.Controllers
             var item = benefit.GetEntity();
             if (repo.Create(item, out error))
             {
-                if (!string.IsNullOrEmpty(benefit.BenefitCall))
-                {
-                    var benefitCall = benefit.GetCall();
-                    benefitCall.IdBenefit = item.Id;
-                    staticTextRepo.Create(benefitCall, out error);
-                }
                 if (!string.IsNullOrEmpty(benefit.Detail))
                 {
                     var detail = benefit.GetDetail();

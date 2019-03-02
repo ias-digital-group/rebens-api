@@ -17,26 +17,14 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class HelperController : ControllerBase
     {
-        private IBenefitTypeRepository benefitRepo;
-        private IIntegrationTypeRepository integrationRepo;
-        private IOperationTypeRepository operationRepo;
-        private IStaticTextTypeRepository staticTextRepo;
         private IHostingEnvironment _hostingEnvironment;
 
         /// <summary>
-        /// Helper controller constructor that receive the dependency injection of the repositories of BenefiteType, IntegrationType, OperationType, StaticTextType and Hosting Enviroment
+        /// Helper controller constructor that receive the dependency injection of the repositories of Hosting Enviroment
         /// </summary>
-        /// <param name="benefitTypeRepository"></param>
-        /// <param name="integrationTypeRepository"></param>
-        /// <param name="operationTypeRepository"></param>
-        /// <param name="staticTextTypeRepository"></param>
         /// <param name="hostingEnvironment"></param>
-        public HelperController(IBenefitTypeRepository benefitTypeRepository, IIntegrationTypeRepository integrationTypeRepository, IOperationTypeRepository operationTypeRepository, IStaticTextTypeRepository staticTextTypeRepository, IHostingEnvironment hostingEnvironment)
+        public HelperController(IHostingEnvironment hostingEnvironment)
         {
-            this.benefitRepo = benefitTypeRepository;
-            this.integrationRepo = integrationTypeRepository;
-            this.operationRepo = operationTypeRepository;
-            this.staticTextRepo = staticTextTypeRepository;
             this._hostingEnvironment = hostingEnvironment;
         }
 
@@ -54,21 +42,21 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListBenefitType()
         {
-            var list = benefitRepo.ListActive(out string error);
-            
-            if (string.IsNullOrEmpty(error))
+            try
             {
-                if (list == null || list.Count() == 0)
-                    return NoContent();
-
                 var ret = new JsonDataModel<List<BenefitTypeModel>>();
                 ret.Data = new List<BenefitTypeModel>();
-                list.ForEach(item => { ret.Data.Add(new BenefitTypeModel(item)); });
 
+                foreach (Enums.BenefitType type in Enum.GetValues(typeof(Enums.BenefitType)))
+                {
+                    ret.Data.Add(new BenefitTypeModel(type));
+                }
                 return Ok(ret);
             }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            catch(Exception ex)
+            {
+                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+            }
         }
 
         /// <summary>
@@ -80,27 +68,26 @@ namespace ias.Rebens.api.Controllers
         /// <response code="400">Se ocorrer algum erro</response>
         [Authorize("Bearer", Roles = "administrator")]
         [HttpGet("ListIntegrationType")]
-        [ProducesResponseType(typeof(JsonDataModel<List<BenefitTypeModel>>), 200)]
+        [ProducesResponseType(typeof(JsonDataModel<List<IntegrationTypeModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListIntegrationType()
         {
-            var list = integrationRepo.ListActive(out string error);
-
-            if (string.IsNullOrEmpty(error))
+            try
             {
-                if (list == null || list.Count() == 0)
-                    return NoContent();
-
                 var ret = new JsonDataModel<List<IntegrationTypeModel>>();
                 ret.Data = new List<IntegrationTypeModel>();
-                list.ForEach(item => { ret.Data.Add(new IntegrationTypeModel(item)); });
 
+                foreach (Enums.IntegrationType type in Enum.GetValues(typeof(Enums.IntegrationType)))
+                {
+                    ret.Data.Add(new IntegrationTypeModel(type));
+                }
                 return Ok(ret);
             }
-
-            return Ok(new JsonModel() { Status = "error", Message = error });
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            catch (Exception ex)
+            {
+                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+            }
         }
 
         /// <summary>
@@ -117,21 +104,21 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListOperationType()
         {
-            var list = operationRepo.ListActive(out string error);
-
-            if (string.IsNullOrEmpty(error))
+            try
             {
-                if (list == null || list.Count() == 0)
-                    return NoContent();
-
                 var ret = new JsonDataModel<List<OperationTypeModel>>();
                 ret.Data = new List<OperationTypeModel>();
-                list.ForEach(item => { ret.Data.Add(new OperationTypeModel(item)); });
 
+                foreach (Enums.OperationType type in Enum.GetValues(typeof(Enums.OperationType)))
+                {
+                    ret.Data.Add(new OperationTypeModel(type));
+                }
                 return Ok(ret);
             }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            catch (Exception ex)
+            {
+                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+            }
         }
 
         /// <summary>
@@ -148,21 +135,21 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListStaticTextType()
         {
-            var list = staticTextRepo.ListActive(out string error);
-
-            if (string.IsNullOrEmpty(error))
+            try
             {
-                if (list == null || list.Count() == 0)
-                    return NoContent();
-
                 var ret = new JsonDataModel<List<StaticTextTypeModel>>();
                 ret.Data = new List<StaticTextTypeModel>();
-                list.ForEach(item => { ret.Data.Add(new StaticTextTypeModel(item)); });
 
+                foreach (Enums.StaticTextType type in Enum.GetValues(typeof(Enums.StaticTextType)))
+                {
+                    ret.Data.Add(new StaticTextTypeModel(type));
+                }
                 return Ok(ret);
             }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            catch (Exception ex)
+            {
+                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+            }
         }
 
         /// <summary>
@@ -179,14 +166,21 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListBannerType()
         {
-            var ret = new JsonDataModel<List<BannerTypeModel>>();
-            ret.Data = new List<BannerTypeModel>();
-            foreach (Enums.BannerType type in Enum.GetValues(typeof(Enums.BannerType)))
+            try
             {
-                ret.Data.Add(new BannerTypeModel() { Id = (int)type, Name = Enums.EnumHelper.GetEnumDescription(type) });
-            }
+                var ret = new JsonDataModel<List<BannerTypeModel>>();
+                ret.Data = new List<BannerTypeModel>();
+                foreach (Enums.BannerType type in Enum.GetValues(typeof(Enums.BannerType)))
+                {
+                    ret.Data.Add(new BannerTypeModel() { Id = (int)type, Name = Enums.EnumHelper.GetEnumDescription(type) });
+                }
 
-            return Ok(ret);
+                return Ok(ret);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+            }
         }
 
         /// <summary>

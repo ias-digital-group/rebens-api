@@ -18,6 +18,12 @@ namespace ias.Rebens.api.Models
         /// Título
         /// </summary>
         [Required]
+        [MaxLength(300)]
+        public string Name { get; set; }
+        /// <summary>
+        /// Título
+        /// </summary>
+        [Required]
         [MaxLength(400)]
         public string Title { get; set; }
         /// <summary>
@@ -66,7 +72,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Tipo de benefício
         /// </summary>
-        public string BenefitType { get; set; }
+        public string BenefitType { get { return Enums.EnumHelper.GetEnumDescription((Enums.BenefitType)this.IdBenefitType); } }
         /// <summary>
         /// É um benefício exclusivo
         /// </summary>
@@ -98,10 +104,12 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Tipo de Integração
         /// </summary>
-        public string IntegrationType { get; set; }
+        public string IntegrationType { get { return Enums.EnumHelper.GetEnumDescription((Enums.IntegrationType)this.IdIntegrationType); } }
         /// <summary>
         /// Chamada do Benefício
         /// </summary>
+        [Required]
+        [MaxLength(500)]
         public string BenefitCall { get; set; }
         /// <summary>
         /// Detalhes
@@ -132,6 +140,7 @@ namespace ias.Rebens.api.Models
         public BenefitModel(Benefit benefit, int? idCustomer = null)
         {
             this.Id = benefit.Id;
+            this.Name = benefit.Name;
             this.Title = benefit.Title;
             this.Image = benefit.Image;
             this.DueDate = benefit.DueDate;
@@ -148,32 +157,26 @@ namespace ias.Rebens.api.Models
             this.IdIntegrationType = benefit.IdIntegrationType;
             this.IdPartner = benefit.IdPartner;
             this.Link = benefit.WebSite;
+            this.BenefitCall = benefit.Teaser;
 
             if (this.IdBenefitType == (int)Enums.BenefitType.OffLine && idCustomer.HasValue)
                 this.Link = "http://admin.rebens.com.br/Voucher/?code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
             if (this.IdBenefitType == (int)Enums.BenefitType.Cashback && idCustomer.HasValue)
                 this.Link = benefit.WebSite + (benefit.WebSite.IndexOf('?') > 0 ? "&" : "?") + "zpar0=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
 
-
-            if (benefit.BenefitType != null)
-                this.BenefitType = benefit.BenefitType.Name;
             if (benefit.Partner != null)
             {
                 this.PartnerImage = benefit.Partner.Logo;
                 if(benefit.Partner.StaticText != null)
                     this.PartnerDescription = benefit.Partner.StaticText.Html;
             }
-            if (benefit.IntegrationType != null)
-                this.IntegrationType = benefit.IntegrationType.Name;
-            if(benefit.StaticTexts != null)
+
+            if (benefit.StaticTexts != null)
             {
                 foreach(var text in benefit.StaticTexts)
                 {
                     switch((Enums.StaticTextType)text.IdStaticTextType)
                     {
-                        case Enums.StaticTextType.BenefitCall:
-                            this.BenefitCall = text.Html;
-                            break;
                         case Enums.StaticTextType.BenefitDetail:
                             this.Detail = text.Html;
                             break;
@@ -194,6 +197,7 @@ namespace ias.Rebens.api.Models
             return new Benefit()
             {
                 Id = this.Id,
+                Name = this.Name,
                 Title = this.Title,
                 Image = this.Image,
                 DueDate = this.DueDate,
@@ -208,26 +212,8 @@ namespace ias.Rebens.api.Models
                 Exclusive = this.Exclusive,
                 Active = this.Active,
                 IdIntegrationType = this.IdIntegrationType,
-                IdPartner = this.IdPartner
-            };
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public StaticText GetCall()
-        {
-            return new StaticText()
-            {
-                Active = true,
-                Created = DateTime.Now,
-                Html = this.BenefitCall,
-                IdBenefit = this.Id,
-                IdStaticTextType = (int)Enums.StaticTextType.BenefitCall,
-                Modified = DateTime.Now,
-                Order = 1,
-                Title = "Chamada - " + this.Title
+                IdPartner = this.IdPartner,
+                Teaser = this.BenefitCall
             };
         }
 
@@ -312,14 +298,8 @@ namespace ias.Rebens.api.Models
             this.Id = benefit.Id;
             this.Title = benefit.Title;
             this.IdBenefitType = benefit.IdBenefitType;
-            if (benefit.StaticTexts != null)
-            {
-                var staticText = benefit.StaticTexts.SingleOrDefault(s => s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall);
-                if(staticText != null && staticText.Id > 0)
-                    this.BenefitCall = staticText.Html;
-            }
-            if(benefit.BenefitType != null)
-                this.BenefitType = benefit.BenefitType.Name;
+            this.BenefitCall = benefit.Teaser;
+            this.BenefitType = Enums.EnumHelper.GetEnumDescription((Enums.BenefitType)benefit.IdBenefitType);
             if (benefit.Partner != null)
                 this.Image = benefit.Partner.Logo;
         }

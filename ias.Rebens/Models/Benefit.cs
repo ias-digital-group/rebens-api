@@ -16,6 +16,7 @@ namespace ias.Rebens
         }
 
         public int Id { get; set; }
+        public string Name { get; set; }
         public string Title { get; set; }
         public int IdAdminUser { get; set; }
         public string Image { get; set; }
@@ -32,11 +33,10 @@ namespace ias.Rebens
         public bool Active { get; set; }
         public int IdIntegrationType { get; set; }
         public int IdPartner { get; set; }
+        public string Teaser { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public virtual BenefitType BenefitType { get; set; }
-        public virtual IntegrationType IntegrationType { get; set; }
         public virtual Partner Partner { get; set; }
         public virtual ICollection<Banner> Banners { get; set; }
         public virtual ICollection<BenefitAddress> BenefitAddresses { get; set; }

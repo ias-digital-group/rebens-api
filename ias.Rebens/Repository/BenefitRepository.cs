@@ -273,6 +273,8 @@ namespace ias.Rebens
                         update.IdIntegrationType = benefit.IdIntegrationType;
                         update.IdPartner = benefit.IdPartner;
                         update.Modified = DateTime.UtcNow;
+                        update.Teaser = benefit.Teaser;
+                        update.Name = benefit.Name;
 
                         db.SaveChanges();
                         error = null;
@@ -403,8 +405,6 @@ namespace ias.Rebens
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
 
-                    list.ForEach(i => { i.StaticTexts.Add(db.StaticText.SingleOrDefault(s => s.IdBenefit == i.Id && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall)); });
-
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
                 }
@@ -462,12 +462,6 @@ namespace ias.Rebens
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
-
-                    list.ForEach(i => {
-                        var text = db.StaticText.SingleOrDefault(s => s.IdBenefit == i.Id && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall);
-                        if(text != null && text.Id > 0)
-                            i.StaticTexts.Add(text);
-                    });
 
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
@@ -684,12 +678,11 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var staticCall = db.StaticText.SingleOrDefault(s => s.IdBenefit == idBenefit && s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall);
-                    call = staticCall != null ? staticCall.Html : "";
                     var partner = db.Partner.SingleOrDefault(p => p.Benefits.Any(b => b.Id == idBenefit));
                     logo = partner != null ? partner.Logo : "";
                     var benefit = db.Benefit.SingleOrDefault(s => s.Id == idBenefit);
                     title = benefit != null ? benefit.Title : "";
+                    call = benefit != null ? benefit.Teaser : "";
                     error = null;
                 }
             }

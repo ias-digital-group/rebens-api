@@ -37,9 +37,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Typo de benefício
         /// </summary>
-        [Required]
-        [MaxLength(50)]
-        public string BenefitType { get; set; }
+        public string BenefitType { get { return Enums.EnumHelper.GetEnumDescription((Enums.BenefitType)this.IdBenefitType); } }
         /// <summary>
         /// Valor da compra
         /// </summary>
@@ -86,8 +84,6 @@ namespace ias.Rebens.api.Models
             this.IdStatus = benefitUse.Status;
             this.Status = Enums.EnumHelper.GetEnumDescription((Enums.BenefitUseStatus)benefitUse.Status);
             this.Date = benefitUse.Created.ToString("dd/MM/yyyy");
-            if (benefitUse.BenefitType != null)
-                this.BenefitType = benefitUse.BenefitType.Name;
         }
 
         /// <summary>

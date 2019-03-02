@@ -48,6 +48,10 @@ namespace ias.Rebens.api.Models
         [Required]
         public int IdOperationType { get; set; }
         /// <summary>
+        /// Tipo da operação
+        /// </summary>
+        public string OperationType { get { return Enums.EnumHelper.GetEnumDescription((Enums.OperationType)this.IdOperationType); } }
+        /// <summary>
         /// Porcentagem do cashback
         /// </summary>
         public decimal? CachbackPercentage { get; set; }

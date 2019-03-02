@@ -872,14 +872,10 @@
             Helper Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.HelperController.#ctor(ias.Rebens.IBenefitTypeRepository,ias.Rebens.IIntegrationTypeRepository,ias.Rebens.IOperationTypeRepository,ias.Rebens.IStaticTextTypeRepository,Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+        <member name="M:ias.Rebens.api.Controllers.HelperController.#ctor(Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
             <summary>
-            Helper controller constructor that receive the dependency injection of the repositories of BenefiteType, IntegrationType, OperationType, StaticTextType and Hosting Enviroment
+            Helper controller constructor that receive the dependency injection of the repositories of Hosting Enviroment
             </summary>
-            <param name="benefitTypeRepository"></param>
-            <param name="integrationTypeRepository"></param>
-            <param name="operationTypeRepository"></param>
-            <param name="staticTextTypeRepository"></param>
             <param name="hostingEnvironment"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.HelperController.ListBenefitType">
@@ -1340,6 +1336,17 @@
             <param name="operationCode">código da operação</param>
             <returns>Retorna os items necessários para montar a home não logada</returns>
             <response code="200">Retorna o model com os items da home não logada, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.GetText(System.String,System.String)">
+            <summary>
+            Retorna o texto da página requerida
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <param name="page">Página requerida</param>
+            <returns>Retorna o objeto StaticText com as informações solicitadas</returns>
+            <response code="200">Retorna o model, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
@@ -2116,6 +2123,11 @@
             Id
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.Name">
+            <summary>
+            Título
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.BenefitModel.Title">
             <summary>
             Título
@@ -2249,12 +2261,6 @@
             <param name="idCustomer"></param>
         </member>
         <member name="M:ias.Rebens.api.Models.BenefitModel.GetEntity">
-            <summary>
-            
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:ias.Rebens.api.Models.BenefitModel.GetCall">
             <summary>
             
             </summary>
@@ -2446,7 +2452,7 @@
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.BenefitTypeModel.#ctor(ias.Rebens.BenefitType)">
+        <member name="M:ias.Rebens.api.Models.BenefitTypeModel.#ctor(ias.Rebens.Enums.BenefitType)">
             <summary>
             Construtor que recebe um BenefitType e popula os atributos
             </summary>
@@ -3184,7 +3190,7 @@
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.IntegrationTypeModel.#ctor(ias.Rebens.IntegrationType)">
+        <member name="M:ias.Rebens.api.Models.IntegrationTypeModel.#ctor(ias.Rebens.Enums.IntegrationType)">
             <summary>
             Construtor que recebe um objeto IntegrationType, e popula os atributos
             </summary>
@@ -3365,6 +3371,11 @@
             Tipo da operação
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.OperationType">
+            <summary>
+            Tipo da operação
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.OperationModel.CachbackPercentage">
             <summary>
             Porcentagem do cashback
@@ -3427,7 +3438,7 @@
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.OperationTypeModel.#ctor(ias.Rebens.OperationType)">
+        <member name="M:ias.Rebens.api.Models.OperationTypeModel.#ctor(ias.Rebens.Enums.OperationType)">
             <summary>
             Construtor que recebe um objeto OperationType e popula os atributos
             </summary>
@@ -3781,34 +3792,14 @@
             Id
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.StaticTextModel.Title">
+        <member name="P:ias.Rebens.api.Models.StaticTextModel.Page">
             <summary>
             Título
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.StaticTextModel.Url">
+        <member name="P:ias.Rebens.api.Models.StaticTextModel.Data">
             <summary>
-            Url
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.StaticTextModel.Html">
-            <summary>
-            Html
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.StaticTextModel.Style">
-            <summary>
-            Estilo
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.StaticTextModel.Order">
-            <summary>
-            Ordem
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.StaticTextModel.IdStaticTextType">
-            <summary>
-            Id do Tipo de texto estático
+            Objeto a ser salvo
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.StaticTextModel.IdOperation">
@@ -3816,19 +3807,9 @@
             Id da operação
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.StaticTextModel.IdBenefit">
-            <summary>
-            Id do benefício
-            </summary>
-        </member>
         <member name="P:ias.Rebens.api.Models.StaticTextModel.Active">
             <summary>
             Ativo
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.StaticTextModel.StaticTextType">
-            <summary>
-            Tipo de texto estático
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.StaticTextModel.#ctor">
@@ -3868,7 +3849,7 @@
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.StaticTextTypeModel.#ctor(ias.Rebens.StaticTextType)">
+        <member name="M:ias.Rebens.api.Models.StaticTextTypeModel.#ctor(ias.Rebens.Enums.StaticTextType)">
             <summary>
             Construtor que recebe um objeto StaticTextType e popula os atributos
             </summary>

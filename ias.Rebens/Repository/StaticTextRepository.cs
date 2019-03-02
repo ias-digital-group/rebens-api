@@ -162,7 +162,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.StaticText.Include("StaticTextType").SingleOrDefault(c => c.Id == id);
+                    ret = db.StaticText.SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }
@@ -183,7 +183,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.StaticText.Include("StaticTextType").Where(t => t.IdOperation == idOperation && t.IdStaticTextType == idType && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
+                    ret = db.StaticText.Where(t => t.IdOperation == idOperation && t.IdStaticTextType == idType && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
                     error = null;
                 }
             }
@@ -191,6 +191,48 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("StaticTextRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o texto. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public StaticText ReadText(int idOperation, string page, out string error)
+        {
+            StaticText ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.StaticText.SingleOrDefault(c => c.IdOperation == idOperation && c.Title == page && c.IdStaticTextType == (int)Enums.StaticTextType.Text);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextRepository.ReadText", ex.Message, $"idOperation:{idOperation}, page:{page}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o texto. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public StaticText ReadText(Guid operationCode, string page, out string error)
+        {
+            StaticText ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.StaticText.SingleOrDefault(c => c.Operation.Code == operationCode && c.Title == page && c.IdStaticTextType == (int)Enums.StaticTextType.Text);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextRepository.ReadText", ex.Message, $"operationCode:{operationCode}, page:{page}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler o texto. (erro:" + idLog + ")";
                 ret = null;
             }

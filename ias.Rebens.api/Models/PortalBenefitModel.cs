@@ -51,13 +51,8 @@ namespace ias.Rebens.api.Models
             this.Id = benefit.Id;
             this.Title = benefit.Title;
             this.WebSite = benefit.WebSite;
+            this.BenefitCall = benefit.Teaser;
 
-            if (benefit.StaticTexts != null)
-            {
-                var staticText = benefit.StaticTexts.SingleOrDefault(s => s.IdStaticTextType == (int)Enums.StaticTextType.BenefitCall);
-                if (staticText != null && staticText.Id > 0)
-                    this.BenefitCall = staticText.Html;
-            }
             if (benefit.Partner != null)
                 this.Image = benefit.Partner.Logo;
         }

@@ -8,6 +8,8 @@ namespace ias.Rebens
     {
         StaticText Read(int id, out string error);
 
+        StaticText ReadText(int idOperation, string page, out string error);
+
         ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, out string error);
 
         bool Delete(int id, out string error);
@@ -17,6 +19,8 @@ namespace ias.Rebens
         bool Update(StaticText staticText, out string error);
 
         StaticText ReadByType(int idOperation, int idType, out string error);
+
+        StaticText ReadText(Guid operationCode, string page, out string error);
 
         ResultPage<StaticText> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
     }

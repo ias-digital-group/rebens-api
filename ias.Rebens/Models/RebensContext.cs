@@ -31,7 +31,6 @@ namespace ias.Rebens
         public virtual DbSet<BenefitCategory> BenefitCategory { get; set; }
         public virtual DbSet<BenefitOperation> BenefitOperation { get; set; }
         public virtual DbSet<BenefitOperationPosition> BenefitOperationPosition { get; set; }
-        public virtual DbSet<BenefitType> BenefitType { get; set; }
         public virtual DbSet<BenefitUse> BenefitUse { get; set; }
         public virtual DbSet<Category> Category { get; set; }
         public virtual DbSet<Configuration> Configuration { get; set; }
@@ -43,7 +42,6 @@ namespace ias.Rebens
         public virtual DbSet<Faq> Faq { get; set; }
         public virtual DbSet<FormContact> FormContact { get; set; }
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
-        public virtual DbSet<IntegrationType> IntegrationType { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }
         public virtual DbSet<MoipInvoice> MoipInvoice { get; set; }
         public virtual DbSet<MoipPayment> MoipPayment { get; set; }
@@ -51,14 +49,12 @@ namespace ias.Rebens
         public virtual DbSet<Operation> Operation { get; set; }
         public virtual DbSet<OperationAddress> OperationAddress { get; set; }
         public virtual DbSet<OperationContact> OperationContact { get; set; }
-        public virtual DbSet<OperationType> OperationType { get; set; }
         public virtual DbSet<Partner> Partner { get; set; }
         public virtual DbSet<PartnerAddress> PartnerAddress { get; set; }
         public virtual DbSet<PartnerContact> PartnerContact { get; set; }
         public virtual DbSet<Permission> Permission { get; set; }
         public virtual DbSet<Profile> Profile { get; set; }
         public virtual DbSet<StaticText> StaticText { get; set; }
-        public virtual DbSet<StaticTextType> StaticTextType { get; set; }
         public virtual DbSet<Withdraw> Withdraw { get; set; }
         public virtual DbSet<ZanoxSale> ZanoxSale { get; set; }
 
@@ -221,17 +217,9 @@ namespace ias.Rebens
 
                 entity.Property(e => e.WebSite).HasMaxLength(500);
 
-                entity.HasOne(d => d.BenefitType)
-                    .WithMany(p => p.Benefits)
-                    .HasForeignKey(d => d.IdBenefitType)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Benefit_BenefitType");
+                entity.Property(e => e.Teaser).IsRequired().HasMaxLength(500);
 
-                entity.HasOne(d => d.IntegrationType)
-                    .WithMany(p => p.Benefits)
-                    .HasForeignKey(d => d.IdIntegrationType)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Benefit_IntegrationType");
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
 
                 entity.HasOne(d => d.Partner)
                     .WithMany(p => p.Benefits)
@@ -312,17 +300,6 @@ namespace ias.Rebens
                     .HasMaxLength(200);
             });
 
-            modelBuilder.Entity<BenefitType>(entity =>
-            {
-                entity.Property(e => e.Created).HasColumnType("datetime");
-
-                entity.Property(e => e.Modified).HasColumnType("datetime");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(200);
-            });
-
             modelBuilder.Entity<BenefitUse>(entity =>
             {
                 entity.Property(e => e.Created).HasColumnType("datetime");
@@ -332,12 +309,6 @@ namespace ias.Rebens
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
 
                 entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
-
-                entity.HasOne(d => d.BenefitType)
-                    .WithMany(p => p.BenefitUses)
-                    .HasForeignKey(d => d.IdBenefitType)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_BenefitUse_BenefitType");
 
                 entity.HasOne(d => d.Benefit)
                     .WithMany(p => p.BenefitUses)
@@ -588,17 +559,6 @@ namespace ias.Rebens
                     .HasConstraintName("FK_FormEstablishment_Operation");
             });
 
-            modelBuilder.Entity<IntegrationType>(entity =>
-            {
-                entity.Property(e => e.Created).HasColumnType("datetime");
-
-                entity.Property(e => e.Modified).HasColumnType("datetime");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(200);
-            });
-
             modelBuilder.Entity<LogError>(entity =>
             {
                 entity.Property(e => e.Complement).HasMaxLength(500);
@@ -745,12 +705,6 @@ namespace ias.Rebens
                 entity.Property(e => e.Title)
                     .IsRequired()
                     .HasMaxLength(300);
-
-                entity.HasOne(d => d.OperationType)
-                    .WithMany(p => p.Operations)
-                    .HasForeignKey(d => d.IdOperationType)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Operation_OperationType");
             });
 
             modelBuilder.Entity<OperationAddress>(entity =>
@@ -785,17 +739,6 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdContact)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_OperationContact_Contact");
-            });
-
-            modelBuilder.Entity<OperationType>(entity =>
-            {
-                entity.Property(e => e.Created).HasColumnType("datetime");
-
-                entity.Property(e => e.Modified).HasColumnType("datetime");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(200);
             });
 
             modelBuilder.Entity<Partner>(entity =>
@@ -882,25 +825,6 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdBenefit)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_StaticText_Benefit");
-
-                entity.HasOne(d => d.StaticTextType)
-                    .WithMany(p => p.StaticTexts)
-                    .HasForeignKey(d => d.IdStaticTextType)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_StaticText_StaticTextType");
-            });
-
-            modelBuilder.Entity<StaticTextType>(entity =>
-            {
-                entity.Property(e => e.Created).HasColumnType("datetime");
-
-                entity.Property(e => e.Description).HasMaxLength(500);
-
-                entity.Property(e => e.Modified).HasColumnType("datetime");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(200);
             });
 
             modelBuilder.Entity<Withdraw>(entity => {
