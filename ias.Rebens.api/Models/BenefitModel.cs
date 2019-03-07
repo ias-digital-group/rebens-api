@@ -36,26 +36,21 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public DateTime? DueDate { get; set; }
         /// <summary>
-        /// Site do benefício
+        /// Porcentagem máxima de desconto
         /// </summary>
-        [MaxLength(500)]
-        public string WebSite { get; set; }
+        public decimal? MaxDiscountPercentage { get; set; }
         /// <summary>
-        /// Porcentagem máxima de desconto online
+        /// Porcentagem de CPV
         /// </summary>
-        public decimal? MaxDiscountPercentageOnline { get; set; }
+        public decimal? Cpvpercentage { get; set; }
         /// <summary>
-        /// Porcentagem de CPV online
+        /// Porcentagem mínima de desconto
         /// </summary>
-        public decimal? CpvpercentageOnline { get; set; }
+        public decimal? MinDiscountPercentage { get; set; }
         /// <summary>
-        /// Porcentagem máxima de desconto offline
+        /// Valor do cashback
         /// </summary>
-        public decimal? MaxDiscountPercentageOffline { get; set; }
-        /// <summary>
-        /// Porcentagem de CPV offline
-        /// </summary>
-        public decimal? CpvpercentageOffline { get; set; }
+        public decimal? CashbackAmount { get; set; }
         /// <summary>
         /// Início
         /// </summary>
@@ -110,7 +105,7 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         [MaxLength(500)]
-        public string BenefitCall { get; set; }
+        public string Call { get; set; }
         /// <summary>
         /// Detalhes
         /// </summary>
@@ -122,7 +117,17 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Link do benefício
         /// </summary>
+        [MaxLength(500)]
         public string Link { get; set; }
+        /// <summary>
+        /// Texto do Voucher
+        /// </summary>
+        [MaxLength(500)]
+        public string VoucherText { get; set; }
+        /// <summary>
+        /// Id da operação quando o benefício é exclusivo
+        /// </summary>
+        public int? IdOperation { get; set; }
         /// <summary>
         /// Status
         /// </summary>
@@ -144,11 +149,11 @@ namespace ias.Rebens.api.Models
             this.Title = benefit.Title;
             this.Image = benefit.Image;
             this.DueDate = benefit.DueDate;
-            this.WebSite = benefit.WebSite;
-            this.MaxDiscountPercentageOnline = benefit.MaxDiscountPercentageOnline;
-            this.CpvpercentageOnline = benefit.CpvpercentageOnline;
-            this.MaxDiscountPercentageOffline = benefit.MaxDiscountPercentageOffline;
-            this.CpvpercentageOffline = benefit.CpvpercentageOffline;
+            this.Link = benefit.Link;
+            this.MaxDiscountPercentage = benefit.MaxDiscountPercentage;
+            this.Cpvpercentage = benefit.CPVPercentage;
+            this.MinDiscountPercentage = benefit.MinDiscountPercentage;
+            this.CashbackAmount = benefit.CashbackAmount;
             this.Start = benefit.Start;
             this.End = benefit.End;
             this.IdBenefitType = benefit.IdBenefitType;
@@ -156,13 +161,15 @@ namespace ias.Rebens.api.Models
             this.Active = benefit.Active;
             this.IdIntegrationType = benefit.IdIntegrationType;
             this.IdPartner = benefit.IdPartner;
-            this.Link = benefit.WebSite;
-            this.BenefitCall = benefit.Teaser;
+            this.Link = benefit.Link;
+            this.Call = benefit.Call;
+            this.VoucherText = benefit.VoucherText;
+            this.IdOperation = benefit.IdOperation;
 
             if (this.IdBenefitType == (int)Enums.BenefitType.OffLine && idCustomer.HasValue)
                 this.Link = "http://admin.rebens.com.br/Voucher/?code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
             if (this.IdBenefitType == (int)Enums.BenefitType.Cashback && idCustomer.HasValue)
-                this.Link = benefit.WebSite + (benefit.WebSite.IndexOf('?') > 0 ? "&" : "?") + "zpar0=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+                this.Link = benefit.Link + (benefit.Link.IndexOf('?') > 0 ? "&" : "?") + "zpar0=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
 
             if (benefit.Partner != null)
             {
@@ -201,11 +208,11 @@ namespace ias.Rebens.api.Models
                 Title = this.Title,
                 Image = this.Image,
                 DueDate = this.DueDate,
-                WebSite = this.WebSite,
-                MaxDiscountPercentageOnline = this.MaxDiscountPercentageOnline,
-                CpvpercentageOnline = this.CpvpercentageOnline,
-                MaxDiscountPercentageOffline = this.MaxDiscountPercentageOffline,
-                CpvpercentageOffline = this.CpvpercentageOffline,
+                Link = this.Link,
+                MaxDiscountPercentage = this.MaxDiscountPercentage,
+                CPVPercentage = this.Cpvpercentage,
+                MinDiscountPercentage = this.MinDiscountPercentage,
+                CashbackAmount = this.CashbackAmount,
                 Start = this.Start,
                 End = this.End,
                 IdBenefitType = this.IdBenefitType,
@@ -213,7 +220,9 @@ namespace ias.Rebens.api.Models
                 Active = this.Active,
                 IdIntegrationType = this.IdIntegrationType,
                 IdPartner = this.IdPartner,
-                Teaser = this.BenefitCall
+                Call = this.Call,
+                VoucherText = this.VoucherText,
+                IdOperation = this.IdOperation
             };
         }
 
@@ -284,7 +293,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Chamada do Benefício
         /// </summary>
-        public string BenefitCall { get; set; }
+        public string Call { get; set; }
         /// <summary>
         /// Construtor
         /// </summary>
@@ -298,7 +307,7 @@ namespace ias.Rebens.api.Models
             this.Id = benefit.Id;
             this.Title = benefit.Title;
             this.IdBenefitType = benefit.IdBenefitType;
-            this.BenefitCall = benefit.Teaser;
+            this.Call = benefit.Call;
             this.BenefitType = Enums.EnumHelper.GetEnumDescription((Enums.BenefitType)benefit.IdBenefitType);
             if (benefit.Partner != null)
                 this.Image = benefit.Partner.Logo;
@@ -321,7 +330,13 @@ namespace ias.Rebens.api.Models
         [Required]
         [MaxLength(400)]
         public string Title { get; set; }
-        
+        /// <summary>
+        /// Título
+        /// </summary>
+        [Required]
+        [MaxLength(400)]
+        public string Name { get; set; }
+
 
         /// <summary>
         /// Construtor
@@ -336,6 +351,7 @@ namespace ias.Rebens.api.Models
         {
             this.Id = benefit.Id;
             this.Title = benefit.Title;
+            this.Name = benefit.Name;
         }
     }
 }

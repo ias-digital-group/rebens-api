@@ -17,7 +17,7 @@ namespace ias.Rebens.api.Controllers
     /// Portal Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer, referal")]
     [ApiController]
     public class PortalController : ControllerBase
     {
@@ -25,51 +25,57 @@ namespace ias.Rebens.api.Controllers
         private IBannerRepository bannerRepo;
         private IBenefitRepository benefitRepo;
         private IBenefitUseRepository benefitUseRepo;
+        private ICouponRepository couponRepo;
+        private ICustomerRepository customerRepo;
+        private ICustomerReferalRepository customerReferalRepo;
         private IFaqRepository faqRepo;
         private IFormContactRepository formContactRepo;
         private IFormEstablishmentRepository formEstablishmentRepo;
-        private IOperationRepository operationRepo;
-        private ICustomerRepository customerRepo;
-        private IWithdrawRepository withdrawRepo;
-        private IStaticTextRepository staticTextRepo;
-        private ICouponRepository couponRepo;
         private IMoipRepository moipRepo;
+        private IOperationRepository operationRepo;
+        private IOperationCustomerRepository operationCustomerRepo;
+        private IStaticTextRepository staticTextRepo;
+        private IWithdrawRepository withdrawRepo;
 
         /// <summary>
-        /// Constructor
+        /// 
         /// </summary>
-        /// <param name="addressRepository"></param>
         /// <param name="bannerRepository"></param>
         /// <param name="benefitRepository"></param>
-        /// <param name="benefitUseRepository"></param>
-        /// <param name="customerRepository"></param>
         /// <param name="faqRepository"></param>
         /// <param name="formContactRepository"></param>
-        /// <param name="formEstablishmentRepository"></param>
         /// <param name="operationRepository"></param>
+        /// <param name="formEstablishmentRepository"></param>
+        /// <param name="customerRepository"></param>
+        /// <param name="addressRepository"></param>
         /// <param name="withdrawRepository"></param>
+        /// <param name="benefitUseRepository"></param>
         /// <param name="staticTextRepository"></param>
         /// <param name="couponRepository"></param>
         /// <param name="moipRepository"></param>
+        /// <param name="customerReferalRepository"></param>
+        /// <param name="operationCustomerRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
             IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository, ICouponRepository couponRepository, 
-            IMoipRepository moipRepository)
+            IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository)
         {
+            this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
             this.benefitRepo = benefitRepository;
+            this.benefitUseRepo = benefitUseRepository;
+            this.couponRepo = couponRepository;
+            this.customerRepo = customerRepository;
+            this.customerReferalRepo = customerReferalRepository;
             this.faqRepo = faqRepository;
             this.formContactRepo = formContactRepository;
-            this.operationRepo = operationRepository;
             this.formEstablishmentRepo = formEstablishmentRepository;
-            this.customerRepo = customerRepository;
-            this.addrRepo = addressRepository;
-            this.withdrawRepo = withdrawRepository;
-            this.benefitUseRepo = benefitUseRepository;
-            this.staticTextRepo = staticTextRepository;
-            this.couponRepo = couponRepository;
             this.moipRepo = moipRepository;
+            this.operationRepo = operationRepository;
+            this.operationCustomerRepo = operationCustomerRepository;
+            this.staticTextRepo = staticTextRepository;
+            this.withdrawRepo = withdrawRepository;
         }
 
         /// <summary>
@@ -94,8 +100,8 @@ namespace ias.Rebens.api.Controllers
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
 
-            var listFull = bannerRepo.ListByTypeAndOperation(operationGuid, (int)Enums.BannerType.Home, out string error);
-            var listUnmissable = bannerRepo.ListByTypeAndOperation(operationGuid, (int)Enums.BannerType.Unmissable, out error);
+            var listFull = bannerRepo.ListByTypeAndOperation(operationGuid, (int)Enums.BannerType.Home, (int)Enums.BannerShow.HomeNotLogged, out string error);
+            var listUnmissable = bannerRepo.ListByTypeAndOperation(operationGuid, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.HomeNotLogged, out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -306,7 +312,7 @@ namespace ias.Rebens.api.Controllers
                             }
                         );
 
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "customer"));
+                        identity.AddClaim(new Claim(ClaimTypes.Role, customer.CustomerType == (int)Enums.CustomerType.Customer ? "customer" : "referal"));
                         //foreach (var policy in user.Permissions)
                         //    identity.AddClaim(new Claim("permissions", "permission1"));
 
@@ -331,7 +337,6 @@ namespace ias.Rebens.api.Controllers
                         });
                         var token = handler.WriteToken(securityToken);
 
-                        decimal balance = (decimal)(new Random().NextDouble() * 499);
 
                         var Data = new PortalTokenModel()
                         {
@@ -339,8 +344,13 @@ namespace ias.Rebens.api.Controllers
                             created = dataCriacao,
                             expiration = dataExpiracao,
                             accessToken = token,
-                            balance = Math.Round(balance, 2)
+                            balance = 0
                         };
+                        if(customer.CustomerType == (int)Enums.CustomerType.Customer)
+                        {
+                            decimal balance = (decimal)(new Random().NextDouble() * 499);
+                            Data.balance = Math.Round(balance, 2);
+                        }
 
                         return Ok(Data);
                     }
@@ -372,8 +382,8 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
             }
 
-            var listFull = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Home, out string error);
-            var listUnmissable = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, out error);
+            var listFull = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Home, (int)Enums.BannerShow.HomeLogged, out string error);
+            var listUnmissable = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.HomeLogged, out error);
             var listBenefits = benefitRepo.ListByOperation(idOperation, null, null, 0, 6, null, "title asc", out error);
 
             if (string.IsNullOrEmpty(error))
@@ -588,31 +598,82 @@ namespace ias.Rebens.api.Controllers
             {
                 if(!customerRepo.CheckEmailAndCpf(signUp.Email, signUp.Cpf, operation.Id, out error))
                 {
-                    var customer = new Customer()
+                    Customer customer = null;
+                    CustomerReferal referal = null;
+                    OperationCustomer oc = null;
+                    if (operation.Id != 1)
                     {
-                        Email = signUp.Email,
-                        Cpf = signUp.Cpf,
-                        Created = DateTime.Now,
-                        Modified = DateTime.Now,
-                        Status = (int)Enums.CustomerStatus.Validation,
-                        CustomerType = (int)Enums.CustomerType.Customer,
-                        Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                        IdOperation = operation.Id
-                    };
-
-                    if (customerRepo.Create(customer, out error))
-                    {
-                        var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.EmailCustomerValidation, out error);
-                        if(staticText != null)
+                        oc = operationCustomerRepo.ReadByCpf(signUp.Cpf, out error);
+                        if (oc != null)
                         {
-                            var sendingBlue = new Integration.SendinBlueHelper();
-                            string link = operation.Domain + "#/?c=" + customer.Code;
-                            var body = staticText.Html.Replace("##LINK##", link);
-                            var result = sendingBlue.Send(customer.Email, "", "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
+                            customer = new Customer()
+                            {
+                                Email = signUp.Email,
+                                Cpf = signUp.Cpf,
+                                Name = oc.Name,
+                                Phone = oc.Phone1,
+                                Cellphone = oc.MobilePhone,
+                                Created = DateTime.Now,
+                                Modified = DateTime.Now,
+                                Status = (int)Enums.CustomerStatus.Validation,
+                                CustomerType = (int)Enums.CustomerType.Customer,
+                                Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
+                                IdOperation = operation.Id
+                            };
                         }
-
-                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
+                        else
+                        {
+                            referal = customerReferalRepo.ReadByEmail(signUp.Email, out error);
+                            if (referal != null)
+                            {
+                                customer = new Customer()
+                                {
+                                    Email = signUp.Email,
+                                    Cpf = signUp.Cpf,
+                                    Name = oc.Name,
+                                    Created = DateTime.Now,
+                                    Modified = DateTime.Now,
+                                    Status = (int)Enums.CustomerStatus.Validation,
+                                    CustomerType = (int)Enums.CustomerType.Referal,
+                                    Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
+                                    IdOperation = operation.Id
+                                };
+                            }
+                        }
                     }
+                    else
+                    {
+                        customer = new Customer()
+                        {
+                            Email = signUp.Email,
+                            Cpf = signUp.Cpf,
+                            Created = DateTime.Now,
+                            Modified = DateTime.Now,
+                            Status = (int)Enums.CustomerStatus.Validation,
+                            CustomerType = (int)Enums.CustomerType.Customer,
+                            Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
+                            IdOperation = operation.Id
+                        };
+                    }
+
+                    if(customer != null)
+                    {
+                        if (customerRepo.Create(customer, out error))
+                        {
+                            Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
+
+                            if(operation.Id != 1)
+                            {
+                                if (oc != null)
+                                    operationCustomerRepo.SetSigned(oc.Id, out error);
+                                else if (referal != null)
+                                    customerReferalRepo.ChangeStatus(referal.Id, Enums.CustomerReferalStatus.Signed, out error);
+                            }
+
+                            return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
+                        }
+                    }
+                    
                     return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 }
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Email ou CPF já cadastrado!" });
@@ -659,7 +720,7 @@ namespace ias.Rebens.api.Controllers
                             }
                         );
 
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "customer"));
+                        identity.AddClaim(new Claim(ClaimTypes.Role, customer.CustomerType == (int)Enums.CustomerType.Customer ? "customer" : "referal"));
                         //foreach (var policy in user.Permissions)
                         //    identity.AddClaim(new Claim("permissions", "permission1"));
 
@@ -813,17 +874,9 @@ namespace ias.Rebens.api.Controllers
                 {
                     if(customerRepo.ChangeStatus(user.Id, Enums.CustomerStatus.ChangePassword, out error))
                     {
-                        var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.EmailPasswordRecovery, out error);
-                        if (staticText != null)
-                        {
-                            var sendingBlue = new Integration.SendinBlueHelper();
-                            var link = operation.Domain + "#/?c=" + user.Code;
-                            var body = staticText.Html.Replace("##NAME##", user.Name).Replace("##LINK##", link);
-                            var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
-                            if (result.Status)
-                                return Ok(new JsonModel() { Status = "ok", Message = "Enviamos um link com as instruções para definir uma nova senha." });
-                            return StatusCode(400, new JsonModel() { Status = "error", Message = result.Message });
-                        }
+                        if(Helper.EmailHelper.SendPasswordRecovery(staticTextRepo, operation, user, out error))
+                            return Ok(new JsonModel() { Status = "ok", Message = "Enviamos um link com as instruções para definir uma nova senha." });
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
                 }
@@ -875,7 +928,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna o resumo para página de resgate, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("GetWithdrawSummary")]
+        [HttpGet("GetWithdrawSummary"), Authorize("Bearer", Roles = "customer")]
         [ProducesResponseType(typeof(JsonDataModel<BalanceSummaryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -954,7 +1007,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("Withdraw")]
+        [HttpPost("Withdraw"), Authorize("Bearer", Roles = "customer")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Withdraw([FromBody]WithdrawModel withdraw)
@@ -1000,7 +1053,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna o histórico de resgates do cliente, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("ListWithdraw")]
+        [HttpGet("ListWithdraw"), Authorize("Bearer", Roles = "customer")]
         [ProducesResponseType(typeof(ResultPageModel<WithdrawItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -1111,14 +1164,14 @@ namespace ias.Rebens.api.Controllers
             var principal = HttpContext.User;
             if (principal?.Claims != null)
             {
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
                 if (operationId == null)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
                 if (!int.TryParse(operationId.Value, out idOperation))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            var list = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, out string error);
+            var list = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.Benefit, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
@@ -1186,7 +1239,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista com o histórico de pagamento, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("ListPayments")]
+        [HttpGet("ListPayments"), Authorize("Bearer", Roles = "customer")]
         [ProducesResponseType(typeof(JsonDataModel<List<PaymentModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]

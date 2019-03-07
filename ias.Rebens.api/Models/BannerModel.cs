@@ -76,7 +76,18 @@ namespace ias.Rebens.api.Models
         /// Status
         /// </summary>
         public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
-
+        /// <summary>
+        /// aparece na home
+        /// </summary>
+        public bool BannerShowHome { get; set; }
+        /// <summary>
+        /// aparece na home
+        /// </summary>
+        public bool BannerShowHomeLogged { get; set; }
+        /// <summary>
+        /// aparece na home
+        /// </summary>
+        public bool BannerShowBenefit { get; set; }
         /// <summary>
         /// Construtor
         /// </summary>
@@ -100,6 +111,9 @@ namespace ias.Rebens.api.Models
             this.Active = banner.Active;
             this.Start = banner.Start.Value;
             this.End = banner.End.Value;
+            this.BannerShowHome = (banner.IdBannerShow & (int)Enums.BannerShow.HomeNotLogged) == (int)Enums.BannerShow.HomeNotLogged;
+            this.BannerShowHomeLogged = (banner.IdBannerShow & (int)Enums.BannerShow.HomeLogged) == (int)Enums.BannerShow.HomeLogged;
+            this.BannerShowBenefit = (banner.IdBannerShow & (int)Enums.BannerShow.Benefit) == (int)Enums.BannerShow.Benefit;
         }
 
         /// <summary>
@@ -121,6 +135,9 @@ namespace ias.Rebens.api.Models
                 Active = this.Active,
                 Start = this.Start,
                 End = this.End,
+                IdBannerShow = (this.BannerShowHome ? (int)Enums.BannerShow.HomeNotLogged : 0) + 
+                    (this.BannerShowHomeLogged ? (int)Enums.BannerShow.HomeLogged : 0) +
+                    (this.BannerShowBenefit ? (int)Enums.BannerShow.Benefit : 0),
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };

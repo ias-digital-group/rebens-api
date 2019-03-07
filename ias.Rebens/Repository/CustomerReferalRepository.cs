@@ -19,10 +19,18 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    customerReferal.Modified = customerReferal.Created = DateTime.UtcNow;
-                    db.CustomerReferal.Add(customerReferal);
-                    db.SaveChanges();
-                    error = null;
+                    if(!db.CustomerReferal.Any(c => c.Email == customerReferal.Email))
+                    {
+                        customerReferal.Modified = customerReferal.Created = DateTime.UtcNow;
+                        db.CustomerReferal.Add(customerReferal);
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Esse e-mail já foi indicado para participar do clube.";
+                    }
                 }
             }
             catch (Exception ex)
@@ -32,6 +40,32 @@ namespace ias.Rebens
                 error = "Ocorreu um erro ao tentar criar uma referência. (erro:" + idLog + ")";
                 ret = false;
             }
+            return ret;
+        }
+
+        public bool CheckLimit(int idOperation, int idCustomer, out string error)
+        {
+            bool ret = true;
+            error = null;
+            if (idOperation == 2)
+            {
+                try
+                {
+                    using (var db = new RebensContext(this._connectionString))
+                    {
+                        var count = db.CustomerReferal.Count(c => c.IdCustomer == idCustomer);
+                        ret = count < 5;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var logError = new LogErrorRepository(this._connectionString);
+                    int idLog = logError.Create("CustomerReferalRepository.CheckLimit", ex.Message, "", ex.StackTrace);
+                    error = "Ocorreu um erro ao tentar verificar o limite. (erro:" + idLog + ")";
+                    ret = false;
+                }
+            }
+
             return ret;
         }
 
@@ -187,6 +221,27 @@ namespace ias.Rebens
             return ret;
         }
 
+        public CustomerReferal ReadByEmail(string email, out string error)
+        {
+            CustomerReferal ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.CustomerReferal.SingleOrDefault(c => c.Email == email);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerReferalRepository.ReadByEmail", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar ler a referência. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public bool Update(CustomerReferal customerReferal, out string error)
         {
             bool ret = true;
@@ -201,6 +256,7 @@ namespace ias.Rebens
                         update.IdStatus = customerReferal.IdStatus;
                         update.Modified = DateTime.Now;
                         update.Name = customerReferal.Name;
+                        update.DegreeOfKinship = customerReferal.DegreeOfKinship;
 
                         db.SaveChanges();
                         error = null;

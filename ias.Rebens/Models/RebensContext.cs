@@ -49,6 +49,7 @@ namespace ias.Rebens
         public virtual DbSet<Operation> Operation { get; set; }
         public virtual DbSet<OperationAddress> OperationAddress { get; set; }
         public virtual DbSet<OperationContact> OperationContact { get; set; }
+        public virtual DbSet<OperationCustomer> OperationCustomer { get; set; }
         public virtual DbSet<Partner> Partner { get; set; }
         public virtual DbSet<PartnerAddress> PartnerAddress { get; set; }
         public virtual DbSet<PartnerContact> PartnerContact { get; set; }
@@ -146,26 +147,17 @@ namespace ias.Rebens
 
                 entity.Property(e => e.End).HasColumnType("datetime");
 
-                entity.Property(e => e.Image)
-                    .IsRequired()
-                    .HasMaxLength(500);
+                entity.Property(e => e.Image).IsRequired().HasMaxLength(500);
 
-                entity.Property(e => e.Link)
-                    .IsRequired()
-                    .HasMaxLength(500);
+                entity.Property(e => e.Link).IsRequired().HasMaxLength(500);
 
                 entity.Property(e => e.Modified).HasColumnType("datetime");
 
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(200);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
 
                 entity.Property(e => e.Start).HasColumnType("datetime");
 
-                entity.HasOne(d => d.Benefit)
-                    .WithMany(p => p.Banners)
-                    .HasForeignKey(d => d.IdBenefit)
-                    .HasConstraintName("FK_Banner_Benefit");
+                entity.HasOne(d => d.Benefit).WithMany(p => p.Banners).HasForeignKey(d => d.IdBenefit).HasConstraintName("FK_Banner_Benefit");
             });
 
             modelBuilder.Entity<BannerOperation>(entity =>
@@ -187,13 +179,9 @@ namespace ias.Rebens
 
             modelBuilder.Entity<Benefit>(entity =>
             {
-                entity.Property(e => e.CpvpercentageOffline)
-                    .HasColumnName("CPVPercentageOffline")
-                    .HasColumnType("money");
+                entity.Property(e => e.CPVPercentage).HasColumnName("CPVPercentage").HasColumnType("money");
 
-                entity.Property(e => e.CpvpercentageOnline)
-                    .HasColumnName("CPVPercentageOnline")
-                    .HasColumnType("money");
+                entity.Property(e => e.CashbackAmount).HasColumnName("CashbackAmount").HasColumnType("money");
 
                 entity.Property(e => e.Created).HasColumnType("datetime");
 
@@ -203,29 +191,35 @@ namespace ias.Rebens
 
                 entity.Property(e => e.Image).HasMaxLength(500);
 
-                entity.Property(e => e.MaxDiscountPercentageOffline).HasColumnType("money");
+                entity.Property(e => e.MaxDiscountPercentage).HasColumnName("MaxDiscountPercentage").HasColumnType("money");
 
-                entity.Property(e => e.MaxDiscountPercentageOnline).HasColumnType("money");
+                entity.Property(e => e.MinDiscountPercentage).HasColumnName("MinDiscountPercentage").HasColumnType("money");
 
                 entity.Property(e => e.Modified).HasColumnType("datetime");
 
                 entity.Property(e => e.Start).HasColumnType("datetime");
 
-                entity.Property(e => e.Title)
-                    .IsRequired()
-                    .HasMaxLength(400);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(400);
 
-                entity.Property(e => e.WebSite).HasMaxLength(500);
+                entity.Property(e => e.Link).HasMaxLength(500);
 
-                entity.Property(e => e.Teaser).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Call).IsRequired().HasMaxLength(500);
 
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.VoucherText).HasMaxLength(500);
 
                 entity.HasOne(d => d.Partner)
                     .WithMany(p => p.Benefits)
                     .HasForeignKey(d => d.IdPartner)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Benefit_Partner");
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.Benefits)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Benefit_Operation");
             });
 
             modelBuilder.Entity<BenefitAddress>(entity =>
@@ -739,6 +733,27 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdContact)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_OperationContact_Contact");
+            });
+
+            modelBuilder.Entity<OperationCustomer>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+                entity.Property(e => e.CPF).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Phone1).HasMaxLength(50);
+                entity.Property(e => e.Phone2).HasMaxLength(50);
+                entity.Property(e => e.Email1).HasMaxLength(500);
+                entity.Property(e => e.Email2).HasMaxLength(500);
+                entity.Property(e => e.MobilePhone).HasMaxLength(50);
+                entity.Property(e => e.Others).HasMaxLength(4000);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.OperationCustomers)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OperationCustomer_Operation");
             });
 
             modelBuilder.Entity<Partner>(entity =>

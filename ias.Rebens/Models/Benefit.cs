@@ -21,11 +21,11 @@ namespace ias.Rebens
         public int IdAdminUser { get; set; }
         public string Image { get; set; }
         public DateTime? DueDate { get; set; }
-        public string WebSite { get; set; }
-        public decimal? MaxDiscountPercentageOnline { get; set; }
-        public decimal? CpvpercentageOnline { get; set; }
-        public decimal? MaxDiscountPercentageOffline { get; set; }
-        public decimal? CpvpercentageOffline { get; set; }
+        public string Link { get; set; }
+        public decimal? MaxDiscountPercentage { get; set; }
+        public decimal? CPVPercentage { get; set; }
+        public decimal? MinDiscountPercentage { get; set; }
+        public decimal? CashbackAmount { get; set; }
         public DateTime? Start { get; set; }
         public DateTime? End { get; set; }
         public int IdBenefitType { get; set; }
@@ -33,11 +33,14 @@ namespace ias.Rebens
         public bool Active { get; set; }
         public int IdIntegrationType { get; set; }
         public int IdPartner { get; set; }
-        public string Teaser { get; set; }
+        public string Call { get; set; }
+        public string VoucherText { get; set; }
+        public int? IdOperation { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
         public virtual Partner Partner { get; set; }
+        public virtual Operation Operation { get; set; }
         public virtual ICollection<Banner> Banners { get; set; }
         public virtual ICollection<BenefitAddress> BenefitAddresses { get; set; }
         public virtual ICollection<BenefitCategory> BenefitCategories { get; set; }

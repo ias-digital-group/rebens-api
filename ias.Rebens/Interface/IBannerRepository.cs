@@ -20,9 +20,9 @@ namespace ias.Rebens
 
         ResultPage<Banner> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error);
 
-        List<Banner> ListByTypeAndOperation(Guid operationCode, int type, out string error);
+        List<Banner> ListByTypeAndOperation(Guid operationCode, int type, int idBannerShow, out string error);
 
-        List<Banner> ListByTypeAndOperation(int idOperation, int type, out string error);
+        List<Banner> ListByTypeAndOperation(int idOperation, int type, int idBannerShow, out string error);
 
         bool AddOperation(int idBanner, int idOperation, out string error);
 

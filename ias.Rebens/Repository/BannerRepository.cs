@@ -208,7 +208,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Banner> ListByTypeAndOperation(Guid operationCode, int type, out string error)
+        public List<Banner> ListByTypeAndOperation(Guid operationCode, int type, int idBannerShow, out string error)
         {
             List<Banner> ret;
             try
@@ -216,7 +216,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.Operation.Code == operationCode) && b.Type == type &&
-                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && (!b.IdBenefit.HasValue  || (b.IdBenefit.HasValue && b.Benefit.Active)))
+                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && b.Benefit.Active))
+                                && ((b.IdBannerShow & idBannerShow) == idBannerShow))
                                 .OrderBy(b => b.Order).ToList();
                    
                     error = null;
@@ -232,7 +233,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Banner> ListByTypeAndOperation(int idOperation, int type, out string error)
+        public List<Banner> ListByTypeAndOperation(int idOperation, int type, int idBannerShow, out string error)
         {
             List<Banner> ret;
             try
@@ -240,7 +241,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Type == type &&
-                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && b.Benefit.Active)))
+                                b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && b.Benefit.Active))
+                                && ((b.IdBannerShow & idBannerShow) == idBannerShow))
                                 .OrderBy(b => b.Order).ToList();
 
                     error = null;
@@ -345,6 +347,7 @@ namespace ias.Rebens
                         update.Order = banner.Order;
                         update.Start = banner.Start;
                         update.Type = banner.Type;
+                        update.IdBannerShow = banner.IdBannerShow;
                         update.Modified = DateTime.UtcNow;
 
                         db.SaveChanges();

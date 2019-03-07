@@ -8,6 +8,8 @@ namespace ias.Rebens
     {
         CustomerReferal Read(int id, out string error);
 
+        CustomerReferal ReadByEmail(string email, out string error);
+
         ResultPage<CustomerReferal> ListPage(int page, int pageItems, string word, string sort, out string error);
 
         bool Delete(int id, out string error);
@@ -19,5 +21,7 @@ namespace ias.Rebens
         ResultPage<CustomerReferal> ListByCustomer(int idCustomer, int page, int pageItems, string word, string sort, out string error);
 
         bool ChangeStatus(int id, Enums.CustomerReferalStatus status, out string error);
+
+        bool CheckLimit(int idOperation, int idCustomer, out string error);
     }
 }

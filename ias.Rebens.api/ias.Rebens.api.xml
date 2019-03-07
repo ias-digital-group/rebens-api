@@ -756,6 +756,15 @@
             <response code="200">Se o objeto for atualizado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.#ctor(ias.Rebens.ICustomerReferalRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IOperationRepository,ias.Rebens.IStaticTextRepository)">
+            <summary>
+            
+            </summary>
+            <param name="customerReferalRepository"></param>
+            <param name="customerRepository"></param>
+            <param name="operationRepository"></param>
+            <param name="staticTextRepository"></param>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.CustomerReferalController.List(System.Int32,System.Int32,System.String,System.String)">
             <summary>
             Lista as Indicações conforme os parametros
@@ -1311,23 +1320,25 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository)">
             <summary>
-            Constructor
+            
             </summary>
-            <param name="addressRepository"></param>
             <param name="bannerRepository"></param>
             <param name="benefitRepository"></param>
-            <param name="benefitUseRepository"></param>
-            <param name="customerRepository"></param>
             <param name="faqRepository"></param>
             <param name="formContactRepository"></param>
-            <param name="formEstablishmentRepository"></param>
             <param name="operationRepository"></param>
+            <param name="formEstablishmentRepository"></param>
+            <param name="customerRepository"></param>
+            <param name="addressRepository"></param>
             <param name="withdrawRepository"></param>
+            <param name="benefitUseRepository"></param>
             <param name="staticTextRepository"></param>
             <param name="couponRepository"></param>
             <param name="moipRepository"></param>
+            <param name="customerReferalRepository"></param>
+            <param name="operationCustomerRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1995,6 +2006,21 @@
             Status
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.BannerShowHome">
+            <summary>
+            aparece na home
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.BannerShowHomeLogged">
+            <summary>
+            aparece na home
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BannerModel.BannerShowBenefit">
+            <summary>
+            aparece na home
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.BannerModel.#ctor">
             <summary>
             Construtor
@@ -2143,29 +2169,24 @@
             Data de validade
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.WebSite">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.MaxDiscountPercentage">
             <summary>
-            Site do benefício
+            Porcentagem máxima de desconto
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.MaxDiscountPercentageOnline">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.Cpvpercentage">
             <summary>
-            Porcentagem máxima de desconto online
+            Porcentagem de CPV
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.CpvpercentageOnline">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.MinDiscountPercentage">
             <summary>
-            Porcentagem de CPV online
+            Porcentagem mínima de desconto
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.MaxDiscountPercentageOffline">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.CashbackAmount">
             <summary>
-            Porcentagem máxima de desconto offline
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.CpvpercentageOffline">
-            <summary>
-            Porcentagem de CPV offline
+            Valor do cashback
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.BenefitModel.Start">
@@ -2223,7 +2244,7 @@
             Tipo de Integração
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.BenefitCall">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.Call">
             <summary>
             Chamada do Benefício
             </summary>
@@ -2241,6 +2262,16 @@
         <member name="P:ias.Rebens.api.Models.BenefitModel.Link">
             <summary>
             Link do benefício
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.VoucherText">
+            <summary>
+            Texto do Voucher
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.IdOperation">
+            <summary>
+            Id da operação quando o benefício é exclusivo
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.BenefitModel.StatusName">
@@ -2308,7 +2339,7 @@
             Tipo de benefício
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitListItem.BenefitCall">
+        <member name="P:ias.Rebens.api.Models.BenefitListItem.Call">
             <summary>
             Chamada do Benefício
             </summary>
@@ -2335,6 +2366,11 @@
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.BenefitItem.Title">
+            <summary>
+            Título
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitItem.Name">
             <summary>
             Título
             </summary>
@@ -2941,6 +2977,12 @@
         <member name="P:ias.Rebens.api.Models.CustomerReferalModel.Email">
             <summary>
             Email do indicado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerReferalModel.DegreeOfKinship">
+            <summary>
+            Grau de parentesco
+            (Pai = 1, Mãe = 2, Irmão = 3, Irmã = 4, Tio(a) = 5, Primo(a) = 6, Avô(ó) = 7)
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CustomerReferalModel.IdStatus">

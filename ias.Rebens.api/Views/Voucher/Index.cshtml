@@ -22,7 +22,8 @@
         .box .middle .logo{width:188px;height:108px;border-right:1px solid #f1f1f1;float:left;position:relative;}
         .box .middle .logo img{position:absolute;max-width:150px;max-height:100px;top:0;left:0;right:0;bottom:0;margin:auto;}
         .box .middle .discount{width:170px;height:108px;border-right:1px solid #f1f1f1;float:left;text-align:center;}
-        .box .middle .discount h1{font-size:60px;font-weight:500;margin:10px 0 0 0;}
+        .box .middle .discount p{margin:0;}
+        .box .middle .discount h1{font-size:60px;font-weight:500;margin:0;}
         .box .middle .discount h2{font-weight:600;margin:0;}
         .box .middle .description{width:408px;height:150px;float:left;padding:0 15px;}
         .box .middle .description p{margin:0 0 6px 0;font-size:13px;}
@@ -49,12 +50,13 @@
                 <img src="@Model.PartnerLogo" alt="@Model.PartnerName" />
             </div>
             <div class="discount">
+                <p><small>até</small></p>
                 <h1>@Model.Discount</h1>
                 <h2>DESCONTO</h2>
             </div>
             <div class="description">
                 <p><b>Como Utilizar:</b></p>
-                <p>@Model.HowToUse</p>
+                <p>@Html.Raw(Model.HowToUse)</p>
             </div>
         </div>
         <div class="bottom">

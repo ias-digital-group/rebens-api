@@ -17,12 +17,21 @@ namespace ias.Rebens.api.Controllers
         private ICustomerReferalRepository repo;
         private ICustomerRepository customerRepo;
         private IOperationRepository operationRepo;
+        private IStaticTextRepository staticTextRepo;
 
-        public CustomerReferalController(ICustomerReferalRepository customerReferalRepository, ICustomerRepository customerRepository, IOperationRepository operationRepository)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="customerReferalRepository"></param>
+        /// <param name="customerRepository"></param>
+        /// <param name="operationRepository"></param>
+        /// <param name="staticTextRepository"></param>
+        public CustomerReferalController(ICustomerReferalRepository customerReferalRepository, ICustomerRepository customerRepository, IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
         {
             this.repo = customerReferalRepository;
             this.customerRepo = customerRepository;
             this.operationRepo = operationRepository;
+            this.staticTextRepo = staticTextRepository;
         }
 
         /// <summary>
@@ -163,23 +172,22 @@ namespace ias.Rebens.api.Controllers
             var operation = operationRepo.Read(idOperation, out string error);
             var customer = customerRepo.Read(idCustomer, out error);
 
-
-
-            var model = new JsonModel();
-
-            var referal = customerReferal.GetEntity();
-            referal.IdStatus = (int)Enums.CustomerReferalStatus.pending;
-            referal.IdCustomer = idCustomer;
-            referal.Created = referal.Modified = DateTime.Now;
-            if (repo.Create(referal, out error))
+            if(repo.CheckLimit(operation.Id, customer.Id, out error))
             {
-                var sendingBlue = new Integration.SendinBlueHelper();
-                var body = $"<p>Olá {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
-                sendingBlue.Send(referal.Email, referal.Name, "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);
+                var referal = customerReferal.GetEntity();
+                referal.IdStatus = (int)Enums.CustomerReferalStatus.pending;
+                referal.IdCustomer = idCustomer;
+                referal.Created = referal.Modified = DateTime.Now;
+                if (repo.Create(referal, out error))
+                {
+                    Helper.EmailHelper.SendCustomerReferal(staticTextRepo, operation, customer, referal, out error);
 
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Indicação criada com sucesso!", Id = referal.Id });
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Indicação criada com sucesso!", Id = referal.Id });
+                }
+
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não possui mais indicações para fazer. (limite = 5)" });
         }
 
         /// <summary>

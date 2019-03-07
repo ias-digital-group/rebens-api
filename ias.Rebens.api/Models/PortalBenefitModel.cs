@@ -50,8 +50,8 @@ namespace ias.Rebens.api.Models
         {
             this.Id = benefit.Id;
             this.Title = benefit.Title;
-            this.WebSite = benefit.WebSite;
-            this.BenefitCall = benefit.Teaser;
+            this.WebSite = benefit.Link;
+            this.BenefitCall = benefit.Call;
 
             if (benefit.Partner != null)
                 this.Image = benefit.Partner.Logo;

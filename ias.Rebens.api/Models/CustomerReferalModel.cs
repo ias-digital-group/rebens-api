@@ -35,6 +35,11 @@ namespace ias.Rebens.api.Models
         [MaxLength(500)]
         public string Email { get; set; }
         /// <summary>
+        /// Grau de parentesco
+        /// (Pai = 1, Mãe = 2, Irmão = 3, Irmã = 4, Tio(a) = 5, Primo(a) = 6, Avô(ó) = 7)
+        /// </summary>
+        public int? DegreeOfKinship { get; set; }
+        /// <summary>
         /// id do Status
         /// </summary>
         public int IdStatus { get; set; }
@@ -66,6 +71,7 @@ namespace ias.Rebens.api.Models
             this.Email = customerReferal.Email;
             this.Status = Enums.EnumHelper.GetEnumDescription((Enums.CustomerReferalStatus)customerReferal.IdStatus);
             this.Date = customerReferal.Created;
+            this.DegreeOfKinship = customerReferal.DegreeOfKinship;
             if (customerReferal.Customer != null)
                 this.CustomerName = customerReferal.Customer.Name;
         }
@@ -84,6 +90,7 @@ namespace ias.Rebens.api.Models
                 Name = this.Name,
                 Email = this.Email,
                 Created = this.Date,
+                DegreeOfKinship = this.DegreeOfKinship,
                 Modified = DateTime.UtcNow
             };
         }

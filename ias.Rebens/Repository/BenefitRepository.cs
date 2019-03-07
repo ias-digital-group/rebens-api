@@ -188,7 +188,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Benefit.Include("BenefitType").Include("IntegrationType").Where(p => string.IsNullOrEmpty(word) || p.Title.Contains(word));
+                    var tmpList = db.Benefit.Where(p => string.IsNullOrEmpty(word) || p.Name.Contains(word));
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -196,6 +196,12 @@ namespace ias.Rebens
                             break;
                         case "title desc":
                             tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
                             break;
                         case "id asc":
                             tmpList = tmpList.OrderBy(f => f.Id);
@@ -261,11 +267,11 @@ namespace ias.Rebens
                         if (!string.IsNullOrEmpty(benefit.Image))
                             update.Image = benefit.Image;
                         update.DueDate = benefit.DueDate;
-                        update.WebSite = benefit.WebSite;
-                        update.MaxDiscountPercentageOnline = benefit.MaxDiscountPercentageOnline;
-                        update.CpvpercentageOnline = benefit.CpvpercentageOnline;
-                        update.MaxDiscountPercentageOffline = benefit.MaxDiscountPercentageOffline;
-                        update.CpvpercentageOffline = benefit.CpvpercentageOffline;
+                        update.Link = benefit.Link;
+                        update.MaxDiscountPercentage = benefit.MaxDiscountPercentage;
+                        update.CPVPercentage = benefit.CPVPercentage;
+                        update.MinDiscountPercentage = benefit.MinDiscountPercentage;
+                        update.CashbackAmount = benefit.CashbackAmount;
                         update.Start = benefit.Start;
                         update.End = benefit.End;
                         update.IdBenefitType = benefit.IdBenefitType;
@@ -273,8 +279,10 @@ namespace ias.Rebens
                         update.IdIntegrationType = benefit.IdIntegrationType;
                         update.IdPartner = benefit.IdPartner;
                         update.Modified = DateTime.UtcNow;
-                        update.Teaser = benefit.Teaser;
+                        update.Call = benefit.Call;
                         update.Name = benefit.Name;
+                        update.VoucherText = benefit.VoucherText;
+                        update.IdOperation = benefit.IdOperation;
 
                         db.SaveChanges();
                         error = null;
@@ -436,8 +444,8 @@ namespace ias.Rebens
                                 types.Add(i);
                         }
                     }
-                    var tmpList = db.Benefit.Include("BenefitType").Include("Partner")
-                                    .Where(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)
+                    var tmpList = db.Benefit.Include("Partner")
+                                    .Where(b => ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation)) 
                                     && (string.IsNullOrEmpty(word) || b.Title.Contains(word))
                                     && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
                                     && b.Active
@@ -682,7 +690,7 @@ namespace ias.Rebens
                     logo = partner != null ? partner.Logo : "";
                     var benefit = db.Benefit.SingleOrDefault(s => s.Id == idBenefit);
                     title = benefit != null ? benefit.Title : "";
-                    call = benefit != null ? benefit.Teaser : "";
+                    call = benefit != null ? benefit.Call : "";
                     error = null;
                 }
             }

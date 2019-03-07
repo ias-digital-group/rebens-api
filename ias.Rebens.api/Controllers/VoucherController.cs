@@ -32,18 +32,11 @@ namespace ias.Rebens.api.Controllers
                 if (int.TryParse(aIds[0], out int idBenefit) && int.TryParse(aIds[1], out int idCustomer))
                 {
                     var benefit = benefitRepo.Read(idBenefit, out string error);
-                    string howToUse = "";
-                    if (benefit.StaticTexts != null)
-                    {
-                        var staticText = benefit.StaticTexts.SingleOrDefault(st => st.IdStaticTextType == (int)Enums.StaticTextType.BenefitHowToUse);
-                        howToUse = staticText.Html;
-                    }
-
                     var customer = customerRepo.Read(idCustomer, out error);
 
                     var benefitUse = new BenefitUse()
                     {
-                        Amount = benefit.MaxDiscountPercentageOffline,
+                        Amount = benefit.MaxDiscountPercentage,
                         Created = DateTime.Now,
                         IdBenefit = benefit.Id,
                         IdBenefitType = benefit.IdBenefitType,
@@ -64,9 +57,9 @@ namespace ias.Rebens.api.Controllers
                             CustomerDoc = customer.Cpf,
                             CustomerName = customer.Name,
                             PartnerLogo = benefit.Partner.Logo,
-                            Discount = benefit.MaxDiscountPercentageOffline.Value.ToString().Substring(0, benefit.MaxDiscountPercentageOffline.Value.ToString().IndexOf(".")) + "%",
-                            ExpireDate = benefit.DueDate.Value.ToString("dd/MM/yyyy"),
-                            HowToUse = howToUse
+                            Discount = benefit.MaxDiscountPercentage.Value.ToString().Substring(0, benefit.MaxDiscountPercentage.Value.ToString().IndexOf(".")) + "%",
+                            ExpireDate = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy"),
+                            HowToUse = benefit.VoucherText
                         };
 
                         return new ViewAsPdf("Index", "voucher.pdf", model);

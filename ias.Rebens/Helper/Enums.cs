@@ -22,6 +22,16 @@ namespace ias.Rebens.Enums
         savings
     }
 
+    public enum BannerShow: int
+    {
+        [Description("Home não logada")]
+        HomeNotLogged = 2,
+        [Description("Home logada")]
+        HomeLogged = 4,
+        [Description("Home de benefícios")]
+        Benefit = 8
+    }
+
     public enum BannerType
     {
         [Description("Home Full")]
@@ -93,7 +103,9 @@ namespace ias.Rebens.Enums
         [Description("Trocar Senha")]
         ChangePassword = 4,
         [Description("Imcompleto")]
-        Incomplete = 5
+        Incomplete = 5,
+        [Description("Lista")]
+        List = 6
     }
 
     public enum CustomerType : int
@@ -101,7 +113,25 @@ namespace ias.Rebens.Enums
         [Description("Cliente")]
         Customer = 1,
         [Description("Indicação")]
-        indication = 2
+        Referal = 2
+    }
+
+    public enum DegreeOfKinship : int
+    {
+        [Description("Pai")]
+        Father = 1,
+        [Description("Mãe")]
+        Mother = 2,
+        [Description("Irmão")]
+        Brother = 3,
+        [Description("Irmã")]
+        Sister = 4,
+        [Description("Tio(a)")]
+        Uncle = 5,
+        [Description("Primo(a)")]
+        Cousin = 6,
+        [Description("Avô(ó)")]
+        Granparents = 7
     }
 
     public enum IntegrationType : int
@@ -191,7 +221,9 @@ namespace ias.Rebens.Enums
         [Description("E-mail de recuperação de senha")]
         EmailPasswordRecovery = 7,
         [Description("E-mail de validação de cliente")]
-        EmailCustomerValidation = 8
+        EmailCustomerValidation = 8,
+        [Description("E-mail de indicação de cliente")]
+        EmailDefault = 9
     }
 
     public enum WithdrawStatus : int

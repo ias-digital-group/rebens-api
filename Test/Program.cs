@@ -26,21 +26,25 @@ namespace Test
         {
             var encoding = Encoding.Unicode;
 
+            string code = "wNOizZqPxtlh9HoQvNcq4A%3d%3d";
+            string temp = SimpleDecryption(System.Web.HttpUtility.UrlDecode(code));
 
-            int length = 12;
-            var list = new List<string>();
-            for (int i=0;i<100;i++)
-            {
-                string tmp = GenerateOTP(length);
-                Console.WriteLine(tmp);
+            Console.WriteLine(temp);
 
-                if (list.Any(l => l == tmp))
-                    Console.WriteLine("############################## ERROR ###############################");
-                else
-                    list.Add(tmp);
+            //int length = 12;
+            //var list = new List<string>();
+            //for (int i=0;i<100;i++)
+            //{
+            //    string tmp = GenerateOTP(length);
+            //    Console.WriteLine(tmp);
 
-                Thread.Sleep(10);
-            }
+            //    if (list.Any(l => l == tmp))
+            //        Console.WriteLine("############################## ERROR ###############################");
+            //    else
+            //        list.Add(tmp);
+
+            //    Thread.Sleep(10);
+            //}
 
             Console.WriteLine("DONE");
 
