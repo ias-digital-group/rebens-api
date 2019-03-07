@@ -103,9 +103,7 @@ namespace ias.Rebens.Enums
         [Description("Trocar Senha")]
         ChangePassword = 4,
         [Description("Imcompleto")]
-        Incomplete = 5,
-        [Description("Lista")]
-        List = 6
+        Incomplete = 5
     }
 
     public enum CustomerType : int

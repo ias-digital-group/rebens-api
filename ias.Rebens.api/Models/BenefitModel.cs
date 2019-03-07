@@ -42,7 +42,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Porcentagem de CPV
         /// </summary>
-        public decimal? Cpvpercentage { get; set; }
+        public decimal? CpvPercentage { get; set; }
         /// <summary>
         /// Porcentagem mínima de desconto
         /// </summary>
@@ -151,7 +151,7 @@ namespace ias.Rebens.api.Models
             this.DueDate = benefit.DueDate;
             this.Link = benefit.Link;
             this.MaxDiscountPercentage = benefit.MaxDiscountPercentage;
-            this.Cpvpercentage = benefit.CPVPercentage;
+            this.CpvPercentage = benefit.CPVPercentage;
             this.MinDiscountPercentage = benefit.MinDiscountPercentage;
             this.CashbackAmount = benefit.CashbackAmount;
             this.Start = benefit.Start;
@@ -210,7 +210,7 @@ namespace ias.Rebens.api.Models
                 DueDate = this.DueDate,
                 Link = this.Link,
                 MaxDiscountPercentage = this.MaxDiscountPercentage,
-                CPVPercentage = this.Cpvpercentage,
+                CPVPercentage = this.CpvPercentage,
                 MinDiscountPercentage = this.MinDiscountPercentage,
                 CashbackAmount = this.CashbackAmount,
                 Start = this.Start,

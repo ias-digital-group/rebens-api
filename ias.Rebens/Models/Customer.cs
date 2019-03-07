@@ -10,6 +10,7 @@ namespace ias.Rebens
         {
             BankAccounts = new HashSet<BankAccount>();
             BenefitUses = new HashSet<BenefitUse>();
+            BenefitViews = new HashSet<BenefitView>();
             CustomerReferals = new HashSet<CustomerReferal>();
             Coupons = new HashSet<Coupon>();
             Withdraws = new HashSet<Withdraw>();
@@ -42,6 +43,7 @@ namespace ias.Rebens
         public virtual Address Address { get; set; }
         public virtual ICollection<BankAccount> BankAccounts { get; set; }
         public virtual ICollection<BenefitUse> BenefitUses { get; set; }
+        public virtual ICollection<BenefitView> BenefitViews { get; set; }
         public virtual ICollection<Coupon> Coupons { get; set; }
         public virtual ICollection<CustomerReferal> CustomerReferals { get; set; }
         public virtual ICollection<MoipSignature> Signatures { get; set; }

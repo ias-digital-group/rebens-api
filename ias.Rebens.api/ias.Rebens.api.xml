@@ -1320,7 +1320,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository)">
             <summary>
             
             </summary>
@@ -1339,6 +1339,7 @@
             <param name="moipRepository"></param>
             <param name="customerReferalRepository"></param>
             <param name="operationCustomerRepository"></param>
+            <param name="benefitViewRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1570,6 +1571,18 @@
             <response code="200">Retorna a lista com o histórico de pagamento, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ReportController.#ctor(ias.Rebens.IReportRepository)">
+            <summary>
+            
+            </summary>
+            <param name="reportRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ReportController.LoadDashboard">
+            <summary>
+            Método que retorna as informações necessárias para montar o dashboard do admin
+            </summary>
+            <returns></returns>
         </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
             <summary>
@@ -2174,7 +2187,7 @@
             Porcentagem máxima de desconto
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.Cpvpercentage">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.CpvPercentage">
             <summary>
             Porcentagem de CPV
             </summary>

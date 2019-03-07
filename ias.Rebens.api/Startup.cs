@@ -101,6 +101,7 @@ namespace ias.Rebens.api
             services.AddTransient<IBannerRepository, BannerRepository>();
             services.AddTransient<IBenefitRepository, BenefitRepository>();
             services.AddTransient<IBenefitUseRepository, BenefitUseRepository>();
+            services.AddTransient<IBenefitViewRepository, BenefitViewRepository>();
             services.AddTransient<ICategoryRepository, CategoryRepository>();
             services.AddTransient<IConfigurationRepository, ConfigurationRepository>();
             services.AddTransient<IContactRepository, ContactRepository>();
@@ -114,8 +115,10 @@ namespace ias.Rebens.api
             services.AddTransient<ILogErrorRepository, LogErrorRepository>();
             services.AddTransient<IMoipRepository, MoipRepository>();
             services.AddTransient<IOperationRepository, OperationRepository>();
+            services.AddTransient<IOperationCustomerRepository, OperationCustomerRepository>();
             services.AddTransient<IPartnerRepository, PartnerRepository>();
             services.AddTransient<IProfileRepository, ProfileRepository>();
+            services.AddTransient<IReportRepository, ReportRepository>();
             services.AddTransient<IStaticTextRepository, StaticTextRepository>();
             services.AddTransient<IWithdrawRepository, WithdrawRepository>();
             services.AddTransient<IZanoxSaleRepository, ZanoxSaleRepository>();

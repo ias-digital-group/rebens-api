@@ -25,6 +25,7 @@ namespace ias.Rebens.api.Controllers
         private IBannerRepository bannerRepo;
         private IBenefitRepository benefitRepo;
         private IBenefitUseRepository benefitUseRepo;
+        private IBenefitViewRepository benefitViewRepo;
         private ICouponRepository couponRepo;
         private ICustomerRepository customerRepo;
         private ICustomerReferalRepository customerReferalRepo;
@@ -55,16 +56,19 @@ namespace ias.Rebens.api.Controllers
         /// <param name="moipRepository"></param>
         /// <param name="customerReferalRepository"></param>
         /// <param name="operationCustomerRepository"></param>
+        /// <param name="benefitViewRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
             IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository, ICouponRepository couponRepository, 
-            IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository)
+            IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository,
+            IBenefitViewRepository benefitViewRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
             this.benefitRepo = benefitRepository;
             this.benefitUseRepo = benefitUseRepository;
+            this.benefitViewRepo = benefitViewRepository;
             this.couponRepo = couponRepository;
             this.customerRepo = customerRepository;
             this.customerReferalRepo = customerReferalRepository;
@@ -508,6 +512,7 @@ namespace ias.Rebens.api.Controllers
 
             var operation = operationRepo.Read(idOperation, out string error);
             var benefit = benefitRepo.Read(id, out error);
+            benefitViewRepo.SaveView(id, idCustomer, out string viewError);
             if (string.IsNullOrEmpty(error))
             {
                 if (benefit == null || benefit.Id == 0)

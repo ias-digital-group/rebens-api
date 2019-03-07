@@ -32,6 +32,7 @@ namespace ias.Rebens
         public virtual DbSet<BenefitOperation> BenefitOperation { get; set; }
         public virtual DbSet<BenefitOperationPosition> BenefitOperationPosition { get; set; }
         public virtual DbSet<BenefitUse> BenefitUse { get; set; }
+        public virtual DbSet<BenefitView> BenefitView { get; set; }
         public virtual DbSet<Category> Category { get; set; }
         public virtual DbSet<Configuration> Configuration { get; set; }
         public virtual DbSet<Contact> Contact { get; set; }
@@ -315,6 +316,22 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdCustomer)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BenefitUse_Customer");
+            });
+
+            modelBuilder.Entity<BenefitView>(entity => {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Benefit)
+                    .WithMany(p => p.BenefitViews)
+                    .HasForeignKey(d => d.IdBenefit)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_BenefitView_Benefit");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.BenefitViews)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_BenefitView_Customer");
             });
 
             modelBuilder.Entity<Category>(entity =>
