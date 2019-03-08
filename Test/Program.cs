@@ -10,6 +10,7 @@ using ias.Rebens;
 using System.Threading;
 using System.Collections.Specialized;
 using System.Web;
+using System.Globalization;
 
 namespace Test
 {
@@ -26,10 +27,10 @@ namespace Test
         {
             var encoding = Encoding.Unicode;
 
-            string code = "wNOizZqPxtlh9HoQvNcq4A%3d%3d";
-            string temp = SimpleDecryption(System.Web.HttpUtility.UrlDecode(code));
+            decimal phone1 = 1000.0M;
 
-            Console.WriteLine(temp);
+            Console.WriteLine(phone1);
+            Console.WriteLine(phone1.ToString("N", CultureInfo.GetCultureInfo("pt-BR")));
 
             //int length = 12;
             //var list = new List<string>();

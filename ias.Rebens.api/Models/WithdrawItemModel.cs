@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace ias.Rebens.api.Models
 {
@@ -26,7 +27,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Valor
         /// </summary>
-        public decimal Amount { get; set; }
+        public string Amount { get; set; }
         /// <summary>
         /// Status
         /// </summary>
@@ -45,7 +46,7 @@ namespace ias.Rebens.api.Models
             this.Id = withdraw.Id;
             this.IdBankAccount = withdraw.IdBankAccount;
             this.Date = withdraw.Date.ToString("dd/MM/yyyy");
-            this.Amount = withdraw.Amount;
+            this.Amount = withdraw.Amount.ToString("N", CultureInfo.GetCultureInfo("pt-BR"));
             this.Status = Enums.EnumHelper.GetEnumDescription((Enums.WithdrawStatus)withdraw.Status);
             if (withdraw.BankAccount != null)
                 this.BankAccount = new BankAccountModel(withdraw.BankAccount);

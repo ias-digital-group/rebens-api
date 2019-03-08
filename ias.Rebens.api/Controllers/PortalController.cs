@@ -224,7 +224,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     var sendingBlue = new Integration.SendinBlueHelper();
                     var body = $"<p>Nome: {formContact.Name}<br />Email: {formContact.Email}<br />Telefone: {formContact.Phone}<br />Mensagem: {formContact.Message}</p>";
-                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", "Novo Contato [{operation.Title}]", body);
+                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"Novo Contato [{operation.Title}]", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Contato enviado com sucesso!", Id = f.Id });
                 }

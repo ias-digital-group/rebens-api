@@ -61,7 +61,7 @@ namespace ias.Rebens.api.Models
         /// <returns></returns>
         public FormContact GetEntity()
         {
-            return new FormContact()
+            var contact = new FormContact()
             {
                 Id = this.Id,
                 Name = this.Name,
@@ -70,6 +70,15 @@ namespace ias.Rebens.api.Models
                 Message = this.Message,
                 Created = DateTime.Now
             };
+            if(!string.IsNullOrEmpty(contact.Phone))
+            {
+                if(contact.Phone.Length == 10)
+                    contact.Phone = "(" + contact.Phone.Substring(0, 2) + ") " + contact.Phone.Substring(2, 4) + "-" + contact.Phone.Substring(6);
+                else if(contact.Phone.Length == 11)
+                    contact.Phone = "(" + contact.Phone.Substring(0, 2) + ") " + contact.Phone.Substring(2, 5) + "-" + contact.Phone.Substring(7);
+            }
+
+            return contact;
         }
     }
 }
