@@ -339,5 +339,44 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public List<Customer> ListToGenerateCoupon(int idOperation, int totalItems)
+        {
+            List<Customer> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var dt = DateTime.Now.Date;
+                    ret = db.Customer.Where(c => c.IdOperation == idOperation && !c.Coupons.Any(cp => cp.Created > dt)).Take(totalItems).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ListToGenerateCoupon", ex.Message, "", ex.StackTrace);
+                ret = null;
+            }
+            return ret;
+        }
+
+        public bool HasToGenerateCoupon(int idOperation)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var dt = DateTime.Now.Date;
+                    ret = db.Customer.Any(c => c.IdOperation == idOperation && !c.Coupons.Any(cp => cp.Created > dt));
+                }
+            }
+            catch(Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.HasToGenerateCoupon", ex.Message, "", ex.StackTrace);
+            }
+            return ret;
+        }
     }
 }

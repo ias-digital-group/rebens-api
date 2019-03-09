@@ -308,48 +308,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     if (customer.CheckPassword(model.Password))
                     {
-                        ClaimsIdentity identity = new ClaimsIdentity(
-                            new GenericIdentity(model.Email),
-                            new[] {
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-                            new Claim(JwtRegisteredClaimNames.UniqueName, model.Email)
-                            }
-                        );
-
-                        identity.AddClaim(new Claim(ClaimTypes.Role, customer.CustomerType == (int)Enums.CustomerType.Customer ? "customer" : "referal"));
-                        //foreach (var policy in user.Permissions)
-                        //    identity.AddClaim(new Claim("permissions", "permission1"));
-
-                        identity.AddClaim(new Claim("operationId", customer.IdOperation.ToString()));
-                        identity.AddClaim(new Claim("Id", customer.Id.ToString()));
-                        identity.AddClaim(new Claim("Name", string.IsNullOrEmpty(customer.Name) ? "" : customer.Name));
-                        identity.AddClaim(new Claim("Email", customer.Email));
-                        identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
-
-                        DateTime dataCriacao = DateTime.UtcNow;
-                        DateTime dataExpiracao = dataCriacao.AddDays(2);
-
-                        var handler = new JwtSecurityTokenHandler();
-                        var securityToken = handler.CreateToken(new SecurityTokenDescriptor
-                        {
-                            Issuer = tokenConfigurations.Issuer,
-                            Audience = tokenConfigurations.Audience,
-                            SigningCredentials = signingConfigurations.SigningCredentials,
-                            Subject = identity,
-                            NotBefore = dataCriacao,
-                            Expires = dataExpiracao
-                        });
-                        var token = handler.WriteToken(securityToken);
-
-
-                        var Data = new PortalTokenModel()
-                        {
-                            authenticated = true,
-                            created = dataCriacao,
-                            expiration = dataExpiracao,
-                            accessToken = token,
-                            balance = 0
-                        };
+                        var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
                         if(customer.CustomerType == (int)Enums.CustomerType.Customer)
                         {
                             decimal balance = (decimal)(new Random().NextDouble() * 499);
@@ -429,6 +388,8 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="idCategory">categoria, não obrigatório (default=null)</param>
         /// <param name="idBenefitType">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
+        /// <param name="latitude">latitude do usuário (default=null)</param>
+        /// <param name="longitude">longitude do usuário (default=null)</param>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
@@ -441,7 +402,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<BenefitListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefits([FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListBenefits([FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, [FromQuery]decimal? latitude = null, [FromQuery]decimal? longitude = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
             int idOperation = 0;
             var principal = HttpContext.User;
@@ -691,6 +652,8 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="operationCode"></param>
         /// <param name="validateCustomer"></param>
+        /// <param name="signingConfigurations"></param>
+        /// <param name="tokenConfigurations"></param>
         /// <returns></returns>
         /// <response code="200">Se o cliente for validado com sucesso já é retornado o token</response>
         /// <response code="400">Se ocorrer algum erro</response>
@@ -717,48 +680,7 @@ namespace ias.Rebens.api.Controllers
                     customer.SetPassword(validateCustomer.Password);
                     if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
                     {
-                        ClaimsIdentity identity = new ClaimsIdentity(
-                            new GenericIdentity(customer.Email),
-                            new[] {
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-                            new Claim(JwtRegisteredClaimNames.UniqueName, customer.Email)
-                            }
-                        );
-
-                        identity.AddClaim(new Claim(ClaimTypes.Role, customer.CustomerType == (int)Enums.CustomerType.Customer ? "customer" : "referal"));
-                        //foreach (var policy in user.Permissions)
-                        //    identity.AddClaim(new Claim("permissions", "permission1"));
-
-                        identity.AddClaim(new Claim("operationId", operation.Id.ToString()));
-                        identity.AddClaim(new Claim("Id", customer.Id.ToString()));
-                        identity.AddClaim(new Claim("Name", ""));
-                        identity.AddClaim(new Claim("Email", customer.Email));
-                        identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
-
-
-                        DateTime dataCriacao = DateTime.UtcNow;
-                        DateTime dataExpiracao = dataCriacao.AddDays(2);
-
-                        var handler = new JwtSecurityTokenHandler();
-                        var securityToken = handler.CreateToken(new SecurityTokenDescriptor
-                        {
-                            Issuer = tokenConfigurations.Issuer,
-                            Audience = tokenConfigurations.Audience,
-                            SigningCredentials = signingConfigurations.SigningCredentials,
-                            Subject = identity,
-                            NotBefore = dataCriacao,
-                            Expires = dataExpiracao
-                        });
-                        var token = handler.WriteToken(securityToken);
-
-                        var Data = new PortalTokenModel()
-                        {
-                            authenticated = true,
-                            created = dataCriacao,
-                            expiration = dataExpiracao,
-                            accessToken = token,
-                            balance = 0
-                        };
+                        var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
 
                         return Ok(Data);
                     }
@@ -773,13 +695,15 @@ namespace ias.Rebens.api.Controllers
         /// Atualiza um cliente
         /// </summary>
         /// <param name="customer"></param>
+        /// <param name="signingConfigurations"></param>
+        /// <param name="tokenConfigurations"></param>
         /// <returns></returns>
         /// <response code="200">Se o objeto for atualizado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPut("CustomerUpdate")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult CustomerUpdate([FromBody] CustomerModel customer)
+        public IActionResult CustomerUpdate([FromBody] CustomerModel customer, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
             var cust = customer.GetEntity();
             string error = null;
@@ -801,8 +725,10 @@ namespace ias.Rebens.api.Controllers
 
             cust.Status = (int)Enums.CustomerStatus.Active;
             if (customerRepo.Update(cust, out error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Cliente atualizado com sucesso!" });
-
+            {
+                var Data = LoadToken(cust, tokenConfigurations, signingConfigurations);
+                return Ok(Data);
+            }
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
@@ -1280,6 +1206,54 @@ namespace ias.Rebens.api.Controllers
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        private PortalTokenModel LoadToken(Customer customer, helper.TokenOptions tokenConfigurations, helper.SigningConfigurations signingConfigurations)
+        {
+            ClaimsIdentity identity = new ClaimsIdentity(
+                            new GenericIdentity(customer.Email),
+                            new[] {
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+                            new Claim(JwtRegisteredClaimNames.UniqueName, customer.Email)
+                            }
+                        );
+
+            identity.AddClaim(new Claim(ClaimTypes.Role, customer.CustomerType == (int)Enums.CustomerType.Customer ? "customer" : "referal"));
+            //foreach (var policy in user.Permissions)
+            //    identity.AddClaim(new Claim("permissions", "permission1"));
+
+            identity.AddClaim(new Claim("operationId", customer.IdOperation.ToString()));
+            identity.AddClaim(new Claim("Id", customer.Id.ToString()));
+            identity.AddClaim(new Claim("Name", string.IsNullOrEmpty(customer.Name) ? "" : customer.Name));
+            identity.AddClaim(new Claim("Email", customer.Email));
+            identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
+
+            DateTime dataCriacao = DateTime.UtcNow;
+            DateTime dataExpiracao = dataCriacao.AddDays(2);
+
+            var handler = new JwtSecurityTokenHandler();
+            var securityToken = handler.CreateToken(new SecurityTokenDescriptor
+            {
+                Issuer = tokenConfigurations.Issuer,
+                Audience = tokenConfigurations.Audience,
+                SigningCredentials = signingConfigurations.SigningCredentials,
+                Subject = identity,
+                NotBefore = dataCriacao,
+                Expires = dataExpiracao
+            });
+            var token = handler.WriteToken(securityToken);
+
+
+            var Data = new PortalTokenModel()
+            {
+                authenticated = true,
+                created = dataCriacao,
+                expiration = dataExpiracao,
+                accessToken = token,
+                balance = 0
+            };
+
+            return Data;
         }
     }
 }

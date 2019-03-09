@@ -1400,12 +1400,14 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.Nullable{System.Int32},System.String,System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.Nullable{System.Int32},System.String,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Int32,System.Int32,System.String,System.String)">
             <summary>
             Lista todos os benefícios da operação com paginação
             </summary>
             <param name="idCategory">categoria, não obrigatório (default=null)</param>
             <param name="idBenefitType">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
+            <param name="latitude">latitude do usuário (default=null)</param>
+            <param name="longitude">longitude do usuário (default=null)</param>
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
@@ -1451,15 +1453,19 @@
             </summary>
             <param name="operationCode"></param>
             <param name="validateCustomer"></param>
+            <param name="signingConfigurations"></param>
+            <param name="tokenConfigurations"></param>
             <returns></returns>
             <response code="200">Se o cliente for validado com sucesso já é retornado o token</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.CustomerUpdate(ias.Rebens.api.Models.CustomerModel)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.CustomerUpdate(ias.Rebens.api.Models.CustomerModel,ias.Rebens.api.helper.SigningConfigurations,ias.Rebens.api.helper.TokenOptions)">
             <summary>
             Atualiza um cliente
             </summary>
             <param name="customer"></param>
+            <param name="signingConfigurations"></param>
+            <param name="tokenConfigurations"></param>
             <returns></returns>
             <response code="200">Se o objeto for atualizado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>

@@ -29,5 +29,9 @@ namespace ias.Rebens
         bool ChangeStatus(int id, Enums.CustomerStatus status, out string error);
 
         bool CheckEmailAndCpf(string email, string cpf, int idOperation, out string error);
+
+        List<Customer> ListToGenerateCoupon(int idOperation, int totalItems);
+
+        bool HasToGenerateCoupon(int idOperation);
     }
 }
