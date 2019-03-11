@@ -21,6 +21,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Lista com os benefícios da home
         /// </summary>
-        public List<PortalBenefitModel> Benefits { get; set; }
+        public List<BenefitListItem> Benefits { get; set; }
     }
 }

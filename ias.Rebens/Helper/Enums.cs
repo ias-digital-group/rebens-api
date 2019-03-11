@@ -89,7 +89,9 @@ namespace ias.Rebens.Enums
         [Description("Pendente")]
         pending = 1,
         [Description("Assinado")]
-        Signed = 2
+        Signed = 2,
+        [Description("Cadastrado")]
+        SignUp = 3
     }
 
     public enum CustomerStatus : int

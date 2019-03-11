@@ -347,7 +347,7 @@ namespace ias.Rebens.api.Controllers
 
             var listFull = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Home, (int)Enums.BannerShow.HomeLogged, out string error);
             var listUnmissable = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.HomeLogged, out error);
-            var listBenefits = benefitRepo.ListByOperation(idOperation, null, null, 0, 6, null, "title asc", out error);
+            var listBenefits = benefitRepo.ListByOperation(idOperation, null, null, 0, 8, null, "title asc", out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -360,7 +360,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         BannerFullList = new List<PortalBannerModel>(),
                         BannerUnmissable = new List<PortalBannerModel>(),
-                        Benefits = new List<PortalBenefitModel>()
+                        Benefits = new List<BenefitListItem>()
                     }
                 };
                 foreach (var banner in listUnmissable)
@@ -375,7 +375,7 @@ namespace ias.Rebens.api.Controllers
                 }
 
                 foreach (var item in listBenefits)
-                    ret.Data.Benefits.Add(new PortalBenefitModel(item));
+                    ret.Data.Benefits.Add(new BenefitListItem(item));
 
                 return Ok(ret);
             }
@@ -628,12 +628,12 @@ namespace ias.Rebens.api.Controllers
                         {
                             Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
 
-                            if(operation.Id != 1)
+                            if(operation.Id == 2)
                             {
                                 if (oc != null)
                                     operationCustomerRepo.SetSigned(oc.Id, out error);
                                 else if (referal != null)
-                                    customerReferalRepo.ChangeStatus(referal.Id, Enums.CustomerReferalStatus.Signed, out error);
+                                    customerReferalRepo.ChangeStatus(referal.Id, Enums.CustomerReferalStatus.SignUp, out error);
                             }
 
                             return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
@@ -681,7 +681,6 @@ namespace ias.Rebens.api.Controllers
                     if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
                     {
                         var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
-
                         return Ok(Data);
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
@@ -705,7 +704,19 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult CustomerUpdate([FromBody] CustomerModel customer, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
+            int idOperation = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                if (operationId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                if (!int.TryParse(operationId.Value, out idOperation))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
             var cust = customer.GetEntity();
+            cust.IdOperation = idOperation;
             string error = null;
 
             if (customer.Address != null)
@@ -727,6 +738,30 @@ namespace ias.Rebens.api.Controllers
             if (customerRepo.Update(cust, out error))
             {
                 var Data = LoadToken(cust, tokenConfigurations, signingConfigurations);
+                if (idOperation == 1 && !string.IsNullOrEmpty(cust.Name))
+                {
+                    try
+                    {
+                        var coupon = new Coupon()
+                        {
+                            Campaign = "Raspadinha Unicap",
+                            IdCustomer = cust.Id,
+                            IdCouponCampaign = 1,
+                            ValidationCode = Helper.SecurityHelper.GenerateCode(18),
+                            Locked = false,
+                            Status = (int)Enums.CouponStatus.pendent,
+                            VerifiedDate = DateTime.UtcNow,
+                            Created = DateTime.UtcNow,
+                            Modified = DateTime.UtcNow
+                        };
+
+                        var couponHelper = new Integration.CouponToolsHelper();
+                        if (couponHelper.CreateSingle(cust, coupon, out error))
+                            couponRepo.Create(coupon, out error);
+                    }
+                    catch { }
+                }
+
                 return Ok(Data);
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

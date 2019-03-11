@@ -16,6 +16,11 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public CouponRepository(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
         public bool Create(Coupon coupon, out string error)
         {
             bool ret = true;

@@ -16,8 +16,8 @@ namespace ias.Rebens.Integration
         public bool CreateSingle(Customer customer, Coupon coupon, out string error)
         {
             bool ret = false;
-            var postData = "campaign=" + coupon.Campaign; 
-            postData += "&firstname=" + customer.Name.Split(" ")[0];
+            var postData = "campaign=cam_1009976";// + coupon.Campaign; 
+            postData += "&firstname=" + customer.Name.Trim().Split(" ")[0];
             postData += "&email=" + customer.Email;
             postData += "&customid=" + coupon.Id;
             postData += "&customvalcode=" + coupon.ValidationCode;

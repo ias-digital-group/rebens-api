@@ -16,6 +16,11 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public CustomerRepository(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
         public bool Create(Customer customer, out string error)
         {
             bool ret = true;
@@ -348,7 +353,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var dt = DateTime.Now.Date;
-                    ret = db.Customer.Where(c => c.IdOperation == idOperation && !c.Coupons.Any(cp => cp.Created > dt)).Take(totalItems).ToList();
+                    ret = db.Customer.Where(c => c.IdOperation == idOperation && !string.IsNullOrEmpty(c.Name)  && !c.Coupons.Any(cp => cp.Created > dt)).Take(totalItems).ToList();
                 }
             }
             catch (Exception ex)
@@ -368,7 +373,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var dt = DateTime.Now.Date;
-                    ret = db.Customer.Any(c => c.IdOperation == idOperation && !c.Coupons.Any(cp => cp.Created > dt));
+                    ret = db.Customer.Any(c => c.IdOperation == idOperation && !string.IsNullOrEmpty(c.Name) && !c.Coupons.Any(cp => cp.Created > dt));
                 }
             }
             catch(Exception ex)

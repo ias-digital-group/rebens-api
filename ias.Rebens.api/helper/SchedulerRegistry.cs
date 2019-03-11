@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using FluentScheduler;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace ias.Rebens.api.helper
 {
@@ -13,7 +16,7 @@ namespace ias.Rebens.api.helper
             //Schedule<CouponToolsUpdateJob>().ToRunEvery(1).Days().At(3, 0);
             //Schedule<ZanoxUpdateJob>().ToRunNow().AndEvery(2).Minutes();
 
-            Schedule<KeepAlive>().ToRunEvery(15).Minutes();
+            Schedule<KeepAlive>().ToRunNow().AndEvery(15).Minutes();
         }
     }
 
@@ -28,9 +31,6 @@ namespace ias.Rebens.api.helper
                 request.ContentType = "application/xml";
                 request.Headers.Add("x-operation-code", "de6e6ce9-1cf6-46b0-b5ea-2bdc09f359d1");
                 var response = request.GetResponse();
-
-                var mail = new Integration.SendinBlueHelper();
-                mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] KeepAlive", "Run at: " + DateTime.Now.ToString("HH:mm:ss"));
             }
             catch { }
         }
@@ -72,52 +72,83 @@ namespace ias.Rebens.api.helper
 
     public class CouponToolsGenerateJob : IJob
     {
-        ICouponRepository couponRepo;
-        ICustomerRepository customerRepo;
-        public CouponToolsGenerateJob(ICouponRepository couponRepository, ICustomerRepository customerRepository)
-        {
-            this.couponRepo = couponRepository;
-            this.customerRepo = customerRepository;
-        }
-
         public void Execute()
         {
+            //string conn = "Server=IAS-02;Database=Rebens;user id=ias_user;password=k4r0l1n4;";
+            //bool debug = false;
+            string conn = "Server=172.31.27.205;Database=Rebens;user id=Rebens_user;password=i$f6LiF*N2kv;";
+            bool debug = true;
+
+            var customerRepo = new CustomerRepository(conn);
+            var couponRepo = new CouponRepository(conn);
+
             var mail = new Integration.SendinBlueHelper();
-            mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "Start at: " + DateTime.Now.ToString("HH:mm:ss"));
-            while (true)
+            if(debug)
+                mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "Start at: " + DateTime.Now.ToString("HH:mm:ss"));
+            bool run = true;
+            while (run)
             {
                 var couponHelper = new Integration.CouponToolsHelper();
-
-                var list = customerRepo.ListToGenerateCoupon(1, 30);
-                if (list != null && list.Count > 0)
+                List<Customer> list;
+                try
                 {
+                    list = customerRepo.ListToGenerateCoupon(1, 30);
+                }
+                catch(Exception ex)
+                {
+                    if(debug)
+                        mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "Error: " + ex.Message + "<br /><br />StackTrace:" + ex.StackTrace);
+                    run = false;
+                    break;
+                }
+                if(list != null && list.Count > 0)
+                {
+                    if(debug)
+                        mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "Total: " + list.Count);
                     foreach (var customer in list)
                     {
-                        var coupon = new Coupon()
+                        try
                         {
-                            Campaign = "Raspadinha Unicap",
-                            IdCustomer = customer.Id,
-                            IdCouponCampaign = 1,
-                            ValidationCode = Helper.SecurityHelper.GenerateCode(18),
-                            Locked = false,
-                            Status = (int)Enums.CouponStatus.pendent,
-                            VerifiedDate = DateTime.UtcNow,
-                            Created = DateTime.UtcNow,
-                            Modified = DateTime.UtcNow
-                        };
+                            var coupon = new Coupon()
+                            {
+                                Campaign = "Raspadinha Unicap",
+                                IdCustomer = customer.Id,
+                                IdCouponCampaign = 1,
+                                ValidationCode = Helper.SecurityHelper.GenerateCode(18),
+                                Locked = false,
+                                Status = (int)Enums.CouponStatus.pendent,
+                                VerifiedDate = DateTime.UtcNow,
+                                Created = DateTime.UtcNow,
+                                Modified = DateTime.UtcNow
+                            };
 
-                        if (couponHelper.CreateSingle(customer, coupon, out string error))
+                            if (couponHelper.CreateSingle(customer, coupon, out string error))
+                            {
+                                couponRepo.Create(coupon, out error);
+                                if(debug)
+                                    mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "User: " + customer.Id + "<br /><br />CREATED");
+                            }
+                            else if (debug)
+                                mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "User: " + customer.Id + "<br /><br />Error: " + error);
+
+                        }
+                        catch(Exception ex)
                         {
-                            couponRepo.Create(coupon, out error);
+                            if(debug)
+                                mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "User: " + customer.Id + "<br /><br />Error: " + ex.Message + "<br /><br />Trace: " + ex.StackTrace);
                         }
                         Thread.Sleep(200);
                     }
                 }
 
+
                 if (customerRepo.HasToGenerateCoupon(1))
                     Thread.Sleep(800);
                 else
+                {
+                    run = false;
                     break;
+                }
             }
 
             mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "End at: " + DateTime.Now.ToString("HH:mm:ss"));
