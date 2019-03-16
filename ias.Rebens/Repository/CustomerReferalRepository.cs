@@ -12,14 +12,14 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public bool Create(CustomerReferal customerReferal, out string error)
+        public bool Create(CustomerReferal customerReferal, int idOperation, out string error)
         {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if(!db.CustomerReferal.Any(c => c.Email == customerReferal.Email))
+                    if(!db.CustomerReferal.Any(c => c.Email == customerReferal.Email && c.Customer.IdOperation == idOperation))
                     {
                         customerReferal.Modified = customerReferal.Created = DateTime.UtcNow;
                         db.CustomerReferal.Add(customerReferal);

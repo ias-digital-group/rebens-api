@@ -14,7 +14,7 @@ namespace ias.Rebens
 
         bool Delete(int id, out string error);
 
-        bool Create(CustomerReferal customerReferal, out string error);
+        bool Create(CustomerReferal customerReferal, int idOperation, out string error);
 
         bool Update(CustomerReferal customerReferal, out string error);
 

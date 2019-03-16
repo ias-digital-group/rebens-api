@@ -21,6 +21,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    if (cpf.Length == 11)
+                        cpf = cpf.Substring(0, 3) + "." + cpf.Substring(3, 3) + "." + cpf.Substring(6, 3) + "-" + cpf.Substring(9);
                     ret = db.OperationCustomer.SingleOrDefault(o => o.CPF == cpf);
                     error = null;
                 }

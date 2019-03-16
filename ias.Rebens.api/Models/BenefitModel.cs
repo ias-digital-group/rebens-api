@@ -105,7 +105,7 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         [MaxLength(500)]
-        public string Call { get; set; }
+        public string BenefitCall { get; set; }
         /// <summary>
         /// Detalhes
         /// </summary>
@@ -162,7 +162,7 @@ namespace ias.Rebens.api.Models
             this.IdIntegrationType = benefit.IdIntegrationType;
             this.IdPartner = benefit.IdPartner;
             this.Link = benefit.Link;
-            this.Call = benefit.Call;
+            this.BenefitCall = benefit.Call;
             this.VoucherText = benefit.VoucherText;
             this.IdOperation = benefit.IdOperation;
 
@@ -220,7 +220,7 @@ namespace ias.Rebens.api.Models
                 Active = this.Active,
                 IdIntegrationType = this.IdIntegrationType,
                 IdPartner = this.IdPartner,
-                Call = this.Call,
+                Call = this.BenefitCall,
                 VoucherText = this.VoucherText,
                 IdOperation = this.IdOperation
             };
@@ -293,7 +293,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Chamada do Benefício
         /// </summary>
-        public string Call { get; set; }
+        public string BenefitCall { get; set; }
         /// <summary>
         /// Construtor
         /// </summary>
@@ -307,7 +307,7 @@ namespace ias.Rebens.api.Models
             this.Id = benefit.Id;
             this.Title = benefit.Title;
             this.IdBenefitType = benefit.IdBenefitType;
-            this.Call = benefit.Call;
+            this.BenefitCall = benefit.Call;
             this.BenefitType = Enums.EnumHelper.GetEnumDescription((Enums.BenefitType)benefit.IdBenefitType);
             if (benefit.Partner != null)
                 this.Image = benefit.Partner.Logo;

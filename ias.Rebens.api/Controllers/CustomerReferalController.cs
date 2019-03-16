@@ -178,7 +178,7 @@ namespace ias.Rebens.api.Controllers
                 referal.IdStatus = (int)Enums.CustomerReferalStatus.pending;
                 referal.IdCustomer = idCustomer;
                 referal.Created = referal.Modified = DateTime.Now;
-                if (repo.Create(referal, out error))
+                if (repo.Create(referal, operation.Id, out error))
                 {
                     Helper.EmailHelper.SendCustomerReferal(staticTextRepo, operation, customer, referal, out error);
 

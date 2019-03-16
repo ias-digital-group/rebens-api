@@ -2263,7 +2263,7 @@
             Tipo de Integração
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitModel.Call">
+        <member name="P:ias.Rebens.api.Models.BenefitModel.BenefitCall">
             <summary>
             Chamada do Benefício
             </summary>
@@ -2358,7 +2358,7 @@
             Tipo de benefício
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BenefitListItem.Call">
+        <member name="P:ias.Rebens.api.Models.BenefitListItem.BenefitCall">
             <summary>
             Chamada do Benefício
             </summary>
@@ -3854,6 +3854,11 @@
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.StaticTextModel.Page">
+            <summary>
+            Página
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.StaticTextModel.Name">
             <summary>
             Título
             </summary>

@@ -212,8 +212,8 @@ namespace ias.Rebens.Enums
         HowOperationWork = 2,
         [Description("Detalhes")]
         BenefitDetail = 3,
-        [Description("Textos")]
-        Text = 4,
+        [Description("Páginas")]
+        Pages = 4,
         [Description("Como Utilizar")]
         BenefitHowToUse = 5,
         [Description("Descrição do Parceiro")]
@@ -224,6 +224,7 @@ namespace ias.Rebens.Enums
         EmailCustomerValidation = 8,
         [Description("E-mail de indicação de cliente")]
         EmailDefault = 9
+
     }
 
     public enum WithdrawStatus : int

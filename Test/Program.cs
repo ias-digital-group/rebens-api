@@ -11,6 +11,7 @@ using System.Threading;
 using System.Collections.Specialized;
 using System.Web;
 using System.Globalization;
+using Newtonsoft.Json;
 
 namespace Test
 {
@@ -27,25 +28,16 @@ namespace Test
         {
             var encoding = Encoding.Unicode;
 
-            decimal phone1 = 1000.0M;
+            var x = (Math.Pow(2, 2011) - 39);
+            var y = 7;
+            var r = x % y;
 
-            Console.WriteLine(phone1);
-            Console.WriteLine(phone1.ToString("N", CultureInfo.GetCultureInfo("pt-BR")));
 
-            //int length = 12;
-            //var list = new List<string>();
-            //for (int i=0;i<100;i++)
-            //{
-            //    string tmp = GenerateOTP(length);
-            //    Console.WriteLine(tmp);
 
-            //    if (list.Any(l => l == tmp))
-            //        Console.WriteLine("############################## ERROR ###############################");
-            //    else
-            //        list.Add(tmp);
 
-            //    Thread.Sleep(10);
-            //}
+
+            Console.WriteLine(Math.Pow(2, 2011));
+
 
             Console.WriteLine("DONE");
 

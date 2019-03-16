@@ -118,7 +118,6 @@ namespace ias.Rebens.api.Controllers
         {
             var model = new JsonModel();
 
-
             var part = benefit.GetEntity();
             if (repo.Update(part, out string error))
             {

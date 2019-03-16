@@ -148,7 +148,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="400">Se ocorrer algum erro</response>
         [AllowAnonymous]
         [HttpGet("GetText")]
-        [ProducesResponseType(typeof(JsonDataModel<PortalHomeLockedModel>), 200)]
+        [ProducesResponseType(typeof(JsonDataModel<StaticTextModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetText([FromQuery]string page, [FromHeader(Name = "x-operation-code")]string operationCode = null)
@@ -266,7 +266,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     var sendingBlue = new Integration.SendinBlueHelper();
                     string body = $"<p>Nome: {formEstablishment.Name}<br />Email: {formEstablishment.Email}<br />Estabelecimento: {formEstablishment.Establishment}<br />Site: {formEstablishment.WebSite}<br />Responsável: {formEstablishment.Responsible}<br />Email Responsável: {formEstablishment.ResponsibleEmail}<br />Cidade: {formEstablishment.City}<br />Estado: {formEstablishment.State}</p>";
-                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", "Novo Contato [{operation.Title}]", body);
+                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"Novo Contato [{operation.Title}]", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Indicação enviada com sucesso!", Id = f.Id });
                 }
@@ -605,6 +605,8 @@ namespace ias.Rebens.api.Controllers
                                     IdOperation = operation.Id
                                 };
                             }
+                            else
+                                error = "O cpf digitado não está cadastrado em nossa base!";
                         }
                     }
                     else
@@ -1004,7 +1006,14 @@ namespace ias.Rebens.api.Controllers
                 };
 
                 if (withdrawRepo.Create(draw, out string error))
+                {
+
+                    //var sendingBlue = new Integration.SendinBlueHelper();
+                    //string body = $"<p>Nome: {formEstablishment.Name}<br />Email: {formEstablishment.Email}<br />Estabelecimento: {formEstablishment.Establishment}<br />Site: {formEstablishment.WebSite}<br />Responsável: {formEstablishment.Responsible}<br />Email Responsável: {formEstablishment.ResponsibleEmail}<br />Cidade: {formEstablishment.City}<br />Estado: {formEstablishment.State}</p>";
+                    //sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"[{operation.Title}] - Novo Resgate", body);
+
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Resgate registrado com sucesso!", Id = draw.Id });
+                }
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });

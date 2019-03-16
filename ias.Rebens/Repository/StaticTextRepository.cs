@@ -204,7 +204,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.StaticText.SingleOrDefault(c => c.IdOperation == idOperation && c.Title == page && c.IdStaticTextType == (int)Enums.StaticTextType.Text);
+                    ret = db.StaticText.SingleOrDefault(c => c.IdOperation == idOperation && c.Url == page && c.IdStaticTextType == (int)Enums.StaticTextType.Pages);
                     error = null;
                 }
             }
@@ -225,7 +225,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.StaticText.SingleOrDefault(c => c.Operation.Code == operationCode && c.Title == page && c.IdStaticTextType == (int)Enums.StaticTextType.Text);
+                    ret = db.StaticText.SingleOrDefault(c => c.Operation.Code == operationCode && c.Url == page && c.IdStaticTextType == (int)Enums.StaticTextType.Pages);
                     error = null;
                 }
             }
