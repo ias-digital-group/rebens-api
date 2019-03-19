@@ -114,7 +114,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.StaticText.Where(p => string.IsNullOrEmpty(word) || p.Title.Contains(word));
+                    var tmpList = db.StaticText.Where(p => (string.IsNullOrEmpty(word) || p.Title.Contains(word)) && p.IdStaticTextType == (int)Enums.StaticTextType.Pages);
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -138,7 +138,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.StaticText.Count(o => string.IsNullOrEmpty(word) || o.Title.Contains(word));
+                    var total = db.StaticText.Count(s => (string.IsNullOrEmpty(word) || s.Title.Contains(word)) && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
 
                     ret = new ResultPage<StaticText>(list, page, pageItems, total);
 
