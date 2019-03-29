@@ -37,6 +37,8 @@ namespace ias.Rebens
         public string Call { get; set; }
         public string VoucherText { get; set; }
         public int? IdOperation { get; set; }
+        public int HomeHighlight { get; set; }
+        public int HomeBenefitHighlight { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 

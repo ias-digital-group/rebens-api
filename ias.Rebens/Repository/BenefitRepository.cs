@@ -188,7 +188,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Benefit.Where(p => string.IsNullOrEmpty(word) || p.Name.Contains(word));
+                    var tmpList = db.Benefit.Where(p => string.IsNullOrEmpty(word) || p.Name.Contains(word) || p.Title.Contains(word) || p.Partner.Name.Contains(word));
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -283,6 +283,8 @@ namespace ias.Rebens
                         update.Name = benefit.Name;
                         update.VoucherText = benefit.VoucherText;
                         update.IdOperation = benefit.IdOperation;
+                        update.HomeHighlight = benefit.HomeHighlight;
+                        update.HomeBenefitHighlight = benefit.HomeBenefitHighlight;
 
                         db.SaveChanges();
                         error = null;
@@ -446,7 +448,7 @@ namespace ias.Rebens
                     }
                     var tmpList = db.Benefit.Include("Partner")
                                     .Where(b => ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation)) 
-                                    && (string.IsNullOrEmpty(word) || b.Title.Contains(word))
+                                    && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word))
                                     && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
                                     && b.Active
                                     && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
@@ -469,7 +471,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Benefit.Count(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+                    var total = db.Benefit.Count(b => b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word)));
 
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
@@ -755,6 +757,120 @@ namespace ias.Rebens
                 int idLog = logError.Create("BenefitRepository.SaveCategories", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar salvar as categorias. (erro:" + idLog + ")";
                 ret = false;
+            }
+            return ret;
+        }
+
+        public ResultPage<Benefit> ListForHomePortal(int idOperation, out string error)
+        {
+            ResultPage<Benefit> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    int total = 0;
+                    var listPosition = db.Benefit.Include("Partner").Where(b => b.HomeHighlight > 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation));
+                    total = listPosition.Count();
+
+                    List<Benefit> listRandom = null;
+                    if (total < 8)
+                    {
+                        listRandom = db.Benefit.Include("Partner").Where(b => b.HomeHighlight == 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(8-total).ToList();
+                        total += listRandom.Count();
+                    }
+                    List<Benefit> listOthers = null;
+                    if(total < 8)
+                    {
+                        listOthers = db.Benefit.Include("Partner").Where(b => b.HomeHighlight == -1 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(8 - total).ToList();
+                        total += listOthers.Count();
+                    }
+
+                    var list = new List<Benefit>();
+                    int randomIdx = 0;
+                    int othersIdx = 0;
+                    for (int i = 0; i<8; i++)
+                    {
+                        if (listPosition.Any(b => b.HomeHighlight == (i + 1)))
+                            list.Add(listPosition.First(b => b.HomeHighlight == (i + 1)));
+                        else if(listRandom != null && listRandom.Count > randomIdx)
+                        {
+                            list.Add(listRandom.Skip(randomIdx).First());
+                            randomIdx++;
+                        }
+                        else if(listOthers != null && listOthers.Count > othersIdx)
+                        {
+                            list.Add(listOthers.Skip(othersIdx).First());
+                            othersIdx++;
+                        }
+                    }
+
+                    ret = new ResultPage<Benefit>(list, 0, 8, list.Count);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ListForHomePortal", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<Benefit> ListForHomeBenefitPortal(int idOperation, out string error)
+        {
+            ResultPage<Benefit> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    int total = 0;
+                    var listPosition = db.Benefit.Include("Partner").Where(b => b.HomeBenefitHighlight > 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation));
+                    total = listPosition.Count();
+
+                    List<Benefit> listRandom = null;
+                    if (total < 12)
+                    {
+                        listRandom = db.Benefit.Include("Partner").Where(b => b.HomeBenefitHighlight == 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(12 - total).ToList();
+                        total += listRandom.Count();
+                    }
+                    List<Benefit> listOthers = null;
+                    if (total < 12)
+                    {
+                        listOthers = db.Benefit.Include("Partner").Where(b => b.HomeBenefitHighlight == -1 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(12 - total).ToList();
+                        total += listOthers.Count();
+                    }
+
+                    var list = new List<Benefit>();
+                    int randomIdx = 0;
+                    int othersIdx = 0;
+                    for (int i = 0; i < 12; i++)
+                    {
+                        if (listPosition.Any(b => b.HomeBenefitHighlight == (i + 1)))
+                            list.Add(listPosition.First(b => b.HomeBenefitHighlight == (i + 1)));
+                        else if (listRandom != null && listRandom.Count > randomIdx)
+                        {
+                            list.Add(listRandom.Skip(randomIdx).First());
+                            randomIdx++;
+                        }
+                        else if (listOthers != null && listOthers.Count > othersIdx)
+                        {
+                            list.Add(listOthers.Skip(othersIdx).First());
+                            othersIdx++;
+                        }
+                    }
+
+                    ret = new ResultPage<Benefit>(list, 0, 8, list.Count);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ListForHomeBenefitPortal", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

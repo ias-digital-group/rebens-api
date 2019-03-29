@@ -129,6 +129,22 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public int? IdOperation { get; set; }
         /// <summary>
+        /// Se deve aparecer na home
+        /// -1 - não aparece
+        /// 0 - aparece randomicamente
+        /// 1 a 8 - aparece na posição escolhida
+        /// </summary>
+        [Required]
+        public int HomeHighlight { get; set; }
+        /// <summary>
+        /// Se deve aparecer na home benefícios
+        /// -1 - não aparece
+        /// 0 - aparece randomicamente
+        /// 1 a 12 - aparece na posição escolhida
+        /// </summary>
+        [Required]
+        public int HomeBenefitHighlight { get; set; }
+        /// <summary>
         /// Status
         /// </summary>
         public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
@@ -165,6 +181,8 @@ namespace ias.Rebens.api.Models
             this.BenefitCall = benefit.Call;
             this.VoucherText = benefit.VoucherText;
             this.IdOperation = benefit.IdOperation;
+            this.HomeHighlight = benefit.HomeHighlight;
+            this.HomeBenefitHighlight = benefit.HomeBenefitHighlight;
 
             if (this.IdBenefitType == (int)Enums.BenefitType.OffLine && idCustomer.HasValue)
                 this.Link = "http://admin.rebens.com.br/Voucher/?code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
@@ -222,7 +240,9 @@ namespace ias.Rebens.api.Models
                 IdPartner = this.IdPartner,
                 Call = this.BenefitCall,
                 VoucherText = this.VoucherText,
-                IdOperation = this.IdOperation
+                IdOperation = this.IdOperation,
+                HomeHighlight = this.HomeHighlight,
+                HomeBenefitHighlight = this.HomeBenefitHighlight
             };
         }
 

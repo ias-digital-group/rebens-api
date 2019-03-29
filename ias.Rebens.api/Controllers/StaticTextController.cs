@@ -32,6 +32,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Title, Order), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="idOperation">Id da operação (default=null)</param>
         /// <returns>Lista com os textos encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -40,9 +41,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<StaticTextModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, idOperation, out string error);
 
             if (string.IsNullOrEmpty(error))
             {

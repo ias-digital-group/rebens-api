@@ -223,7 +223,9 @@ namespace ias.Rebens.Enums
         [Description("E-mail de validação de cliente")]
         EmailCustomerValidation = 8,
         [Description("E-mail de indicação de cliente")]
-        EmailDefault = 9
+        EmailDefault = 9,
+        [Description("Configuração de Operação")]
+        OperationConfiguration = 10
 
     }
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -35,7 +37,7 @@ namespace ias.Rebens.api.Models
         /// Logo
         /// </summary>
         [MaxLength(500)]
-        public string Image { get; set; }
+        public string Logo { get; set; }
         /// <summary>
         /// Domínio da opreação
         /// </summary>
@@ -88,7 +90,7 @@ namespace ias.Rebens.api.Models
             this.Title = operation.Title;
             this.CompanyName = operation.CompanyName;
             this.CompanyDoc = operation.CompanyDoc;
-            this.Image = operation.Image;
+            this.Logo = operation.Image;
             this.Domain = operation.Domain;
             this.IdOperationType = operation.IdOperationType;
             this.CachbackPercentage = operation.CashbackPercentage;
@@ -115,7 +117,7 @@ namespace ias.Rebens.api.Models
                 Title = this.Title,
                 CompanyName = this.CompanyName,
                 CompanyDoc = this.CompanyDoc,
-                Image = this.Image,
+                Image = this.Logo,
                 Domain = this.Domain,
                 IdOperationType = this.IdOperationType,
                 CashbackPercentage = this.CachbackPercentage,

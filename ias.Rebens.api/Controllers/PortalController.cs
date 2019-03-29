@@ -347,7 +347,7 @@ namespace ias.Rebens.api.Controllers
 
             var listFull = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Home, (int)Enums.BannerShow.HomeLogged, out string error);
             var listUnmissable = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.HomeLogged, out error);
-            var listBenefits = benefitRepo.ListByOperation(idOperation, null, null, 0, 8, null, "title asc", out error);
+            var listBenefits = benefitRepo.ListForHomePortal(idOperation, out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -415,7 +415,12 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
             }
 
-            var list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, page, pageItems, searchWord, sort, out string error);
+            ResultPage<Benefit> list;
+            string error;
+            if (page == 0 && !idCategory.HasValue && string.IsNullOrEmpty(idBenefitType) && !latitude.HasValue && !longitude.HasValue && string.IsNullOrEmpty(searchWord))
+                list = benefitRepo.ListForHomeBenefitPortal(idOperation, out error);
+            else
+                list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, page, pageItems, searchWord, sort, out error);
 
             if (string.IsNullOrEmpty(error))
             {

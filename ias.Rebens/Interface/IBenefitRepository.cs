@@ -49,5 +49,9 @@ namespace ias.Rebens
         List<Benefit> ListActive(out string error);
 
         bool SaveCategories(int idBenefit, string categoryIds, out string error);
+
+        ResultPage<Benefit> ListForHomePortal(int idOperation, out string error);
+
+        ResultPage<Benefit> ListForHomeBenefitPortal(int idOperation, out string error);
     }
 }

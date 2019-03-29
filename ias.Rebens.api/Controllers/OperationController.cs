@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -501,6 +503,70 @@ namespace ias.Rebens.api.Controllers
 
                 return Ok(ret);
             }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna o objeto com as configurações da operação
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <returns>Retorna o objeto com as configurações da operação</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/Configuration")]
+        [ProducesResponseType(typeof(JsonDataModel<object>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetConfiguration(int id)
+        {
+            var config = staticTextRepo.ReadOperationConfiguration(id, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (config == null || config.Id == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<object>() { Data = JObject.Parse(config.Html) };
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Adiciona um endereço a uma operação
+        /// </summary>
+        /// <param name="model">{ idOperation: 0, idAddress: 0 }</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Víncula um parceiro com um endereço</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/Configuration")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SaveConfiguration(int id, [FromBody]object data)
+        {
+            var resultModel = new JsonModel();
+
+            var config = new StaticText()
+            {
+                Title = "Configuração de Operação - " + id,
+                Url = "operation-" + id,
+                Html = JsonConvert.SerializeObject(data),
+                Style = "",
+                Order = 0,
+                IdStaticTextType = (int)Enums.StaticTextType.OperationConfiguration,
+                IdOperation = id,
+                IdBenefit = null,
+                Active = true,
+                Created = DateTime.UtcNow,
+                Modified = DateTime.UtcNow
+            };
+
+            if (staticTextRepo.Update(config, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

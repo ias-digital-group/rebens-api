@@ -1170,6 +1170,25 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.GetConfiguration(System.Int32)">
+            <summary>
+            Retorna o objeto com as configurações da operação
+            </summary>
+            <param name="id">id da operação</param>
+            <returns>Retorna o objeto com as configurações da operação</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.SaveConfiguration(System.Int32,System.Object)">
+            <summary>
+            Adiciona um endereço a uma operação
+            </summary>
+            <param name="model">{ idOperation: 0, idAddress: 0 }</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Víncula um parceiro com um endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.PartnerController">
             <summary>
             Partner Controller
@@ -1601,7 +1620,7 @@
             </summary>
             <param name="staticTextRepository"></param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.StaticTextController.List(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.StaticTextController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
             <summary>
             Lista os textos conforme os parametros
             </summary>
@@ -1609,6 +1628,7 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Title, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da operação (default=null)</param>
             <returns>Lista com os textos encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -2291,6 +2311,22 @@
         <member name="P:ias.Rebens.api.Models.BenefitModel.IdOperation">
             <summary>
             Id da operação quando o benefício é exclusivo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.HomeHighlight">
+            <summary>
+            Se deve aparecer na home
+            -1 - não aparece
+            0 - aparece randomicamente
+            1 a 8 - aparece na posição escolhida
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitModel.HomeBenefitHighlight">
+            <summary>
+            Se deve aparecer na home benefícios
+            -1 - não aparece
+            0 - aparece randomicamente
+            1 a 12 - aparece na posição escolhida
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.BenefitModel.StatusName">
@@ -3417,7 +3453,7 @@
             Documento da empresa
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.OperationModel.Image">
+        <member name="P:ias.Rebens.api.Models.OperationModel.Logo">
             <summary>
             Logo
             </summary>

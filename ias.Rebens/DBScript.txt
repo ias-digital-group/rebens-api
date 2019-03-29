@@ -1,1 +1,90 @@
-﻿
+﻿ALTER TABLE Benefit ADD HomeHighlight INT NULL
+GO
+ALTER TABLE Benefit ADD HomeBenefitHighlight INT NULL
+GO
+
+update Benefit SET HomeHighlight = -1, HomeBenefitHighlight = -1
+GO
+
+ALTER TABLE Benefit ALTER COLUMN HomeHighlight INT NOT NULL
+GO
+ALTER TABLE Benefit ALTER COLUMN HomeBenefitHighlight INT NOT NULL
+GO
+
+
+
+INSERT INTO StaticText VALUES ('Configuração de Operação', 'operation-1', '{ "fields": [
+	{
+		"name": "color",
+		"label": "Cor",
+		"type": "text",
+		"data": "#427147",
+		"isRequired": false
+	},
+	{
+		"name": "favicon",
+		"label": "Ícone de favorito",
+		"type": "image",
+		"data": "favicon.ico",
+		"isRequired": false
+	},
+	{
+		"name": "module-coupon",
+		"label": "Módulo Raspadinha",
+		"type": "boolean",
+		"data": true,
+		"isRequired": false
+	},
+	{
+		"name": "wirecard-token",
+		"label": "Token Wirecard",
+		"type": "text",
+		"data": "TEhFUUxVRDdPOE9QT0pWU0U1SkZFRzVJRjhXWU5HMlM6TkZWSzlVRUJHVEJJSVUwWE9KMkdFWUc3TUU5S0xaQUNDWkJCUEhEUQ==",
+		"isRequired": false
+	},
+	{
+		"name": "wirecard-jstoken",
+		"label": "Token JS Wirecard",
+		"type": "text",
+		"data": "VWRQFBVC478NE5PAPJIC5FDEXZJNESVO",
+		"isRequired": false
+	}
+] }', NULL, 0, 10, 1, 1, getdate(), getdate(), null)
+
+INSERT INTO StaticText VALUES ('Configuração de Operação', 'operation-2', '{ "fields": [
+	{
+		"name": "color",
+		"label": "Cor",
+		"type": "text",
+		"data": "#00b0d3",
+		"isRequired": false
+	},
+	{
+		"name": "favicon",
+		"label": "Ícone de favorito",
+		"type": "image",
+		"data": "favicon.ico",
+		"isRequired": false
+	},
+	{
+		"name": "module-coupon",
+		"label": "Módulo Raspadinha",
+		"type": "boolean",
+		"data": false,
+		"isRequired": false
+	},
+	{
+		"name": "wirecard-token",
+		"label": "Token Wirecard",
+		"type": "text",
+		"data": "",
+		"isRequired": false
+	},
+	{
+		"name": "wirecard-jstoken",
+		"label": "Token JS Wirecard",
+		"type": "text",
+		"data": "",
+		"isRequired": false
+	}
+] }', NULL, 0, 10, 2, 1, getdate(), getdate(), null)

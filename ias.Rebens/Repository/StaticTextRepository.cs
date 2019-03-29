@@ -107,14 +107,14 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, int? idOperation, out string error)
         {
             ResultPage<StaticText> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.StaticText.Where(p => (string.IsNullOrEmpty(word) || p.Title.Contains(word)) && p.IdStaticTextType == (int)Enums.StaticTextType.Pages);
+                    var tmpList = db.StaticText.Where(p => (!idOperation.HasValue || (idOperation.HasValue && p.IdOperation == idOperation)) && (string.IsNullOrEmpty(word) || p.Title.Contains(word)) && p.IdStaticTextType == (int)Enums.StaticTextType.Pages);
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -138,7 +138,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.StaticText.Count(s => (string.IsNullOrEmpty(word) || s.Title.Contains(word)) && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
+                    var total = db.StaticText.Count(s => (!idOperation.HasValue || (idOperation.HasValue && s.IdOperation == idOperation)) && (string.IsNullOrEmpty(word) || s.Title.Contains(word)) && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
 
                     ret = new ResultPage<StaticText>(list, page, pageItems, total);
 
@@ -192,6 +192,27 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("StaticTextRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler o texto. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public StaticText ReadOperationConfiguration(int idOperation, out string error)
+        {
+            StaticText ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.StaticText.SingleOrDefault(c => c.IdOperation == idOperation && c.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextRepository.ReadOperationConfiguration", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler a configuração da operação. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
