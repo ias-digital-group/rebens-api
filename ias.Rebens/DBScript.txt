@@ -13,6 +13,23 @@ GO
 
 
 
+ALTER TABLE Operation ADD PublishStatus INT NULL
+go
+ALTER TABLE Operation ADD IdLogError INT NULL
+GO
+
+ALTER TABLE [dbo].[Operation]  WITH CHECK ADD  CONSTRAINT [FK_Operation_LogError] FOREIGN KEY([IdLogError])
+REFERENCES [dbo].[LogError] ([Id])
+GO
+
+ALTER TABLE [dbo].[Operation] CHECK CONSTRAINT [FK_Operation_LogError]
+GO
+
+
+
+
+
+
 INSERT INTO StaticText VALUES ('Configuração de Operação', 'operation-1', '{ "fields": [
 	{
 		"name": "color",

@@ -8,7 +8,7 @@ namespace ias.Rebens
     {
         Contact Read(int id, out string error);
 
-        ResultPage<Contact> ListPage(int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Contact> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null);
 
         bool Delete(int id, out string error);
 

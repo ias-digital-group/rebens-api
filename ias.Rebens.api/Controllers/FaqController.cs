@@ -10,7 +10,7 @@ namespace ias.Rebens.api.Controllers
     /// Faq Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/Faq"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/Faq"), Authorize("Bearer", Roles = "master,publisher,administrator")]
     [ApiController]
     public class FaqController : ControllerBase
     {
@@ -42,7 +42,25 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Question ASC", [FromQuery]string searchWord = "")
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
+            int? idOperation = null;
+            var principal = HttpContext.User;
+            if (principal.IsInRole("administrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (int.TryParse(operationId.Value, out int tmpId))
+                        idOperation = tmpId;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -124,9 +142,29 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] FaqModel faq)
         {
+            int? idOperation = null;
+            var principal = HttpContext.User;
+            if (principal.IsInRole("administrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (int.TryParse(operationId.Value, out int tmpId))
+                        idOperation = tmpId;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
             var model = new JsonModel();
 
             var f = faq.GetEntity();
+            if (idOperation.HasValue)
+                f.IdOperation = idOperation.Value;
             if (repo.Create(f, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Pergunta criado com sucesso!", Id = f.Id });
 

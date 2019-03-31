@@ -9,7 +9,7 @@ namespace ias.Rebens.api.Controllers
     /// Address Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,publiser")]
     [ApiController]
     public class AddressController : ControllerBase
     {

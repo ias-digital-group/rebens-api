@@ -12,7 +12,7 @@ namespace ias.Rebens
 
         Customer Read(int id, out string error);
 
-        ResultPage<Customer> ListPage(int? idOperation, int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Customer> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null);
 
         bool Create(Customer customer, out string error);
 

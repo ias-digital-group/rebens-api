@@ -107,14 +107,15 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, int? idOperation, out string error)
+        public ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
         {
             ResultPage<StaticText> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.StaticText.Where(p => (!idOperation.HasValue || (idOperation.HasValue && p.IdOperation == idOperation)) && (string.IsNullOrEmpty(word) || p.Title.Contains(word)) && p.IdStaticTextType == (int)Enums.StaticTextType.Pages);
+                    var tmpList = db.StaticText.Where(p => (!idOperation.HasValue || (idOperation.HasValue && p.IdOperation == idOperation)) 
+                                    && (string.IsNullOrEmpty(word) || p.Title.Contains(word)) && p.IdStaticTextType == (int)Enums.StaticTextType.Pages);
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -138,7 +139,8 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.StaticText.Count(s => (!idOperation.HasValue || (idOperation.HasValue && s.IdOperation == idOperation)) && (string.IsNullOrEmpty(word) || s.Title.Contains(word)) && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
+                    var total = db.StaticText.Count(s => (!idOperation.HasValue || (idOperation.HasValue && s.IdOperation == idOperation)) 
+                                    && (string.IsNullOrEmpty(word) || s.Title.Contains(word)) && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
 
                     ret = new ResultPage<StaticText>(list, page, pageItems, total);
 

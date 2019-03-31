@@ -29,10 +29,13 @@ namespace ias.Rebens
         public int IdOperationType { get; set; }
         public decimal? CashbackPercentage { get; set; }
         public bool Active { get; set; }
+        public int? PublishStatus { get; set; }
+        public int? IdLogError { get; set; }
         public Guid Code { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
+        public virtual LogError LogError { get; set; }
         public virtual ICollection<Benefit> Benefits { get; set; }
         public virtual ICollection<BannerOperation> BannerOperations { get; set; }
         public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }

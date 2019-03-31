@@ -45,7 +45,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet, Authorize("Bearer", Roles = "administrator, customer")]
+        [HttpGet, Authorize("Bearer", Roles = "master, administrator, customer")]
         [ProducesResponseType(typeof(ResultPageModel<CustomerReferalModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -101,7 +101,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna o banner, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}"), Authorize("Bearer", Roles = "administrator, customer")]
+        [HttpGet("{id}"), Authorize("Bearer", Roles = "master,administrator, customer")]
         [ProducesResponseType(typeof(JsonDataModel<CustomerReferalModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]

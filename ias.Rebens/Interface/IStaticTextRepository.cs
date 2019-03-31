@@ -10,7 +10,7 @@ namespace ias.Rebens
 
         StaticText ReadText(int idOperation, string page, out string error);
 
-        ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, int? idOperation, out string error);
+        ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null);
 
         bool Delete(int id, out string error);
 

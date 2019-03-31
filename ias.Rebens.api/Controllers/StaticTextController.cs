@@ -10,7 +10,7 @@ namespace ias.Rebens.api.Controllers
     /// StaticText Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/StaticText"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/StaticText"), Authorize("Bearer", Roles = "master,administrator,publisher")]
     [ApiController]
     public class StaticTextController : ControllerBase
     {
@@ -43,7 +43,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, idOperation, out string error);
+            var principal = HttpContext.User;
+            if (principal.IsInRole("administrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (int.TryParse(operationId.Value, out int tmpId))
+                        idOperation = tmpId;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -125,11 +142,31 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] StaticTextModel staticText)
         {
+            int? idOperation = null;
+            var principal = HttpContext.User;
+            if (principal.IsInRole("administrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (int.TryParse(operationId.Value, out int tmpId))
+                        idOperation = tmpId;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
             var model = new JsonModel();
 
-            var b = staticText.GetEntity();
-            if (repo.Create(b, out string error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Texto criado com sucesso!", Id = b.Id });
+            var s = staticText.GetEntity();
+            if(idOperation.HasValue)
+                s.IdOperation = idOperation.Value;
+            if (repo.Create(s, out string error))
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Texto criado com sucesso!", Id = s.Id });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

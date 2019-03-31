@@ -10,7 +10,7 @@ namespace ias.Rebens.api.Controllers
     /// Benefit Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,publisher")]
     [ApiController]
     public class BenefitController : ControllerBase
     {

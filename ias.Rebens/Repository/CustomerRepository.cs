@@ -89,14 +89,15 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Customer> ListPage(int? idOperation, int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Customer> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
         {
             ResultPage<Customer> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Customer.Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation)) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
+                    var tmpList = db.Customer.Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation)) 
+                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "name asc":

@@ -34,7 +34,6 @@ namespace ias.Rebens
         public virtual DbSet<BenefitUse> BenefitUse { get; set; }
         public virtual DbSet<BenefitView> BenefitView { get; set; }
         public virtual DbSet<Category> Category { get; set; }
-        public virtual DbSet<Configuration> Configuration { get; set; }
         public virtual DbSet<Contact> Contact { get; set; }
         public virtual DbSet<Coupon> Coupon { get; set; }
         public virtual DbSet<CouponCampaign> CouponCampaign { get; set; }
@@ -350,13 +349,6 @@ namespace ias.Rebens
                     .WithMany(p => p.Categories)
                     .HasForeignKey(d => d.IdParent)
                     .HasConstraintName("FK_Category_Category");
-            });
-
-            modelBuilder.Entity<Configuration>(entity =>
-            {
-                entity.Property(e => e.Created).HasColumnType("datetime");
-
-                entity.Property(e => e.Modified).HasColumnType("datetime");
             });
 
             modelBuilder.Entity<Contact>(entity =>

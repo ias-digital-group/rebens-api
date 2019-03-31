@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -9,7 +10,7 @@ namespace ias.Rebens.api.Controllers
     /// Contact Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,publisher,administrator")]
     [ApiController]
     public class ContactController : ControllerBase
     {
@@ -44,7 +45,25 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error);
+            int? idOperation = null;
+            var principal = HttpContext.User;
+            if (principal.IsInRole("administrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (int.TryParse(operationId.Value, out int tmpId))
+                        idOperation = tmpId;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {

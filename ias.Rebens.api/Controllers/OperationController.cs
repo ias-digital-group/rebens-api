@@ -13,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     /// Operation Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/Operation"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/Operation"), Authorize("Bearer", Roles = "master")]
     [ApiController]
     public class OperationController : ControllerBase
     {

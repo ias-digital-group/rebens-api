@@ -591,56 +591,6 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="T:ias.Rebens.api.Controllers.ConfigurationController">
-            <summary>
-            Configuration Controller
-            </summary>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.ConfigurationController.#ctor(ias.Rebens.IConfigurationRepository)">
-            <summary>
-            Construtor
-            </summary>
-            <param name="configurationRepository">Injeção de dependencia do repositório de Configuraçõe</param>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.ConfigurationController.Put(ias.Rebens.api.Models.ConfigurationModel)">
-            <summary>
-            Atualiza uma Configuração
-            </summary>
-            <param name="configuration"></param>
-            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="200">Se o objeto for atualizado com sucesso</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.ConfigurationController.Get(System.Int32)">
-            <summary>
-            Retorna a configuração conforme o Id da Operação
-            </summary>
-            <param name="id">Id da configuração desejada</param>
-            <returns>configuração</returns>
-            <response code="200">Retorna a configuração, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.ConfigurationController.Post(ias.Rebens.api.Models.ConfigurationModel)">
-            <summary>
-            Cria uma configuração
-            </summary>
-            <param name="configuration"></param>
-            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id da categoria criada</returns>
-            <response code="200">Se o objeto for criado com sucesso</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.ConfigurationController.List(System.Int32,System.Int32)">
-            <summary>
-            Retorna uma lista de configuraçãoe
-            </summary>
-            <param name="idOperation">id da operação</param>
-            <param name="type">Tipo da configuração</param>
-            <returns>Lista com as configurações encontradas</returns>
-            <response code="200">Retorna a lista, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
         <member name="T:ias.Rebens.api.Controllers.ContactController">
             <summary>
             Contact Controller
@@ -926,15 +876,6 @@
         <member name="M:ias.Rebens.api.Controllers.HelperController.ListBannerType">
             <summary>
             Lista os tipos de banner
-            </summary>
-            <returns></returns>
-            <response code="200">Retorna a lista, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.HelperController.ListConfigurationType">
-            <summary>
-            Lista os tipos de configuração
             </summary>
             <returns></returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
@@ -2726,63 +2667,6 @@
         <member name="P:ias.Rebens.api.Models.ChangePasswordModel.NewPasswordConfirm">
             <summary>
             Confirmação da nova senha
-            </summary>
-        </member>
-        <member name="T:ias.Rebens.api.Models.ConfigurationModel">
-            <summary>
-            Configuration
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.ConfigurationModel.Id">
-            <summary>
-            Id
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.ConfigurationModel.IdOperation">
-            <summary>
-            Id Operation
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.ConfigurationModel.ConfigurationType">
-            <summary>
-            Configuration Type
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.ConfigurationModel.Configurations">
-            <summary>
-            Configurations
-            </summary>
-        </member>
-        <member name="M:ias.Rebens.api.Models.ConfigurationModel.#ctor">
-            <summary>
-            Construtror
-            </summary>
-        </member>
-        <member name="M:ias.Rebens.api.Models.ConfigurationModel.#ctor(ias.Rebens.Configuration)">
-            <summary>
-            Construtor que recebe um objeto Configuration e já popula os atributos
-            </summary>
-            <param name="configuration"></param>
-        </member>
-        <member name="M:ias.Rebens.api.Models.ConfigurationModel.GetEntity">
-            <summary>
-            Retorna um objeto Configuration com as informações
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="T:ias.Rebens.api.Models.ConfigurationTypeModel">
-            <summary>
-            Tipos de configuração
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.ConfigurationTypeModel.Id">
-            <summary>
-            Id
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.ConfigurationTypeModel.Name">
-            <summary>
-            Nome
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.ContactModel">

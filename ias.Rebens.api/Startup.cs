@@ -103,7 +103,6 @@ namespace ias.Rebens.api
             services.AddTransient<IBenefitUseRepository, BenefitUseRepository>();
             services.AddTransient<IBenefitViewRepository, BenefitViewRepository>();
             services.AddTransient<ICategoryRepository, CategoryRepository>();
-            services.AddTransient<IConfigurationRepository, ConfigurationRepository>();
             services.AddTransient<IContactRepository, ContactRepository>();
             services.AddTransient<ICouponCampaignRepository, CouponCampaignRepository>();
             services.AddTransient<ICouponRepository, CouponRepository>();

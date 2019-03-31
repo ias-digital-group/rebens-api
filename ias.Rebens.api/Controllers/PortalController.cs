@@ -17,7 +17,7 @@ namespace ias.Rebens.api.Controllers
     /// Portal Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer, referal")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer")]
     [ApiController]
     public class PortalController : ControllerBase
     {

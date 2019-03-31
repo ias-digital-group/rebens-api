@@ -203,7 +203,17 @@ namespace ias.Rebens.Enums
         [Description("Aluguel")]
         rent = 4
     }
-    
+
+    public enum PublishStatus : int
+    {
+        [Description("Processando")]
+        processing = 1,
+        [Description("Processando")]
+        done = 2,
+        [Description("Erro")]
+        error = 3
+    }
+
     public enum StaticTextType : int
     {
         [Description("Operação Sobre")]

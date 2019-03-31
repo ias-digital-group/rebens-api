@@ -392,5 +392,31 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool SavePublishStatus(int id, int idStatus, int? idError, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Operation.SingleOrDefault(o => o.Id == id);
+                    update.PublishStatus = idStatus;
+                    update.IdLogError = idError;
+                    update.Modified = DateTime.UtcNow;
+
+                    db.SaveChanges();
+                    ret = true;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.SavePublishStatus", ex.Message, $"id: {id}, idStatus: {idStatus}, idError: {idError}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar salvar o status de publicação operações. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

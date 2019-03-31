@@ -60,14 +60,15 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Faq> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Faq> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
         {
             ResultPage<Faq> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Faq.Where(f => string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word));
+                    var tmpList = db.Faq.Where(f => (string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word))
+                                    && (!idOperation.HasValue || (idOperation.HasValue && f.IdOperation == idOperation.Value)));
                     switch (sort.ToLower())
                     {
                         case "question asc":
@@ -97,7 +98,8 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Faq.Count(f => string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word));
+                    var total = db.Faq.Count(f => (string.IsNullOrEmpty(word) || f.Question.Contains(word) || f.Answer.Contains(word))
+                                    && (!idOperation.HasValue || (idOperation.HasValue && f.IdOperation == idOperation.Value)));
 
                     ret = new ResultPage<Faq>(list, page, pageItems, total);
 

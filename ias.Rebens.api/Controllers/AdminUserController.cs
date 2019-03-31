@@ -13,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     /// AdminUser Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master")]
     [ApiController]
     public class AdminUserController : ControllerBase
     {
@@ -43,31 +43,13 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet]
-        [Authorize("Bearer", Roles = "administrator,manager")]
+        [Authorize("Bearer")]
         [ProducesResponseType(typeof(ResultPageModel<AdminUserModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
         {
-            int? idOperation = null;
-            var principal = HttpContext.User;
-            if(principal.IsInRole("manager"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
-
-            var list = repo.ListPage(idOperation, page, pageItems, searchWord, sort, out string error);
+            var list = repo.ListPage(null, page, pageItems, searchWord, sort, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
@@ -99,7 +81,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}")]
-        [Authorize("Bearer", Roles = "administrator,manager")]
+        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonDataModel<AdminUserModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -125,36 +107,14 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Se o objeto for atualizado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPut]
-        [Authorize("Bearer", Roles = "administrator,manager")]
+        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]AdminUserModel user)
         {
-            int? idOperation = null;
-            var principal = HttpContext.User;
-            if (principal.IsInRole("manager"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
-
             var model = new JsonModel();
             var admin = user.GetEntity();
-            if (idOperation.HasValue)
-            {
-                admin.IdOperation = idOperation;
-                admin.Roles = "manager";
-            }
+           
             if (repo.Update(admin, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Usuário atualizado com sucesso!" });
 
@@ -169,36 +129,13 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost]
-        [Authorize("Bearer", Roles = "administrator,manager")]
+        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]AdminUserModel user)
         {
-            int? idOperation = null;
-            var principal = HttpContext.User;
-            if (principal.IsInRole("manager"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
-
             var model = new JsonModel();
             var admin = user.GetEntity();
-            if (idOperation.HasValue)
-            {
-                admin.IdOperation = idOperation;
-                admin.Roles = "manager";
-            }
                 
             if (repo.Create(admin, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Usuário criado com sucesso!", Id = admin.Id });
@@ -214,7 +151,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Se o objeto for excluido com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpDelete("{id}")]
-        [Authorize("Bearer", Roles = "administrator,manager")]
+        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)

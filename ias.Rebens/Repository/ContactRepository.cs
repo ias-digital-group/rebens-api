@@ -180,14 +180,16 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Contact> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Contact> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
         {
             ResultPage<Contact> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Contact.Include("Address").Where(c => string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word));
+                    var tmpList = db.Contact.Include("Address")
+                        .Where(c => (string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word)) 
+                        && (!idOperation.HasValue || (idOperation.HasValue && c.OperationContacts.Any(o => o.IdOperation == idOperation.Value))));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -217,7 +219,8 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Contact.Count(c => string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word));
+                    var total = db.Contact.Count(c => string.IsNullOrEmpty(word) || c.Email.Contains(word) || c.Name.Contains(word) || c.JobTitle.Contains(word)
+                                    && (!idOperation.HasValue || c.OperationContacts.Any(o => o.IdOperation == idOperation.Value)));
 
                     ret = new ResultPage<Contact>(list, page, pageItems, total);
 

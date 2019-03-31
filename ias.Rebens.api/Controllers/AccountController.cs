@@ -14,7 +14,7 @@ namespace ias.Rebens.api.Controllers
     /// Account Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/Account"), Authorize("Bearer", Roles = "administrator")]
+    [Route("api/Account")]
     [ApiController]
     public class AccountController : ControllerBase
     {
@@ -185,7 +185,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         /// <respons code="200"></respons>
         /// <respons code="400"></respons>
-        [HttpPost("ChangePassword")]
+        [HttpPost("ChangePassword"), Authorize("Bearer", Roles = "master,administrator,publisher")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)

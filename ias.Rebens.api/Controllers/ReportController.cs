@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator,manager")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator,master")]
     [ApiController]
     public class ReportController : ControllerBase
     {
@@ -37,7 +37,7 @@ namespace ias.Rebens.api.Controllers
         {
             int? idOperation = null;
             var principal = HttpContext.User;
-            if (principal.IsInRole("manager"))
+            if (principal.IsInRole("administrator"))
             {
                 if (principal?.Claims != null)
                 {

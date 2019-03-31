@@ -258,14 +258,15 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Banner> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Banner> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
         {
             ResultPage<Banner> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Banner.Where(b => string.IsNullOrEmpty(word) || b.Name.Contains(word));
+                    var tmpList = db.Banner.Where(b => (string.IsNullOrEmpty(word) || b.Name.Contains(word)) 
+                                    && (!idOperation.HasValue || (idOperation.HasValue && b.BannerOperations.Any(o => o.IdOperation == idOperation.Value))));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -289,7 +290,8 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Banner.Count(f => string.IsNullOrEmpty(word) || f.Name.Contains(word));
+                    var total = db.Banner.Count(b => (string.IsNullOrEmpty(word) || b.Name.Contains(word))
+                                    && (!idOperation.HasValue || (idOperation.HasValue && b.BannerOperations.Any(o => o.IdOperation == idOperation.Value))));
 
                     ret = new ResultPage<Banner>(list, page, pageItems, total);
 

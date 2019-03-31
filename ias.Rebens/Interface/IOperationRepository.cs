@@ -30,5 +30,6 @@ namespace ias.Rebens
 
         List<BannerOperationItem> ListByBanner(int idBanner, out string error);
 
+        bool SavePublishStatus(int id, int idStatus, int? idError, out string error);
     }
 }
