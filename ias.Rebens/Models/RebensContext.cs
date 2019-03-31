@@ -708,6 +708,12 @@ namespace ias.Rebens
                 entity.Property(e => e.Title)
                     .IsRequired()
                     .HasMaxLength(300);
+
+                entity.HasOne(o => o.LogError)
+                    .WithMany(o => o.Operations)
+                    .HasForeignKey(o => o.IdLogError)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Operation_LogError");
             });
 
             modelBuilder.Entity<OperationAddress>(entity =>
