@@ -159,4 +159,59 @@ namespace ias.Rebens.api.Models
             return ret;
         }
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class CustomerListItem
+    {
+        /// <summary>
+        /// Id
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
+        /// Nome
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
+        /// Id da operação
+        /// </summary>
+        public int IdOperation { get; set; }
+        /// <summary>
+        /// Email
+        /// </summary>
+        public string Email { get; set; }
+        /// <summary>
+        /// Id do Status 
+        /// </summary>
+        public int Status { get; set; }
+        /// <summary>
+        /// Nome do Status 
+        /// </summary>
+        public string StatusName { get; set; }
+        /// <summary>
+        /// Nome da Operação
+        /// </summary>
+        public string OperationName { get; set; }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public CustomerListItem() { }
+
+        /// <summary>
+        /// Construtor que recebe um objeto Customer e já popula os atributos
+        /// </summary>
+        /// <param name="customer"></param>
+        public CustomerListItem(CustomerReportItem customer)
+        {
+            this.Id = customer.Id;
+            this.Name = customer.Name + " " + customer.Surname;
+            this.IdOperation = customer.IdOperation;
+            this.Email = customer.Email;
+            this.Status = customer.Status;
+            this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)customer.Status);
+            this.OperationName = customer.OperationName;
+        }
+    }
 }

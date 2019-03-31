@@ -77,7 +77,7 @@ namespace ias.Rebens.api.helper
             //string conn = "Server=IAS-02;Database=Rebens;user id=ias_user;password=k4r0l1n4;";
             //bool debug = false;
             string conn = "Server=172.31.27.205;Database=Rebens;user id=Rebens_user;password=i$f6LiF*N2kv;";
-            bool debug = true;
+            bool debug = false;
 
             var customerRepo = new CustomerRepository(conn);
             var couponRepo = new CouponRepository(conn);
@@ -150,8 +150,8 @@ namespace ias.Rebens.api.helper
                     break;
                 }
             }
-
-            mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "End at: " + DateTime.Now.ToString("HH:mm:ss"));
+            if (debug)
+                mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "End at: " + DateTime.Now.ToString("HH:mm:ss"));
         }
     }
 }

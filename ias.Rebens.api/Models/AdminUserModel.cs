@@ -27,14 +27,9 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public DateTime? LastLogin { get; set; }
         /// <summary>
-        /// Status do usuário (1 = ativo, 2 = inativo) 
+        /// Status do usuário 
         /// </summary>
-        [Required]
-        public int Status { get; set; }
-        /// <summary>
-        /// Nome do Status
-        /// </summary>
-        public string StatusName { get; set; }
+        public bool Active { get; set; }
         /// <summary>
         /// Id da operação do usuário
         /// </summary>
@@ -46,6 +41,11 @@ namespace ias.Rebens.api.Models
         public string Roles { get; set; }
 
         /// <summary>
+        /// Construtor
+        /// </summary>
+        public AdminUserModel() { }
+
+        /// <summary>
         /// Construtor que recebe um AdminUser e popula os objetos
         /// </summary>
         /// <param name="adminUser"></param>
@@ -55,8 +55,7 @@ namespace ias.Rebens.api.Models
             this.Name = adminUser.Name;
             this.Email = adminUser.Email;
             this.LastLogin = adminUser.LastLogin;
-            this.Status = adminUser.Status;
-            this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.AdminUserStatus)adminUser.Status);
+            this.Active = adminUser.Status == (int)Enums.AdminUserStatus.Active;
             this.IdOperation = adminUser.IdOperation;
             this.Roles = adminUser.Roles;
         }
@@ -73,7 +72,7 @@ namespace ias.Rebens.api.Models
                 Name = this.Name,
                 Email = this.Email,
                 LastLogin = this.LastLogin,
-                Status = this.Status,
+                Status = this.Active ? (int)Enums.AdminUserStatus.Active : (int)Enums.AdminUserStatus.Inactive,
                 IdOperation = this.IdOperation,
                 Roles = this.Roles,
                 Created = DateTime.UtcNow,

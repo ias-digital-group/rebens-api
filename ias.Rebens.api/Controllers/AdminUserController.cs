@@ -18,17 +18,14 @@ namespace ias.Rebens.api.Controllers
     public class AdminUserController : ControllerBase
     {
         private IAdminUserRepository repo;
-        private IOperationRepository opreationRepo;
 
         /// <summary>
         /// Consturctor
         /// </summary>
-        /// <param name="operationRepository"></param>
         /// <param name="adminUserRepository"></param>
         public AdminUserController(IOperationRepository operationRepository, IAdminUserRepository adminUserRepository)
         {
             this.repo = adminUserRepository;
-            this.opreationRepo = operationRepository;
         }
 
         /// <summary>
@@ -43,7 +40,6 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet]
-        [Authorize("Bearer")]
         [ProducesResponseType(typeof(ResultPageModel<AdminUserModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -55,14 +51,16 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<AdminUserModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<AdminUserModel>();
+                var ret = new ResultPageModel<AdminUserModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<AdminUserModel>()
+                };
                 foreach (var admin in list.Page)
                     ret.Data.Add(new AdminUserModel(admin));
 
@@ -81,7 +79,6 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}")]
-        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonDataModel<AdminUserModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -107,7 +104,6 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Se o objeto for atualizado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPut]
-        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]AdminUserModel user)
@@ -129,7 +125,6 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost]
-        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]AdminUserModel user)
@@ -151,7 +146,6 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Se o objeto for excluido com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpDelete("{id}")]
-        [Authorize("Bearer")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)

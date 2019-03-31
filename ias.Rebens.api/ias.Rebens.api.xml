@@ -123,7 +123,6 @@
             <summary>
             Consturctor
             </summary>
-            <param name="operationRepository"></param>
             <param name="adminUserRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.AdminUserController.List(System.Int32,System.Int32,System.String,System.String)">
@@ -671,7 +670,7 @@
             <param name="idOperation">id da operação (default=null)</param>
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+            <param name="sort">Ordenação campos (Name, Id, Email, Birthday), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com os endereços encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
@@ -1550,6 +1549,38 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.ReportController.ListCustomers(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Relatório de clientes cadastrados no sistema
+            </summary>
+            <param name="idOperation">id da operação (default=null)</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Name, Id, Email, Birthday), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os endereços encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+            <returns></returns>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ReportController.ListBenefitUse(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+            Relatório de clientes cadastrados no sistema
+            </summary>
+            <param name="idOperation">id da operação (default=null)</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Name, Id, Email, Birthday), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="startDate">Filtro data inicial</param>
+            <param name="endDate">Filtro data final</param>
+            <returns>Lista com os endereços encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+            <returns></returns>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
             <summary>
             StaticText Controller
@@ -1610,59 +1641,6 @@
             <param name="id">Id do texto a ser apagado</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
             <response code="200">Se o objeto for excluido com sucesso</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="T:ias.Rebens.api.Controllers.UserController">
-            <summary>
-            User Controller
-            </summary>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.UserController.#ctor(ias.Rebens.IAdminUserRepository)">
-            <summary>
-            User Controller Constructor that receive an Dependency Injection of the Repository
-            </summary>
-            <param name="adminUserRepository"></param>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.UserController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
-            <summary>
-            Retorna uma lista de usuários conforme os parametros
-            </summary>
-            <param name="operationId">id da operação (default=null)</param>
-            <param name="page">página, não obrigatório (default=0)</param>
-            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
-            <param name="searchWord">Palavra à ser buscada</param>
-            <returns>Lista com os usuários encontradas</returns>
-            <response code="200">Retorna a lista, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.UserController.Get(System.Int32)">
-            <summary>
-            Retorna o usuário conforme o ID
-            </summary>
-            <param name="id">Id do usuário desejada</param>
-            <returns>Endereço</returns>
-            <response code="200">Retorna o usuário, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.UserController.Put(ias.Rebens.api.Models.AdminUserModel)">
-            <summary>
-            Atualiza um usuário
-            </summary>
-            <param name="user"></param>
-            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="200">Se o objeto for atualizado com sucesso</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.UserController.Post(ias.Rebens.api.Models.AdminUserModel)">
-            <summary>
-            Cria um usuário
-            </summary>
-            <param name="user"></param>
-            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do usuário criado</returns>
-            <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Models.AddressModel">
@@ -1767,14 +1745,9 @@
             Data Hora do último login do usuário
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.AdminUserModel.Status">
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.Active">
             <summary>
-            Status do usuário (1 = ativo, 2 = inativo) 
-            </summary>
-        </member>
-        <member name="P:ias.Rebens.api.Models.AdminUserModel.StatusName">
-            <summary>
-            Nome do Status
+            Status do usuário 
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.AdminUserModel.IdOperation">
@@ -1785,6 +1758,11 @@
         <member name="P:ias.Rebens.api.Models.AdminUserModel.Roles">
             <summary>
             Papéis do usuário
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.AdminUserModel.#ctor">
+            <summary>
+            Construtor
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.AdminUserModel.#ctor(ias.Rebens.AdminUser)">
@@ -2382,6 +2360,47 @@
             </summary>
             <param name="benefit"></param>
         </member>
+        <member name="T:ias.Rebens.api.Models.BenefitListUseItem">
+            <summary>
+            Item simplificado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListUseItem.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListUseItem.Title">
+            <summary>
+            Título
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListUseItem.Name">
+            <summary>
+            Título
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListUseItem.TotalUse">
+            <summary>
+            Total utilizado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.BenefitListUseItem.StatusName">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitListUseItem.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.BenefitListUseItem.#ctor(ias.Rebens.BenefitReportItem)">
+            <summary>
+            Construtor que recebe um Benefício e já popula os atributos
+            </summary>
+            <param name="benefit"></param>
+        </member>
         <member name="T:ias.Rebens.api.Models.BenefitOperationModel">
             <summary>
             Relacionamento Benefício com Operação
@@ -2887,6 +2906,57 @@
             Retorna um objeto Customer com as informações
             </summary>
             <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CustomerListItem">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerListItem.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerListItem.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerListItem.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerListItem.Email">
+            <summary>
+            Email
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerListItem.Status">
+            <summary>
+            Id do Status 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerListItem.StatusName">
+            <summary>
+            Nome do Status 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerListItem.OperationName">
+            <summary>
+            Nome da Operação
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CustomerListItem.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CustomerListItem.#ctor(ias.Rebens.CustomerReportItem)">
+            <summary>
+            Construtor que recebe um objeto Customer e já popula os atributos
+            </summary>
+            <param name="customer"></param>
         </member>
         <member name="T:ias.Rebens.api.Models.CustomerReferalModel">
             <summary>

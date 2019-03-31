@@ -10,9 +10,71 @@ namespace ias.Rebens
     public class ReportRepository : IReportRepository
     {
         private string _connectionString;
+
         public ReportRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
+        public ResultPage<CustomerReportItem> ListCustomerPage(int page, int pageItems, string word, string sort, out string error, int? idOperation)
+        {
+            ResultPage<CustomerReportItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Customer.Include("Operation").Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
+                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "email asc":
+                            tmpList = tmpList.OrderBy(f => f.Email);
+                            break;
+                        case "email desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Email);
+                            break;
+                        case "birthday asc":
+                            tmpList = tmpList.OrderBy(f => f.Birthday);
+                            break;
+                        case "birthday desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Birthday);
+                            break;
+                    }
+
+                    var customers = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Customer.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation)) 
+                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
+
+                    var list = new List<CustomerReportItem>();
+                    customers.ForEach(c => {
+                        list.Add(new CustomerReportItem(c, c.Operation.Title));
+                    });
+
+                    ret = new ResultPage<CustomerReportItem>(list, page, pageItems, total);
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ReportRepository.ListCustomerPage", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os clientes. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
         }
 
         public Dashboard LoadDashboard(out string error, DateTime? begin = null, DateTime? end = null, int? idOperation = null)
@@ -132,6 +194,67 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("ReportRepository.LoadDashboard", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar carregar o Dashboard. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public ResultPage<BenefitReportItem> ListBenefitUsePage(int page, int pageItems, string word, string sort, out string error, int? idOperation, DateTime? start, DateTime? end)
+        {
+            ResultPage<BenefitReportItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Benefit.Include("BenefitUses").Where(b => (!idOperation.HasValue || (idOperation.HasValue && idOperation == b.IdOperation))
+                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word))
+                                    && (!start.HasValue || (start.HasValue && b.BenefitUses.Any(u => u.Created >= start.Value) ))
+                                    && (!end.HasValue || (end.HasValue && b.BenefitUses.Any(u => u.Created <= end.Value))));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var benefits = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Benefit.Count(b => (!idOperation.HasValue || (idOperation.HasValue && idOperation == b.IdOperation))
+                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word))
+                                    && (!start.HasValue || (start.HasValue && b.BenefitUses.Any(u => u.Created >= start.Value)))
+                                    && (!end.HasValue || (end.HasValue && b.BenefitUses.Any(u => u.Created <= end.Value))));
+
+                    var list = new List<BenefitReportItem>();
+                    benefits.ForEach(b => {
+                        int totalUse = b.BenefitUses.Count(u => (!start.HasValue || (start.HasValue && u.Created >= start.Value))
+                                    && (!end.HasValue || (end.HasValue && u.Created <= end.Value)));
+                        list.Add(new BenefitReportItem(b, totalUse));
+                    });
+
+                    ret = new ResultPage<BenefitReportItem>(list, page, pageItems, total);
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ReportRepository.ListBenefitUsePage", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os Benefícios. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

@@ -37,7 +37,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="idOperation">id da operação (default=null)</param>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+        /// <param name="sort">Ordenação campos (Name, Id, Email, Birthday), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <returns>Lista com os endereços encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>

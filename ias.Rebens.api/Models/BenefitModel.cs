@@ -374,4 +374,49 @@ namespace ias.Rebens.api.Models
             this.Name = benefit.Name;
         }
     }
+
+    /// <summary>
+    /// Item simplificado
+    /// </summary>
+    public class BenefitListUseItem
+    {
+        /// <summary>
+        /// Id
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
+        /// Título
+        /// </summary>
+        public string Title { get; set; }
+        /// <summary>
+        /// Título
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
+        /// Total utilizado
+        /// </summary>
+        public int TotalUse { get; set; }
+        /// <summary>
+        /// Status
+        /// </summary>
+        public string StatusName { get; set; }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public BenefitListUseItem() { }
+
+        /// <summary>
+        /// Construtor que recebe um Benefício e já popula os atributos
+        /// </summary>
+        /// <param name="benefit"></param>
+        public BenefitListUseItem(BenefitReportItem benefit)
+        {
+            this.Id = benefit.Id;
+            this.Title = benefit.Title;
+            this.Name = benefit.Name;
+            this.TotalUse = benefit.TotalUse;
+            this.StatusName = benefit.Active ? "Ativo" : "Inativo";
+        }
+    }
 }

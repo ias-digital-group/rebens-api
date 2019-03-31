@@ -213,6 +213,8 @@ namespace ias.Rebens
                         update.Email = adminUser.Email;
                         update.Modified = DateTime.UtcNow;
                         update.Status = adminUser.Status;
+                        if(!string.IsNullOrEmpty(adminUser.Roles))
+                            update.Roles = adminUser.Roles;
 
                         db.SaveChanges();
                         error = null;

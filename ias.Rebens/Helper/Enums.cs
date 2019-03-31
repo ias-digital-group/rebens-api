@@ -269,6 +269,18 @@ namespace ias.Rebens.Enums
         treat = 2
     }
 
+    public enum Roles
+    {
+        [Description("Master")]
+        master,
+        [Description("Administrador")]
+        administrator,
+        [Description("Publicador")]
+        publisher,
+        [Description("Cliente")]
+        customer
+    }
+
     public static class EnumHelper
     {
         public static string GetEnumDescription(Enum value)
