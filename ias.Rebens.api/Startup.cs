@@ -16,8 +16,15 @@ using Microsoft.DotNet.PlatformAbstractions;
 
 namespace ias.Rebens.api
 {
+    /// <summary>
+    /// Startup Class
+    /// </summary>
     public class Startup
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="configuration"></param>
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -25,7 +32,10 @@ namespace ias.Rebens.api
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        /// <summary>
+        /// Configure Services Method
+        /// </summary>
+        /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
@@ -33,9 +43,11 @@ namespace ias.Rebens.api
             var signingConfigurations = new SigningConfigurations();
             services.AddSingleton(signingConfigurations);
 
-            var tokenConfigurations = new TokenOptions();
-            tokenConfigurations.Issuer = "Rebens";
-            tokenConfigurations.Audience = "Rebens";
+            var tokenConfigurations = new TokenOptions()
+            {
+                Issuer = "Rebens",
+                Audience = "Rebens"
+            };
             new ConfigureFromConfigurationOptions<TokenOptions>(Configuration.GetSection("TokenOptions")).Configure(tokenConfigurations);
             services.AddSingleton(tokenConfigurations);
 
@@ -125,7 +137,11 @@ namespace ias.Rebens.api
             services.AddDbContext<RebensContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <summary>
+        /// Configure Method
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="env"></param>
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -162,7 +178,7 @@ namespace ias.Rebens.api
             // MVC
             app.UseMvc(routes =>
             {
-                routes.MapRoute("Voucher", "Voucher/", defaults: new { controller = "Voucher", action = "Index" });
+                routes.MapRoute("Voucher", "Voucher/{code}", defaults: new { controller = "Voucher", action = "Index" } );
                 routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
 

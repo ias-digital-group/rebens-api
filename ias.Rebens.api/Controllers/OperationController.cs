@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using System.Net;
+using System.IO;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -537,11 +539,12 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Adiciona um endereço a uma operação
+        /// Salva as configurações de publicação da Operação
         /// </summary>
-        /// <param name="model">{ idOperation: 0, idAddress: 0 }</param>
+        /// <param name="id">id da operação</param>
+        /// <param name="data">configurações</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Víncula um parceiro com um endereço</response>
+        /// <response code="200">Configurações salva com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost("{id}/Configuration")]
         [ProducesResponseType(typeof(JsonModel), 200)]
@@ -566,7 +569,58 @@ namespace ias.Rebens.api.Controllers
             };
 
             if (staticTextRepo.Update(config, out string error))
+            {
+                repo.ValidateOperation(id, out error);
+
                 return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!" });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Coloca uma operação na fila de publicação
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <returns></returns>
+        /// <response code="200">Opreação em fila</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/publish")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Publish(int id)
+        {
+            if(repo.ValidateOperation(id, out string error))
+            {
+                var ret = repo.GetPublishData(id, out error);
+                if(ret != null)
+                {
+                    string content = JsonConvert.SerializeObject(ret);
+                    HttpWebRequest request = WebRequest.Create("http://builder.rebens.com.br/api/operations") as HttpWebRequest;
+
+                    request.Method = "POST";
+                    request.ContentType = "application/json";
+                    request.Timeout = 30000;
+
+                    using (Stream s = request.GetRequestStream())
+                    {
+                        using (StreamWriter sw = new StreamWriter(s))
+                            sw.Write(content);
+                    }
+                    try
+                    {
+                        HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                        if (response.StatusCode == HttpStatusCode.OK)
+                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error);
+                        else
+                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+                    }
+                    catch(Exception ex)
+                    {
+                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+                    }
+                }
+            }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

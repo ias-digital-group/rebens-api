@@ -1122,11 +1122,21 @@
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.SaveConfiguration(System.Int32,System.Object)">
             <summary>
-            Adiciona um endereço a uma operação
+            Salva as configurações de publicação da Operação
             </summary>
-            <param name="model">{ idOperation: 0, idAddress: 0 }</param>
+            <param name="id">id da operação</param>
+            <param name="data">configurações</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="200">Víncula um parceiro com um endereço</response>
+            <response code="200">Configurações salva com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.Publish(System.Int32)">
+            <summary>
+            Coloca uma operação na fila de publicação
+            </summary>
+            <param name="id">id da operação</param>
+            <returns></returns>
+            <response code="200">Opreação em fila</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Controllers.PartnerController">
@@ -3452,6 +3462,16 @@
             GUID gerado automáticamente
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.PublishStatus">
+            <summary>
+            Status de publicação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.CanPublish">
+            <summary>
+            Pode publicar
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.OperationModel.#ctor">
             <summary>
             Construtor
@@ -4041,6 +4061,30 @@
             <summary>
             Valor do resgate
             </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Startup">
+            <summary>
+            Startup Class
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Startup.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="configuration"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Configure Services Method
+            </summary>
+            <param name="services"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+            <summary>
+            Configure Method
+            </summary>
+            <param name="app"></param>
+            <param name="env"></param>
         </member>
     </members>
 </doc>

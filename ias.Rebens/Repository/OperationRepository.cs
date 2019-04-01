@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,6 +74,7 @@ namespace ias.Rebens
                 {
                     operation.Code = Guid.NewGuid();
                     operation.Modified = operation.Created = DateTime.UtcNow;
+                    operation.PublishStatus = (int)Enums.PublishStatus.notvalid;
                     db.Operation.Add(operation);
                     db.SaveChanges();
                     error = null;
@@ -415,6 +417,140 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OperationRepository.SavePublishStatus", ex.Message, $"id: {id}, idStatus: {idStatus}, idError: {idError}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar salvar o status de publicação operações. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public bool ValidateOperation(int id, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var operation = db.Operation.SingleOrDefault(o => o.Id == id);
+                    if(operation.PublishStatus == (int)Enums.PublishStatus.notvalid 
+                        || operation.PublishStatus == (int)Enums.PublishStatus.valid
+                        || operation.PublishStatus == (int)Enums.PublishStatus.error)
+                    {
+                        if(operation.Title != "" && operation.Domain != "" && !string.IsNullOrEmpty(operation.Image ))
+                        {
+                            var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                            if(configuration != null)
+                            {
+                                var jObj = JObject.Parse(configuration.Html);
+
+                                int totalOK = 0;
+                                int infoTotal = 2;
+                                var list = jObj["fields"].Children();
+                                foreach (var item in list)
+                                {
+                                    switch (item["name"].ToString())
+                                    {
+                                        case "color":
+                                            totalOK += item["data"].ToString() != "" ? 1 : 0;
+                                            break;
+                                        case "favicon":
+                                            totalOK += item["data"].ToString() != "" ? 1 : 0;
+                                            break;
+                                        case "module-coupon":
+                                            if (bool.Parse(item["data"].ToString()))
+                                                infoTotal += 2;
+                                            break;
+                                        case "wirecard-token":
+                                            if (infoTotal > 2)
+                                                totalOK += item["data"].ToString() != "" ? 1 : 0;
+                                            break;
+                                        case "wirecard-jstoken":
+                                            if (infoTotal > 2)
+                                                totalOK += item["data"].ToString() != "" ? 1 : 0;
+                                            break;
+                                    }
+                                }
+                                if (totalOK == infoTotal)
+                                {
+                                    operation.PublishStatus = (int)Enums.PublishStatus.valid;
+                                    operation.Modified = DateTime.UtcNow;
+                                    db.SaveChanges();
+                                }
+                            }
+                        }
+                    }
+
+                    ret = true;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ValidateOperation", ex.Message, $"id: {id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar validar a operação. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public object GetPublishData(int id, out string error)
+        {
+            object ret = null;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var operation = db.Operation.SingleOrDefault(o => o.Id == id);
+                    if(operation != null)
+                    {
+                        if(operation.PublishStatus == (int)Enums.PublishStatus.valid)
+                        {
+                            string color = "", favicon = "";
+                            bool couponEnable = false;
+                            var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                            if (configuration != null)
+                            {
+                                var jObj = JObject.Parse(configuration.Html);
+                                var list = jObj["fields"].Children();
+                                foreach (var item in list)
+                                {
+                                    switch (item["name"].ToString())
+                                    {
+                                        case "color":
+                                            color = item["data"].ToString();
+                                            break;
+                                        case "favicon":
+                                            favicon = item["data"].ToString();
+                                            break;
+                                        case "module-coupon":
+                                            couponEnable = bool.Parse(item["data"].ToString());
+                                            break;
+                                    }
+                                }
+                                ret = new
+                                {
+                                    Id = operation.Code,
+                                    Color = color,
+                                    operation.Title,
+                                    Logo = operation.Image,
+                                    Favicon = favicon,
+                                    CouponEnabled = couponEnable,
+                                    operation.Domain
+                                };
+                                error = null;
+                            }
+                            else
+                                error = "Configuração da operação não encontrada!";
+                        }
+                        else
+                            error = "Operação não válida para publicação!";
+                    }
+                    else
+                        error = "Operação não encontrada!";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.GetPublishData", ex.Message, $"id: {id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar validar a operação. (erro:" + idLog + ")";
             }
             return ret;
         }

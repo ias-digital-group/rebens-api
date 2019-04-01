@@ -206,12 +206,16 @@ namespace ias.Rebens.Enums
 
     public enum PublishStatus : int
     {
+        [Description("Imcompleto")]
+        notvalid = 0,
+        [Description("Válido")]
+        valid = 1,
         [Description("Processando")]
-        processing = 1,
+        processing = 2,
         [Description("Processando")]
-        done = 2,
+        done = 3,
         [Description("Erro")]
-        error = 3
+        error = 4
     }
 
     public enum StaticTextType : int

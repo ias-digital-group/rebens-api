@@ -77,6 +77,14 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string Code { get; set; } 
         /// <summary>
+        /// Status de publicação
+        /// </summary>
+        public string PublishStatus { get; set; }
+        /// <summary>
+        /// Pode publicar
+        /// </summary>
+        public bool CanPublish { get; set; }
+        /// <summary>
         /// Construtor
         /// </summary>
         public OperationModel() { }
@@ -96,6 +104,8 @@ namespace ias.Rebens.api.Models
             this.CachbackPercentage = operation.CashbackPercentage;
             this.Active = operation.Active;
             this.Code = operation.Code.ToString();
+            this.PublishStatus = Enums.EnumHelper.GetEnumDescription((Enums.PublishStatus)operation.PublishStatus);
+            this.CanPublish = operation.PublishStatus == (int)Enums.PublishStatus.valid;
 
             if(operation.OperationContacts != null && operation.OperationContacts.Count >0)
             {
