@@ -206,13 +206,13 @@ namespace ias.Rebens.Enums
 
     public enum PublishStatus : int
     {
-        [Description("Imcompleto")]
+        [Description("Incompleto")]
         notvalid = 0,
         [Description("Válido")]
         valid = 1,
         [Description("Processando")]
         processing = 2,
-        [Description("Processando")]
+        [Description("Publicado")]
         done = 3,
         [Description("Erro")]
         error = 4
@@ -239,8 +239,11 @@ namespace ias.Rebens.Enums
         [Description("E-mail de indicação de cliente")]
         EmailDefault = 9,
         [Description("Configuração de Operação")]
-        OperationConfiguration = 10
-
+        OperationConfiguration = 10,
+        [Description("Configuração de Operação Padrão")]
+        OperationConfigurationDefault = 11,
+        [Description("Páginas Padrão")]
+        PagesDefault = 11
     }
 
     public enum WithdrawStatus : int

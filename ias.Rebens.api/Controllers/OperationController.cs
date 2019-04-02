@@ -585,12 +585,12 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         /// <response code="200">Opreação em fila</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/publish")]
+        [HttpPost("{id}/publish")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Publish(int id)
         {
-            if(repo.ValidateOperation(id, out string error))
+            if (repo.ValidateOperation(id, out string error))
             {
                 var ret = repo.GetPublishData(id, out error);
                 if(ret != null)
@@ -614,8 +614,10 @@ namespace ias.Rebens.api.Controllers
                             repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error);
                         else
                             repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+
+                        return StatusCode(200, new JsonModel() { Status = "ok" });
                     }
-                    catch(Exception ex)
+                    catch
                     {
                         repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
                     }

@@ -84,107 +84,150 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = new Dashboard()
-                    {
-                        Benefits = new List<DashboardGraph>(),
-                        Users = new List<DashboardUser>()
-                    };
+                    ret = new Dashboard() { Operations = new List<DashboardOperation>() };
 
                     // Usuários
                     var operations = db.Operation.Where(o => o.Active && (!idOperation.HasValue ||(idOperation.HasValue && o.Id == idOperation)));
                     foreach (var operation in operations)
                     {
-                        // Usuários por status
-                        var item = new DashboardUser() { Operation = operation.Title, Users = new DashboardGraph(), Region = new List<DashboardGraph>() };
-                        item.Users.Title = "Usuários";
-                        item.Users.Type = "pie";
-                        item.Users.Items = new List<DashboardGraphItem>();
-                        int totalPaid = 0;
-                        if (operation.Id == 1)
+                        if(db.Customer.Any(c => c.IdOperation == operation.Id))
                         {
-                            totalPaid = db.MoipSignature.Where(s => s.Customer.IdOperation == operation.Id && s.Status.ToLower() == "active").Count();
-                            item.Users.Items.Add(new DashboardGraphItem() { Title = "Associados", Total = totalPaid });
+                            var dashOperation = new DashboardOperation() { Operation = operation.Title };
+
+                            // Usuários por status
+                            dashOperation.Users = new DashboardGraph() { Title = "Usuários", Type = "pie", Labels = new List<string>(), Data = new List<int>() };
+                            int totalPaid = 0;
+                            if (operation.Id == 1)
+                            {
+                                totalPaid = db.MoipSignature.Where(s => s.Customer.IdOperation == operation.Id && s.Status.ToLower() == "active").Count();
+                                dashOperation.Users.Labels.Add("Associados");
+                                dashOperation.Users.Data.Add(totalPaid);
+                            }
+
+                            var users = from c in db.Customer
+                                        where c.IdOperation == operation.Id
+                                        && c.Status != (int)Enums.CustomerStatus.ChangePassword
+                                        group c by c.Status into g
+                                        select new { idStatus = g.Key, total = g.Count() };
+                            foreach (var user in users)
+                            {
+                                dashOperation.Users.Labels.Add(Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)user.idStatus));
+                                dashOperation.Users.Data.Add(user.idStatus == (int)Enums.CustomerStatus.Active ? user.total - totalPaid : user.total);
+                            }
+
+                            // indicações
+                            dashOperation.TotalReferals = db.CustomerReferal.Count(c => c.Customer.IdOperation == operation.Id);
+
+                            // Região - estados
+                            var tmpStates = (from c in db.Customer
+                                             where c.IdOperation == operation.Id
+                                             && !string.IsNullOrEmpty(c.Address.State)
+                                             group c.Address by c.Address.State into g
+                                             orderby g.Count()
+                                             select new { Title = g.Key, Total = g.Count() }).Take(10).ToList();
+                            if (tmpStates.Count > 0)
+                            {
+                                dashOperation.RegionState = new DashboardGraph()
+                                {
+                                    Title = "Estados",
+                                    Type = "pie",
+                                    Labels = new List<string>(),
+                                    Data = new List<int>()
+                                };
+                                foreach (var i in tmpStates)
+                                {
+                                    dashOperation.RegionState.Labels.Add(i.Title);
+                                    dashOperation.RegionState.Data.Add(i.Total);
+                                }
+                            }
+
+                            // Região - cidades
+                            var tmpCities = (from c in db.Customer
+                                             where c.IdOperation == operation.Id
+                                             && !string.IsNullOrEmpty(c.Address.City)
+                                             group c.Address by c.Address.City into g
+                                             orderby g.Count()
+                                             select new { Title = g.Key, Total = g.Count() }).Take(10).ToList();
+                            if(tmpCities.Count > 0)
+                            {
+                                dashOperation.RegionCity = new DashboardGraph()
+                                {
+                                    Title = "Cidades",
+                                    Type = "pie",
+                                    Labels = new List<string>(),
+                                    Data = new List<int>()
+                                };
+                                foreach (var i in tmpCities)
+                                {
+                                    dashOperation.RegionCity.Labels.Add(i.Title);
+                                    dashOperation.RegionCity.Data.Add(i.Total);
+                                }
+                            }
+                            
+                            // Região - Bairros
+                            var tmpNeighborhood = (from c in db.Customer
+                                                   where c.IdOperation == operation.Id
+                                                   && !string.IsNullOrEmpty(c.Address.Neighborhood)
+                                                   group c.Address by c.Address.Neighborhood into g
+                                                   orderby g.Count()
+                                                   select new { Title = g.Key, Total = g.Count() }).Take(10).ToList();
+                            if(tmpNeighborhood.Count > 0)
+                            {
+                                dashOperation.RegionNeighborhood = new DashboardGraph()
+                                {
+                                    Title = "Bairros",
+                                    Type = "pie",
+                                    Labels = new List<string>(),
+                                    Data = new List<int>()
+                                };
+                                foreach (var i in tmpNeighborhood)
+                                {
+                                    dashOperation.RegionNeighborhood.Labels.Add(i.Title);
+                                    dashOperation.RegionNeighborhood.Data.Add(i.Total);
+                                }
+                            }
+                            ret.Operations.Add(dashOperation);
                         }
-                        var users = from c in db.Customer
-                                    where c.IdOperation == operation.Id
-                                    && c.Status != (int)Enums.CustomerStatus.ChangePassword
-                                    group c by c.Status into g
-                                    select new { idStatus = g.Key, total = g.Count() };
-                        foreach (var user in users)
-                        {
-                            item.Users.Items.Add(new DashboardGraphItem() {
-                                Title = Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)user.idStatus),
-                                Total = user.idStatus == (int)Enums.CustomerStatus.Active ? user.total - totalPaid : user.total });
-                        }
-
-                        // indicações
-                        item.TotalReferals = db.CustomerReferal.Count(c => c.Customer.IdOperation == operation.Id);
-
-                        // Região - estados
-                        var graphState = new DashboardGraph() {
-                                            Title = "Estados",
-                                            Type = "pie"
-                                         };
-                        graphState.Items = (from c in db.Customer
-                                          where c.IdOperation == operation.Id
-                                          group c.Address by c.Address.State into g
-                                          orderby g.Count()
-                                          select new DashboardGraphItem() { Title = g.Key, Total = g.Count() }).Take(10).ToList();
-                        item.Region.Add(graphState);
-
-                        // Região - estados
-                        var graphCity = new DashboardGraph()
-                        {
-                            Title = "Cidades",
-                            Type = "pie"
-                        };
-                        graphCity.Items = (from c in db.Customer
-                                            where c.IdOperation == operation.Id
-                                            group c.Address by c.Address.City into g
-                                            orderby g.Count()
-                                            select new DashboardGraphItem() { Title = g.Key, Total = g.Count() }).Take(10).ToList();
-                        item.Region.Add(graphCity);
-
-                        // Região - Bairros
-                        var graphNeighborhood = new DashboardGraph()
-                        {
-                            Title = "Bairros",
-                            Type = "pie"
-                        };
-                        graphNeighborhood.Items = (from c in db.Customer
-                                            where c.IdOperation == operation.Id
-                                            group c.Address by c.Address.Neighborhood into g
-                                            orderby g.Count()
-                                            select new DashboardGraphItem() { Title = g.Key, Total = g.Count() }).Take(10).ToList();
-                        item.Region.Add(graphNeighborhood);
-                        ret.Users.Add(item);
                     }
 
                     // Benefícios - Mais vistos
-                    var graphView = new DashboardGraph()
+                    ret.BenefitView = new DashboardGraph()
                     {
                         Title = "Mais Vistos",
-                        Type = "bar"
+                        Type = "bar",
+                        Labels = new List<string>(),
+                        Data = new List<int>()
                     };
-                    graphView.Items = (from b in db.BenefitView
+                    var tmpView = (from b in db.BenefitView
                                        where (!idOperation.HasValue || (idOperation.HasValue && b.Customer.IdOperation == idOperation.Value))
                                        group b by b.Benefit.Name into g
                                        orderby g.Count()
-                                       select new DashboardGraphItem() { Title = g.Key, Total = g.Count() }).Take(10).ToList();
-                    ret.Benefits.Add(graphView);
+                                       select new { Title = g.Key, Total = g.Count() }).Take(10).ToList();
+                    foreach (var i in tmpView)
+                    {
+                        ret.BenefitView.Labels.Add(i.Title);
+                        ret.BenefitView.Data.Add(i.Total);
+                    }
+
 
                     // Benefícios - Mais usados
-                    var graphUsed = new DashboardGraph()
+                    ret.BenefitUse = new DashboardGraph()
                     {
                         Title = "Mais Usados",
-                        Type = "bar"
+                        Type = "bar",
+                        Labels = new List<string>(),
+                        Data = new List<int>()
                     };
-                    graphUsed.Items = (from b in db.BenefitUse
+                    var tmpUsed = (from b in db.BenefitUse
                                      where (!idOperation.HasValue || (idOperation.HasValue && b.Customer.IdOperation == idOperation.Value))
                                      group b by b.Name into g
                                      orderby g.Count()
-                                     select new DashboardGraphItem() { Title = g.Key, Total = g.Count() }).Take(10).ToList();
-                    ret.Benefits.Add(graphUsed);
+                                     select new { Title = g.Key, Total = g.Count() }).Take(10).ToList();
+                    foreach (var i in tmpUsed)
+                    {
+                        ret.BenefitUse.Labels.Add(i.Title);
+                        ret.BenefitUse.Data.Add(i.Total);
+                    }
 
                     error = null;
                 }

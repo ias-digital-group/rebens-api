@@ -30,6 +30,7 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
         public int IdCustomer { get; set; }
+        public int IdBenefit { get; set; }
 
         public virtual Customer Customer { get; set; }
     }

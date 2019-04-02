@@ -165,7 +165,6 @@ namespace ias.Rebens.api.Models
             this.Title = benefit.Title;
             this.Image = benefit.Image;
             this.DueDate = benefit.DueDate;
-            this.Link = benefit.Link;
             this.MaxDiscountPercentage = benefit.MaxDiscountPercentage;
             this.CpvPercentage = benefit.CPVPercentage;
             this.MinDiscountPercentage = benefit.MinDiscountPercentage;

@@ -195,12 +195,23 @@ namespace ias.Rebens
                     }
                     else
                     {
-                        zanoxSale.Created = zanoxSale.Modified = DateTime.Now;
-                        db.ZanoxSale.Add(zanoxSale);
-                        db.SaveChanges();
+                        var tmp = Helper.SecurityHelper.SimpleDecryption(zanoxSale.Zpar);
+                        if(tmp.IndexOf('|') > 0)
+                        {
+                            if(int.TryParse(tmp.Split("|")[0], out int idBenefit) && int.TryParse(tmp.Split("|")[1], out int idCustomer))
+                            {
+                                if (db.Customer.Any(c => c.Id == idCustomer) && db.Benefit.Any(b => b.Id == idBenefit))
+                                {
+                                    zanoxSale.IdCustomer = idCustomer;
+                                    zanoxSale.IdBenefit = idBenefit;
+                                    zanoxSale.Created = zanoxSale.Modified = DateTime.Now;
+                                    db.ZanoxSale.Add(zanoxSale);
+                                    db.SaveChanges();
+                                }
+                            }
+                        }
                         error = null;
-                    }
-                        
+                    }   
                 }
             }
             catch (Exception ex)

@@ -212,7 +212,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Benefit.Count(o => string.IsNullOrEmpty(word) || o.Title.Contains(word));
+                    var total = db.Benefit.Count(o => string.IsNullOrEmpty(word) || o.Name.Contains(word) || o.Title.Contains(word) || o.Partner.Name.Contains(word));
 
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
 

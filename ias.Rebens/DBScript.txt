@@ -26,7 +26,8 @@ ALTER TABLE [dbo].[Operation] CHECK CONSTRAINT [FK_Operation_LogError]
 GO
 
 
-
+ALTER TABLE ZanoxSale ADD IdBenefit INT NOT NULL
+GO
 
 
 

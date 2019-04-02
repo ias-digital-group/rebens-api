@@ -14,7 +14,7 @@ namespace ias.Rebens.api.helper
         {
             Schedule<CouponToolsGenerateJob>().ToRunNow().AndEvery(1).Days().At(0, 30);
             //Schedule<CouponToolsUpdateJob>().ToRunEvery(1).Days().At(3, 0);
-            //Schedule<ZanoxUpdateJob>().ToRunNow().AndEvery(2).Minutes();
+            Schedule<ZanoxUpdateJob>().ToRunNow().AndEvery(2).Hours();
 
             Schedule<KeepAlive>().ToRunNow().AndEvery(15).Minutes();
         }

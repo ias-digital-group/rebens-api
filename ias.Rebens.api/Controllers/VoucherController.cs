@@ -42,7 +42,7 @@ namespace ias.Rebens.api.Controllers
                         IdBenefitType = benefit.IdBenefitType,
                         IdCustomer = customer.Id,
                         Modified = DateTime.Now,
-                        Name = benefit.Title,
+                        Name = benefit.Name,
                         Status = (int)Enums.BenefitUseStatus.NoCashBack
                     };
 

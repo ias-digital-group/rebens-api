@@ -6,15 +6,18 @@ namespace ias.Rebens
 {
     public class Dashboard
     {
-        public List<DashboardGraph> Benefits { get; set; }
-        public List<DashboardUser> Users { get; set; }
+        public DashboardGraph BenefitUse { get; set; }
+        public DashboardGraph BenefitView { get; set; }
+        public List<DashboardOperation> Operations { get; set; }
     }
 
-    public class DashboardUser
+    public class DashboardOperation
     {
         public string Operation { get; set; }
         public DashboardGraph Users { get; set; }
-        public List<DashboardGraph> Region { get; set; }
+        public DashboardGraph RegionState { get; set; }
+        public DashboardGraph RegionCity { get; set; }
+        public DashboardGraph RegionNeighborhood { get; set; }
         public int TotalReferals { get; set; }
     }
 
@@ -22,12 +25,7 @@ namespace ias.Rebens
     {
         public string Type { get; set; }
         public string Title { get; set; }
-        public List<DashboardGraphItem> Items { get; set; }
-    }
-
-    public class DashboardGraphItem
-    {
-        public string Title { get; set; }
-        public int Total { get; set; }
+        public List<string> Labels { get; set; }
+        public List<int> Data { get; set; }
     }
 }

@@ -77,6 +77,45 @@ namespace ias.Rebens
                     operation.PublishStatus = (int)Enums.PublishStatus.notvalid;
                     db.Operation.Add(operation);
                     db.SaveChanges();
+
+                    var staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfigurationDefault);
+                    var config = new StaticText()
+                    {
+                        Active = true, 
+                        Created = DateTime.UtcNow,
+                        Html = staticText.Html,
+                        IdOperation = operation.Id,
+                        IdStaticTextType = (int)Enums.StaticTextType.OperationConfiguration,
+                        Modified = DateTime.UtcNow,
+                        Order = staticText.Order,
+                        Style = staticText.Style,
+                        Title = "Configuração de Operação",
+                        Url = "operation-" + operation.Id
+                    };
+                    db.StaticText.Add(config);
+                    db.SaveChanges();
+
+                    var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault);
+                    var listPages = new List<StaticText>();
+                    foreach(var page in pages)
+                    {
+                        listPages.Add(new StaticText()
+                        {
+                            Active = page.Active,
+                            Created = DateTime.UtcNow,
+                            Html = staticText.Html,
+                            IdOperation = operation.Id,
+                            IdStaticTextType = (int)Enums.StaticTextType.Pages,
+                            Modified = DateTime.UtcNow,
+                            Order = staticText.Order,
+                            Style = staticText.Style,
+                            Title = page.Title,
+                            Url = page.Url
+                        });
+                    }
+                    db.StaticText.AddRange(listPages);
+                    db.SaveChanges();
+
                     error = null;
                 }
             }
