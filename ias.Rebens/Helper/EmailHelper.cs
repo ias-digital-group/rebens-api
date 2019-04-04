@@ -40,7 +40,7 @@ namespace ias.Rebens.Helper
 
         public static bool SendCustomerReferal(IStaticTextRepository staticTextRepo, Operation operation, Customer customer, CustomerReferal referal, out string error)
         {
-            var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.EmailDefault, out error);
+            var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.Email, out error);
             if (staticText != null)
             {
                 var sendingBlue = new Integration.SendinBlueHelper();

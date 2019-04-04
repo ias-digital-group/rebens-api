@@ -236,14 +236,20 @@ namespace ias.Rebens.Enums
         EmailPasswordRecovery = 7,
         [Description("E-mail de validação de cliente")]
         EmailCustomerValidation = 8,
-        [Description("E-mail de indicação de cliente")]
-        EmailDefault = 9,
+        [Description("E-mail")]
+        Email = 9,
         [Description("Configuração de Operação")]
         OperationConfiguration = 10,
-        [Description("Configuração de Operação Padrão")]
+        [Description("Configuração de Operação - Padrão")]
         OperationConfigurationDefault = 11,
-        [Description("Páginas Padrão")]
-        PagesDefault = 11
+        [Description("Páginas - Padrão")]
+        PagesDefault = 12,
+        [Description("E-mail de recuperação de senha - Padrão")]
+        EmailPasswordRecoveryDefault = 13,
+        [Description("E-mail de validação de cliente - Padrão")]
+        EmailCustomerValidationDefault = 14,
+        [Description("E-mail - Padrão")]
+        EmailDefault = 15
     }
 
     public enum WithdrawStatus : int

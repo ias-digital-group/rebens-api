@@ -615,6 +615,12 @@ namespace ias.Rebens.api.Controllers
                         else
                             repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
 
+                        var mail = new Integration.SendinBlueHelper();
+                        mail.Send(toEmail: "suporte@iasdigitalgroup.com", toName: "Suporte", 
+                            fromEmail: "contato@rebens.com.br",  fromName: "Rebens", 
+                            subject: "[Rebens] Builder START", 
+                            body: "Start at: " + DateTime.Now.ToString("HH:mm:ss") + "<br /> OperationId:" + id + "<br />" + content);
+
                         return StatusCode(200, new JsonModel() { Status = "ok" });
                     }
                     catch
@@ -625,6 +631,24 @@ namespace ias.Rebens.api.Controllers
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        [HttpGet("BuilderDone/{code}"), AllowAnonymous]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        public IActionResult BuilderDone(string code)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(code, out operationGuid);
+
+            if (operationGuid != Guid.Empty)
+                repo.SavePublishDone(operationGuid, out string error);
+
+            return Ok(new JsonModel() { Status = "ok" });
         }
     }
 }

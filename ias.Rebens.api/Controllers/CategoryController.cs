@@ -11,7 +11,7 @@ namespace ias.Rebens.api.Controllers
     /// Category Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/Category"), Authorize("Bearer", Roles = "master,publiser")]
+    [Route("api/Category")]
     [ApiController]
     public class CategoryController : ControllerBase
     {
@@ -39,8 +39,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet]
-        [Authorize("Bearer")]
+        [HttpGet, Authorize("Bearer", Roles = "master,publiser")]
         [ProducesResponseType(typeof(ResultPageModel<CategoryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -78,8 +77,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a categoria, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}")]
-        [Authorize("Bearer")]
+        [HttpGet("{id}"), Authorize("Bearer", Roles = "master,publiser")]
         [ProducesResponseType(typeof(JsonDataModel<CategoryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -104,8 +102,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="200">Se o objeto for atualizado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPut]
-        [Authorize("Bearer")]
+        [HttpPut, Authorize("Bearer", Roles = "master,publiser")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]CategoryModel category)
@@ -124,8 +121,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da categoria criada</returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost]
-        [Authorize("Bearer")]
+        [HttpPost, Authorize("Bearer", Roles = "master,publiser")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]CategoryModel category)
@@ -145,8 +141,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="200">Se o objeto for excluido com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}")]
-        [Authorize("Bearer")]
+        [HttpDelete("{id}"), Authorize("Bearer", Roles = "master,publiser")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
@@ -165,8 +160,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("ListTree")]
-        [Authorize("Bearer", Roles = "master, customer")]
+        [HttpGet("ListTree"), Authorize("Bearer", Roles = "master,publiser,customer")]
         [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]

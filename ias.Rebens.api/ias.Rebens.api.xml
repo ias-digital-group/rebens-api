@@ -1139,6 +1139,13 @@
             <response code="200">Opreação em fila</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.BuilderDone(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.PartnerController">
             <summary>
             Partner Controller

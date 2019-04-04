@@ -601,7 +601,7 @@ namespace ias.Rebens.api.Controllers
                                 {
                                     Email = signUp.Email,
                                     Cpf = signUp.Cpf,
-                                    Name = oc.Name,
+                                    Name = referal.Name,
                                     Created = DateTime.Now,
                                     Modified = DateTime.Now,
                                     Status = (int)Enums.CustomerStatus.Validation,
@@ -635,7 +635,7 @@ namespace ias.Rebens.api.Controllers
                         {
                             Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
 
-                            if(operation.Id == 2)
+                            if(operation.Id != 1)
                             {
                                 if (oc != null)
                                     operationCustomerRepo.SetSigned(oc.Id, out error);
@@ -999,6 +999,9 @@ namespace ias.Rebens.api.Controllers
             if (idCustomer > 0)
             {
 
+                if(withdraw.Amount < 25)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "O valor mínimo para resgate é de R$ 25,00." });
+
                 var draw = new Withdraw()
                 {
                     IdBankAccount = withdraw.IdBankAccount,
@@ -1014,7 +1017,7 @@ namespace ias.Rebens.api.Controllers
                 {
 
                     //var sendingBlue = new Integration.SendinBlueHelper();
-                    //string body = $"<p>Nome: {formEstablishment.Name}<br />Email: {formEstablishment.Email}<br />Estabelecimento: {formEstablishment.Establishment}<br />Site: {formEstablishment.WebSite}<br />Responsável: {formEstablishment.Responsible}<br />Email Responsável: {formEstablishment.ResponsibleEmail}<br />Cidade: {formEstablishment.City}<br />Estado: {formEstablishment.State}</p>";
+                    //formEstablishment.Name}<br />Email: {formEstablishment.Email}<br />Estabelecimento: {formEstablishment.Establishment}<br />Site: {formEstablishment.WebSite}<br />Responsável: {formEstablishment.Responsible}<br />Email Responsável: {formEstablishment.ResponsibleEmail}<br />Cidade: {formEstablishment.City}<br />Estado: {formEstablishment.State}</p>";
                     //sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"[{operation.Title}] - Novo Resgate", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Resgate registrado com sucesso!", Id = draw.Id });
@@ -1267,7 +1270,7 @@ namespace ias.Rebens.api.Controllers
                             }
                         );
 
-            identity.AddClaim(new Claim(ClaimTypes.Role, customer.CustomerType == (int)Enums.CustomerType.Customer ? "customer" : "referal"));
+            identity.AddClaim(new Claim(ClaimTypes.Role, "customer"));
             //foreach (var policy in user.Permissions)
             //    identity.AddClaim(new Claim("permissions", "permission1"));
 

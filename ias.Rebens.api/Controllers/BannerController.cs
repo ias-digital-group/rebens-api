@@ -168,8 +168,14 @@ namespace ias.Rebens.api.Controllers
             var b = banner.GetEntity();
             if (repo.Create(b, out string error))
             {
-                if(repo.AddOperation(b.Id, idOperation.Value, out error ))
+                if (idOperation.HasValue)
+                {
+                    if (repo.AddOperation(b.Id, idOperation.Value, out error))
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Banner criado com sucesso!", Id = b.Id });
+                }
+                else
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Banner criado com sucesso!", Id = b.Id });
+
             }
                 
 

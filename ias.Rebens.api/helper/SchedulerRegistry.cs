@@ -83,8 +83,6 @@ namespace ias.Rebens.api.helper
             var couponRepo = new CouponRepository(conn);
 
             var mail = new Integration.SendinBlueHelper();
-            if(debug)
-                mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "Start at: " + DateTime.Now.ToString("HH:mm:ss"));
             bool run = true;
             while (run)
             {
@@ -96,15 +94,11 @@ namespace ias.Rebens.api.helper
                 }
                 catch(Exception ex)
                 {
-                    if(debug)
-                        mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "Error: " + ex.Message + "<br /><br />StackTrace:" + ex.StackTrace);
                     run = false;
                     break;
                 }
                 if(list != null && list.Count > 0)
                 {
-                    if(debug)
-                        mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "Total: " + list.Count);
                     foreach (var customer in list)
                     {
                         try
@@ -125,17 +119,10 @@ namespace ias.Rebens.api.helper
                             if (couponHelper.CreateSingle(customer, coupon, out string error))
                             {
                                 couponRepo.Create(coupon, out error);
-                                if(debug)
-                                    mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "User: " + customer.Id + "<br /><br />CREATED");
                             }
-                            else if (debug)
-                                mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "User: " + customer.Id + "<br /><br />Error: " + error);
-
                         }
-                        catch(Exception ex)
+                        catch
                         {
-                            if(debug)
-                                mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "User: " + customer.Id + "<br /><br />Error: " + ex.Message + "<br /><br />Trace: " + ex.StackTrace);
                         }
                         Thread.Sleep(200);
                     }

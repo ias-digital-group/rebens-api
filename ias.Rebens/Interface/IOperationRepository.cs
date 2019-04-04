@@ -35,5 +35,7 @@ namespace ias.Rebens
         bool ValidateOperation(int id, out string error);
 
         object GetPublishData(int id, out string error);
+
+        bool SavePublishDone(Guid code, out string error);
     }
 }
