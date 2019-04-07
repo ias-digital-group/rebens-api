@@ -563,7 +563,7 @@ namespace ias.Rebens.api.Controllers
             if (operationGuid == Guid.Empty)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var operation = operationRepo.Read(operationGuid, out string error);
+            var operation = operationRepo.ReadForSignUp(operationGuid, out bool openSignUp, out string error);
 
             if (operation != null)
             {
@@ -571,50 +571,46 @@ namespace ias.Rebens.api.Controllers
                 {
                     Customer customer = null;
                     CustomerReferal referal = null;
-                    OperationCustomer oc = null;
-                    if (operation.Id != 1)
+                    OperationCustomer oc = operationCustomerRepo.ReadByCpf(signUp.Cpf, operation.Id, out error);
+
+                    if (oc != null)
                     {
-                        oc = operationCustomerRepo.ReadByCpf(signUp.Cpf, out error);
-                        if (oc != null)
+                        customer = new Customer()
+                        {
+                            Email = signUp.Email,
+                            Cpf = signUp.Cpf,
+                            Name = oc.Name,
+                            Phone = oc.Phone1,
+                            Cellphone = oc.MobilePhone,
+                            Created = DateTime.Now,
+                            Modified = DateTime.Now,
+                            Status = (int)Enums.CustomerStatus.Validation,
+                            CustomerType = (int)Enums.CustomerType.Customer,
+                            Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
+                            IdOperation = operation.Id
+                        };
+                    }
+                    else
+                    {
+                        referal = customerReferalRepo.ReadByEmail(signUp.Email, operation.Id, out error);
+                        if (referal != null)
                         {
                             customer = new Customer()
                             {
                                 Email = signUp.Email,
                                 Cpf = signUp.Cpf,
-                                Name = oc.Name,
-                                Phone = oc.Phone1,
-                                Cellphone = oc.MobilePhone,
+                                Name = referal.Name,
                                 Created = DateTime.Now,
                                 Modified = DateTime.Now,
                                 Status = (int)Enums.CustomerStatus.Validation,
-                                CustomerType = (int)Enums.CustomerType.Customer,
+                                CustomerType = (int)Enums.CustomerType.Referal,
                                 Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
                                 IdOperation = operation.Id
                             };
                         }
-                        else
-                        {
-                            referal = customerReferalRepo.ReadByEmail(signUp.Email, out error);
-                            if (referal != null)
-                            {
-                                customer = new Customer()
-                                {
-                                    Email = signUp.Email,
-                                    Cpf = signUp.Cpf,
-                                    Name = referal.Name,
-                                    Created = DateTime.Now,
-                                    Modified = DateTime.Now,
-                                    Status = (int)Enums.CustomerStatus.Validation,
-                                    CustomerType = (int)Enums.CustomerType.Referal,
-                                    Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                                    IdOperation = operation.Id
-                                };
-                            }
-                            else
-                                error = "O cpf digitado não está cadastrado em nossa base!";
-                        }
                     }
-                    else
+
+                    if (customer == null && openSignUp)
                     {
                         customer = new Customer()
                         {
@@ -628,6 +624,8 @@ namespace ias.Rebens.api.Controllers
                             IdOperation = operation.Id
                         };
                     }
+                    else
+                        error = "O cpf digitado não está cadastrado em nossa base!";
 
                     if(customer != null)
                     {
@@ -635,13 +633,10 @@ namespace ias.Rebens.api.Controllers
                         {
                             Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
 
-                            if(operation.Id != 1)
-                            {
-                                if (oc != null)
-                                    operationCustomerRepo.SetSigned(oc.Id, out error);
-                                else if (referal != null)
-                                    customerReferalRepo.ChangeStatus(referal.Id, Enums.CustomerReferalStatus.SignUp, out error);
-                            }
+                            if (oc != null)
+                                operationCustomerRepo.SetSigned(oc.Id, out error);
+                            else if (referal != null)
+                                customerReferalRepo.ChangeStatus(referal.Id, Enums.CustomerReferalStatus.SignUp, out error);
 
                             return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
                         }

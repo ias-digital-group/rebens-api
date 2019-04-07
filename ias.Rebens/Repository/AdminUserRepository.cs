@@ -48,6 +48,7 @@ namespace ias.Rebens
                 {
                     adminUser.Modified = adminUser.Created = DateTime.UtcNow;
                     adminUser.EncryptedPassword = adminUser.PasswordSalt = "";
+                    adminUser.Deleted = false;
 
                     db.AdminUser.Add(adminUser);
                     db.SaveChanges();
@@ -72,7 +73,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var user = db.AdminUser.SingleOrDefault(s => s.Id == id);
-                    db.AdminUser.Remove(user);
+                    user.Deleted = true;
+                    user.Modified = DateTime.UtcNow;
                     db.SaveChanges();
                     error = null;
                 }
@@ -94,7 +96,9 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.AdminUser.Where(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) && (!operationId.HasValue || (operationId.HasValue && a.IdOperation == operationId.Value)));
+                    var tmpList = db.AdminUser.Where(a => !a.Deleted
+                                && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) 
+                                && (!operationId.HasValue || (operationId.HasValue && a.IdOperation == operationId.Value)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -118,7 +122,9 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.AdminUser.Count(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word));
+                    var total = db.AdminUser.Count(a => !a.Deleted &&
+                                (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                && (!operationId.HasValue || (operationId.HasValue && a.IdOperation == operationId.Value)));
 
                     ret = new ResultPage<AdminUser>(list, page, pageItems, total);
                     error = null;
@@ -141,7 +147,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.AdminUser.SingleOrDefault(c => c.Id == id);
+                    ret = db.AdminUser.SingleOrDefault(a => a.Id == id && !a.Deleted);
                     error = null;
                 }
             }
@@ -162,7 +168,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.AdminUser.SingleOrDefault(c => c.Email == email);
+                    ret = db.AdminUser.SingleOrDefault(a => a.Email == email && !a.Deleted);
                     error = null;
                 }
             }

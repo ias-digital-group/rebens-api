@@ -19,6 +19,7 @@ namespace ias.Rebens
         public bool Active { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public bool Deleted { get; set; }
 
         public virtual StaticText StaticText { get; set; }
 

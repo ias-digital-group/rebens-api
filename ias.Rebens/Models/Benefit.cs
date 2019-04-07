@@ -41,6 +41,7 @@ namespace ias.Rebens
         public int HomeBenefitHighlight { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public bool Deleted { get; set; }
 
         public virtual Partner Partner { get; set; }
         public virtual Operation Operation { get; set; }

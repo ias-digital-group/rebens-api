@@ -75,6 +75,7 @@ namespace ias.Rebens
                     operation.Code = Guid.NewGuid();
                     operation.Modified = operation.Created = DateTime.UtcNow;
                     operation.PublishStatus = (int)Enums.PublishStatus.notvalid;
+                    operation.Deleted = false;
                     db.Operation.Add(operation);
                     db.SaveChanges();
 
@@ -185,7 +186,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Operation.Where(o => string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word));
+                    var tmpList = db.Operation.Where(o => !o.Deleted && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "domain asc":
@@ -221,7 +222,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Operation.Count(o => string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word));
+                    var total = db.Operation.Count(o => !o.Deleted && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
 
                     ret = new ResultPage<Operation>(list, page, pageItems, total);
 
@@ -245,7 +246,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Operation.Include("OperationContacts").SingleOrDefault(c => c.Id == id);
+                    ret = db.Operation.Include("OperationContacts").SingleOrDefault(o => !o.Deleted && o.Id == id);
                     error = null;
                 }
             }
@@ -266,7 +267,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Operation.SingleOrDefault(c => c.Code == code);
+                    ret = db.Operation.SingleOrDefault(o => !o.Deleted && o.Code == code);
                     error = null;
                 }
             }
@@ -274,6 +275,47 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OperationRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar ler a operação. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public Operation ReadForSignUp(Guid code, out bool openSignUp, out string error)
+        {
+            Operation ret;
+            openSignUp = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Operation.SingleOrDefault(o => !o.Deleted && o.Code == code);
+                    if(ret != null)
+                    {
+                        var config = db.StaticText.SingleOrDefault(s => s.IdOperation == ret.Id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                        if(config != null)
+                        {
+                            var jObj = JObject.Parse(config.Html);
+                            var list = jObj["fields"].Children();
+                            foreach (var item in list)
+                            {
+                                switch (item["name"].ToString())
+                                {
+                                    case "signup-opend":
+                                        openSignUp = bool.Parse(item["data"].ToString());
+                                        break;
+                                }
+                            }
+                        }
+                    }
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ReadForSignUp", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler a operação. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -328,7 +370,7 @@ namespace ias.Rebens
                 {
                     ret = (from o in db.Operation
                            from b in db.BenefitOperation.Where(bo => bo.IdOperation == o.Id && bo.IdBenefit == idBenefit).DefaultIfEmpty()
-                           where o.Active
+                           where !o.Deleted && o.Active
                            select new BenefitOperationItem()
                            {
                                IdBenefit = b.IdBenefit,
@@ -356,7 +398,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Operation.Where(o => o.Active && o.BannerOperations.Any(bo => bo.IdBanner == idBanner) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
+                    var tmpList = db.Operation.Where(o => !o.Deleted && o.Active && o.BannerOperations.Any(bo => bo.IdBanner == idBanner) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "domain asc":
@@ -392,7 +434,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Operation.Count(o => o.Active && o.BannerOperations.Any(bo => bo.IdBanner == idBanner) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
+                    var total = db.Operation.Count(o => !o.Deleted && o.Active && o.BannerOperations.Any(bo => bo.IdBanner == idBanner) && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
 
                     ret = new ResultPage<Operation>(list, page, pageItems, total);
                     error = null;
@@ -417,7 +459,7 @@ namespace ias.Rebens
                 {
                     ret = (from o in db.Operation
                            from b in db.BannerOperation.Where(bo => bo.IdOperation == o.Id && bo.IdBanner == idBanner).DefaultIfEmpty()
-                           where o.Active
+                           where !o.Deleted && o.Active
                            select new BannerOperationItem()
                            {
                                IdBanner = b.IdBanner,
@@ -707,6 +749,31 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OperationRepository.SavePublishDone", ex.Message, $"code: {code}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar macar a publicação da operação como concluída. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public bool Delete(int id, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Operation.SingleOrDefault(o => o.Id == id);
+                    update.Deleted = true;
+                    update.Modified = DateTime.UtcNow;
+
+                    db.SaveChanges();
+                    ret = true;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.Delete", ex.Message, $"id: {id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar apagar a status. (erro:" + idLog + ")";
             }
             return ret;
         }

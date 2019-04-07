@@ -17,6 +17,7 @@ namespace ias.Rebens
         public DateTime Modified { get; set; }
         public int? IdOperation { get; set; }
         public string Roles { get; set; }
+        public bool Deleted { get; set; }
 
         public void SetPassword(string password)
         {

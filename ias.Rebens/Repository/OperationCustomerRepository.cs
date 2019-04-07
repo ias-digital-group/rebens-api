@@ -14,23 +14,24 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public OperationCustomer ReadByCpf(string cpf, out string error)
+        public OperationCustomer ReadByCpf(string cpf, int idOperation, out string error)
         {
             OperationCustomer ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if (cpf.Length == 11)
-                        cpf = cpf.Substring(0, 3) + "." + cpf.Substring(3, 3) + "." + cpf.Substring(6, 3) + "-" + cpf.Substring(9);
-                    ret = db.OperationCustomer.SingleOrDefault(o => o.CPF == cpf);
+                    cpf = cpf.Replace(".", "").Replace("-", "");
+                    string cpfMasked = cpf.Substring(0, 3) + "." + cpf.Substring(3, 3) + "." + cpf.Substring(6, 3) + "-" + cpf.Substring(9);
+
+                    ret = db.OperationCustomer.SingleOrDefault(o => (o.CPF == cpf || o.CPF == cpfMasked) && o.IdOperation == idOperation);
                     error = null;
                 }
             }
             catch(Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("OperationCustomerRepository.CheckUser", ex.Message, "", ex.StackTrace);
+                int idLog = logError.Create("OperationCustomerRepository.ReadByCpf", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler o usuário. (erro:" + idLog + ")";
                 ret = null;
             }

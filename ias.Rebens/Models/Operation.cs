@@ -34,6 +34,7 @@ namespace ias.Rebens
         public Guid Code { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public bool Deleted { get; set; }
 
         public virtual LogError LogError { get; set; }
         public virtual ICollection<Benefit> Benefits { get; set; }

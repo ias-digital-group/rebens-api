@@ -221,14 +221,14 @@ namespace ias.Rebens
             return ret;
         }
 
-        public CustomerReferal ReadByEmail(string email, out string error)
+        public CustomerReferal ReadByEmail(string email, int idOperation, out string error)
         {
             CustomerReferal ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.CustomerReferal.SingleOrDefault(c => c.Email == email);
+                    ret = db.CustomerReferal.SingleOrDefault(c => c.Email == email && c.Customer.IdOperation == idOperation);
                     error = null;
                 }
             }

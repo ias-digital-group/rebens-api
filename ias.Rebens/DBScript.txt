@@ -106,3 +106,41 @@ INSERT INTO StaticText VALUES ('Configuração de Operação', 'operation-2', '{
 		"isRequired": false
 	}
 ] }', NULL, 0, 10, 2, 1, getdate(), getdate(), null)
+
+
+
+
+ALTER TABLE Benefit ADD Deleted BIT NULL
+GO
+UPDATE Benefit SET Deleted = 0
+GO
+ALTER TABLE Benefit ALTER COLUMN Deleted BIT NOT NULL
+GO
+
+ALTER TABLE Banner ADD Deleted BIT NULL
+GO
+UPDATE Banner SET Deleted = 0
+GO
+ALTER TABLE Banner ALTER COLUMN Deleted BIT NOT NULL
+GO
+
+ALTER TABLE [Partner] ADD Deleted BIT NULL
+GO
+UPDATE [Partner] SET Deleted = 0
+GO
+ALTER TABLE [Partner] ALTER COLUMN Deleted BIT NOT NULL
+GO
+
+ALTER TABLE AdminUser ADD Deleted BIT NULL
+GO
+UPDATE AdminUser SET Deleted = 0
+GO
+ALTER TABLE AdminUser ALTER COLUMN Deleted BIT NOT NULL
+GO
+
+ALTER TABLE Operation ADD Deleted BIT NULL
+GO
+UPDATE Operation SET Deleted = 0
+GO
+ALTER TABLE Operation ALTER COLUMN Deleted BIT NOT NULL
+GO

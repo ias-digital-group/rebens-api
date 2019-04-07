@@ -46,6 +46,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     banner.Modified = banner.Created = DateTime.UtcNow;
+                    banner.Deleted = false;
                     db.Banner.Add(banner);
                     db.SaveChanges();
                     error = null;
@@ -68,12 +69,9 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var operations = db.BannerOperation.Where(b => b.IdBanner == id);
-                    db.BannerOperation.RemoveRange(operations);
-                    db.SaveChanges();
-
                     var item = db.Banner.SingleOrDefault(c => c.Id == id);
-                    db.Banner.Remove(item);
+                    item.Deleted = true;
+                    item.Modified = DateTime.UtcNow;
                     db.SaveChanges();
                     error = null;
                 }
@@ -121,7 +119,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Banner.Where(b => b.IdBenefit == idBenefit && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
+                    var tmpList = db.Banner.Where(b => !b.Deleted && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted && b.IdBenefit == idBenefit && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -145,7 +143,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Banner.Count(b => b.IdBenefit == idBenefit && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
+                    var total = db.Banner.Count(b => !b.Deleted && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted && b.IdBenefit == idBenefit && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
 
                     ret = new ResultPage<Banner>(list, page, pageItems, total);
                     error = null;
@@ -168,7 +166,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Banner.Where(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
+                    var tmpList = db.Banner.Where(b => !b.Deleted && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted)) && 
+                                    b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -192,7 +191,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Banner.Count(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
+                    var total = db.Banner.Count(b => !b.Deleted && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted && b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Active && (string.IsNullOrEmpty(word) || b.Name.Contains(word)));
 
                     ret = new ResultPage<Banner>(list, page, pageItems, total);
                     error = null;
@@ -215,7 +214,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.Operation.Code == operationCode) && b.Type == type &&
+                    ret = db.Banner.Where(b => !b.Deleted && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted)) && 
+                                b.BannerOperations.Any(o => o.Operation.Code == operationCode) && b.Type == type &&
                                 b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && b.Benefit.Active))
                                 && ((b.IdBannerShow & idBannerShow) == idBannerShow))
                                 .OrderBy(b => b.Order).ToList();
@@ -240,7 +240,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Banner.Where(b => b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Type == type &&
+                    ret = db.Banner.Where(b => !b.Deleted && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted)) &&
+                                b.BannerOperations.Any(o => o.IdOperation == idOperation) && b.Type == type &&
                                 b.Active && b.Start < DateTime.Now && b.End > DateTime.Now && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && b.Benefit.Active))
                                 && ((b.IdBannerShow & idBannerShow) == idBannerShow))
                                 .OrderBy(b => b.Order).ToList();
@@ -265,7 +266,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Banner.Where(b => (string.IsNullOrEmpty(word) || b.Name.Contains(word)) 
+                    var tmpList = db.Banner.Where(b => !b.Deleted && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted))  
+                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word)) 
                                     && (!idOperation.HasValue || (idOperation.HasValue && b.BannerOperations.Any(o => o.IdOperation == idOperation.Value))));
                     switch (sort.ToLower())
                     {
@@ -290,7 +292,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Banner.Count(b => (string.IsNullOrEmpty(word) || b.Name.Contains(word))
+                    var total = db.Banner.Count(b => !b.Deleted && (string.IsNullOrEmpty(word) || b.Name.Contains(word))
                                     && (!idOperation.HasValue || (idOperation.HasValue && b.BannerOperations.Any(o => o.IdOperation == idOperation.Value))));
 
                     ret = new ResultPage<Banner>(list, page, pageItems, total);
@@ -315,7 +317,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Banner.SingleOrDefault(f => f.Id == id);
+                    ret = db.Banner.SingleOrDefault(b => !b.Deleted && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted)) && b.Id == id);
                     error = null;
                 }
             }

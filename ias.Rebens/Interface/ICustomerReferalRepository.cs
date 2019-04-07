@@ -8,7 +8,7 @@ namespace ias.Rebens
     {
         CustomerReferal Read(int id, out string error);
 
-        CustomerReferal ReadByEmail(string email, out string error);
+        CustomerReferal ReadByEmail(string email, int idOperation, out string error);
 
         ResultPage<CustomerReferal> ListPage(int page, int pageItems, string word, string sort, out string error);
 

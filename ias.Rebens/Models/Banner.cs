@@ -24,6 +24,7 @@ namespace ias.Rebens
         public DateTime? End { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public bool Deleted { get; set; }
 
         public virtual Benefit Benefit { get; set; }
         public virtual ICollection<BannerOperation> BannerOperations { get; set; }

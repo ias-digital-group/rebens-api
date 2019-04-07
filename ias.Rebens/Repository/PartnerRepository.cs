@@ -72,6 +72,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     partner.Modified = partner.Created = DateTime.UtcNow;
+                    partner.Deleted = false;
                     db.Partner.Add(partner);
                     db.SaveChanges();
                     error = null;
@@ -102,15 +103,8 @@ namespace ias.Rebens
                     else
                     {
                         var partner = db.Partner.SingleOrDefault(c => c.Id == id);
-                        var parnerContacts = db.PartnerContact.Where(p => p.IdPartner == id);
-                        var contacts = db.Contact.Include("Address").Where(c => c.PartnerContacts.Any(p => p.IdPartner == id));
-                        var partnerAddresses = db.PartnerAddress.Where(p => p.IdPartner == id);
-                        var addresses = db.Address.Where(a => a.PartnerAddresses.Any(p => p.IdPartner == id));
-
-                        db.PartnerContact.RemoveRange(parnerContacts);
-                        db.PartnerAddress.RemoveRange(partnerAddresses);
-                        db.Contact.RemoveRange(contacts);
-                        db.Address.RemoveRange(addresses);
+                        partner.Deleted = true;
+                        partner.Modified = DateTime.UtcNow;
 
                         db.Partner.Remove(partner);
 
@@ -184,7 +178,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Partner.Where(p => string.IsNullOrEmpty(word) || p.Name.Contains(word));
+                    var tmpList = db.Partner.Where(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -202,7 +196,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Partner.Count(p => string.IsNullOrEmpty(word) || p.Name.Contains(word));
+                    var total = db.Partner.Count(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word)));
 
                     ret = new ResultPage<Partner>(list, page, pageItems, total);
 
@@ -226,7 +220,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Partner.Include("StaticText").SingleOrDefault(c => c.Id == id);
+                    ret = db.Partner.Include("StaticText").SingleOrDefault(p => !p.Deleted && p.Id == id);
                     error = null;
                 }
             }
