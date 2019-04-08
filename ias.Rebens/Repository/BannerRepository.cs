@@ -342,7 +342,7 @@ namespace ias.Rebens
                     if (update != null)
                     {
                         update.Active = banner.Active;
-                        update.BackgroundColor = banner.BackgroundColor;
+                        update.Target = banner.Target;
                         update.End = banner.End;
                         update.IdBenefit = banner.IdBenefit;
                         update.Image = banner.Image;

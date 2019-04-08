@@ -52,7 +52,21 @@ namespace ias.Rebens.Helper
                     return true;
                 error = result.Message;
             }
+            return false;
+        }
 
+        public static bool SendDefaultEmail(IStaticTextRepository staticTextRepo, string toEmail, string toName, int idOperation, string subject, string body, out string error)
+        {
+            var staticText = staticTextRepo.ReadByType(idOperation, (int)Enums.StaticTextType.Email, out error);
+            if (staticText != null)
+            {
+                var sendingBlue = new Integration.SendinBlueHelper();
+                string message = staticText.Html.Replace("###BODY###", body);
+                var result = sendingBlue.Send(toEmail, toName, "contato@rebens.com.br", "Contato", subject, message);
+                if (result.Status)
+                    return true;
+                error = result.Message;
+            }
             return false;
         }
     }

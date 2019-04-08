@@ -775,7 +775,7 @@
             </summary>
             <param name="faqRepository"></param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.FaqController.List(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.FaqController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
             <summary>
             Lista as perguntas de faq conforme os parametros
             </summary>
@@ -783,6 +783,7 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Question, Answer, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da Operação</param>
             <returns>Lista com as faqs encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -1296,7 +1297,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository)">
             <summary>
             
             </summary>
@@ -1316,6 +1317,7 @@
             <param name="customerReferalRepository"></param>
             <param name="operationCustomerRepository"></param>
             <param name="benefitViewRepository"></param>
+            <param name="bankAccountRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1946,9 +1948,9 @@
             Tipo
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.BannerModel.BackgroundColor">
+        <member name="P:ias.Rebens.api.Models.BannerModel.TargetBlank">
             <summary>
-            Cor de fundo
+            TargetBlank?
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.BannerModel.IdBenefit">
@@ -2887,6 +2889,11 @@
             Celular
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.Picture">
+            <summary>
+            Avatar
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.CustomerModel.CustomerType">
             <summary>
             Tipo de cliente
@@ -3689,9 +3696,9 @@
             Tipo
             </summary>
         </member>
-        <member name="P:ias.Rebens.api.Models.PortalBannerModel.BackgroundColor">
+        <member name="P:ias.Rebens.api.Models.PortalBannerModel.Target">
             <summary>
-            Cor de fundo
+            Target
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.PortalBannerModel.Title">
@@ -3991,6 +3998,11 @@
         <member name="P:ias.Rebens.api.Models.PortalTokenModel.balance">
             <summary>
             Saldo de cashback do cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PortalTokenModel.picture">
+            <summary>
+            Foto do usuário
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.ValidateCustomerModel">

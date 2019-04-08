@@ -42,10 +42,9 @@ namespace ias.Rebens.api.Models
         [Required]
         public int Type { get; set; }
         /// <summary>
-        /// Cor de fundo
+        /// Target
         /// </summary>
-        [MaxLength(50)]
-        public string BackgroundColor { get; set; }
+        public string Target { get; set; }
         /// <summary>
         /// Título
         /// </summary>
@@ -84,7 +83,7 @@ namespace ias.Rebens.api.Models
             this.Link = banner.Link;
             this.Type = banner.Type;
             this.Title = string.IsNullOrEmpty(benefitCall) ? title : (string.IsNullOrEmpty(title) ? "" : title + " | ");
-            this.BackgroundColor = banner.BackgroundColor;
+            this.Target = banner.Target;
             this.BenefitCall = benefitCall;
             this.PartnerLogo = partnerLogo;
             this.IdBenefit = banner.IdBenefit;

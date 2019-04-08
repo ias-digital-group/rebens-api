@@ -16,7 +16,7 @@ namespace ias.Rebens
 
         bool Update(Category category, out string error);
 
-        List<Category> ListTree(out string error);
+        List<Category> ListTree(bool isCustomer, out string error);
 
         List<int> ListByBenefit(int idBenefit, out string error);
 

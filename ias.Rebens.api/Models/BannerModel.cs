@@ -45,10 +45,9 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string Type { get; set; }
         /// <summary>
-        /// Cor de fundo
+        /// TargetBlank?
         /// </summary>
-        [MaxLength(50)]
-        public string BackgroundColor { get; set; }
+        public bool TargetBlank { get; set; }
         /// <summary>
         /// Id do benefício
         /// </summary>
@@ -106,7 +105,7 @@ namespace ias.Rebens.api.Models
             this.Link = banner.Link;
             this.IdType = banner.Type;
             this.Type = Enums.EnumHelper.GetEnumDescription((Enums.BannerType)banner.Type);
-            this.BackgroundColor = banner.BackgroundColor;
+            this.TargetBlank = banner.Target == "_blank";
             this.IdBenefit = banner.IdBenefit;
             this.Active = banner.Active;
             this.Start = banner.Start.Value;
@@ -130,7 +129,7 @@ namespace ias.Rebens.api.Models
                 Order = this.Order,
                 Link = this.Link,
                 Type = this.IdType,
-                BackgroundColor = this.BackgroundColor,
+                Target = this.TargetBlank ? "_blank" : "_self",
                 IdBenefit = this.IdBenefit,
                 Active = this.Active,
                 Start = this.Start,

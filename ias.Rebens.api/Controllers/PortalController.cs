@@ -37,6 +37,7 @@ namespace ias.Rebens.api.Controllers
         private IOperationCustomerRepository operationCustomerRepo;
         private IStaticTextRepository staticTextRepo;
         private IWithdrawRepository withdrawRepo;
+        private IBankAccountRepository bankAccountRepo;
 
         /// <summary>
         /// 
@@ -57,12 +58,13 @@ namespace ias.Rebens.api.Controllers
         /// <param name="customerReferalRepository"></param>
         /// <param name="operationCustomerRepository"></param>
         /// <param name="benefitViewRepository"></param>
+        /// <param name="bankAccountRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
             IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository, ICouponRepository couponRepository, 
             IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository,
-            IBenefitViewRepository benefitViewRepository)
+            IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -80,6 +82,7 @@ namespace ias.Rebens.api.Controllers
             this.operationCustomerRepo = operationCustomerRepository;
             this.staticTextRepo = staticTextRepository;
             this.withdrawRepo = withdrawRepository;
+            this.bankAccountRepo = bankAccountRepository;
         }
 
         /// <summary>
@@ -313,6 +316,7 @@ namespace ias.Rebens.api.Controllers
                         {
                             decimal balance = (decimal)(new Random().NextDouble() * 499);
                             Data.balance = Math.Round(balance, 2);
+                            Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
                         }
 
                         return Ok(Data);
@@ -420,7 +424,7 @@ namespace ias.Rebens.api.Controllers
             if (page == 0 && !idCategory.HasValue && string.IsNullOrEmpty(idBenefitType) && !latitude.HasValue && !longitude.HasValue && string.IsNullOrEmpty(searchWord))
                 list = benefitRepo.ListForHomeBenefitPortal(idOperation, out error);
             else
-                list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, page, pageItems, searchWord, sort, out error);
+                list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, latitude, longitude, page, pageItems, searchWord, sort, out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -683,6 +687,7 @@ namespace ias.Rebens.api.Controllers
                     if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
                     {
                         var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
+                        Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
                         return Ok(Data);
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
@@ -740,6 +745,7 @@ namespace ias.Rebens.api.Controllers
             if (customerRepo.Update(cust, out error))
             {
                 var Data = LoadToken(cust, tokenConfigurations, signingConfigurations);
+                Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
                 if (idOperation == 1 && !string.IsNullOrEmpty(cust.Name))
                 {
                     try
@@ -981,6 +987,8 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Withdraw([FromBody]WithdrawModel withdraw)
         {
             int idCustomer = 0;
+            int idOperation = 0;
+            string customerName = "", customerEmail = "";
             var principal = HttpContext.User;
             if (principal?.Claims != null)
             {
@@ -989,13 +997,23 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
                 if (!int.TryParse(customerId.Value, out idCustomer))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+
+                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                if (operationId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
+                if (!int.TryParse(operationId.Value, out idOperation))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
+
+                customerName = principal.Claims.SingleOrDefault(c => c.Type == "Name").Value;
+                customerEmail = principal.Claims.SingleOrDefault(c => c.Type == "Email").Value;
             }
 
             if (idCustomer > 0)
             {
-
                 if(withdraw.Amount < 25)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "O valor mínimo para resgate é de R$ 25,00." });
+
+                var operation = operationRepo.Read(idOperation, out string error);
 
                 var draw = new Withdraw()
                 {
@@ -1008,12 +1026,19 @@ namespace ias.Rebens.api.Controllers
                     Modified = DateTime.Now
                 };
 
-                if (withdrawRepo.Create(draw, out string error))
+                if (withdrawRepo.Create(draw, out error))
                 {
+                    var bankAccount = bankAccountRepo.Read(withdraw.IdBankAccount, out error);
+                    var sendingBlue = new Integration.SendinBlueHelper();
+                    string body = $"Novo resgate: <b>{customerName}</b><br /><br />Banco: {bankAccount.Bank.Name} - {bankAccount.Bank.Code}<br />";
+                    body += $"Tipo de conta:{(bankAccount.Type == "CC" ? "Poupança" : "Conta Corrente")}<br />Agência:{bankAccount.Branch}<br />";
+                    body += $"Número:{bankAccount.AccountNumber}<br />Valor:{withdraw.Amount.ToString("N")}";
+                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"[{operation.Title}] - Novo Resgate", body);
 
-                    //var sendingBlue = new Integration.SendinBlueHelper();
-                    //formEstablishment.Name}<br />Email: {formEstablishment.Email}<br />Estabelecimento: {formEstablishment.Establishment}<br />Site: {formEstablishment.WebSite}<br />Responsável: {formEstablishment.Responsible}<br />Email Responsável: {formEstablishment.ResponsibleEmail}<br />Cidade: {formEstablishment.City}<br />Estado: {formEstablishment.State}</p>";
-                    //sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"[{operation.Title}] - Novo Resgate", body);
+                    string bodyCustomer = $"<p>Olá {customerName}, </p><br /><br /><p>Foi realizado um novo resgate conforme as informações abaixo:<br /><br />";
+                    bodyCustomer += $"Banco: {bankAccount.Bank.Name} - {bankAccount.Bank.Code}<br />Tipo de conta:{(bankAccount.Type == "CC" ? "Poupança" : "Conta Corrente")}<br />Agência:{bankAccount.Branch}<br />";
+                    bodyCustomer += $"Número:{bankAccount.AccountNumber}<br />Valor:{withdraw.Amount.ToString("N")}</p>";
+                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customerEmail, customerName, idOperation, $"[{operation.Title}] - Novo Resgate", bodyCustomer, out error);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Resgate registrado com sucesso!", Id = draw.Id });
                 }

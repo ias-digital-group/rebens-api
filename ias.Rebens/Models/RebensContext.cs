@@ -141,7 +141,7 @@ namespace ias.Rebens
 
             modelBuilder.Entity<Banner>(entity =>
             {
-                entity.Property(e => e.BackgroundColor).HasMaxLength(50);
+                entity.Property(e => e.Target).HasMaxLength(50);
 
                 entity.Property(e => e.Created).HasColumnType("datetime");
 

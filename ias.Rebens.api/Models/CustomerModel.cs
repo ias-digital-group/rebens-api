@@ -73,6 +73,11 @@ namespace ias.Rebens.api.Models
         [MaxLength(50)]
         public string Cellphone { get; set; }
         /// <summary>
+        /// Avatar
+        /// </summary>
+        [MaxLength(500)]
+        public string Picture { get; set; }
+        /// <summary>
         /// Tipo de cliente
         /// </summary>
         [Required]
@@ -112,6 +117,7 @@ namespace ias.Rebens.api.Models
             this.IdAddress = customer.IdAddress;
             this.Cpf = customer.Cpf;
             this.RG = customer.RG;
+            this.Picture = customer.Picture;
             this.Phone = customer.Phone;
             this.Cellphone = customer.Cellphone;
             this.CustomerType = customer.CustomerType;
@@ -142,6 +148,7 @@ namespace ias.Rebens.api.Models
                 Cellphone = this.Cellphone,
                 CustomerType = this.CustomerType,
                 Status = this.Status,
+                Picture = this.Picture,
                 Configuration = this.Configurations != null && this.Configurations.Count > 0 ? null : Helper.Config.ConfigurationHelper.GetConfigurationValueString(this.Configurations),
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow

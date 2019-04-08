@@ -144,3 +144,13 @@ UPDATE Operation SET Deleted = 0
 GO
 ALTER TABLE Operation ALTER COLUMN Deleted BIT NOT NULL
 GO
+
+
+ALTER TABLE Customer ADD Picture NVARCHAR(500) NULL
+GO
+
+
+EXEC sp_RENAME 'Banner.BackgroundColor' , 'Target', 'COLUMN'
+GO
+
+UPDATE Banner SET Target = '_self'

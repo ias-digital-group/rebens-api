@@ -51,5 +51,9 @@ namespace ias.Rebens.api.Models
         /// Saldo de cashback do cliente
         /// </summary>
         public decimal balance { get; set; }
+        /// <summary>
+        /// Foto do usuário
+        /// </summary>
+        public string picture { get; set; }
     }
 }

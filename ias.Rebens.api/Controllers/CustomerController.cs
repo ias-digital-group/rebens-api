@@ -65,6 +65,15 @@ namespace ias.Rebens.api.Controllers
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
+            else if (principal.IsInRole("publisher"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId != null && int.TryParse(operationId.Value, out int tmpId))
+                        idOperation = tmpId;
+                }
+            }
 
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
 

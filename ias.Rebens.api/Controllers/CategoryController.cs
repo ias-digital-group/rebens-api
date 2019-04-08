@@ -166,7 +166,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListTree()
         {
-            var list = repo.ListTree(out string error);
+            var principal = HttpContext.User;
+            
+            var list = repo.ListTree(principal.IsInRole("customer"), out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count() == 0)

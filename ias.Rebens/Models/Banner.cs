@@ -16,7 +16,7 @@ namespace ias.Rebens
         public int Order { get; set; }
         public string Link { get; set; }
         public int Type { get; set; }
-        public string BackgroundColor { get; set; }
+        public string Target { get; set; }
         public int? IdBenefit { get; set; }
         public int IdBannerShow { get; set; }
         public bool Active { get; set; }

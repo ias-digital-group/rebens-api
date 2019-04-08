@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using ias.Rebens.Helper;
 
 namespace ias.Rebens
 {
@@ -194,6 +195,9 @@ namespace ias.Rebens
                             break;
                     }
 
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
+
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word)));
 
@@ -314,6 +318,9 @@ namespace ias.Rebens
                             break;
                     }
 
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
+
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && b.BenefitAddresses.Any(pa => pa.IdAddress == idAddress) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
 
@@ -356,6 +363,9 @@ namespace ias.Rebens
                             break;
                     }
 
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
+
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
 
@@ -397,6 +407,9 @@ namespace ias.Rebens
                             break;
                     }
 
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
+
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
 
@@ -414,7 +427,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, decimal? latitude, decimal? longitude, int page, int pageItems, string word, string sort, out string error)
         {
             ResultPage<Benefit> ret;
             try
@@ -431,12 +444,33 @@ namespace ias.Rebens
                                 types.Add(i);
                         }
                     }
+
+                    BoundingBox boundingBox = null;
+                    List<int> benefitIds = new List<int>();
+                    if (latitude.HasValue && longitude.HasValue)
+                    {
+                        boundingBox = MapHelper.GetBoundingBox((double)latitude.Value, (double)longitude.Value, 10);
+
+                        var addresses = db.BenefitAddress.Include("Address").Where(ba => !string.IsNullOrEmpty(ba.Address.Latitude) && !string.IsNullOrEmpty(ba.Address.Longitude) && ba.Benefit.Active);
+
+                        foreach(var addr in addresses)
+                        {
+                            if(double.TryParse(addr.Address.Latitude, out double lat) && double.TryParse(addr.Address.Longitude, out double lon))
+                            {
+                                if (lat >= boundingBox.MinLatitude && lat <= boundingBox.MaxLatitude
+                                    && lon >= boundingBox.MinLongitude && lon <= boundingBox.MaxLongitude)
+                                    benefitIds.Add(addr.IdBenefit);
+                            }
+                        }
+                    }
+
                     var tmpList = db.Benefit.Include("Partner")
                                     .Where(b => !b.Deleted && !b.Partner.Deleted && ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation)) 
                                     && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word))
                                     && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
                                     && b.Active
                                     && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
+                                    && (boundingBox == null || benefitIds.Any(bi => bi == b.Id))
                                     );
 
                     switch (sort.ToLower())
@@ -454,6 +488,9 @@ namespace ias.Rebens
                             tmpList = tmpList.OrderByDescending(f => f.Id);
                             break;
                     }
+
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation))
@@ -501,6 +538,9 @@ namespace ias.Rebens
                             break;
                     }
 
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
+
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && b.IdBenefitType == idType && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
 
@@ -542,6 +582,9 @@ namespace ias.Rebens
                             break;
                     }
 
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
+
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && b.IdPartner == idPartner && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
 
@@ -582,6 +625,9 @@ namespace ias.Rebens
                             tmpList = tmpList.OrderByDescending(f => f.Id);
                             break;
                     }
+
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && b.IdIntegrationType == idIntegrationType && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
@@ -816,19 +862,19 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     int total = 0;
-                    var listPosition = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.HomeBenefitHighlight > 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation));
+                    var listPosition = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.Active && b.HomeBenefitHighlight > 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation));
                     total = listPosition.Count();
 
                     List<Benefit> listRandom = null;
                     if (total < 12)
                     {
-                        listRandom = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.HomeBenefitHighlight == 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(12 - total).ToList();
+                        listRandom = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.Active && b.HomeBenefitHighlight == 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(12 - total).ToList();
                         total += listRandom.Count();
                     }
                     List<Benefit> listOthers = null;
                     if (total < 12)
                     {
-                        listOthers = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.HomeBenefitHighlight == -1 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(12 - total).ToList();
+                        listOthers = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.Active && b.HomeBenefitHighlight == -1 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(12 - total).ToList();
                         total += listOthers.Count();
                     }
 

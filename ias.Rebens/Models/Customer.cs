@@ -35,6 +35,7 @@ namespace ias.Rebens
         public string PasswordSalt { get; set; }
         public string Configuration { get; set; }
         public string Code { get; set; }
+        public string Picture { get; set; }
         public int Status { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
