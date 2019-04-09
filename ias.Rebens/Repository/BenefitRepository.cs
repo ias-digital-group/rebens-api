@@ -805,19 +805,19 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     int total = 0;
-                    var listPosition = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.HomeHighlight > 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation));
+                    var listPosition = db.Benefit.Include("Partner").Where(b => b.Active && !b.Deleted && !b.Partner.Deleted && b.HomeHighlight > 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation));
                     total = listPosition.Count();
 
                     List<Benefit> listRandom = null;
                     if (total < 8)
                     {
-                        listRandom = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.HomeHighlight == 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(8-total).ToList();
+                        listRandom = db.Benefit.Include("Partner").Where(b => b.Active && !b.Deleted && !b.Partner.Deleted && b.HomeHighlight == 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(8-total).ToList();
                         total += listRandom.Count();
                     }
                     List<Benefit> listOthers = null;
                     if(total < 8)
                     {
-                        listOthers = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.HomeHighlight == -1 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(8 - total).ToList();
+                        listOthers = db.Benefit.Include("Partner").Where(b => b.Active && !b.Deleted && !b.Partner.Deleted && b.HomeHighlight == -1 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).OrderBy(c => Guid.NewGuid()).Take(8 - total).ToList();
                         total += listOthers.Count();
                     }
 
