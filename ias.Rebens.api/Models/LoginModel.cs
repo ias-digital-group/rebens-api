@@ -22,4 +22,28 @@ namespace ias.Rebens.api.Models
         [MaxLength(50)]
         public string Password { get; set; }
     }
+
+    /// <summary>
+    /// Validate Model
+    /// </summary>
+    public class ValidateModel
+    {
+        /// <summary>
+        /// Código de validação
+        /// </summary>
+        [Required]
+        public string Code { get; set; }
+        /// <summary>
+        /// Senha
+        /// </summary>
+        [Required]
+        [MaxLength(50)]
+        public string Password { get; set; }
+        /// <summary>
+        /// Confirmação da Senha
+        /// </summary>
+        [Required]
+        [MaxLength(50)]
+        public string PasswordConfirm { get; set; }
+    }
 }

@@ -253,6 +253,87 @@ namespace ias.Rebens.api.Controllers
             }
             return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
         }
+
+        /// <summary>
+        /// Validação de cadastro
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="signingConfigurations"></param>
+        /// <param name="tokenConfigurations"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpPost("Validate")]
+        [ProducesResponseType(typeof(TokenModel), 201)]
+        [ProducesResponseType(typeof(JsonModel), 404)]
+        public IActionResult Validate([FromBody]ValidateModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
+        {
+            var email = Helper.SecurityHelper.SimpleDecryption(model.Code);
+            if(!string.IsNullOrEmpty(email))
+            {
+                var user = repo.ReadByEmail(email, out string error);
+                if (user != null)
+                {
+                    if(model.Password != model.PasswordConfirm)
+                    {
+                        return NotFound(new JsonModel() { Status = "error", Message = "A senha e a confirmação da senha devem ser iguais!" });
+                    }
+
+                    user.SetPassword(model.Password);
+                    if(repo.ChangePassword(user.Id, user.EncryptedPassword, user.PasswordSalt, out error))
+                    {
+                        ClaimsIdentity identity = new ClaimsIdentity(
+                            new GenericIdentity(user.Email),
+                            new[] {
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+                            new Claim(JwtRegisteredClaimNames.UniqueName, user.Email)
+                            }
+                        );
+
+                        var roles = user.Roles.Split(',');
+                        foreach (var role in roles)
+                        {
+                            identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                        }
+
+                        //foreach (var policy in user.Permissions)
+                        //    identity.AddClaim(new Claim("permissions", "permission1"));
+
+                        identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
+                        identity.AddClaim(new Claim("Id", user.Id.ToString()));
+                        identity.AddClaim(new Claim("Name", user.Name));
+
+                        DateTime dataCriacao = DateTime.UtcNow;
+                        DateTime dataExpiracao = dataCriacao.AddDays(2);
+
+                        var handler = new JwtSecurityTokenHandler();
+                        var securityToken = handler.CreateToken(new SecurityTokenDescriptor
+                        {
+                            Issuer = tokenConfigurations.Issuer,
+                            Audience = tokenConfigurations.Audience,
+                            SigningCredentials = signingConfigurations.SigningCredentials,
+                            Subject = identity,
+                            NotBefore = dataCriacao,
+                            Expires = dataExpiracao
+                        });
+                        var token = handler.WriteToken(securityToken);
+
+                        var Data = new TokenModel()
+                        {
+                            authenticated = true,
+                            created = dataCriacao,
+                            expiration = dataExpiracao,
+                            accessToken = token
+                        };
+
+                        repo.SetLastLogin(user.Id, out error);
+
+                        return Ok(Data);
+                    }
+                }
+            }
+
+            return NotFound(new JsonModel() { Status = "error", Message = "O código de validação não conferem!" });
+        }
     }
 }
  

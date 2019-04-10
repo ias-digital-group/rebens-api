@@ -69,5 +69,18 @@ namespace ias.Rebens.Helper
             }
             return false;
         }
+
+        public static bool SendAdminEmail(string toEmail, string toName, string subject, string body, out string error)
+        {
+            var sendingBlue = new Integration.SendinBlueHelper();
+            var result = sendingBlue.Send(toEmail, toName, "contato@rebens.com.br", "Contato", subject, body);
+            if (result.Status)
+            {
+                error = null;
+                return true;
+            }
+            error = result.Message;
+            return false;
+        }
     }
 }

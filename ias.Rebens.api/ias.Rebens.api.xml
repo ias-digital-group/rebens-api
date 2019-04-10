@@ -53,6 +53,15 @@
             <respons code="200"></respons>
             <respons code="400"></respons>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.AccountController.Validate(ias.Rebens.api.Models.ValidateModel,ias.Rebens.api.helper.SigningConfigurations,ias.Rebens.api.helper.TokenOptions)">
+            <summary>
+            Validação de cadastro
+            </summary>
+            <param name="model"></param>
+            <param name="signingConfigurations"></param>
+            <param name="tokenConfigurations"></param>
+            <returns></returns>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.AddressController">
             <summary>
             Address Controller
@@ -119,7 +128,7 @@
             AdminUser Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.AdminUserController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IAdminUserRepository)">
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.#ctor(ias.Rebens.IAdminUserRepository)">
             <summary>
             Consturctor
             </summary>
@@ -3329,6 +3338,26 @@
         <member name="P:ias.Rebens.api.Models.LoginModel.Password">
             <summary>
             Senha
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.ValidateModel">
+            <summary>
+            Validate Model
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ValidateModel.Code">
+            <summary>
+            Código de validação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ValidateModel.Password">
+            <summary>
+            Senha
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ValidateModel.PasswordConfirm">
+            <summary>
+            Confirmação da Senha
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.LoginResultModel">

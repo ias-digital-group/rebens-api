@@ -46,13 +46,21 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    adminUser.Modified = adminUser.Created = DateTime.UtcNow;
-                    adminUser.EncryptedPassword = adminUser.PasswordSalt = "";
-                    adminUser.Deleted = false;
+                    if (db.AdminUser.Any(a => a.Email == adminUser.Email))
+                    {
+                        error = "O e-mail digitado já está cadastrado em nossa base!";
+                        ret = false;
+                    }
+                    else
+                    {
+                        adminUser.Modified = adminUser.Created = DateTime.UtcNow;
+                        adminUser.EncryptedPassword = adminUser.PasswordSalt = "";
+                        adminUser.Deleted = false;
 
-                    db.AdminUser.Add(adminUser);
-                    db.SaveChanges();
-                    error = null;
+                        db.AdminUser.Add(adminUser);
+                        db.SaveChanges();
+                        error = null;
+                    }
                 }
             }
             catch (Exception ex)
