@@ -165,14 +165,17 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Benefit> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Benefit> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
         {
             ResultPage<Benefit> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Benefit.Where(b => !b.Deleted && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word)));
+                    var tmpList = db.Benefit.Where(b => !b.Deleted 
+                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word))
+                                    && (!idOperation.HasValue || (idOperation.HasValue && b.Exclusive && b.IdOperation == idOperation))
+                                );
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -199,7 +202,9 @@ namespace ias.Rebens
                         page = 0;
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Benefit.Count(b => !b.Deleted && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word)));
+                    var total = db.Benefit.Count(b => !b.Deleted 
+                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word))
+                                    && (!idOperation.HasValue || (idOperation.HasValue && b.Exclusive && b.IdOperation == idOperation)));
 
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
 

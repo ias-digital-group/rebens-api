@@ -57,9 +57,11 @@ namespace ias.Rebens.Enums
         [Description("Não Possuí Cashback")]
         NoCashBack = 2,
         [Description("Cashback Disponível")]
-        Cashback = 3,
+        CashbackAvailable = 3,
         [Description("Cashback em Processamento")]
-        ProcessingCashback = 4
+        ProcessingCashback = 4,
+        [Description("Cashback Resgatado")]
+        Withdraw = 5
     }
 
     public enum ConfigurationType

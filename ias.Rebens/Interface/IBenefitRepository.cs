@@ -8,7 +8,7 @@ namespace ias.Rebens
     {
         Benefit Read(int id, out string error);
 
-        ResultPage<Benefit> ListPage(int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Benefit> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null);
 
         bool Delete(int id, out string error);
 

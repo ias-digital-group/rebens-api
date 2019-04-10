@@ -312,13 +312,6 @@ namespace ias.Rebens.api.Controllers
                     if (customer.CheckPassword(model.Password))
                     {
                         var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
-                        if(customer.CustomerType == (int)Enums.CustomerType.Customer)
-                        {
-                            decimal balance = (decimal)(new Random().NextDouble() * 499);
-                            Data.balance = Math.Round(balance, 2);
-                            Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
-                        }
-
                         return Ok(Data);
                     }
                 }
@@ -687,7 +680,6 @@ namespace ias.Rebens.api.Controllers
                     if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
                     {
                         var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
-                        Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
                         return Ok(Data);
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
@@ -904,7 +896,6 @@ namespace ias.Rebens.api.Controllers
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("GetWithdrawSummary"), Authorize("Bearer", Roles = "customer")]
         [ProducesResponseType(typeof(JsonDataModel<BalanceSummaryModel>), 200)]
-        [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetWithdrawSummary()
         {
@@ -919,10 +910,10 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
             }
 
-            decimal blocked = Math.Round((decimal)(new Random().NextDouble() * 499), 2);
-            decimal available = Math.Round((decimal)(new Random().NextDouble() * 499), 2);
+            if(benefitUseRepo.GetCustomerWithdrawSummary(idCustomer, out decimal available, out decimal blocked, out string error))
+                return Ok(new JsonDataModel<BalanceSummaryModel>() { Data = new BalanceSummaryModel() { AvailableBalance = available, BlokedBalance = blocked, Total = (available + blocked) } });
 
-            return Ok(new JsonDataModel<BalanceSummaryModel>() { Data = new BalanceSummaryModel() { AvailableBalance = available, BlokedBalance = blocked, Total = (available + blocked) } });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -1321,9 +1312,10 @@ namespace ias.Rebens.api.Controllers
                 authenticated = true,
                 created = dataCriacao,
                 expiration = dataExpiracao,
-                accessToken = token,
-                balance = 0
+                accessToken = token
             };
+            Data.balance = benefitUseRepo.GetCustomerBalance(customer.Id, out string error);
+            Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
 
             return Data;
         }

@@ -13,5 +13,8 @@ namespace ias.Rebens
         BenefitUse Read(int id, out string error);
         bool Update(BenefitUse benefitUse, out string error);
         BenefitUse ReadByCode(string code, out string error);
+
+        bool GetCustomerWithdrawSummary(int idCustomer, out decimal available, out decimal blocked, out string error);
+        decimal GetCustomerBalance(int idCustomer, out string error);
     }
 }

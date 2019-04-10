@@ -234,5 +234,50 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public decimal GetCustomerBalance(int idCustomer, out string error)
+        {
+            decimal ret = 0;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.BenefitUse.Where(b => b.Status == (int)Enums.BenefitUseStatus.CashbackAvailable && b.IdCustomer == idCustomer).Sum(b => (decimal?)b.Comission) ?? (decimal)0;
+                    ret -= db.Withdraw.Where(w => w.IdCustomer == idCustomer).Sum(w => (decimal?)w.Amount) ?? (decimal)0;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitUseRepository.GetCustomerBalance", ex.Message, $"idCustomer: {idCustomer}", ex.StackTrace);
+                error = $"Ocorreu um erro ao tentar buscar o saldo do cliente. (erro:{idLog})";
+            }
+            return ret;
+        }
+
+        public bool GetCustomerWithdrawSummary(int idCustomer, out decimal available, out decimal blocked, out string error)
+        {
+            bool ret = false;
+            blocked = available = 0;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    available = db.BenefitUse.Where(b => b.Status == (int)Enums.BenefitUseStatus.CashbackAvailable && b.IdCustomer == idCustomer).Sum(b => (decimal?)b.Comission) ?? (decimal)0;
+                    available -= db.Withdraw.Where(w => w.IdCustomer == idCustomer).Sum(w => (decimal?)w.Amount) ?? (decimal)0;
+                    blocked = db.BenefitUse.Where(b => b.Status == (int)Enums.BenefitUseStatus.ProcessingCashback && b.IdCustomer == idCustomer).Sum(b => (decimal?)b.Comission) ?? (decimal)0;
+                    error = null;
+                    ret = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.GetCustomerWithdrawSummary", ex.Message, $"idCustomer: {idCustomer}", ex.StackTrace);
+                error = $"Ocorreu um erro ao tentar buscar o saldo do cliente. (erro:{idLog})";
+            }
+            return ret;
+        }
     }
 }
