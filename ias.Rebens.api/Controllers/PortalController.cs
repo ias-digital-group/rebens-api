@@ -1004,7 +1004,11 @@ namespace ias.Rebens.api.Controllers
                 if(withdraw.Amount < 25)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "O valor mínimo para resgate é de R$ 25,00." });
 
-                var operation = operationRepo.Read(idOperation, out string error);
+                decimal balance = benefitUseRepo.GetCustomerBalance(idCustomer, out string error);
+                if(withdraw.Amount > balance)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = $"O valor máximo que você pode resgate é o seu saldo disponível." });
+
+                var operation = operationRepo.Read(idOperation, out error);
 
                 var draw = new Withdraw()
                 {

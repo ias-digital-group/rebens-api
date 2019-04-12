@@ -44,8 +44,18 @@ namespace ias.Rebens.Helper
             if (staticText != null)
             {
                 var sendingBlue = new Integration.SendinBlueHelper();
-                var msg = $"<p>Olá {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
-                msg += $"<p>Clique no link, para se cadastrar: <a href='{operation.Domain}'>{operation.Domain}</a></p>";
+                string msg = "";
+                if (operation.Id == 1)
+                {
+                    msg = $"<p>Olá {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
+                    msg += $"<p>Clique no link, para se cadastrar: <a href='{operation.Domain}'>{operation.Domain}</a></p>";
+                }
+                else
+                {
+                    msg = "<p>Olá {referal.Name}</p><br /><br />";
+                    msg += "<p><b>Você foi convidado</b> por um dos nossos participantes <b>para ingressar</b> em um <b>Clube de Vantagens Exclusivo</b>.</p><br />";
+                    msg += $"<p>Clique no link, para se cadastrar: <a href='{operation.Domain}'>{operation.Domain}</a></p>";
+                }
                 string body = staticText.Html.Replace("###BODY###", msg);
                 var result = sendingBlue.Send(referal.Email, referal.Name, "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);
                 if (result.Status)
