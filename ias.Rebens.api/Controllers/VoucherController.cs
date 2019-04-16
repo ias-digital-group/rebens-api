@@ -52,7 +52,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         model = new Models.VoucherModel()
                         {
-                            ClubLogo = operation.Domain + "images/logo.jpg",
+                            ClubLogo = operation.Image,
                             Code = benefitUse.Code,
                             CustomerDoc = customer.Cpf,
                             CustomerName = customer.Name,
