@@ -146,14 +146,15 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<CustomerReferal> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<CustomerReferal> ListPage(int page, int pageItems, string word, string sort, int? idOperation, out string error)
         {
             ResultPage<CustomerReferal> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.CustomerReferal.Where(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word));
+                    var tmpList = db.CustomerReferal.Where(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) && 
+                                    (!idOperation.HasValue || (idOperation.HasValue && a.Customer.IdOperation == idOperation.Value)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -183,7 +184,8 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.CustomerReferal.Count(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word));
+                    var total = db.CustomerReferal.Count(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) &&
+                                    (!idOperation.HasValue || (idOperation.HasValue && a.Customer.IdOperation == idOperation.Value)));
 
                     ret = new ResultPage<CustomerReferal>(list, page, pageItems, total);
 

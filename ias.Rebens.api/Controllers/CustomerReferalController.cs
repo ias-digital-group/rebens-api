@@ -45,7 +45,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet, Authorize("Bearer", Roles = "master, administrator, customer")]
+        [HttpGet, Authorize("Bearer", Roles = "master,administrator,customer,administratorRebens")]
         [ProducesResponseType(typeof(ResultPageModel<CustomerReferalModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -68,22 +68,44 @@ namespace ias.Rebens.api.Controllers
                 }
                 list = repo.ListByCustomer(idCustomer, page, pageItems, searchWord, sort, out error);
             }
-            else 
-                list = repo.ListPage(page, pageItems, searchWord, sort, out error);
+            else
+            {
+                int? idOperation = null;
+                if (principal.IsInRole("administrator"))
+                {
+                    if (principal?.Claims != null)
+                    {
+                        var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                        if (operationId == null)
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                        if (int.TryParse(operationId.Value, out int tmpId))
+                            idOperation = tmpId;
+                        else
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    }
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                list = repo.ListPage(page, pageItems, searchWord, sort, idOperation, out error);
+            }
+                
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<CustomerReferalModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<CustomerReferalModel>();
+                var ret = new ResultPageModel<CustomerReferalModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<CustomerReferalModel>()
+                };
+                
                 foreach (var cr in list.Page)
                     ret.Data.Add(new CustomerReferalModel(cr));
 
@@ -101,7 +123,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna o banner, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}"), Authorize("Bearer", Roles = "master,administrator, customer")]
+        [HttpGet("{id}"), Authorize("Bearer", Roles = "master,administrator,customer,administratorRebens")]
         [ProducesResponseType(typeof(JsonDataModel<CustomerReferalModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]

@@ -10,7 +10,7 @@ namespace ias.Rebens
 
         CustomerReferal ReadByEmail(string email, int idOperation, out string error);
 
-        ResultPage<CustomerReferal> ListPage(int page, int pageItems, string word, string sort, out string error);
+        ResultPage<CustomerReferal> ListPage(int page, int pageItems, string word, string sort, int? idOperation, out string error);
 
         bool Delete(int id, out string error);
 

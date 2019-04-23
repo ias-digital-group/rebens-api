@@ -185,7 +185,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         /// <respons code="200"></respons>
         /// <respons code="400"></respons>
-        [HttpPost("ChangePassword"), Authorize("Bearer", Roles = "master,administrator,publisher")]
+        [HttpPost("ChangePassword"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)

@@ -39,7 +39,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet, Authorize("Bearer", Roles = "master,publiser")]
+        [HttpGet, Authorize("Bearer", Roles = "master,administrator,publiser,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(ResultPageModel<CategoryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -77,7 +77,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a categoria, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}"), Authorize("Bearer", Roles = "master,publiser")]
+        [HttpGet("{id}"), Authorize("Bearer", Roles = "master")]
         [ProducesResponseType(typeof(JsonDataModel<CategoryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -102,7 +102,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="200">Se o objeto for atualizado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPut, Authorize("Bearer", Roles = "master,publiser")]
+        [HttpPut, Authorize("Bearer", Roles = "master")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]CategoryModel category)
@@ -121,7 +121,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da categoria criada</returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost, Authorize("Bearer", Roles = "master,publiser")]
+        [HttpPost, Authorize("Bearer", Roles = "master")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]CategoryModel category)
@@ -141,7 +141,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="200">Se o objeto for excluido com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}"), Authorize("Bearer", Roles = "master,publiser")]
+        [HttpDelete("{id}"), Authorize("Bearer", Roles = "master")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
@@ -160,15 +160,29 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("ListTree"), Authorize("Bearer", Roles = "master,publiser,customer")]
+        [HttpGet("ListTree"), Authorize("Bearer", Roles = "master,administrator,publiser,customer,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListTree()
         {
+            int? idOperation = null;
             var principal = HttpContext.User;
+            if (principal.IsInRole("customer"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out int idOp))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    idOperation = idOp;
+                }
+            }
             
-            var list = repo.ListTree(principal.IsInRole("customer"), out string error);
+
+            var list = repo.ListTree(principal.IsInRole("customer"), idOperation, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count() == 0)

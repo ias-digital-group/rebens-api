@@ -10,7 +10,7 @@ namespace ias.Rebens.api.Controllers
     /// Partner Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/Partner"), Authorize("Bearer", Roles = "master,publisher")]
+    [Route("api/Partner"), Authorize("Bearer", Roles = "master")]
     [ApiController]
     public class PartnerController : ControllerBase
     {

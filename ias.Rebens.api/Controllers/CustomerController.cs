@@ -16,7 +16,7 @@ namespace ias.Rebens.api.Controllers
     /// Customer Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,administratorRebens")]
     [ApiController]
     public class CustomerController : ControllerBase
     {
@@ -65,15 +65,6 @@ namespace ias.Rebens.api.Controllers
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
-            else if (principal.IsInRole("publisher"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId != null && int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                }
-            }
 
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
 
@@ -82,14 +73,15 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<CustomerModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<CustomerModel>();
+                var ret = new ResultPageModel<CustomerModel>() { 
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<CustomerModel>()
+                };
                 foreach (var customer in list.Page)
                     ret.Data.Add(new CustomerModel(customer));
 

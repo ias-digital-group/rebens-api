@@ -29,6 +29,8 @@ namespace ias.Rebens
                             break;
                     }
 
+                    var partner = db.Partner.Single(p => p.Benefits.Any(b => b.Id == benefitUse.IdBenefit));
+                    benefitUse.Name = partner.Name;
                     benefitUse.Modified = benefitUse.Created = DateTime.UtcNow;
                     db.BenefitUse.Add(benefitUse);
                     db.SaveChanges();

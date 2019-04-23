@@ -10,7 +10,7 @@ namespace ias.Rebens.api.Controllers
     /// StaticText Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/StaticText"), Authorize("Bearer", Roles = "master,administrator,publisher")]
+    [Route("api/StaticText"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
     [ApiController]
     public class StaticTextController : ControllerBase
     {

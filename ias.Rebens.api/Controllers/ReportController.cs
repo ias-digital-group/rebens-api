@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator,master")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator,master,administratorRebens")]
     [ApiController]
     public class ReportController : ControllerBase
     {
@@ -29,7 +29,7 @@ namespace ias.Rebens.api.Controllers
         /// Método que retorna as informações necessárias para montar o dashboard do admin
         /// </summary>
         /// <returns></returns>
-        [HttpGet("LoadDashboard")]
+        [HttpGet("LoadDashboard"), Authorize("Bearer", Roles = "administrator,master,administratorRebens,publisher,publisherRebens")]
         [ProducesResponseType(typeof(JsonDataModel<Dashboard>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]

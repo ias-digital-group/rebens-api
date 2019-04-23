@@ -106,7 +106,7 @@ namespace ias.Rebens.Enums
         Validation = 3,
         [Description("Trocar Senha")]
         ChangePassword = 4,
-        [Description("Imcompleto")]
+        [Description("Incompleto")]
         Incomplete = 5
     }
 
@@ -292,6 +292,10 @@ namespace ias.Rebens.Enums
         administrator,
         [Description("Publicador")]
         publisher,
+        [Description("Administrador Rebens")]
+        administratorRebens,
+        [Description("Publicador Rebens")]
+        publisherRebens,
         [Description("Cliente")]
         customer
     }

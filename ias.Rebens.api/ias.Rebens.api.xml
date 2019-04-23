@@ -2608,12 +2608,6 @@
             </summary>
             <param name="benefitUse"></param>
         </member>
-        <member name="M:ias.Rebens.api.Models.BenefitUseModel.GetEntity">
-            <summary>
-            Get the object
-            </summary>
-            <returns></returns>
-        </member>
         <member name="T:ias.Rebens.api.Models.CategoryModel">
             <summary>
             Categoria

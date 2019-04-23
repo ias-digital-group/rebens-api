@@ -118,25 +118,31 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Category> ListTree(bool isCustomer, out string error)
+        public List<Category> ListTree(bool isCustomer, int? idOperation, out string error)
         {
             List<Category> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if(isCustomer)
+                    if(isCustomer && idOperation.HasValue)
                     {
                         ret = new List<Category>();
-                        var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active && (c.BenefitCategories.Count > 0 || c.Categories.Any(cc => cc.Active && cc.BenefitCategories.Count > 0))).ToList();
+                        var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active 
+                                && ((
+                                    c.BenefitCategories.Count > 0 && c.BenefitCategories.Any(bc => bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))
+                                    ) || (
+                                    c.Categories.Any(cc => cc.Active && cc.BenefitCategories.Count > 0 && cc.BenefitCategories.Any(bc => bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))))
+                                    ))
+                                .OrderBy(c => c.Name).ToList();
                         foreach(var parent in listParent)
                         {
-                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.BenefitCategories.Count > 0).ToList();
+                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.BenefitCategories.Count > 0).OrderBy(c => c.Name).ToList();
                             ret.Add(parent);
                         }
                     }
                     else
-                        ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active).ToList();
+                        ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active).OrderBy(c => c.Name).ToList();
                     error = null;
                 }
             }

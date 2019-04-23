@@ -11,28 +11,22 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Id
         /// </summary>
-        [Required]
         public int Id { get; set; }
         /// <summary>
         /// Id do Cliente
         /// </summary>
-        [Required]
         public int IdCustomer { get; set; }
         /// <summary>
         /// Id do Benefício
         /// </summary>
-        [Required]
         public int IdBenefit { get; set; }
         /// <summary>
         /// Nome do Benefício
         /// </summary>
-        [Required]
-        [MaxLength(200)]
         public string Name { get; set; }
         /// <summary>
         /// Id do Typo de benefício
         /// </summary>
-        [Required]
         public int IdBenefitType { get; set; }
         /// <summary>
         /// Typo de benefício
@@ -41,26 +35,22 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Valor da compra
         /// </summary>
-        public decimal? Amount { get; set; }
+        public string Amount { get; set; }
         /// <summary>
         /// Comissão
         /// </summary>
-        public decimal? Comission { get; set; }
+        public string Comission { get; set; }
         /// <summary>
         /// Id do Status
         /// </summary>
-        [Required]
         public int IdStatus { get; set; }
         /// <summary>
         /// Status
         /// </summary>
-        [Required]
-        [MaxLength(50)]
         public string Status { get; set; }
         /// <summary>
         /// Data
         /// </summary>
-        [Required]
         public string Date { get; set; }
 
         /// <summary>
@@ -79,31 +69,11 @@ namespace ias.Rebens.api.Models
             this.IdBenefitType = benefitUse.IdBenefitType;
             this.IdCustomer = benefitUse.IdCustomer;
             this.Name = benefitUse.Name;
-            this.Amount = benefitUse.Amount;
-            this.Comission = benefitUse.Comission;
+            this.Amount = benefitUse.IdBenefitType == (int)Enums.BenefitType.Cashback ? (benefitUse.Amount.HasValue ? benefitUse.Amount.Value.ToString("N") : "") : "";
+            this.Comission = benefitUse.IdBenefitType == (int)Enums.BenefitType.Cashback ? (benefitUse.Comission.HasValue ? benefitUse.Comission.Value.ToString("N") : "") : "";
             this.IdStatus = benefitUse.Status;
             this.Status = Enums.EnumHelper.GetEnumDescription((Enums.BenefitUseStatus)benefitUse.Status);
             this.Date = benefitUse.Created.ToString("dd/MM/yyyy");
-        }
-
-        /// <summary>
-        /// Get the object
-        /// </summary>
-        /// <returns></returns>
-        public BenefitUse GetEntity()
-        {
-            return new BenefitUse()
-            {
-                Id = this.Id,
-                IdBenefit = this.IdBenefit,
-                IdCustomer = this.IdCustomer,
-                IdBenefitType = this.IdBenefitType,
-                Name = this.Name,
-                Amount = this.Amount,
-                Comission = this.Comission,
-                Status = this.IdStatus,
-                Modified = DateTime.Now
-            };
         }
     }
 }

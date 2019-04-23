@@ -10,7 +10,7 @@ namespace ias.Rebens.api.Controllers
     /// Faq Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/Faq"), Authorize("Bearer", Roles = "master,publisher,administrator")]
+    [Route("api/Faq"), Authorize("Bearer", Roles = "master,publisher,administrator,administratorRebens,publisherRebens")]
     [ApiController]
     public class FaqController : ControllerBase
     {
@@ -44,7 +44,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Question ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
         {
             var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
             {
                 if (principal?.Claims != null)
                 {
@@ -59,15 +59,6 @@ namespace ias.Rebens.api.Controllers
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
-            else if (principal.IsInRole("publisher"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId != null && int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                }
-            }
 
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
 
@@ -76,14 +67,17 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.Count() == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<FaqModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<FaqModel>();
+                var ret = new ResultPageModel<FaqModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<FaqModel>()
+                };
+                
                 foreach (var faq in list.Page)
                     ret.Data.Add(new FaqModel(faq));
 
@@ -153,7 +147,7 @@ namespace ias.Rebens.api.Controllers
         {
             int? idOperation = null;
             var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
             {
                 if (principal?.Claims != null)
                 {
@@ -168,17 +162,6 @@ namespace ias.Rebens.api.Controllers
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
-            else if (principal.IsInRole("publisher"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId != null && int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                }
-            }
-
-            var model = new JsonModel();
 
             var f = faq.GetEntity();
             if (idOperation.HasValue)
