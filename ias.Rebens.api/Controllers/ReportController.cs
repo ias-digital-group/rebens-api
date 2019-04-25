@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "administrator,master,administratorRebens")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ReportController : ControllerBase
     {
@@ -71,7 +71,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         /// <returns></returns>
-        [HttpGet("ListCustomers")]
+        [HttpGet("ListCustomers"), Authorize("Bearer", Roles = "administrator,master,administratorRebens")]
         [ProducesResponseType(typeof(ResultPageModel<CustomerListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -135,7 +135,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         /// <returns></returns>
-        [HttpGet("ListBenefitUse")]
+        [HttpGet("ListBenefitUse"), Authorize("Bearer", Roles = "administrator,master,administratorRebens")]
         [ProducesResponseType(typeof(ResultPageModel<BenefitListUseItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]

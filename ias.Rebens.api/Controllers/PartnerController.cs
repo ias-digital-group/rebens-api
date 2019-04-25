@@ -10,7 +10,7 @@ namespace ias.Rebens.api.Controllers
     /// Partner Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/Partner"), Authorize("Bearer", Roles = "master")]
+    [Route("api/Partner")]
     [ApiController]
     public class PartnerController : ControllerBase
     {
@@ -48,7 +48,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet]
+        [HttpGet, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
         [ProducesResponseType(typeof(ResultPageModel<PartnerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -86,7 +86,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna o parceiro, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}")]
+        [HttpGet("{id}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonDataModel<PartnerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -112,7 +112,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="200">Se o objeto for atualizado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPut]
+        [HttpPut, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]PartnerModel partner)
@@ -159,7 +159,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do parceiro criado</returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost]
+        [HttpPost, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]PartnerModel partner)
@@ -231,7 +231,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="200">Se o objeto for excluido com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
@@ -256,7 +256,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/Contacts")]
+        [HttpGet("{id}/Contacts"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonDataModel<List<ContactModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -298,7 +298,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/Address")]
+        [HttpGet("{id}/Address"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonDataModel<List<AddressModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -335,7 +335,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="200">Víncula um parceiro com um contato</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("AddContact")]
+        [HttpPost("AddContact"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddContact([FromBody]PartnerContactModel model)
@@ -356,7 +356,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="200">Remove o vínculo de benefício com endereço</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}/Contacts/{idContact}")]
+        [HttpDelete("{id}/Contacts/{idContact}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveContact(int id, int idContact)
@@ -376,7 +376,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="200">Víncula um parceiro com um endereço</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("AddAddress")]
+        [HttpPost("AddAddress"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddAddress([FromBody]PartnerAddressModel model)
@@ -397,7 +397,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="200">Remove o vínculo de benefício com endereço</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{Id}/Address/{idAddress}")]
+        [HttpDelete("{Id}/Address/{idAddress}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveAddress(int id, int idAddress)
@@ -422,7 +422,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/Benefits")]
+        [HttpGet("{id}/Benefits"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonDataModel<List<BenefitModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]

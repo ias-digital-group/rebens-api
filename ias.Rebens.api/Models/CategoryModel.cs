@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ias.Rebens.api.Models
 {
@@ -76,7 +77,7 @@ namespace ias.Rebens.api.Models
 
             if (category.Categories != null)
             {
-                foreach (var cat in category.Categories)
+                foreach (var cat in category.Categories.OrderBy(c => c.Name))
                     this.Categories.Add(new CategoryModel(cat));
             }
         }
