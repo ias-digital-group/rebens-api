@@ -179,14 +179,16 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Operation> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Operation> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null)
         {
             ResultPage<Operation> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Operation.Where(o => !o.Deleted && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
+                    var tmpList = db.Operation.Where(o => !o.Deleted 
+                                    && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word))
+                                    && (!status.HasValue || (status.HasValue && o.Active == status.Value)));
                     switch (sort.ToLower())
                     {
                         case "domain asc":
@@ -222,7 +224,9 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Operation.Count(o => !o.Deleted && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word)));
+                    var total = db.Operation.Count(o => !o.Deleted
+                                    && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word))
+                                    && (!status.HasValue || (status.HasValue && o.Active == status.Value)));
 
                     ret = new ResultPage<Operation>(list, page, pageItems, total);
 

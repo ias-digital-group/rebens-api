@@ -8,7 +8,7 @@ namespace ias.Rebens
     {
         Partner Read(int id, out string error);
 
-        ResultPage<Partner> ListPage(int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Partner> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null);
 
         bool Delete(int id, out string error);
 

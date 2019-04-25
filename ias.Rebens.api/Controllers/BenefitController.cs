@@ -45,6 +45,9 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="idOperation">id da operação, não obrigatório (default=null)</param>
+        /// <param name="active">status, não obrigatório (default=null)</param>
+        /// <param name="type">tipo do benefício, não obrigatório (default=null)</param>
         /// <returns>Lista com os benefícios encontrados</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -53,12 +56,14 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<BenefitModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "",
+            [FromQuery]int? idOperation = null, [FromQuery]bool? active = null, [FromQuery]int? type = null)
         {
-            int? idOperation = null;
+            bool exclusive = false;
             var principal = HttpContext.User;
             if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
             {
+                exclusive = true;
                 if (principal?.Claims != null)
                 {
                     var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
@@ -73,7 +78,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation, active, type, exclusive);
 
             if (string.IsNullOrEmpty(error))
             {

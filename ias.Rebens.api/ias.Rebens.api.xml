@@ -134,7 +134,7 @@
             </summary>
             <param name="adminUserRepository"></param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.AdminUserController.List(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean},System.String)">
             <summary>
             Retorna uma lista de usuários conforme os parametros
             </summary>
@@ -142,6 +142,9 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">id da operação, não obrigatório (default=null)</param>
+            <param name="active">active, não obrigatório (default=null)</param>
+            <param name="role">papel, não obrigatório (default=null)</param>
             <returns>Lista com os usuários encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -266,7 +269,7 @@
             <param name="bannerRepository"></param>
             <param name="operationRepository"></param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.BannerController.List(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.BannerController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Int32},System.Nullable{System.Int32})">
             <summary>
             Lista os banners conforme os parametros
             </summary>
@@ -274,6 +277,9 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="active">Active, não obrigatório (default=null)</param>
+            <param name="type">Tipo de banner, não obrigatório (default=null)</param>
+            <param name="idOperation">id da Operação, não obrigatório (default=null)</param>
             <returns>Lista com os banners encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -360,7 +366,7 @@
             <param name="operationRepository">Injeção de dependencia do repositório de Operação</param>
             <param name="staticTextRepository">Injeção de dependencia do repositório de Texto Estático</param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.BenefitController.List(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Int32})">
             <summary>
             Lista todos os benefícios com paginação
             </summary>
@@ -368,6 +374,9 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">id da operação, não obrigatório (default=null)</param>
+            <param name="active">status, não obrigatório (default=null)</param>
+            <param name="type">tipo do benefício, não obrigatório (default=null)</param>
             <returns>Lista com os benefícios encontrados</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -540,7 +549,7 @@
             <param name="categoryRepository"></param>
             <param name="logErrorRepository"></param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.CategoryController.List(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.CategoryController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Int32})">
             <summary>
             Retorna uma lista de categorias conforme os parametros
             </summary>
@@ -548,6 +557,8 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="active">active, não obrigatório (default=null)</param>
+            <param name="idParent">id do pai, não obrigatório (default=null)</param>
             <returns>Lista com as categorias encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -960,7 +971,7 @@
             <param name="staticTextRepository">Injeção de dependencia do repositório de Texto</param>
             <param name="bannerRepository">Injeção de dependencia do repositório de Banner</param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.List(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean})">
             <summary>
             Lista todas as operações com paginação
             </summary>
@@ -968,6 +979,7 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Domain, Title, CompanyName, CompanyDoc), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="active">active, não obrigatório (default=null)</param>
             <returns>Lista com as operações encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -1171,7 +1183,7 @@
             <param name="benefitRepository">Injeção de dependencia do repositório de benefício</param>
             <param name="staticTextRepository">Injeção de dependencia do repositório de benefício</param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PartnerController.List(System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.PartnerController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean})">
             <summary>
             Lista todos os parceiros com paginação
             </summary>
@@ -1179,6 +1191,7 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="active">Active não obrigatório (default=null)</param>
             <returns>Lista com os parceiros encontrados</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>

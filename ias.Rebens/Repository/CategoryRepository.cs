@@ -68,14 +68,16 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null, int? idParent = null)
         {
             ResultPage<Category> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Category.Where(c => string.IsNullOrEmpty(word) || c.Name.Contains(word));
+                    var tmpList = db.Category.Where(c => (string.IsNullOrEmpty(word) || c.Name.Contains(word))
+                                    && (!status.HasValue || (status.HasValue && c.Active == status.Value))
+                                    && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value)));
 
                     switch (sort.ToLower())
                     {
@@ -100,7 +102,9 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Category.Count(c => string.IsNullOrEmpty(word) || c.Name.Contains(word));
+                    var total = db.Category.Count(c => (string.IsNullOrEmpty(word) || c.Name.Contains(word))
+                                    && (!status.HasValue || (status.HasValue && c.Active == status.Value))
+                                    && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value)));
 
                     ret = new ResultPage<Category>(list, page, pageItems, total);
 

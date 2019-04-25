@@ -8,7 +8,7 @@ namespace ias.Rebens
     {
         Banner Read(int id, out string error);
 
-        ResultPage<Banner> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null);
+        ResultPage<Banner> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, int? type = null);
 
         bool Delete(int id, out string error);
 

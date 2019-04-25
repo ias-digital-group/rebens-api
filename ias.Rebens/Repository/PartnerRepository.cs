@@ -171,14 +171,15 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Partner> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Partner> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null)
         {
             ResultPage<Partner> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Partner.Where(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word)));
+                    var tmpList = db.Partner.Where(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word))
+                                        && (!status.HasValue || (status.HasValue && p.Active == status.Value)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -196,7 +197,8 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Partner.Count(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word)));
+                    var total = db.Partner.Count(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word))
+                                        && (!status.HasValue || (status.HasValue && p.Active == status.Value)));
 
                     ret = new ResultPage<Partner>(list, page, pageItems, total);
 

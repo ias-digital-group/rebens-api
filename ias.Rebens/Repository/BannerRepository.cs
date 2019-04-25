@@ -259,7 +259,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Banner> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
+        public ResultPage<Banner> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, int? type = null)
         {
             ResultPage<Banner> ret;
             try
@@ -268,7 +268,9 @@ namespace ias.Rebens
                 {
                     var tmpList = db.Banner.Where(b => !b.Deleted && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted))  
                                     && (string.IsNullOrEmpty(word) || b.Name.Contains(word)) 
-                                    && (!idOperation.HasValue || (idOperation.HasValue && b.BannerOperations.Any(o => o.IdOperation == idOperation.Value))));
+                                    && (!idOperation.HasValue || (idOperation.HasValue && b.BannerOperations.Any(o => o.IdOperation == idOperation.Value)))
+                                    && (!status.HasValue || (status.HasValue && b.Active == status.Value))
+                                    && (!type.HasValue || (type.HasValue && b.Type == type.Value)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -292,8 +294,11 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Banner.Count(b => !b.Deleted && (string.IsNullOrEmpty(word) || b.Name.Contains(word))
-                                    && (!idOperation.HasValue || (idOperation.HasValue && b.BannerOperations.Any(o => o.IdOperation == idOperation.Value))));
+                    var total = db.Banner.Count(b => !b.Deleted && (!b.IdBenefit.HasValue || (b.IdBenefit.HasValue && !b.Benefit.Deleted && !b.Benefit.Partner.Deleted))
+                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word))
+                                    && (!idOperation.HasValue || (idOperation.HasValue && b.BannerOperations.Any(o => o.IdOperation == idOperation.Value)))
+                                    && (!status.HasValue || (status.HasValue && b.Active == status.Value))
+                                    && (!type.HasValue || (type.HasValue && b.Type == type.Value)));
 
                     ret = new ResultPage<Banner>(list, page, pageItems, total);
 

@@ -12,7 +12,7 @@ namespace ias.Rebens
 
         Operation ReadForSignUp(Guid code, out bool openSignUp, out string error);
 
-        ResultPage<Operation> ListPage(int page, int pageItems, string word, string sort, out string error);
+        ResultPage<Operation> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null);
 
         bool Create(Operation operation, out string error);
 

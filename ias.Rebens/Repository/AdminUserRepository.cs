@@ -97,7 +97,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<AdminUser> ListPage(int? operationId, int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<AdminUser> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, string role = null)
         {
             ResultPage<AdminUser> ret;
             try
@@ -106,7 +106,10 @@ namespace ias.Rebens
                 {
                     var tmpList = db.AdminUser.Where(a => !a.Deleted
                                 && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) 
-                                && (!operationId.HasValue || (operationId.HasValue && a.IdOperation == operationId.Value)));
+                                && (!idOperation.HasValue || (idOperation.HasValue && a.IdOperation == idOperation.Value))
+                                && (!status.HasValue || (status.HasValue && a.Status == (status.Value ? 1 : 2)))
+                                && (string.IsNullOrEmpty(role) || a.Roles == role)
+                                );
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -130,9 +133,11 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.AdminUser.Count(a => !a.Deleted &&
-                                (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
-                                && (!operationId.HasValue || (operationId.HasValue && a.IdOperation == operationId.Value)));
+                    var total = db.AdminUser.Count(a => !a.Deleted
+                                && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                && (!idOperation.HasValue || (idOperation.HasValue && a.IdOperation == idOperation.Value))
+                                && (!status.HasValue || (status.HasValue && a.Status == (status.Value ? 1 : 2)))
+                                && (string.IsNullOrEmpty(role) || a.Roles == role));
 
                     ret = new ResultPage<AdminUser>(list, page, pageItems, total);
                     error = null;

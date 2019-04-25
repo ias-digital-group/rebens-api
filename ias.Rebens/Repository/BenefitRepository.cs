@@ -165,7 +165,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Benefit> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
+        public ResultPage<Benefit> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, int? type = null, bool exclusive = false)
         {
             ResultPage<Benefit> ret;
             try
@@ -174,7 +174,14 @@ namespace ias.Rebens
                 {
                     var tmpList = db.Benefit.Where(b => !b.Deleted 
                                     && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word))
-                                    && (!idOperation.HasValue || (idOperation.HasValue && b.Exclusive && b.IdOperation == idOperation))
+                                    && (!status.HasValue || (status.HasValue && b.Active == status.Value))
+                                    && (!type.HasValue || (type.HasValue && b.IdBenefitType == type.Value))
+                                    && (!idOperation.HasValue || (idOperation.HasValue && 
+                                         (
+                                            (exclusive && b.Exclusive && b.IdOperation == idOperation) ||
+                                            (!exclusive && (b.IdOperation == idOperation || b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)))
+                                         ))
+                                       )
                                 );
                     switch (sort.ToLower())
                     {
@@ -202,9 +209,16 @@ namespace ias.Rebens
                         page = 0;
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Benefit.Count(b => !b.Deleted 
+                    var total = db.Benefit.Count(b => !b.Deleted
                                     && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word))
-                                    && (!idOperation.HasValue || (idOperation.HasValue && b.Exclusive && b.IdOperation == idOperation)));
+                                    && (!status.HasValue || (status.HasValue && b.Active == status.Value))
+                                    && (!type.HasValue || (type.HasValue && b.IdBenefitType == type.Value))
+                                    && (!idOperation.HasValue || (idOperation.HasValue &&
+                                         (
+                                            (exclusive && b.Exclusive && b.IdOperation == idOperation) ||
+                                            (!exclusive && (b.IdOperation == idOperation || b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)))
+                                         ))
+                                       ));
 
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
 
