@@ -176,6 +176,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Post([FromBody]BenefitModel benefit)
         {
             int? idOperation = null;
+            int idAmin = 0;
             var principal = HttpContext.User;
             if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
             {
@@ -188,6 +189,12 @@ namespace ias.Rebens.api.Controllers
                         idOperation = tmpId;
                     else
                         return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+
+                    var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                    if (customerId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                    if (!int.TryParse(customerId.Value, out idAmin))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
                 }
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
@@ -197,10 +204,12 @@ namespace ias.Rebens.api.Controllers
             var model = new JsonModel();
 
             var item = benefit.GetEntity();
+            item.IdAdminUser = idAmin;
             if (idOperation.HasValue)
             {
                 item.Exclusive = true;
                 item.IdOperation = idOperation.Value;
+                item.IdIntegrationType = (int)Enums.IntegrationType.Own;
             }
 
 

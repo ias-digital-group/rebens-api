@@ -45,7 +45,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Login([FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
             var user = repo.ReadByEmail(model.Email, out string error);
-            if (user != null)
+            if (user != null && user.Status == (int)Enums.AdminUserStatus.Active)
             {
                 if (user.CheckPassword(model.Password))
                 {

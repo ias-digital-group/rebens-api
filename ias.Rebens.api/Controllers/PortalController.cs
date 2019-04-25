@@ -307,17 +307,17 @@ namespace ias.Rebens.api.Controllers
             if (operation != null)
             {
                 var customer = customerRepo.ReadByEmail(model.Email, operation.Id, out error);
-                if (customer != null)
+                if (customer != null && (customer.Status != (int)Enums.CustomerStatus.Inactive && customer.Status != (int)Enums.CustomerStatus.Validation))
                 {
                     if (customer.CheckPassword(model.Password))
                     {
                         var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
                         return Ok(Data);
                     }
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
                 }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O usuário não encontrado!" });
             }
-
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
         }
 

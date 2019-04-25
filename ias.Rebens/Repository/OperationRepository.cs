@@ -336,6 +336,7 @@ namespace ias.Rebens
                     var update = db.Operation.SingleOrDefault(c => c.Id == operation.Id);
                     if (update != null)
                     {
+                        bool changePolicy = operation.Active != update.Active;
                         update.Active = operation.Active;
                         update.CashbackPercentage = operation.CashbackPercentage;
                         update.CompanyDoc = operation.CompanyDoc;
@@ -348,6 +349,20 @@ namespace ias.Rebens
 
                         db.SaveChanges();
                         error = null;
+
+                        if (changePolicy)
+                        {
+                            try
+                            {
+                                var awsHelper = new Integration.AWSHelper();
+                                awsHelper.ChangeBucketPolicy(operation.Domain, operation.Active).Wait();
+                            }
+                            catch(Exception ex)
+                            {
+                                ret = false;
+                                error = $"Ocorreu um erro ao tentar bloquear o acesso na Amazon. Mensagem: '{ex.Message}'";
+                            }
+                        }
                     }
                     else
                     {

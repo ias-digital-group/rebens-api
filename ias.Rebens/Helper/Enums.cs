@@ -141,7 +141,9 @@ namespace ias.Rebens.Enums
         [Description("Rebens")]
         Rebens = 1,
         [Description("Zanox")]
-        Zanox = 2
+        Zanox = 2,
+        [Description("Própria")]
+        Own = 3
     }
 
     public enum MoipPaymentStatus : int
