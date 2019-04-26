@@ -92,7 +92,7 @@ namespace ias.Rebens.api.helper
                 {
                     list = customerRepo.ListToGenerateCoupon(1, 30);
                 }
-                catch(Exception ex)
+                catch
                 {
                     run = false;
                     break;

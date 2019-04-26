@@ -130,7 +130,10 @@ namespace ias.Rebens.api.Controllers
 
             var op = operation.GetEntity();
             if (repo.Update(op, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Operação atualizada com sucesso!" });
+            {
+                repo.ValidateOperation(op.Id, out bool isValid, out error);
+                return Ok(new JsonModel() { Status = "ok", Message = "Operação atualizada com sucesso!", Data = isValid });
+            }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -571,9 +574,9 @@ namespace ias.Rebens.api.Controllers
 
             if (staticTextRepo.Update(config, out string error))
             {
-                repo.ValidateOperation(id, out error);
+                repo.ValidateOperation(id, out bool isValid, out error);
 
-                return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!" });
+                return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!", Data = isValid });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -591,7 +594,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Publish(int id)
         {
-            if (repo.ValidateOperation(id, out string error))
+            if (repo.ValidateOperation(id, out bool isValid, out string error))
             {
                 var ret = repo.GetPublishData(id, out error);
                 if(ret != null)

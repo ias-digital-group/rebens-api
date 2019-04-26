@@ -187,6 +187,15 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.AdminUserController.ResendValidation(System.Int32)">
+            <summary>
+            Reenvia o email de validação do cliente
+            </summary>
+            <param name="id">id do usuário</param>
+            <returns></returns>
+            <response code="200">Se o e-mail for enviado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.BankAccountController">
             <summary>
             Bank Account Controller

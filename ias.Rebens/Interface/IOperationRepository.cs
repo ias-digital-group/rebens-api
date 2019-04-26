@@ -34,7 +34,7 @@ namespace ias.Rebens
 
         bool SavePublishStatus(int id, int idStatus, int? idError, out string error);
 
-        bool ValidateOperation(int id, out string error);
+        bool ValidateOperation(int id, out bool isValid, out string error);
 
         object GetPublishData(int id, out string error);
 

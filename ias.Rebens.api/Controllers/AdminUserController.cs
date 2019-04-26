@@ -202,5 +202,32 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+
+        /// <summary>
+        /// Reenvia o email de validação do cliente
+        /// </summary>
+        /// <param name="id">id do usuário</param>
+        /// <returns></returns>
+        /// <response code="200">Se o e-mail for enviado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ResendValidation/{id}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ResendValidation(int id)
+        {
+            var admin = repo.Read(id, out string error);
+
+            if (admin != null)
+            {
+                var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
+                string body = $"<p>Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
+                body += $"<br /><br /><p><a href='http://dev.rebens.com.br/#/validate?c={code}'>http://dev.rebens.com.br/#/validate?c={code}</a></p>";
+                Helper.EmailHelper.SendAdminEmail(admin.Email, admin.Name, "Rebens - Validação de cadastro", body, out error);
+
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail de validação reenviado com sucesso!" });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+        }
     }
 }

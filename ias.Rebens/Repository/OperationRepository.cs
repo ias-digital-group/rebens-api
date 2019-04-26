@@ -524,9 +524,10 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool ValidateOperation(int id, out string error)
+        public bool ValidateOperation(int id, out bool isValid, out string error)
         {
             bool ret = false;
+            isValid = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -581,6 +582,7 @@ namespace ias.Rebens
                                     operation.PublishStatus = (int)Enums.PublishStatus.valid;
                                     operation.Modified = DateTime.UtcNow;
                                     db.SaveChanges();
+                                    isValid = true;
                                 }
                             }
                         }
