@@ -215,7 +215,7 @@ namespace ias.Rebens.api.Controllers
                         file.CopyTo(stream);
                     }
                     var cloudinary = new Integration.CloudinaryHelper();
-                    var ret = cloudinary.UploadFile(fullPath, "rebens");
+                    var ret = cloudinary.UploadFile(fullPath, "Portal");
                     if(ret.Status)
                         return Ok(new FileUploadResultModel() { FileName = ret.public_id + extension, Url = ret.secure_url });
 
