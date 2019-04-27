@@ -757,12 +757,10 @@ namespace ias.Rebens
 
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
                 entity.Property(e => e.CPF).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Phone1).HasMaxLength(50);
-                entity.Property(e => e.Phone2).HasMaxLength(50);
+                entity.Property(e => e.Phone).HasMaxLength(50);
                 entity.Property(e => e.Email1).HasMaxLength(500);
                 entity.Property(e => e.Email2).HasMaxLength(500);
-                entity.Property(e => e.MobilePhone).HasMaxLength(50);
-                entity.Property(e => e.Others).HasMaxLength(4000);
+                entity.Property(e => e.Cellphone).HasMaxLength(50);
 
                 entity.HasOne(d => d.Operation)
                     .WithMany(p => p.OperationCustomers)

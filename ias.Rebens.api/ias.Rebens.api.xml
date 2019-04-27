@@ -969,7 +969,7 @@
             Operation Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.IBannerRepository)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.IBannerRepository,ias.Rebens.IOperationCustomerRepository,Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
             <summary>
             Construtor
             </summary>
@@ -979,6 +979,7 @@
             <param name="faqRepository">Injeção de dependencia do repositório de faq</param>
             <param name="staticTextRepository">Injeção de dependencia do repositório de Texto</param>
             <param name="bannerRepository">Injeção de dependencia do repositório de Banner</param>
+            <param name="operationCustomerRepository">Injeção de dependencia do repositório de Clientes da operação</param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean})">
             <summary>
@@ -1022,6 +1023,42 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.Publish(System.Int32)">
+            <summary>
+            Coloca uma operação na fila de publicação
+            </summary>
+            <param name="id">id da operação</param>
+            <returns></returns>
+            <response code="200">Opreação em fila</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.BuilderDone(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.GetConfiguration(System.Int32)">
+            <summary>
+            Retorna o objeto com as configurações da operação
+            </summary>
+            <param name="id">id da operação</param>
+            <returns>Retorna o objeto com as configurações da operação</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.SaveConfiguration(System.Int32,System.Object)">
+            <summary>
+            Salva as configurações de publicação da Operação
+            </summary>
+            <param name="id">id da operação</param>
+            <param name="data">configurações</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Configurações salva com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.ListContacts(System.Int32,System.Int32,System.Int32,System.String,System.String)">
             <summary>
             Lista os contatos de uma operação
@@ -1032,20 +1069,6 @@
             <param name="sort">Ordenação campos (Id, Name, Email, JobTitle), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <returns>Lista com os contatos encontradas</returns>
-            <response code="200">Retorna a list, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.ListAddress(System.Int32,System.Int32,System.Int32,System.String,System.String)">
-            <summary>
-            Lista os endereço de uma Operação
-            </summary>
-            <param name="id">id da operação</param>
-            <param name="page">página, não obrigatório (default=0)</param>
-            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
-            <param name="searchWord">Palavra à ser buscada</param>
-            <returns>Lista com os endereços encontradas</returns>
             <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
@@ -1067,6 +1090,20 @@
             <param name="idContact">id do contato</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="200">Remove o vínculo de benefício com endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.ListAddress(System.Int32,System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista os endereço de uma Operação
+            </summary>
+            <param name="id">id da operação</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os endereços encontradas</returns>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.AddAddress(ias.Rebens.api.Models.OperationAddressModel)">
@@ -1141,41 +1178,48 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.GetConfiguration(System.Int32)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.ListCustomers(System.Int32,System.Int32,System.Int32,System.String,System.String)">
             <summary>
-            Retorna o objeto com as configurações da operação
+            Lista os clientes pré cadastrados de uma operação 
             </summary>
             <param name="id">id da operação</param>
-            <returns>Retorna o objeto com as configurações da operação</returns>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>lista dos banners da operação</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.SaveConfiguration(System.Int32,System.Object)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.DeleteCustomer(System.Int32,System.Int32)">
             <summary>
-            Salva as configurações de publicação da Operação
+            Apaga um cliente pré cadastrado
             </summary>
             <param name="id">id da operação</param>
-            <param name="data">configurações</param>
+            <param name="idCustomer">id do cliente</param>
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="200">Configurações salva com sucesso</response>
+            <response code="200">Cliente foi apagado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.Publish(System.Int32)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.CreateCustomer(System.Int32,ias.Rebens.api.Models.OperationCustomerModel)">
             <summary>
-            Coloca uma operação na fila de publicação
+            Cria um cliente pré
             </summary>
-            <param name="id">id da operação</param>
-            <returns></returns>
-            <response code="200">Opreação em fila</response>
+            <param name="id">Id da operação</param>
+            <param name="customer"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.BuilderDone(System.String)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.CreateListOfCustomers(System.Int32)">
             <summary>
-            
+            Cria uma list de cliente pré, a partir de um arquivo excel
             </summary>
-            <param name="code"></param>
-            <returns></returns>
+            <param name="id">Id da operação</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="T:ias.Rebens.api.Controllers.PartnerController">
             <summary>
@@ -3450,6 +3494,68 @@
             <summary>
             Id do Contato
             </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.OperationCustomerModel">
+            <summary>
+            Cliente Pré cadastrado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationCustomerModel.Id">
+            <summary>
+            Id 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationCustomerModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationCustomerModel.CPF">
+            <summary>
+            CPF
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationCustomerModel.Phone">
+            <summary>
+            Telefone
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationCustomerModel.Cellphone">
+            <summary>
+            Celular
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationCustomerModel.Email1">
+            <summary>
+            Email 1
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationCustomerModel.Email2">
+            <summary>
+            Email 2
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationCustomerModel.Signed">
+            <summary>
+            Se já se cadastrou
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationCustomerModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationCustomerModel.#ctor(ias.Rebens.OperationCustomer)">
+            <summary>
+            Construtor que recebe um objeto IntegrationType, e popula os atributos
+            </summary>
+            <param name="type"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationCustomerModel.GetEntity">
+            <summary>
+            
+            </summary>
+            <returns></returns>
         </member>
         <member name="T:ias.Rebens.api.Models.OperationModel">
             <summary>

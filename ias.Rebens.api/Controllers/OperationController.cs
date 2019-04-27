@@ -8,6 +8,11 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Net;
 using System.IO;
+using Microsoft.AspNetCore.Hosting;
+using NPOI.HSSF.UserModel;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
+using System.Linq;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -25,6 +30,8 @@ namespace ias.Rebens.api.Controllers
         private IFaqRepository faqRepo;
         private IStaticTextRepository staticTextRepo;
         private IBannerRepository bannerRepo;
+        private IOperationCustomerRepository operationCustomerRepo;
+        private IHostingEnvironment _hostingEnvironment;
 
         /// <summary>
         /// Construtor
@@ -35,7 +42,10 @@ namespace ias.Rebens.api.Controllers
         /// <param name="faqRepository">Injeção de dependencia do repositório de faq</param>
         /// <param name="staticTextRepository">Injeção de dependencia do repositório de Texto</param>
         /// <param name="bannerRepository">Injeção de dependencia do repositório de Banner</param>
-        public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository)
+        /// <param name="operationCustomerRepository">Injeção de dependencia do repositório de Clientes da operação</param>
+        public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, 
+            IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository,
+            IOperationCustomerRepository operationCustomerRepository, IHostingEnvironment hostingEnvironment)
         {
             this.repo = operationRepository;
             this.addressRepo = addressRepository;
@@ -43,8 +53,12 @@ namespace ias.Rebens.api.Controllers
             this.faqRepo = faqRepository;
             this.staticTextRepo = staticTextRepository;
             this.bannerRepo = bannerRepository;
+            this.operationCustomerRepo = operationCustomerRepository;
+            this._hostingEnvironment = hostingEnvironment;
         }
 
+
+        #region Operation
         /// <summary>
         /// Lista todas as operações com paginação
         /// </summary>
@@ -191,6 +205,152 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Coloca uma operação na fila de publicação
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <returns></returns>
+        /// <response code="200">Opreação em fila</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/publish"), Authorize("Bearer", Roles = "master")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Publish(int id)
+        {
+            if (repo.ValidateOperation(id, out bool isValid, out string error))
+            {
+                var ret = repo.GetPublishData(id, out error);
+                if (ret != null)
+                {
+                    string content = JsonConvert.SerializeObject(ret);
+                    HttpWebRequest request = WebRequest.Create("http://builder.rebens.com.br/api/operations") as HttpWebRequest;
+
+                    request.Method = "POST";
+                    request.ContentType = "application/json";
+                    request.Timeout = 30000;
+
+                    using (Stream s = request.GetRequestStream())
+                    {
+                        using (StreamWriter sw = new StreamWriter(s))
+                            sw.Write(content);
+                    }
+                    try
+                    {
+                        HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                        if (response.StatusCode == HttpStatusCode.OK)
+                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error);
+                        else
+                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+
+                        var mail = new Integration.SendinBlueHelper();
+                        mail.Send(toEmail: "suporte@iasdigitalgroup.com", toName: "Suporte",
+                            fromEmail: "contato@rebens.com.br", fromName: "Rebens",
+                            subject: "[Rebens] Builder START",
+                            body: "Start at: " + DateTime.Now.ToString("HH:mm:ss") + "<br /> OperationId:" + id + "<br />" + content);
+
+                        return StatusCode(200, new JsonModel() { Status = "ok" });
+                    }
+                    catch
+                    {
+                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+                    }
+                }
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        [HttpGet("BuilderDone/{code}"), AllowAnonymous]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        public IActionResult BuilderDone(string code)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(code, out operationGuid);
+
+            if (operationGuid != Guid.Empty)
+                repo.SavePublishDone(operationGuid, out string error);
+
+            return Ok(new JsonModel() { Status = "ok" });
+        }
+        #endregion Operation
+
+        #region Operation Configuration
+        /// <summary>
+        /// Retorna o objeto com as configurações da operação
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <returns>Retorna o objeto com as configurações da operação</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/Configuration"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(JsonDataModel<object>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetConfiguration(int id)
+        {
+            var config = staticTextRepo.ReadOperationConfiguration(id, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (config == null || config.Id == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<object>() { Data = JObject.Parse(config.Html) };
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Salva as configurações de publicação da Operação
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <param name="data">configurações</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Configurações salva com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/Configuration"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SaveConfiguration(int id, [FromBody]object data)
+        {
+            var resultModel = new JsonModel();
+
+            var config = new StaticText()
+            {
+                Title = "Configuração de Operação - " + id,
+                Url = "operation-" + id,
+                Html = JsonConvert.SerializeObject(data),
+                Style = "",
+                Order = 0,
+                IdStaticTextType = (int)Enums.StaticTextType.OperationConfiguration,
+                IdOperation = id,
+                IdBenefit = null,
+                Active = true,
+                Created = DateTime.UtcNow,
+                Modified = DateTime.UtcNow
+            };
+
+            if (staticTextRepo.Update(config, out string error))
+            {
+                repo.ValidateOperation(id, out bool isValid, out error);
+
+                return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!", Data = isValid });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion Operation Configuration
+
+        #region OperationContacts
+        /// <summary>
         /// Lista os contatos de uma operação
         /// </summary>
         /// <param name="id">id da operação</param>
@@ -233,6 +393,49 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Adiciona um contato a uma operação
+        /// </summary>
+        /// <param name="model">{ idOperation: 0, idContact: 0 }</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Víncula uma operação com um contato</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("AddContact"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult AddContact([FromBody]OperationContactModel model)
+        {
+            var resultModel = new JsonModel();
+
+            if (repo.AddContact(model.IdOperation, model.IdContact, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Contato adicionado com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Remove um contato de uma operação
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <param name="idContact">id do contato</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Remove o vínculo de benefício com endereço</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpDelete("{id}/Contact/{idContact}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult RemoveContact(int id, int idContact)
+        {
+            var resultModel = new JsonModel();
+
+            if (repo.DeleteContact(id, idContact, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Contato removido com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion OperationContacts
+
+        #region OperationAddress
+        /// <summary>
         /// Lista os endereço de uma Operação
         /// </summary>
         /// <param name="id">id da operação</param>
@@ -270,47 +473,6 @@ namespace ias.Rebens.api.Controllers
 
                 return Ok(ret);
             }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Adiciona um contato a uma operação
-        /// </summary>
-        /// <param name="model">{ idOperation: 0, idContact: 0 }</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Víncula uma operação com um contato</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("AddContact"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult AddContact([FromBody]OperationContactModel model)
-        {
-            var resultModel = new JsonModel();
-
-            if(repo.AddContact(model.IdOperation, model.IdContact, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Contato adicionado com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Remove um contato de uma operação
-        /// </summary>
-        /// <param name="id">id da operação</param>
-        /// <param name="idContact">id do contato</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Remove o vínculo de benefício com endereço</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}/Contact/{idContact}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult RemoveContact(int id, int idContact)
-        {
-            var resultModel = new JsonModel();
-
-            if (repo.DeleteContact(id, idContact, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Contato removido com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -355,7 +517,9 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+        #endregion OperationAddress
 
+        #region Faq
         /// <summary>
         /// Lista as perguntas de uma operação 
         /// </summary>
@@ -397,7 +561,9 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+        #endregion Faq
 
+        #region StaticText
         /// <summary>
         /// Lista os textos de uma operação 
         /// </summary>
@@ -470,7 +636,9 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+        #endregion StaticText
 
+        #region Banner
         /// <summary>
         /// Lista os banners de uma operação 
         /// </summary>
@@ -512,29 +680,48 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+        #endregion Banner
 
+
+        #region Operation Customers
         /// <summary>
-        /// Retorna o objeto com as configurações da operação
+        /// Lista os clientes pré cadastrados de uma operação 
         /// </summary>
         /// <param name="id">id da operação</param>
-        /// <returns>Retorna o objeto com as configurações da operação</returns>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <returns>lista dos banners da operação</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/Configuration"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(JsonDataModel<object>), 200)]
+        [HttpGet("{id}/Customers"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
+        [ProducesResponseType(typeof(ResultPageModel<OperationCustomerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GetConfiguration(int id)
+        public IActionResult ListCustomers(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
         {
-            var config = staticTextRepo.ReadOperationConfiguration(id, out string error);
+            var list = operationCustomerRepo.ListPage(page, pageItems, searchWord, sort, out string error, id);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (config == null || config.Id == 0)
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<object>() { Data = JObject.Parse(config.Html) };
+                var ret = new ResultPageModel<OperationCustomerModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<OperationCustomerModel>()
+                };
+                
+                foreach (var customer in list.Page)
+                    ret.Data.Add(new OperationCustomerModel(customer));
 
                 return Ok(ret);
             }
@@ -543,116 +730,162 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Salva as configurações de publicação da Operação
+        /// Apaga um cliente pré cadastrado
         /// </summary>
         /// <param name="id">id da operação</param>
-        /// <param name="data">configurações</param>
+        /// <param name="idCustomer">id do cliente</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Configurações salva com sucesso</response>
+        /// <response code="200">Cliente foi apagado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("{id}/Configuration"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [HttpDelete("{id}/Customers/{idCustomer}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult SaveConfiguration(int id, [FromBody]object data)
+        public IActionResult DeleteCustomer(int id, int idCustomer)
         {
             var resultModel = new JsonModel();
 
-            var config = new StaticText()
-            {
-                Title = "Configuração de Operação - " + id,
-                Url = "operation-" + id,
-                Html = JsonConvert.SerializeObject(data),
-                Style = "",
-                Order = 0,
-                IdStaticTextType = (int)Enums.StaticTextType.OperationConfiguration,
-                IdOperation = id,
-                IdBenefit = null,
-                Active = true,
-                Created = DateTime.UtcNow,
-                Modified = DateTime.UtcNow
-            };
-
-            if (staticTextRepo.Update(config, out string error))
-            {
-                repo.ValidateOperation(id, out bool isValid, out error);
-
-                return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!", Data = isValid });
-            }
+            if (operationCustomerRepo.Delete(idCustomer, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Cliente apagado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
-        /// Coloca uma operação na fila de publicação
+        /// Cria um cliente pré
         /// </summary>
-        /// <param name="id">id da operação</param>
-        /// <returns></returns>
-        /// <response code="200">Opreação em fila</response>
+        /// <param name="id">Id da operação</param>
+        /// <param name="customer"></param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("{id}/publish"), Authorize("Bearer", Roles = "master")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
+        [HttpPost("{id}/Customers/"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Publish(int id)
+        public IActionResult CreateCustomer(int id, [FromBody] OperationCustomerModel customer)
         {
-            if (repo.ValidateOperation(id, out bool isValid, out string error))
+            var c = customer.GetEntity();
+            c.IdOperation = id;
+            c.Signed = false;
+            if (operationCustomerRepo.Create(c, out string error))
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = c.Id });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Cria uma list de cliente pré, a partir de um arquivo excel
+        /// </summary>
+        /// <param name="id">Id da operação</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/UploadCustomersList"), DisableRequestSizeLimit, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult CreateListOfCustomers(int id)
+        {
+            try
             {
-                var ret = repo.GetPublishData(id, out error);
-                if(ret != null)
+                var file = Request.Form.Files[0];
+                string webRootPath = _hostingEnvironment.WebRootPath;
+                string newPath = Path.Combine(webRootPath, "files");
+                if (!Directory.Exists(newPath))
+                    Directory.CreateDirectory(newPath);
+
+                if (file.Length > 0)
                 {
-                    string content = JsonConvert.SerializeObject(ret);
-                    HttpWebRequest request = WebRequest.Create("http://builder.rebens.com.br/api/operations") as HttpWebRequest;
-
-                    request.Method = "POST";
-                    request.ContentType = "application/json";
-                    request.Timeout = 30000;
-
-                    using (Stream s = request.GetRequestStream())
+                    var list = new List<OperationCustomer>();
+                    ISheet sheet;
+                    string extension = Path.GetExtension(file.FileName);
+                    string fileName = Guid.NewGuid().ToString("n") + extension;
+                    string fullPath = Path.Combine(newPath, fileName);
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
-                        using (StreamWriter sw = new StreamWriter(s))
-                            sw.Write(content);
+                        file.CopyTo(stream);
                     }
+
                     try
                     {
-                        HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                        if (response.StatusCode == HttpStatusCode.OK)
-                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error);
-                        else
-                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+                        using (var stream = new StreamReader(fullPath))
+                        {
+                            if (extension == ".xls")
+                            {
+                                HSSFWorkbook hssfwb = new HSSFWorkbook(stream.BaseStream); //This will read the Excel 97-2000 formats  
+                                sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook  
+                            }
+                            else
+                            {
+                                XSSFWorkbook hssfwb = new XSSFWorkbook(stream.BaseStream); //This will read 2007 Excel format  
+                                sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook   
+                            }
+                            IRow headerRow = sheet.GetRow(0); //Get Header Row
+                            int cellCount = headerRow.LastCellNum;
+                            bool isValid = true;
 
-                        var mail = new Integration.SendinBlueHelper();
-                        mail.Send(toEmail: "suporte@iasdigitalgroup.com", toName: "Suporte", 
-                            fromEmail: "contato@rebens.com.br",  fromName: "Rebens", 
-                            subject: "[Rebens] Builder START", 
-                            body: "Start at: " + DateTime.Now.ToString("HH:mm:ss") + "<br /> OperationId:" + id + "<br />" + content);
+                            ICell cellName = headerRow.GetCell(0);
+                            ICell cellCPf = headerRow.GetCell(1);
+                            ICell cellPhone = headerRow.GetCell(2);
+                            ICell cellCellphone = headerRow.GetCell(3);
+                            ICell cellEmail1 = headerRow.GetCell(4);
+                            ICell cellEmail2 = headerRow.GetCell(5);
 
-                        return StatusCode(200, new JsonModel() { Status = "ok" });
+                            isValid = cellName != null && cellName.ToString().Trim().ToLower() == "nome" &&
+                                cellCPf != null && cellCPf.ToString().Trim().ToLower() == "cpf" &&
+                                cellPhone != null && cellPhone.ToString().Trim().ToLower() == "telefone" &&
+                                cellCellphone != null && cellCellphone.ToString().Trim().ToLower() == "celular" &&
+                                cellEmail1 != null && cellEmail1.ToString().Trim().ToLower() == "email1" &&
+                                cellEmail2 != null && cellEmail2.ToString().Trim().ToLower() == "email2";
+
+                            if (isValid)
+                            {
+                                for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++) //Read Excel File
+                                {
+                                    IRow row = sheet.GetRow(i);
+                                    if (row == null) continue;
+                                    if (row.Cells.All(d => d.CellType == CellType.Blank)) continue;
+
+                                    list.Add(new OperationCustomer()
+                                    {
+                                        Name = row.GetCell(0).ToString().Trim(),
+                                        CPF = row.GetCell(1).ToString().Trim(),
+                                        Phone = row.GetCell(2).ToString().Trim(),
+                                        Cellphone = row.GetCell(3).ToString().Trim(),
+                                        Email1 = row.GetCell(4).ToString().Trim(),
+                                        Email2 = row.GetCell(5).ToString().Trim(),
+                                        Signed = false,
+                                        Created = DateTime.UtcNow,
+                                        Modified = DateTime.UtcNow,
+                                        IdOperation = id
+                                    });
+                                }
+                            }
+                        }
                     }
-                    catch
+                    catch(Exception ex)
                     {
-                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
                     }
+
+                    int counter = 0;
+                    foreach(var customer in list)
+                    {
+                        if (operationCustomerRepo.Create(customer, out string error))
+                            counter++;
+                    }
+
+                    return Ok(new JsonModel() { Status = "ok", Message = $"Pré-cadastros inclidos com sucesso. (total:{counter})" });
                 }
+
+                return NoContent();
+
             }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            catch (Exception ex)
+            {
+                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+            }
         }
+        #endregion Operation Customers
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="code"></param>
-        /// <returns></returns>
-        [HttpGet("BuilderDone/{code}"), AllowAnonymous]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        public IActionResult BuilderDone(string code)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(code, out operationGuid);
 
-            if (operationGuid != Guid.Empty)
-                repo.SavePublishDone(operationGuid, out string error);
-
-            return Ok(new JsonModel() { Status = "ok" });
-        }
     }
 }
