@@ -1,14 +1,1 @@
 ﻿
-
-update OperationCustomer set Phone1 = Phone2 where Phone1 is null and Phone2 is not null
-update OperationCustomer set Email1 = Email2 where Email1 is null and Email2 is not null
-
-
-ALTER TABLE OperationCustomer DROP COLUMN Others
-ALTER TABLE OperationCustomer DROP COLUMN Phone2
-
-EXEC sp_rename 'OperationCustomer.Phone1', 'Phone', 'COLUMN';  
-EXEC sp_rename 'OperationCustomer.MobilePhone', 'Cellphone', 'COLUMN';  
-
-update OperationCustomer set Email1 = Email2 where Email1  = '' and Email2 is not null
-update OperationCustomer set Email2 = NULL where Email1  = Email2 

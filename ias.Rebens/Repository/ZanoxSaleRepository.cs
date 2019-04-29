@@ -13,6 +13,11 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public ZanoxSaleRepository(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
         public bool Delete(int id, out string error)
         {
             bool ret = true;
@@ -186,9 +191,59 @@ namespace ias.Rebens
                         update.ReviewNote = zanoxSale.ReviewNote;
                         update.Gpps = zanoxSale.Gpps;
                         update.Zpar = zanoxSale.Zpar;
-                        update.Status = zanoxSale.Status;
-                        update.Modified = DateTime.Now;
-                        update.IdCustomer = zanoxSale.IdCustomer;
+                        update.Modified = DateTime.UtcNow;
+
+                        var use = db.BenefitUse.SingleOrDefault(b => b.Code == zanoxSale.ZanoxId);
+                        if (use != null)
+                        {
+                            use.Amount = zanoxSale.Amount;
+                            use.Comission = zanoxSale.Commission;
+                            use.Modified = DateTime.UtcNow;
+                            switch (zanoxSale.ReviewState)
+                            {
+                                case "confirmed":
+                                case "approved":
+                                    use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
+                                    break;
+                                case "rejected":
+                                    use.Status = (int)Enums.BenefitUseStatus.NoCashBack;
+                                    break;
+                                default:
+                                    use.Status = (int)Enums.BenefitUseStatus.ProcessingCashback;
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            use = new BenefitUse()
+                            {
+                                Amount = update.Amount,
+                                Code = update.ZanoxId,
+                                Comission = update.Commission,
+                                Created = DateTime.UtcNow,
+                                IdBenefit = update.IdBenefit,
+                                IdBenefitType = (int)Enums.BenefitType.Cashback,
+                                IdCustomer = update.IdCustomer,
+                                Modified = DateTime.UtcNow,
+                            };
+
+                            use.Name = db.Partner.Where(p => p.Benefits.Any(b => b.Id == update.IdBenefit)).First().Name;
+                            switch (zanoxSale.ReviewState)
+                            {
+                                case "confirmed":
+                                case "approved":
+                                    use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
+                                    break;
+                                case "rejected":
+                                    use.Status = (int)Enums.BenefitUseStatus.NoCashBack;
+                                    break;
+                                default:
+                                    use.Status = (int)Enums.BenefitUseStatus.ProcessingCashback;
+                                    break;
+                            }
+
+                            db.BenefitUse.Add(use);
+                        }
 
                         db.SaveChanges();
                         error = null;
@@ -204,8 +259,39 @@ namespace ias.Rebens
                                 {
                                     zanoxSale.IdCustomer = idCustomer;
                                     zanoxSale.IdBenefit = idBenefit;
-                                    zanoxSale.Created = zanoxSale.Modified = DateTime.Now;
+                                    zanoxSale.Created = zanoxSale.Modified = DateTime.UtcNow;
+                                    zanoxSale.Status = (int)Enums.ZanoxStatus.treat;
                                     db.ZanoxSale.Add(zanoxSale);
+                                    db.SaveChanges();
+
+                                    var use = new BenefitUse()
+                                    {
+                                        Amount = zanoxSale.Amount,
+                                        Code = zanoxSale.ZanoxId,
+                                        Comission = zanoxSale.Commission,
+                                        Created = DateTime.UtcNow,
+                                        IdBenefit = zanoxSale.IdBenefit,
+                                        IdBenefitType = (int)Enums.BenefitType.Cashback,
+                                        IdCustomer = zanoxSale.IdCustomer,
+                                        Modified = DateTime.UtcNow,
+                                    };
+
+                                    use.Name = db.Partner.Where(p => p.Benefits.Any(b => b.Id == idBenefit)).First().Name;
+                                    switch (zanoxSale.ReviewState)
+                                    {
+                                        case "confirmed":
+                                        case "approved":
+                                            use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
+                                            break;
+                                        case "rejected":
+                                            use.Status = (int)Enums.BenefitUseStatus.NoCashBack;
+                                            break;
+                                        default:
+                                            use.Status = (int)Enums.BenefitUseStatus.ProcessingCashback;
+                                            break;
+                                    }
+
+                                    db.BenefitUse.Add(use);
                                     db.SaveChanges();
                                 }
                             }
@@ -217,7 +303,14 @@ namespace ias.Rebens
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("ZanoxSaleRepository.Save", ex.Message, "", ex.StackTrace);
+                int idLog = logError.Create("ZanoxSaleRepository.Save", ex.Message, 
+                    $"zpar:{zanoxSale.Zpar} - date:{(zanoxSale.ClickDate.HasValue ? zanoxSale.ClickDate.Value.ToString("dd/MM/yyyy") : (zanoxSale.ModifiedDate.HasValue ? zanoxSale.ModifiedDate.Value.ToString("dd/MM/yyyy") : ""))}", ex.StackTrace);
+
+                if(ex.InnerException != null)
+                {
+                    logError.Create("ZanoxSaleRepository.Save - INNER", ex.InnerException.Message,
+                    $"zpar:{zanoxSale.Zpar} - date:{(zanoxSale.ClickDate.HasValue ? zanoxSale.ClickDate.Value.ToString("dd/MM/yyyy") : (zanoxSale.ModifiedDate.HasValue ? zanoxSale.ModifiedDate.Value.ToString("dd/MM/yyyy") : ""))}", ex.InnerException.StackTrace);
+                }
                 error = "Ocorreu um erro ao tentar salvar o pedido. (erro:" + idLog + ")";
                 ret = false;
             }

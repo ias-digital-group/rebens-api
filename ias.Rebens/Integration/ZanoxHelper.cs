@@ -94,6 +94,7 @@ namespace ias.Rebens.Integration
                                 sale.Zpar = item["gpps"]["gpp"]["$"].ToString();
                         }
                     }
+
                     sale.Status = (int)Enums.ZanoxStatus.pendent;
 
                     list.Add(sale);
@@ -111,9 +112,9 @@ namespace ias.Rebens.Integration
         public string CallApi(string method, string uri, string serializedObject)
         {
             string ret = null;
-            string timestamp = DateTime.UtcNow.ToString("r");
+            var timestamp = DateTime.UtcNow;
             string nonce = Helper.SecurityHelper.GenerateNonce(30);
-            string stringToSign = method + uri + timestamp + nonce;
+            string stringToSign = method + uri + timestamp.ToString("r") + nonce;
             string signature = Helper.SecurityHelper.HMACSHA1(SECRTE_KEY, stringToSign);
             string autorization = $"ZXWS {CONNECT_ID}:{signature}";
 
@@ -124,7 +125,7 @@ namespace ias.Rebens.Integration
             request.ContentType = "application/json";
             request.Accept = "application/json";
             request.Headers.Add("Authorization", autorization);
-            request.Headers.Add("date", timestamp);
+            request.Date = timestamp;
             request.Headers.Add("nonce", nonce);
 
             if (serializedObject != null)

@@ -116,12 +116,24 @@ namespace ias.Rebens.Helper
 
         public static string GenerateNonce(int size)
         {
-            var ByteArray = new byte[size];
-            using (var Rnd = RandomNumberGenerator.Create())
+            string result = "";
+            SHA1 sha1 = SHA1.Create();
+
+            Random rand = new Random();
+
+            while (result.Length < size)
             {
-                Rnd.GetBytes(ByteArray);
+                string[] generatedRandoms = new string[4];
+
+                for (int i = 0; i < 4; i++)
+                {
+                    generatedRandoms[i] = rand.Next().ToString();
+                }
+
+                result += Convert.ToBase64String(sha1.ComputeHash(Encoding.ASCII.GetBytes(string.Join("", generatedRandoms)))).Replace("=", "").Replace("/", "").Replace("+", "");
             }
-            return Convert.ToBase64String(ByteArray);
+
+            return result.Substring(0, size);
         }
 
         public static string GenerateString()

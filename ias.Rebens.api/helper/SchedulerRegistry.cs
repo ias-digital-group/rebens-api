@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using System.Web;
 using FluentScheduler;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -12,9 +13,10 @@ namespace ias.Rebens.api.helper
     {
         public SchedulerRegistry()
         {
+            Schedule<ZanoxUpdateJob>().ToRunNow().AndEvery(2).Hours();
+
             Schedule<CouponToolsGenerateJob>().ToRunNow().AndEvery(1).Days().At(0, 30);
             //Schedule<CouponToolsUpdateJob>().ToRunEvery(1).Days().At(3, 0);
-            Schedule<ZanoxUpdateJob>().ToRunNow().AndEvery(2).Hours();
 
             Schedule<KeepAlive>().ToRunNow().AndEvery(15).Minutes();
         }
@@ -38,27 +40,32 @@ namespace ias.Rebens.api.helper
 
     public class ZanoxUpdateJob : IJob
     {
-        IZanoxSaleRepository repo;
-        public ZanoxUpdateJob(IZanoxSaleRepository saleRepository) { this.repo = saleRepository; }
-
         public void Execute()
         {
-            var mail = new Integration.SendinBlueHelper();
-            mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] ZanoxUpdateJob", "Start at: " + DateTime.Now.ToString("HH:mm:ss"));
+            string conn = "Server=172.31.27.205;Database=Rebens;user id=Rebens_user;password=4KRe*d9!cd&g;";
+            var log = new LogErrorRepository(conn);
+            var repo = new ZanoxSaleRepository(conn);
+
+            log.Create("ZanoxUpdateJob", "START", "", "");
+
+            int counter = 0;
             var zanox = new Integration.ZanoxHelper();
             var dt = DateTime.Now.AddMonths(-1);
             while(dt < DateTime.Now)
             {
-                var list = zanox.UpdateZanoxSales(DateTime.Now, out string error);
-                foreach(var item in list)
+                log.Create("ZanoxUpdateJob", "GetByDate", dt.ToString("dd/MM/yyyy"), "");
+                var list = zanox.UpdateZanoxSales(dt, out string error);
+                log.Create("ZanoxUpdateJob", "GetByDate", dt.ToString("dd/MM/yyyy"), $"total:{list.Count}");
+                counter += list.Count;
+                foreach (var item in list)
                 {
+                    item.Zpar = string.IsNullOrEmpty(item.Zpar) ? "" : HttpUtility.UrlDecode(item.Zpar);
                     repo.Save(item, out error);
                 }
 
                 dt = dt.AddDays(1);
             }
-            
-            mail.Send("suporte@iasdigitalgroup.com", "Suporte", "contato@rebens.com.br", "Rebens", "[Rebens] ZanoxUpdateJob", "End at: " + DateTime.Now.ToString("HH:mm:ss"));
+            log.Create("ZanoxUpdateJob", "FINISH", "", "");
         }
     }
 

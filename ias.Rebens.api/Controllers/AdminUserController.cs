@@ -174,7 +174,7 @@ namespace ias.Rebens.api.Controllers
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
                 string body = $"<p>Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
-                body += $"<br /><br /><p><a href='http://dev.rebens.com.br/#/validate?c={code}'>http://dev.rebens.com.br/#/validate?c={code}</a></p>";
+                body += $"<br /><br /><p><a href='http://admin.rebens.com.br/#/validate?c={code}'>http://admin.rebens.com.br/#/validate?c={code}</a></p>";
                 Helper.EmailHelper.SendAdminEmail(admin.Email, admin.Name, "Rebens - Validação de cadastro", body, out error);
 
 
@@ -221,7 +221,7 @@ namespace ias.Rebens.api.Controllers
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
                 string body = $"<p>Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
-                body += $"<br /><br /><p><a href='http://dev.rebens.com.br/#/validate?c={code}'>http://dev.rebens.com.br/#/validate?c={code}</a></p>";
+                body += $"<br /><br /><p><a href='http://admin.rebens.com.br/#/validate?c={code}'>http://admin.rebens.com.br/#/validate?c={code}</a></p>";
                 Helper.EmailHelper.SendAdminEmail(admin.Email, admin.Name, "Rebens - Validação de cadastro", body, out error);
 
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail de validação reenviado com sucesso!" });
