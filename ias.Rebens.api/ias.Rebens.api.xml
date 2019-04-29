@@ -969,7 +969,7 @@
             Operation Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.IBannerRepository,ias.Rebens.IOperationCustomerRepository,Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.IBannerRepository,ias.Rebens.IOperationCustomerRepository,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILogger{ias.Rebens.api.Controllers.OperationController},ias.Rebens.ILogErrorRepository)">
             <summary>
             Construtor
             </summary>
@@ -980,6 +980,9 @@
             <param name="staticTextRepository">Injeção de dependencia do repositório de Texto</param>
             <param name="bannerRepository">Injeção de dependencia do repositório de Banner</param>
             <param name="operationCustomerRepository">Injeção de dependencia do repositório de Clientes da operação</param>
+            <param name="hostingEnvironment">Injeção de dependencia do repositório de Clientes da operação</param>
+            <param name="logger">Injeção de dependencia do repositório de Clientes da operação</param>
+            <param name="logError">Injeção de dependencia do repositório de Clientes da operação</param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean})">
             <summary>
@@ -1038,6 +1041,8 @@
             </summary>
             <param name="code"></param>
             <returns></returns>
+            <response code="200"></response>
+            <response code="400"></response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationController.GetConfiguration(System.Int32)">
             <summary>
@@ -4249,7 +4254,7 @@
             </summary>
             <param name="services"></param>
         </member>
-        <member name="M:ias.Rebens.api.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+        <member name="M:ias.Rebens.api.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILoggerFactory)">
             <summary>
             Configure Method
             </summary>

@@ -748,27 +748,32 @@ namespace ias.Rebens
         public bool SavePublishDone(Guid code, out string error)
         {
             bool ret = false;
+            var logError = new LogErrorRepository(this._connectionString);
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var op = db.Operation.SingleOrDefault(o => o.Code == code);
-                    if(op != null)
+                    if (op != null)
                     {
+                        logError.Create("OperationRepository.SavePublishDone", "Operation Founded", $"id: {op.Id}, operation: {op.CompanyName}", "");
                         op.PublishStatus = (int)Enums.PublishStatus.done;
                         op.Modified = DateTime.UtcNow;
                         db.SaveChanges();
+                        logError.Create("OperationRepository.SavePublishDone", "Operation SAVED", $"id: {op.Id}, operation: {op.CompanyName}, status:{((Enums.PublishStatus)op.PublishStatus.Value).ToString()}", "");
 
                         ret = true;
                         error = null;
                     }
                     else
+                    {
+                        logError.Create("OperationRepository.SavePublishDone", "Operation not Founded", "", "");
                         error = "Operação não foi encontrada";
+                    }
                 }
             }
             catch(Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OperationRepository.SavePublishDone", ex.Message, $"code: {code}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar macar a publicação da operação como concluída. (erro:" + idLog + ")";
             }

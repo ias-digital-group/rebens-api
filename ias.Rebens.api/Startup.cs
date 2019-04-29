@@ -12,7 +12,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using System.IO;
 using Microsoft.DotNet.PlatformAbstractions;
-
+using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace ias.Rebens.api
 {
@@ -27,6 +28,10 @@ namespace ias.Rebens.api
         /// <param name="configuration"></param>
         public Startup(IConfiguration configuration)
         {
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom
+                .Configuration(configuration)
+                .CreateLogger();
             Configuration = configuration;
         }
 
@@ -142,8 +147,9 @@ namespace ias.Rebens.api
         /// </summary>
         /// <param name="app"></param>
         /// <param name="env"></param>
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            loggerFactory.AddSerilog();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

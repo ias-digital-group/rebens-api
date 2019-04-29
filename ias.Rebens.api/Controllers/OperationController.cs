@@ -13,6 +13,8 @@ using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Linq;
+using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -26,12 +28,14 @@ namespace ias.Rebens.api.Controllers
     {
         private IOperationRepository repo;
         private IAddressRepository addressRepo;
+        private ILogErrorRepository logError;
         private IContactRepository contactRepo;
         private IFaqRepository faqRepo;
         private IStaticTextRepository staticTextRepo;
         private IBannerRepository bannerRepo;
         private IOperationCustomerRepository operationCustomerRepo;
         private IHostingEnvironment _hostingEnvironment;
+        private ILogger<OperationController> _logger;
 
         /// <summary>
         /// Construtor
@@ -43,9 +47,13 @@ namespace ias.Rebens.api.Controllers
         /// <param name="staticTextRepository">Injeção de dependencia do repositório de Texto</param>
         /// <param name="bannerRepository">Injeção de dependencia do repositório de Banner</param>
         /// <param name="operationCustomerRepository">Injeção de dependencia do repositório de Clientes da operação</param>
+        /// <param name="hostingEnvironment">Injeção de dependencia do repositório de Clientes da operação</param>
+        /// <param name="logger">Injeção de dependencia do repositório de Clientes da operação</param>
+        /// <param name="logError">Injeção de dependencia do repositório de Clientes da operação</param>
         public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, 
             IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository,
-            IOperationCustomerRepository operationCustomerRepository, IHostingEnvironment hostingEnvironment)
+            IOperationCustomerRepository operationCustomerRepository, IHostingEnvironment hostingEnvironment, ILogger<OperationController> logger,
+            ILogErrorRepository logError)
         {
             this.repo = operationRepository;
             this.addressRepo = addressRepository;
@@ -55,6 +63,8 @@ namespace ias.Rebens.api.Controllers
             this.bannerRepo = bannerRepository;
             this.operationCustomerRepo = operationCustomerRepository;
             this._hostingEnvironment = hostingEnvironment;
+            this._logger = logger;
+            this.logError = logError;
         }
 
 
@@ -264,17 +274,47 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
+        /// <response code="200"></response>
+        /// <response code="400"></response>
         [HttpGet("BuilderDone/{code}"), AllowAnonymous]
         [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult BuilderDone(string code)
         {
+            this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Start - {code}", Created = DateTime.UtcNow });
             Guid operationGuid = Guid.Empty;
-            Guid.TryParse(code, out operationGuid);
+            _logger.LogInformation("Iniciando atualizacao de status");
+            if (Guid.TryParse(code, out operationGuid))
+            {
+                this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Parsed - {code}", Created = DateTime.UtcNow });
+                if (operationGuid != Guid.Empty)
+                {
+                    this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Not Empty - {code}", Created = DateTime.UtcNow });
+                    _logger.LogInformation($"salvando guid:{operationGuid.ToString()}");
+                    if (repo.SavePublishDone(operationGuid, out string error))
+                    {
+                        this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Saved - {code}", Created = DateTime.UtcNow });
+                        _logger.LogInformation("saved");
 
-            if (operationGuid != Guid.Empty)
-                repo.SavePublishDone(operationGuid, out string error);
+                        var operation = repo.Read(operationGuid, out error);
+                        this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"read - {operation.Id} status: {((Enums.PublishStatus)operation.PublishStatus.Value).ToString()}", Created = DateTime.UtcNow });
+                        if(repo.SavePublishStatus(operation.Id, (int)Enums.PublishStatus.done, null, out error))
+                        {
+                            this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"SAVED 2 - {operation.Id} status: {((Enums.PublishStatus)operation.PublishStatus.Value).ToString()}", Created = DateTime.UtcNow });
+                        }
 
-            return Ok(new JsonModel() { Status = "ok" });
+                        return Ok(new JsonModel() { Status = "ok" });
+                    }
+                    this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Error Saving - {code}", Complement = error, Created = DateTime.UtcNow });
+                    _logger.LogInformation("error saving");
+
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                }
+                this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Guid empty - {code}", Created = DateTime.UtcNow });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "GUID empty" });
+            }
+            this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Guid parse error - {code}", Created = DateTime.UtcNow });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "GUID parse error" });
         }
         #endregion Operation
 
