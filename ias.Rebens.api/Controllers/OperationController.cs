@@ -231,6 +231,8 @@ namespace ias.Rebens.api.Controllers
                 var ret = repo.GetPublishData(id, out error);
                 if (ret != null)
                 {
+                    repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error);
+
                     string content = JsonConvert.SerializeObject(ret);
                     HttpWebRequest request = WebRequest.Create("http://builder.rebens.com.br/api/operations") as HttpWebRequest;
 
@@ -246,9 +248,7 @@ namespace ias.Rebens.api.Controllers
                     try
                     {
                         HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                        if (response.StatusCode == HttpStatusCode.OK)
-                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error);
-                        else
+                        if (response.StatusCode != HttpStatusCode.OK)
                             repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
 
                         var mail = new Integration.SendinBlueHelper();
