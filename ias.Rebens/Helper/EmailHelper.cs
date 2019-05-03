@@ -28,7 +28,7 @@ namespace ias.Rebens.Helper
             if (staticText != null)
             {
                 var sendingBlue = new Integration.SendinBlueHelper();
-                string link = operation.Domain + "#/?c=" + customer.Code;
+                string link = (string.IsNullOrEmpty(operation.Domain) ? (operation.TemporarySubdomain + ".sistemarebens.com.br") : operation.Domain) + "/#/?c=" + customer.Code;
                 var body = staticText.Html.Replace("##LINK##", link);
                 var result = sendingBlue.Send(customer.Email, "", "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
                 if (result.Status)

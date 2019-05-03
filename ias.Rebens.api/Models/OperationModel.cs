@@ -41,7 +41,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Domínio da opreação
         /// </summary>
-        [Required]
         [MaxLength(200)]
         public string Domain { get; set; }
         /// <summary>
@@ -85,6 +84,23 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public bool CanPublish { get; set; }
         /// <summary>
+        /// Status de publicação temporária
+        /// </summary>
+        public string TemporaryPublishStatus { get; set; }
+        /// <summary>
+        /// Pode publicar na url temporária
+        /// </summary>
+        public bool CanPublishTemporary { get; set; }
+        /// <summary>
+        /// Subdomínio temporário
+        /// </summary>
+        [MaxLength(20)]
+        public string TemporarySubdomain { get; set; }
+        /// <summary>
+        /// Se o subdomínio já foi criado
+        /// </summary>
+        public bool SubdomainCreated { get; set; }
+        /// <summary>
         /// Construtor
         /// </summary>
         public OperationModel() { }
@@ -105,7 +121,11 @@ namespace ias.Rebens.api.Models
             this.Active = operation.Active;
             this.Code = operation.Code.ToString();
             this.PublishStatus = Enums.EnumHelper.GetEnumDescription((Enums.PublishStatus)operation.PublishStatus);
-            this.CanPublish = operation.PublishStatus == (int)Enums.PublishStatus.valid;
+            this.CanPublish = (operation.PublishStatus == (int)Enums.PublishStatus.publish);
+            this.TemporaryPublishStatus = Enums.EnumHelper.GetEnumDescription((Enums.PublishStatus)operation.TemporaryPublishStatus) + " Temporário";
+            this.CanPublishTemporary = (operation.TemporaryPublishStatus == (int)Enums.PublishStatus.publish);
+            this.SubdomainCreated = operation.SubdomainCreated;
+            this.TemporarySubdomain = operation.TemporarySubdomain;
 
             if(operation.OperationContacts != null && operation.OperationContacts.Count >0)
             {
@@ -128,10 +148,11 @@ namespace ias.Rebens.api.Models
                 CompanyName = this.CompanyName,
                 CompanyDoc = this.CompanyDoc,
                 Image = this.Logo,
-                Domain = this.Domain,
+                Domain = string.IsNullOrEmpty(this.Domain) ? string.Empty : this.Domain,
                 IdOperationType = this.IdOperationType,
                 CashbackPercentage = this.CachbackPercentage,
-                Active = this.Active
+                Active = this.Active,
+                TemporarySubdomain = this.TemporarySubdomain
             };
         }
     }

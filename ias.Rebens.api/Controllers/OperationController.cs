@@ -67,7 +67,6 @@ namespace ias.Rebens.api.Controllers
             this.logError = logError;
         }
 
-
         #region Operation
         /// <summary>
         /// Lista todas as operações com paginação
@@ -155,8 +154,8 @@ namespace ias.Rebens.api.Controllers
             var op = operation.GetEntity();
             if (repo.Update(op, out string error))
             {
-                repo.ValidateOperation(op.Id, out bool isValid, out error);
-                return Ok(new JsonModel() { Status = "ok", Message = "Operação atualizada com sucesso!", Data = isValid });
+                repo.ValidateOperation(op.Id, out error);
+                return Ok(new JsonModel() { Status = "ok", Message = "Operação atualizada com sucesso!" });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -218,20 +217,31 @@ namespace ias.Rebens.api.Controllers
         /// Coloca uma operação na fila de publicação
         /// </summary>
         /// <param name="id">id da operação</param>
+        /// <param name="isTemporary">Boolean informando se é para publicar o temporário ou o site definitivo. (default = false)</param>
         /// <returns></returns>
         /// <response code="200">Opreação em fila</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost("{id}/publish"), Authorize("Bearer", Roles = "master")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Publish(int id)
+        public IActionResult Publish(int id, [FromQuery]bool isTemporary = false)
         {
-            if (repo.ValidateOperation(id, out bool isValid, out string error))
+            if (repo.ValidateOperation(id, out string error, isTemporary))
             {
-                var ret = repo.GetPublishData(id, out error);
+                if(isTemporary)
+                {
+                    var operation = repo.Read(id, out error);
+                    if(!operation.SubdomainCreated)
+                    {
+                        var awsHelper = new Integration.AWSHelper();
+                        awsHelper.AddDomainToRoute53(operation.TemporarySubdomain, id, this.repo);
+                    }
+                }
+
+                var ret = repo.GetPublishData(id, isTemporary, out error);
                 if (ret != null)
                 {
-                    repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error);
+                    repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error, isTemporary);
 
                     string content = JsonConvert.SerializeObject(ret);
                     HttpWebRequest request = WebRequest.Create("http://builder.rebens.com.br/api/operations") as HttpWebRequest;
@@ -249,19 +259,13 @@ namespace ias.Rebens.api.Controllers
                     {
                         HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                         if (response.StatusCode != HttpStatusCode.OK)
-                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
-
-                        var mail = new Integration.SendinBlueHelper();
-                        mail.Send(toEmail: "suporte@iasdigitalgroup.com", toName: "Suporte",
-                            fromEmail: "contato@rebens.com.br", fromName: "Rebens",
-                            subject: "[Rebens] Builder START",
-                            body: "Start at: " + DateTime.Now.ToString("HH:mm:ss") + "<br /> OperationId:" + id + "<br />" + content);
+                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error, isTemporary);
 
                         return StatusCode(200, new JsonModel() { Status = "ok" });
                     }
                     catch
                     {
-                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error, isTemporary);
                     }
                 }
             }
@@ -281,39 +285,20 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult BuilderDone(string code)
         {
-            this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Start - {code}", Created = DateTime.UtcNow });
             Guid operationGuid = Guid.Empty;
-            _logger.LogInformation("Iniciando atualizacao de status");
             if (Guid.TryParse(code, out operationGuid))
             {
-                this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Parsed - {code}", Created = DateTime.UtcNow });
                 if (operationGuid != Guid.Empty)
                 {
-                    this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Not Empty - {code}", Created = DateTime.UtcNow });
-                    _logger.LogInformation($"salvando guid:{operationGuid.ToString()}");
                     if (repo.SavePublishDone(operationGuid, out string error))
                     {
-                        this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Saved - {code}", Created = DateTime.UtcNow });
-                        _logger.LogInformation("saved");
-
-                        var operation = repo.Read(operationGuid, out error);
-                        this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"read - {operation.Id} status: {((Enums.PublishStatus)operation.PublishStatus.Value).ToString()}", Created = DateTime.UtcNow });
-                        if(repo.SavePublishStatus(operation.Id, (int)Enums.PublishStatus.done, null, out error))
-                        {
-                            this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"SAVED 2 - {operation.Id} status: {((Enums.PublishStatus)operation.PublishStatus.Value).ToString()}", Created = DateTime.UtcNow });
-                        }
-
                         return Ok(new JsonModel() { Status = "ok" });
                     }
-                    this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Error Saving - {code}", Complement = error, Created = DateTime.UtcNow });
-                    _logger.LogInformation("error saving");
 
                     return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 }
-                this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Guid empty - {code}", Created = DateTime.UtcNow });
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "GUID empty" });
             }
-            this.logError.Create(new LogError() { Reference = "Operation.BuilderDone", Message = $"Guid parse error - {code}", Created = DateTime.UtcNow });
             return StatusCode(400, new JsonModel() { Status = "error", Message = "GUID parse error" });
         }
         #endregion Operation
@@ -361,8 +346,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SaveConfiguration(int id, [FromBody]object data)
         {
-            var resultModel = new JsonModel();
-
             var config = new StaticText()
             {
                 Title = "Configuração de Operação - " + id,
@@ -380,9 +363,9 @@ namespace ias.Rebens.api.Controllers
 
             if (staticTextRepo.Update(config, out string error))
             {
-                repo.ValidateOperation(id, out bool isValid, out error);
+                repo.ValidateOperation(id, out error);
 
-                return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!", Data = isValid });
+                return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!" });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -722,7 +705,6 @@ namespace ias.Rebens.api.Controllers
         }
         #endregion Banner
 
-
         #region Operation Customers
         /// <summary>
         /// Lista os clientes pré cadastrados de uma operação 
@@ -925,7 +907,5 @@ namespace ias.Rebens.api.Controllers
             }
         }
         #endregion Operation Customers
-
-
     }
 }

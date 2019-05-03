@@ -35,6 +35,10 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
         public bool Deleted { get; set; }
+        public string TemporarySubdomain { get; set; }
+        public bool SubdomainCreated { get; set; }
+
+        public int TemporaryPublishStatus { get; set; }
 
         public virtual LogError LogError { get; set; }
         public virtual ICollection<Benefit> Benefits { get; set; }

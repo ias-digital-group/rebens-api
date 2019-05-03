@@ -32,12 +32,14 @@ namespace ias.Rebens
 
         List<BannerOperationItem> ListByBanner(int idBanner, out string error);
 
-        bool SavePublishStatus(int id, int idStatus, int? idError, out string error);
+        bool SavePublishStatus(int id, int idStatus, int? idError, out string error, bool isTemporary = false);
 
-        bool ValidateOperation(int id, out bool isValid, out string error);
+        bool ValidateOperation(int id, out string error, bool isTemporary = false);
 
-        object GetPublishData(int id, out string error);
+        object GetPublishData(int id, bool isTemporary, out string error);
 
         bool SavePublishDone(Guid code, out string error);
+
+        bool SetSubdomainCreated(int id, out string error);
     }
 }

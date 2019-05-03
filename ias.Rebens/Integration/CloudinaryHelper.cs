@@ -24,7 +24,7 @@ namespace ias.Rebens.Integration
             var encoding = new ASCIIEncoding();
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
             //string folder = "rebens";
-            var temp = "folder=rebens&timestamp=" + timestamp + API_SECRET;
+            var temp = $"folder={folder}&timestamp={timestamp}{API_SECRET}";
             var hash = (new SHA1Managed()).ComputeHash(Encoding.UTF8.GetBytes(temp));
             string signature = string.Join("", hash.Select(b => b.ToString("x2")).ToArray());
 

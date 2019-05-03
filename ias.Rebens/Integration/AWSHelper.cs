@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.Route53;
@@ -17,9 +18,11 @@ namespace ias.Rebens.Integration
         private const string API_KEY = "AKIA5FPFSHGM4RPFLYMW";
         private const string API_TOKEN = "nalA46tc1YGK5ztTvXiuOCg3Xl+02mbgr7pfSt2s";
 
-        public async void AddDomainToRoute53(string subdomain)
+        public async void AddDomainToRoute53(string subdomain, int idOperation, IOperationRepository operationRepo)
         {
             string domainName = "sistemarebens.com.br.";
+            subdomain += "." + domainName;
+            subdomain = subdomain.TrimEnd('.');
             var route53Client = new AmazonRoute53Client(API_KEY, API_TOKEN, RegionEndpoint.USEast1);
 
             var zoneRequest = new CreateHostedZoneRequest() { Name = domainName, CallerReference = "my_change_request" };
@@ -32,27 +35,38 @@ namespace ias.Rebens.Integration
                 ResourceRecords = new List<ResourceRecord> { new ResourceRecord { Value = "s3-website-sa-east-1.amazonaws.com" } }
             };
 
-            var change = new Change()
-            {
-                Action = ChangeAction.CREATE,
-                ResourceRecordSet = recordSet
-            };
+            var change = new Change() { Action = ChangeAction.CREATE, ResourceRecordSet = recordSet };
 
             var zones = await route53Client.ListHostedZonesAsync();
             var zone = zones.HostedZones.SingleOrDefault(z => z.Name == domainName);
             if (zone != null)
             {
-                var batch = new ChangeBatch()
-                {
-                    Changes = new List<Change>()
-                };
+                var batch = new ChangeBatch() { Changes = new List<Change>() };
                 batch.Changes.Add(change);
 
-                var recordsetResponse = await route53Client.ChangeResourceRecordSetsAsync(new ChangeResourceRecordSetsRequest()
+                try
                 {
-                    ChangeBatch = batch,
-                    HostedZoneId = zone.Id
-                });
+                    var recordsetResponse = await route53Client.ChangeResourceRecordSetsAsync(new ChangeResourceRecordSetsRequest()
+                    {
+                        ChangeBatch = batch,
+                        HostedZoneId = zone.Id
+                    });
+                    var changeRequest = new GetChangeRequest() { Id = recordsetResponse.ChangeInfo.Id };
+
+                    var changeStatus = await route53Client.GetChangeAsync(changeRequest);
+                    while (ChangeStatus.PENDING == changeStatus.ChangeInfo.Status)
+                    {
+                        Thread.Sleep(15000);
+                        changeStatus = await route53Client.GetChangeAsync(changeRequest);
+                    }
+
+                    operationRepo.SetSubdomainCreated(idOperation, out string error);
+                }
+                catch (InvalidChangeBatchException ex)
+                {
+                    if (ex.Message.Contains("already exists"))
+                        operationRepo.SetSubdomainCreated(idOperation, out string error);
+                }
             }
         }
 

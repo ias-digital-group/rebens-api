@@ -202,7 +202,6 @@ namespace ias.Rebens
                             switch (zanoxSale.ReviewState)
                             {
                                 case "confirmed":
-                                case "approved":
                                     use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
                                     break;
                                 case "rejected":
@@ -231,7 +230,6 @@ namespace ias.Rebens
                             switch (zanoxSale.ReviewState)
                             {
                                 case "confirmed":
-                                case "approved":
                                     use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
                                     break;
                                 case "rejected":

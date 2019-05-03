@@ -212,8 +212,8 @@ namespace ias.Rebens.Enums
     {
         [Description("Incompleto")]
         notvalid = 0,
-        [Description("Válido")]
-        valid = 1,
+        [Description("Publicar")]
+        publish = 1,
         [Description("Processando")]
         processing = 2,
         [Description("Publicado")]

@@ -76,6 +76,7 @@ namespace ias.Rebens
                     operation.Modified = operation.Created = DateTime.UtcNow;
                     operation.PublishStatus = (int)Enums.PublishStatus.notvalid;
                     operation.Deleted = false;
+                    operation.SubdomainCreated = false;
                     db.Operation.Add(operation);
                     db.SaveChanges();
 
@@ -246,6 +247,7 @@ namespace ias.Rebens
         public Operation Read(int id, out string error)
         {
             Operation ret;
+            ValidateOperation(id, out error);
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -329,6 +331,7 @@ namespace ias.Rebens
         public bool Update(Operation operation, out string error)
         {
             bool ret = true;
+            bool enablePublish = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -336,16 +339,41 @@ namespace ias.Rebens
                     var update = db.Operation.SingleOrDefault(c => c.Id == operation.Id);
                     if (update != null)
                     {
+
                         bool changePolicy = operation.Active != update.Active;
                         update.Active = operation.Active;
                         update.CashbackPercentage = operation.CashbackPercentage;
                         update.CompanyDoc = operation.CompanyDoc;
                         update.CompanyName = operation.CompanyName;
-                        update.Domain = operation.Domain;
                         update.IdOperationType = operation.IdOperationType;
-                        update.Image = operation.Image;
                         update.Modified = DateTime.UtcNow;
-                        update.Title = operation.Title;
+                        if (update.Image != operation.Image)
+                        {
+                            update.Image = operation.Image;
+                            enablePublish = true;
+                        }
+                        if (update.Title != operation.Title)
+                        {
+                            update.Title = operation.Title;
+                            enablePublish = true;
+                        }
+                        if (update.Domain != operation.Domain)
+                        {
+                            update.Domain = operation.Domain;
+                            enablePublish = true;
+                        }
+                        if (update.TemporarySubdomain != operation.TemporarySubdomain)
+                        {
+                            enablePublish = true;
+                            update.TemporarySubdomain = operation.TemporarySubdomain;
+                            update.SubdomainCreated = false;
+                        }
+                        
+                        if(enablePublish)
+                        {
+                            update.TemporaryPublishStatus = (int)Enums.PublishStatus.notvalid;
+                            update.PublishStatus = (int)Enums.PublishStatus.notvalid;
+                        }
 
                         db.SaveChanges();
                         error = null;
@@ -377,6 +405,10 @@ namespace ias.Rebens
                 error = "Ocorreu um erro ao tentar atualizar a operação. (erro:" + idLog + ")";
                 ret = false;
             }
+
+            if (enablePublish)
+                ValidateOperation(operation.Id, out error);
+
             return ret;
         }
 
@@ -498,7 +530,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool SavePublishStatus(int id, int idStatus, int? idError, out string error)
+        public bool SavePublishStatus(int id, int idStatus, int? idError, out string error, bool isTemporary = false)
         {
             bool ret = false;
             try
@@ -506,7 +538,10 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.Operation.SingleOrDefault(o => o.Id == id);
-                    update.PublishStatus = idStatus;
+                    if (isTemporary)
+                        update.TemporaryPublishStatus = idStatus;
+                    else
+                        update.PublishStatus = idStatus;
                     update.IdLogError = idError;
                     update.Modified = DateTime.UtcNow;
 
@@ -524,20 +559,18 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool ValidateOperation(int id, out bool isValid, out string error)
+        public bool ValidateOperation(int id, out string error, bool isTemporary = false)
         {
             bool ret = false;
-            isValid = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var operation = db.Operation.SingleOrDefault(o => o.Id == id);
-                    if(operation.PublishStatus == (int)Enums.PublishStatus.notvalid 
-                        || operation.PublishStatus == (int)Enums.PublishStatus.valid
-                        || operation.PublishStatus == (int)Enums.PublishStatus.error)
+                    if (operation.PublishStatus != (int)Enums.PublishStatus.processing && operation.PublishStatus != (int)Enums.PublishStatus.done &&
+                        operation.TemporaryPublishStatus != (int)Enums.PublishStatus.processing && operation.TemporaryPublishStatus != (int)Enums.PublishStatus.done)
                     {
-                        if(operation.Title != "" && operation.Domain != "" && !string.IsNullOrEmpty(operation.Image ))
+                        if(operation.Title != "" && !string.IsNullOrEmpty(operation.Image))
                         {
                             var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
                             if(configuration != null)
@@ -573,22 +606,44 @@ namespace ias.Rebens
                                 }
                                 if (totalOK == infoTotal)
                                 {
-                                    if (!Uri.IsWellFormedUriString(operation.Domain, UriKind.Relative))
+                                    if(operation.Domain != "")
                                     {
-                                        operation.Domain = operation.Domain.Replace("http://", "").Replace("https://", "");
-                                        if (operation.Domain.IndexOf("/") > 0)
-                                            operation.Domain = operation.Domain.Substring(0, operation.Domain.IndexOf("/"));
+                                        if (!Uri.IsWellFormedUriString(operation.Domain, UriKind.Relative))
+                                        {
+                                            operation.Domain = operation.Domain.Replace("http://", "").Replace("https://", "");
+                                            if (operation.Domain.IndexOf("/") > 0)
+                                                operation.Domain = operation.Domain.Substring(0, operation.Domain.IndexOf("/"));
+                                        }
+                                        operation.PublishStatus = (int)Enums.PublishStatus.publish;
+                                        operation.Modified = DateTime.UtcNow;
+                                        ret = true;
                                     }
-                                    operation.PublishStatus = (int)Enums.PublishStatus.valid;
-                                    operation.Modified = DateTime.UtcNow;
+                                    else
+                                    {
+                                        operation.PublishStatus = (int)Enums.PublishStatus.notvalid;
+                                        operation.Modified = DateTime.UtcNow;
+                                    }
+                                    if(operation.TemporarySubdomain != "")
+                                    {
+                                        char[] arr = operation.TemporarySubdomain.ToCharArray();
+                                        arr = Array.FindAll<char>(arr, (c => (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || c == '-')));
+                                        operation.TemporarySubdomain = new string(arr);
+                                        operation.TemporaryPublishStatus = (int)Enums.PublishStatus.publish;
+                                        operation.Modified = DateTime.UtcNow;
+                                        if(isTemporary)
+                                            ret = true ;
+                                    }
+                                    else
+                                    {
+                                        operation.TemporaryPublishStatus = (int)Enums.PublishStatus.notvalid;
+                                        operation.Modified = DateTime.UtcNow;
+                                    }
                                     db.SaveChanges();
-                                    isValid = true;
                                 }
                             }
                         }
                     }
 
-                    ret = true;
                     error = null;
                 }
             }
@@ -601,7 +656,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public object GetPublishData(int id, out string error)
+        public object GetPublishData(int id, bool isTemporary, out string error)
         {
             object ret = null;
             try
@@ -611,10 +666,10 @@ namespace ias.Rebens
                     var operation = db.Operation.SingleOrDefault(o => o.Id == id);
                     if(operation != null)
                     {
-                        if(operation.PublishStatus == (int)Enums.PublishStatus.valid)
+                        if((isTemporary && operation.TemporaryPublishStatus == (int)Enums.PublishStatus.publish) || (!isTemporary && operation.PublishStatus == (int)Enums.PublishStatus.publish))
                         {
-                            string color = "", favicon = "", contactEmail = "";
-                            bool couponEnable = false;
+                            string color = "", favicon = "", contactEmail = "", gaCode = "";
+                            bool couponEnable = false, customerReferalEnable = false;
                             var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
                             if (configuration != null)
                             {
@@ -636,6 +691,12 @@ namespace ias.Rebens
                                         case "contact-mail":
                                             contactEmail = item["data"].ToString();
                                             break;
+                                        case "customer-referal":
+                                            customerReferalEnable = bool.Parse(item["data"].ToString());
+                                            break;
+                                        case "g-analytics":
+                                            gaCode = item["data"].ToString();
+                                            break;
                                     }
                                 }
                                 ret = new
@@ -646,7 +707,9 @@ namespace ias.Rebens
                                     Logo = operation.Image,
                                     Favicon = favicon,
                                     CouponEnabled = couponEnable,
-                                    operation.Domain
+                                    Domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain),
+                                    CustomerReferalEnable = customerReferalEnable,
+                                    GoogleAnalytics = gaCode
                                 };
 
                                 contactEmail = string.IsNullOrEmpty(contactEmail) ? "contato@" + operation.Domain : contactEmail;
@@ -756,20 +819,18 @@ namespace ias.Rebens
                     var op = db.Operation.SingleOrDefault(o => o.Code == code);
                     if (op != null)
                     {
-                        logError.Create("OperationRepository.SavePublishDone", "Operation Founded", $"id: {op.Id}, operation: {op.CompanyName}", "");
-                        op.PublishStatus = (int)Enums.PublishStatus.done;
+                        if(op.PublishStatus == (int)Enums.PublishStatus.processing)
+                            op.PublishStatus = (int)Enums.PublishStatus.done;
+                        else if(op.TemporaryPublishStatus == (int)Enums.PublishStatus.processing)
+                            op.TemporaryPublishStatus = (int)Enums.PublishStatus.done;
                         op.Modified = DateTime.UtcNow;
                         db.SaveChanges();
-                        logError.Create("OperationRepository.SavePublishDone", "Operation SAVED", $"id: {op.Id}, operation: {op.CompanyName}, status:{((Enums.PublishStatus)op.PublishStatus.Value).ToString()}", "");
 
                         ret = true;
                         error = null;
                     }
                     else
-                    {
-                        logError.Create("OperationRepository.SavePublishDone", "Operation not Founded", "", "");
                         error = "Operação não foi encontrada";
-                    }
                 }
             }
             catch(Exception ex)
@@ -801,6 +862,36 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OperationRepository.Delete", ex.Message, $"id: {id}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar apagar a status. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public bool SetSubdomainCreated(int id, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var op = db.Operation.SingleOrDefault(o => o.Id == id);
+                    if (op != null)
+                    {
+                        op.SubdomainCreated = true;
+                        op.Modified = DateTime.UtcNow;
+                        db.SaveChanges();
+
+                        ret = true;
+                        error = null;
+                    }
+                    else
+                        error = "Operação não foi encontrada";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.SetSubdomainCreated", ex.Message, $"id: {id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar macar o subdomínio como criado. (erro:" + idLog + ")";
             }
             return ret;
         }

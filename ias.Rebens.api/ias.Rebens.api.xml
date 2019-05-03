@@ -1026,11 +1026,12 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.Publish(System.Int32)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.Publish(System.Int32,System.Boolean)">
             <summary>
             Coloca uma operação na fila de publicação
             </summary>
             <param name="id">id da operação</param>
+            <param name="isTemporary">Boolean informando se é para publicar o temporário ou o site definitivo. (default = false)</param>
             <returns></returns>
             <response code="200">Opreação em fila</response>
             <response code="400">Se ocorrer algum erro</response>
@@ -3640,6 +3641,26 @@
         <member name="P:ias.Rebens.api.Models.OperationModel.CanPublish">
             <summary>
             Pode publicar
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.TemporaryPublishStatus">
+            <summary>
+            Status de publicação temporária
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.CanPublishTemporary">
+            <summary>
+            Pode publicar na url temporária
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.TemporarySubdomain">
+            <summary>
+            Subdomínio temporário
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.SubdomainCreated">
+            <summary>
+            Se o subdomínio já foi criado
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.OperationModel.#ctor">

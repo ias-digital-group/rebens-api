@@ -701,6 +701,9 @@ namespace ias.Rebens
                     .IsRequired()
                     .HasMaxLength(200);
 
+                entity.Property(e => e.TemporarySubdomain)
+                    .HasMaxLength(200);
+
                 entity.Property(e => e.Image).HasMaxLength(500);
 
                 entity.Property(e => e.Modified).HasColumnType("datetime");
