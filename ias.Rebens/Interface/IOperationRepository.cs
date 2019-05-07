@@ -41,5 +41,7 @@ namespace ias.Rebens
         bool SavePublishDone(Guid code, out string error);
 
         bool SetSubdomainCreated(int id, out string error);
+
+        string GetConfigurationOption(int id, string field, out string error);
     }
 }

@@ -288,6 +288,20 @@ namespace ias.Rebens
 
                         db.SaveChanges();
                         error = null;
+
+                        if(update.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration)
+                        {
+                            var operation = db.Operation.Single(o => o.Id == update.IdOperation);
+                            if(operation != null)
+                            {
+                                if (operation.PublishStatus == (int)Enums.PublishStatus.done)
+                                    operation.PublishStatus = (int)Enums.PublishStatus.publish;
+                                if (operation.TemporaryPublishStatus == (int)Enums.PublishStatus.done)
+                                    operation.TemporaryPublishStatus = (int)Enums.PublishStatus.publish;
+                                operation.Modified = DateTime.UtcNow;
+                                db.SaveChanges();
+                            }
+                        }
                     }
                     else
                     {

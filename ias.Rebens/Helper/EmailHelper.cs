@@ -45,22 +45,23 @@ namespace ias.Rebens.Helper
             {
                 var sendingBlue = new Integration.SendinBlueHelper();
                 string msg = "";
+                string domain = (string.IsNullOrEmpty(operation.Domain) ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                 if (operation.Id == 1)
                 {
                     msg = $"<p>Olá {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
-                    msg += $"<p>Clique no link, para se cadastrar: <a href='{operation.Domain}'>{operation.Domain}</a></p>";
+                    msg += $"<p>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
                 }
                 else if(operation.Id == 2)
                 {
                     msg = $"<p>Olá {referal.Name}</p><br /><br />";
                     msg += "<p><b>Você foi convidado</b> por um dos nossos participantes <b>para ingressar</b> em um <b>Clube de Vantagens Exclusivo</b>.</p><br />";
-                    msg += $"<p><a href='{operation.Domain}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#00b0d3;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>QUERO ME CADASTRAR</a></p>";
+                    msg += $"<p><a href='{domain}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#00b0d3;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>QUERO ME CADASTRAR</a></p>";
                 }
                 else
                 {
                     msg = $"<p>Olá {referal.Name}</p><br /><br />";
                     msg += "<p><b>Você foi convidado</b> por um dos nossos participantes <b>para ingressar</b> em um <b>Clube de Vantagens Exclusivo</b>.</p><br />";
-                    msg += $"<p>Clique no link, para se cadastrar: <a href='{operation.Domain}'>{operation.Domain}</a></p>";
+                    msg += $"<p>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
                 }
                 string body = staticText.Html.Replace("###BODY###", msg);
                 var result = sendingBlue.Send(referal.Email, referal.Name, "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);

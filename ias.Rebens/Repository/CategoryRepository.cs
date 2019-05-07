@@ -49,6 +49,11 @@ namespace ias.Rebens
                         ret = false;
                         error = "Essa Categoria não pode ser excluida pois possui Categorias associadas a ela.";
                     }
+                    else if (db.BenefitCategory.Any(c => c.IdCategory == id))
+                    {
+                        ret = false;
+                        error = "Essa Categoria não pode ser excluida pois possui Benefícios associados a ela.";
+                    }
                     else
                     {
                         var cat = db.Category.SingleOrDefault(c => c.Id == id);

@@ -570,10 +570,10 @@ namespace ias.Rebens
                     if (operation.PublishStatus != (int)Enums.PublishStatus.processing && operation.PublishStatus != (int)Enums.PublishStatus.done &&
                         operation.TemporaryPublishStatus != (int)Enums.PublishStatus.processing && operation.TemporaryPublishStatus != (int)Enums.PublishStatus.done)
                     {
-                        if(operation.Title != "" && !string.IsNullOrEmpty(operation.Image))
+                        if (operation.Title != "" && !string.IsNullOrEmpty(operation.Image))
                         {
                             var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
-                            if(configuration != null)
+                            if (configuration != null)
                             {
                                 var jObj = JObject.Parse(configuration.Html);
 
@@ -606,7 +606,7 @@ namespace ias.Rebens
                                 }
                                 if (totalOK == infoTotal)
                                 {
-                                    if(operation.Domain != "")
+                                    if (operation.Domain != "")
                                     {
                                         if (!Uri.IsWellFormedUriString(operation.Domain, UriKind.Relative))
                                         {
@@ -623,15 +623,15 @@ namespace ias.Rebens
                                         operation.PublishStatus = (int)Enums.PublishStatus.notvalid;
                                         operation.Modified = DateTime.UtcNow;
                                     }
-                                    if(operation.TemporarySubdomain != "")
+                                    if (operation.TemporarySubdomain != "")
                                     {
                                         char[] arr = operation.TemporarySubdomain.ToCharArray();
                                         arr = Array.FindAll<char>(arr, (c => (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || c == '-')));
                                         operation.TemporarySubdomain = new string(arr);
                                         operation.TemporaryPublishStatus = (int)Enums.PublishStatus.publish;
                                         operation.Modified = DateTime.UtcNow;
-                                        if(isTemporary)
-                                            ret = true ;
+                                        if (isTemporary)
+                                            ret = true;
                                     }
                                     else
                                     {
@@ -639,12 +639,19 @@ namespace ias.Rebens
                                         operation.Modified = DateTime.UtcNow;
                                     }
                                     db.SaveChanges();
+                                    error = null;
                                 }
+                                else
+                                    error = "A configuração da operação está incompleta.";
                             }
+                            else
+                                error = "Não foi encontrado o arquivo de configuração da operação.";
                         }
+                        else
+                            error = "Os campos título e o logo do clube são obrigatórios para publicação.";
                     }
-
-                    error = null;
+                    else
+                        error = $"A Operação já está publicada {(isTemporary ? "" : "na url temporária")}.";
                 }
             }
             catch (Exception ex)
@@ -712,7 +719,7 @@ namespace ias.Rebens
                                     GoogleAnalytics = gaCode
                                 };
 
-                                contactEmail = string.IsNullOrEmpty(contactEmail) ? "contato@" + operation.Domain : contactEmail;
+                                contactEmail = string.IsNullOrEmpty(contactEmail) ? ("contato@" + (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain)) : contactEmail;
                                 var staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailCustomerValidationDefault);
                                 if (staticText != null)
                                 {
@@ -892,6 +899,41 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OperationRepository.SetSubdomainCreated", ex.Message, $"id: {id}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar macar o subdomínio como criado. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public string GetConfigurationOption(int id, string field, out string error)
+        {
+            string ret = "";
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                    if (configuration != null)
+                    {
+                        var jObj = JObject.Parse(configuration.Html);
+                        var list = jObj["fields"].Children();
+                        foreach (var item in list)
+                        {
+                            if(item["name"].ToString() == field)
+                            {
+                                ret = item["data"].ToString();
+                                break;
+                            }
+                        }
+                        error = null;
+                    }
+                    else
+                        error = "Configuração da operação não encontrada!";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.GetConfigurationOption", ex.Message, $"id: {id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar recuperar a opção da configuração. (erro:" + idLog + ")";
             }
             return ret;
         }

@@ -218,16 +218,19 @@ namespace ias.Rebens.api.Controllers
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var operation = operationRepo.Read(operationGuid, out string error);
-
+            
             if (operation != null)
             {
+                var mailTo = operationRepo.GetConfigurationOption(operation.Id, "form-email", out error);
+                if (string.IsNullOrEmpty(mailTo)) mailTo = "cluberebens@gmail.com";
+
                 var f = formContact.GetEntity();
                 f.IdOperation = operation.Id;
                 if (formContactRepo.Create(f, out error))
                 {
                     var sendingBlue = new Integration.SendinBlueHelper();
                     var body = $"<p>Nome: {formContact.Name}<br />Email: {formContact.Email}<br />Telefone: {formContact.Phone}<br />Mensagem: {formContact.Message}</p>";
-                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"Novo Contato [{operation.Title}]", body);
+                    sendingBlue.Send(mailTo, operation.Title, "contato@rebens.com.br", "Contato", $"Novo Contato [{operation.Title}]", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Contato enviado com sucesso!", Id = f.Id });
                 }
