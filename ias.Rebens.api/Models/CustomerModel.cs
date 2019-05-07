@@ -117,7 +117,7 @@ namespace ias.Rebens.api.Models
             this.IdAddress = customer.IdAddress;
             this.Cpf = customer.Cpf;
             this.RG = customer.RG;
-            this.Picture = customer.Picture;
+            this.Picture = string.IsNullOrEmpty(customer.Picture) ? "https://res.cloudinary.com/rebens/image/upload/v1557186803/Portal/default-avatar.png" : customer.Picture;
             this.Phone = customer.Phone;
             this.Cellphone = customer.Cellphone;
             this.CustomerType = customer.CustomerType;

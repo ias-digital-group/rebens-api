@@ -289,7 +289,7 @@ namespace ias.Rebens
                         db.SaveChanges();
                         error = null;
 
-                        if(update.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration)
+                        if (update.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration)
                         {
                             var operation = db.Operation.Single(o => o.Id == update.IdOperation);
                             if(operation != null)
