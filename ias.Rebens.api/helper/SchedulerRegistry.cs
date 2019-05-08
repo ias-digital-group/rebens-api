@@ -28,7 +28,7 @@ namespace ias.Rebens.api.helper
         {
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create("http://admin.rebens.com.br/api/portal/homeLocked/");
+                var request = (HttpWebRequest)WebRequest.Create($"{Constant.URL}api/portal/homeLocked/");
                 request.Method = "Get";
                 request.ContentType = "application/xml";
                 request.Headers.Add("x-operation-code", "de6e6ce9-1cf6-46b0-b5ea-2bdc09f359d1");

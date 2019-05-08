@@ -210,11 +210,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ContactForm([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody] FormContactModel formContact)
         {
-            var model = new JsonModel();
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if(!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var operation = operationRepo.Read(operationGuid, out string error);
@@ -222,6 +218,7 @@ namespace ias.Rebens.api.Controllers
             if (operation != null)
             {
                 var mailTo = operationRepo.GetConfigurationOption(operation.Id, "form-email", out error);
+
                 if (string.IsNullOrEmpty(mailTo)) mailTo = "cluberebens@gmail.com";
 
                 var f = formContact.GetEntity();

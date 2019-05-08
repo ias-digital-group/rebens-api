@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
+using System.Web;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -238,18 +239,12 @@ namespace ias.Rebens.api.Controllers
             var user = repo.ReadByEmail(email, out string error);
             if (user != null)
             {
-                string password = Helper.SecurityHelper.CreatePassword();
-                user.SetPassword(password);
-                if (repo.ChangePassword(user.Id, user.EncryptedPassword, user.PasswordSalt, out string errorSave))
-                {
-                    var sendingBlue = new Integration.SendinBlueHelper();
-                    string body = "<p><b>Nova Senha:</b> " + password + "</p>";
-                    var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", "Contato", "[Rebens] - Lembrete de Senha", body);
-                    if (result.Status)
-                        return Ok(new JsonModel() { Status = "ok", Message = result.Message });
-                    return StatusCode(400, new JsonModel() { Status = "ok", Message = result.Message });
-                }
-                return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
+                var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(user.Email));
+                string body = $"<p>Olá {user.Name},</p> <br /><p>Clique no link abaixo para cadastrar uma nova senha.</p>";
+                body += $"<br /><br /><p><a href='{Constant.URL}#/validate?c={code}'>{Constant.URL}#/validate?c={code}</a></p>";
+                if(Helper.EmailHelper.SendAdminEmail(user.Email, user.Name, "Rebens - Redefinição de senha de cadastro", body, out error))
+                    return Ok(new JsonModel() { Status = "ok" });
+                return StatusCode(400, new JsonModel() { Status = "ok", Message = error });
             }
             return StatusCode(400, new JsonModel() { Status = "ok", Message = "Ocorreu um erro ao tentar reenviar a senha!" });
         }

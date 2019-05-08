@@ -752,6 +752,7 @@ namespace ias.Rebens
                                     html = html.Replace("##CONFIG_TITLE##", operation.Title);
                                     html = html.Replace("##CONFIG_LOGO##", operation.Image);
                                     html = html.Replace("##CONFIG_EMAIL##", contactEmail);
+                                    html = html.Replace("##COLOR##", color);
 
                                     var email2 = new StaticText()
                                     {
@@ -776,6 +777,7 @@ namespace ias.Rebens
                                     html = html.Replace("##CONFIG_TITLE##", operation.Title);
                                     html = html.Replace("##CONFIG_LOGO##", operation.Image);
                                     html = html.Replace("##CONFIG_EMAIL##", contactEmail);
+                                    html = html.Replace("##COLOR##", color);
 
                                     var email3 = new StaticText()
                                     {
