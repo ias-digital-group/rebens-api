@@ -346,11 +346,26 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SaveConfiguration(int id, [FromBody]object data)
         {
+            var serializedData = JsonConvert.SerializeObject(data);
+            var jObj = JObject.Parse(serializedData);
+
+            if (bool.Parse(jObj["fields"][7]["data"].ToString()))
+            {
+                if(string.IsNullOrEmpty(jObj["fields"][8]["data"].ToString()))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "O campo Token Wirecard é obrigatório quando o módulo de Raspadinha está habilitado!" });
+                if (string.IsNullOrEmpty(jObj["fields"][9]["data"].ToString()))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "O campo Token JS Wirecard é obrigatório quando o módulo de Raspadinha está habilitado!" });
+            }
+
+            if (string.IsNullOrEmpty(jObj["fields"][1]["data"].ToString()))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O campo Ícone de favorito é obrigatório!" });
+
+
             var config = new StaticText()
             {
                 Title = "Configuração de Operação - " + id,
                 Url = "operation-" + id,
-                Html = JsonConvert.SerializeObject(data),
+                Html = serializedData,
                 Style = "",
                 Order = 0,
                 IdStaticTextType = (int)Enums.StaticTextType.OperationConfiguration,
@@ -364,7 +379,6 @@ namespace ias.Rebens.api.Controllers
             if (staticTextRepo.Update(config, out string error))
             {
                 repo.ValidateOperation(id, out error);
-
                 return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!" });
             }
 

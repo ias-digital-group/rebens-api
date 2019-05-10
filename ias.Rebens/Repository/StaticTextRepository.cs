@@ -318,5 +318,30 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool CouponContract(int idOperation, bool enable, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (enable)
+                    {
+                        
+                    }
+                    
+                    ret = true;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextRepository.CouponContract", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar validar o contrato. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

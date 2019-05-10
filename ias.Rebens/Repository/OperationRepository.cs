@@ -100,7 +100,7 @@ namespace ias.Rebens
                         db.SaveChanges();
                     }
 
-                    var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault);
+                    var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url != "contract");
                     var listPages = new List<StaticText>();
                     foreach(var page in pages)
                     {
@@ -579,6 +579,7 @@ namespace ias.Rebens
 
                                 int totalOK = 0;
                                 int infoTotal = 2;
+                                bool coupon = false;
                                 var list = jObj["fields"].Children();
                                 foreach (var item in list)
                                 {
@@ -592,20 +593,55 @@ namespace ias.Rebens
                                             break;
                                         case "module-coupon":
                                             if (bool.Parse(item["data"].ToString()))
+                                            {
                                                 infoTotal += 2;
+                                                coupon = true;
+                                            }
                                             break;
                                         case "wirecard-token":
-                                            if (infoTotal > 2)
+                                            if (coupon)
                                                 totalOK += item["data"].ToString() != "" ? 1 : 0;
                                             break;
                                         case "wirecard-jstoken":
-                                            if (infoTotal > 2)
+                                            if (coupon)
                                                 totalOK += item["data"].ToString() != "" ? 1 : 0;
                                             break;
                                     }
                                 }
                                 if (totalOK == infoTotal)
                                 {
+                                    var contract = db.StaticText.SingleOrDefault(c => c.IdOperation == id && c.IdStaticTextType == (int)Enums.StaticTextType.Pages && c.Url == "contract");
+                                    if(coupon)
+                                    {
+                                        if (contract == null)
+                                        {
+                                            contract = db.StaticText.Single(c => c.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && c.Url == "contract");
+                                            db.StaticText.Add(new StaticText()
+                                            {
+                                                Active = true,
+                                                Created = DateTime.UtcNow,
+                                                Html = contract.Html,
+                                                IdOperation = id,
+                                                IdStaticTextType = (int)Enums.StaticTextType.Pages,
+                                                Modified = DateTime.UtcNow,
+                                                Order = contract.Order,
+                                                Style = contract.Style,
+                                                Title = contract.Title,
+                                                Url = contract.Url
+                                            });
+                                            db.SaveChanges();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (contract != null)
+                                        {
+                                            db.StaticText.Remove(contract);
+                                            db.SaveChanges();
+                                        }
+                                    }
+
+
                                     if (operation.Domain != "")
                                     {
                                         if (!Uri.IsWellFormedUriString(operation.Domain, UriKind.Relative))
@@ -729,20 +765,33 @@ namespace ias.Rebens
                                     html = html.Replace("##CONFIG_EMAIL##", contactEmail);
                                     html = html.Replace("##COLOR##", color);
 
-                                    var email1 = new StaticText()
+                                    var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.EmailCustomerValidation);
+                                    if (update != null)
                                     {
-                                        Active = true,
-                                        Created = DateTime.UtcNow,
-                                        Html = html,
-                                        IdOperation = operation.Id,
-                                        IdStaticTextType = (int)Enums.StaticTextType.EmailCustomerValidation,
-                                        Modified = DateTime.UtcNow,
-                                        Order = staticText.Order,
-                                        Style = staticText.Style,
-                                        Title = staticText.Title,
-                                        Url = staticText.Url
-                                    };
-                                    db.StaticText.Add(email1);
+                                        update.Modified = DateTime.UtcNow;
+                                        update.Html = html;
+                                        update.Style = staticText.Style;
+                                        update.Url = staticText.Url;
+                                        update.Title = staticText.Title;
+                                        update.Order = staticText.Order;
+                                    }
+                                    else
+                                    {
+                                        var email1 = new StaticText()
+                                        {
+                                            Active = true,
+                                            Created = DateTime.UtcNow,
+                                            Html = html,
+                                            IdOperation = operation.Id,
+                                            IdStaticTextType = (int)Enums.StaticTextType.EmailCustomerValidation,
+                                            Modified = DateTime.UtcNow,
+                                            Order = staticText.Order,
+                                            Style = staticText.Style,
+                                            Title = staticText.Title,
+                                            Url = staticText.Url
+                                        };
+                                        db.StaticText.Add(email1);
+                                    }
                                 }
 
                                 staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailPasswordRecoveryDefault);
@@ -754,20 +803,33 @@ namespace ias.Rebens
                                     html = html.Replace("##CONFIG_EMAIL##", contactEmail);
                                     html = html.Replace("##COLOR##", color);
 
-                                    var email2 = new StaticText()
+                                    var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.EmailPasswordRecovery);
+                                    if (update != null)
                                     {
-                                        Active = true,
-                                        Created = DateTime.UtcNow,
-                                        Html = html,
-                                        IdOperation = operation.Id,
-                                        IdStaticTextType = (int)Enums.StaticTextType.EmailPasswordRecovery,
-                                        Modified = DateTime.UtcNow,
-                                        Order = staticText.Order,
-                                        Style = staticText.Style,
-                                        Title = staticText.Title,
-                                        Url = staticText.Url
-                                    };
-                                    db.StaticText.Add(email2);
+                                        update.Modified = DateTime.UtcNow;
+                                        update.Html = html;
+                                        update.Style = staticText.Style;
+                                        update.Url = staticText.Url;
+                                        update.Title = staticText.Title;
+                                        update.Order = staticText.Order;
+                                    }
+                                    else
+                                    {
+                                        var email2 = new StaticText()
+                                        {
+                                            Active = true,
+                                            Created = DateTime.UtcNow,
+                                            Html = html,
+                                            IdOperation = operation.Id,
+                                            IdStaticTextType = (int)Enums.StaticTextType.EmailPasswordRecovery,
+                                            Modified = DateTime.UtcNow,
+                                            Order = staticText.Order,
+                                            Style = staticText.Style,
+                                            Title = staticText.Title,
+                                            Url = staticText.Url
+                                        };
+                                        db.StaticText.Add(email2);
+                                    }
                                 }
 
                                 staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailDefault);
@@ -779,20 +841,33 @@ namespace ias.Rebens
                                     html = html.Replace("##CONFIG_EMAIL##", contactEmail);
                                     html = html.Replace("##COLOR##", color);
 
-                                    var email3 = new StaticText()
+                                    var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.Email);
+                                    if (update != null)
                                     {
-                                        Active = true,
-                                        Created = DateTime.UtcNow,
-                                        Html = html,
-                                        IdOperation = operation.Id,
-                                        IdStaticTextType = (int)Enums.StaticTextType.Email,
-                                        Modified = DateTime.UtcNow,
-                                        Order = staticText.Order,
-                                        Style = staticText.Style,
-                                        Title = staticText.Title,
-                                        Url = staticText.Url
-                                    };
-                                    db.StaticText.Add(email3);
+                                        update.Modified = DateTime.UtcNow;
+                                        update.Html = html;
+                                        update.Style = staticText.Style;
+                                        update.Url = staticText.Url;
+                                        update.Title = staticText.Title;
+                                        update.Order = staticText.Order;
+                                    }
+                                    else
+                                    {
+                                        var email3 = new StaticText()
+                                        {
+                                            Active = true,
+                                            Created = DateTime.UtcNow,
+                                            Html = html,
+                                            IdOperation = operation.Id,
+                                            IdStaticTextType = (int)Enums.StaticTextType.Email,
+                                            Modified = DateTime.UtcNow,
+                                            Order = staticText.Order,
+                                            Style = staticText.Style,
+                                            Title = staticText.Title,
+                                            Url = staticText.Url
+                                        };
+                                        db.StaticText.Add(email3);
+                                    }
                                 }
                                 db.SaveChanges();
 
