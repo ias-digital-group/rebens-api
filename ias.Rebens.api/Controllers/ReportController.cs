@@ -37,7 +37,7 @@ namespace ias.Rebens.api.Controllers
         {
             int? idOperation = null;
             var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
             {
                 if (principal?.Claims != null)
                 {
