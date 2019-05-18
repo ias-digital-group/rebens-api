@@ -7,6 +7,7 @@ namespace ias.Rebens
     {
         public Operation()
         {
+            AdminUsers = new HashSet<AdminUser>();
             BannerOperations = new HashSet<BannerOperation>();
             Benefits = new HashSet<Benefit>();
             BenefitOperations = new HashSet<BenefitOperation>();
@@ -18,6 +19,7 @@ namespace ias.Rebens
             OperationAddresses = new HashSet<OperationAddress>();
             OperationContacts = new HashSet<OperationContact>();
             OperationCustomers = new HashSet<OperationCustomer>();
+            OperationPartners = new HashSet<OperationPartner>();
         }
 
         public int Id { get; set; }
@@ -42,6 +44,7 @@ namespace ias.Rebens
 
         public virtual LogError LogError { get; set; }
         public virtual ICollection<Benefit> Benefits { get; set; }
+        public virtual ICollection<AdminUser> AdminUsers { get; set; }
         public virtual ICollection<BannerOperation> BannerOperations { get; set; }
         public virtual ICollection<BenefitOperation> BenefitOperations { get; set; }
         public virtual ICollection<Faq> Faqs { get; set; }
@@ -51,6 +54,7 @@ namespace ias.Rebens
         public virtual ICollection<OperationAddress> OperationAddresses { get; set; }
         public virtual ICollection<OperationContact> OperationContacts { get; set; }
         public virtual ICollection<OperationCustomer> OperationCustomers { get; set; }
+        public virtual ICollection<OperationPartner> OperationPartners { get; set; }
         public virtual ICollection<Customer> Customers { get; set; }
     }
 }

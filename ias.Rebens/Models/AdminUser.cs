@@ -18,6 +18,10 @@ namespace ias.Rebens
         public int? IdOperation { get; set; }
         public string Roles { get; set; }
         public bool Deleted { get; set; }
+        public int? IdOperationPartner { get; set; }
+
+        public virtual Operation Operation { get; set; }
+        public virtual OperationPartner OperationPartner { get; set; }
 
         public void SetPassword(string password)
         {

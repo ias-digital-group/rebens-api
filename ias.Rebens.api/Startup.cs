@@ -132,6 +132,7 @@ namespace ias.Rebens.api
             services.AddTransient<IMoipRepository, MoipRepository>();
             services.AddTransient<IOperationRepository, OperationRepository>();
             services.AddTransient<IOperationCustomerRepository, OperationCustomerRepository>();
+            services.AddTransient<IOperationPartnerRepository, OperationPartnerRepository>();
             services.AddTransient<IPartnerRepository, PartnerRepository>();
             services.AddTransient<IProfileRepository, ProfileRepository>();
             services.AddTransient<IReportRepository, ReportRepository>();

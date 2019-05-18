@@ -286,6 +286,20 @@ namespace ias.Rebens.Enums
         treat = 2
     }
 
+    public enum OperationPartnerCustomerStatus : int
+    {
+        [Description("Novo")]
+        newCustomer = 1,
+        [Description("Aprovado")]
+        approved = 2,
+        [Description("Reprovado")]
+        reproved = 3,
+        [Description("Cadastrado")]
+        signed = 4,
+        [Description("Apagado")]
+        deleted = 5,
+    }
+
     public enum Roles
     {
         [Description("Master")]
@@ -299,7 +313,11 @@ namespace ias.Rebens.Enums
         [Description("Publicador Rebens")]
         publisherRebens,
         [Description("Cliente")]
-        customer
+        customer,
+        [Description("Admin Parceiro")]
+        partnerAdministrator,
+        [Description("Aprovador Parceiro")]
+        partnerApprover
     }
 
     public static class EnumHelper

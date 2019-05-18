@@ -50,6 +50,8 @@ namespace ias.Rebens
         public virtual DbSet<OperationAddress> OperationAddress { get; set; }
         public virtual DbSet<OperationContact> OperationContact { get; set; }
         public virtual DbSet<OperationCustomer> OperationCustomer { get; set; }
+        public virtual DbSet<OperationPartner> OperationPartner { get; set; }
+        public virtual DbSet<OperationPartnerCustomer> OperationPartnerCustomer { get; set; }
         public virtual DbSet<Partner> Partner { get; set; }
         public virtual DbSet<PartnerAddress> PartnerAddress { get; set; }
         public virtual DbSet<PartnerContact> PartnerContact { get; set; }
@@ -111,6 +113,16 @@ namespace ias.Rebens
                 entity.Property(e => e.Modified).HasColumnType("datetime");
 
                 entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(e => e.OperationPartner)
+                    .WithMany(e => e.AdminUsers)
+                    .HasForeignKey(e => e.IdOperationPartner)
+                    .HasConstraintName("FK_AdminUser_OperationPartner");
+
+                entity.HasOne(e => e.Operation)
+                    .WithMany(e => e.AdminUsers)
+                    .HasForeignKey(e => e.IdOperation)
+                    .HasConstraintName("FK_AdminUser_Operation");
             });
 
             modelBuilder.Entity<Bank>(entity => {
@@ -770,6 +782,48 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_OperationCustomer_Operation");
+            });
+
+            modelBuilder.Entity<OperationPartner>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(300);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.OperationPartners)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OperationPartner_Operation");
+            });
+
+            modelBuilder.Entity<OperationPartnerCustomer>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(300);
+
+                entity.Property(e => e.Email)
+                   .IsRequired()
+                   .HasMaxLength(300);
+
+                entity.Property(e => e.Cpf)
+                   .IsRequired()
+                   .HasMaxLength(50);
+
+                entity.HasOne(d => d.OperationPartner)
+                    .WithMany(p => p.Customers)
+                    .HasForeignKey(d => d.IdOperationPartner)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OperationPartnerCustomer_OperationPartner");
             });
 
             modelBuilder.Entity<Partner>(entity =>
