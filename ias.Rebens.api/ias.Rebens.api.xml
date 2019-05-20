@@ -1227,6 +1227,98 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.#ctor(ias.Rebens.IOperationPartnerRepository)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="operationPartnerRepository">Injeção de dependencia do repositório de parceiro</param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.Get(System.Int32)">
+            <summary>
+            Retorna o parceiro da operação conforme o ID
+            </summary>
+            <param name="id">Id do parceiro desejada</param>
+            <returns>Parceiro da Operação</returns>
+            <response code="200">Retorna o parceiro, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.List(System.Int32,System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean})">
+            <summary>
+            Lista todas os parceiros de uma operação com paginação
+            </summary>
+            <param name="idOperation">id da operação, obrigatório</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="active">active, não obrigatório (default=null)</param>
+            <returns>Lista com os parceiros da operação encontrados</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.Put(ias.Rebens.api.Models.OperationPartnerModel)">
+            <summary>
+            Atualiza um parceiro da operação
+            </summary>
+            <param name="partner"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.Post(ias.Rebens.api.Models.OperationPartnerModel)">
+            <summary>
+            Cria um parceiro de uma  operação
+            </summary>
+            <param name="partner"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id e o Código do parceiro criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.Delete(System.Int32)">
+            <summary>
+            Apaga um parceiro de uma operação
+            </summary>
+            <param name="id">Id do parceiro a ser apagado</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.ListCustomers(System.Int32,System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Lista os clientes de um parceiro da operação 
+            </summary>
+            <param name="id">id do parceiro da operação</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="status">Status do cliente (Novo = 1, Aprovado = 2, Reprovado = 3, Cadastrado = 4), (default = null)</param>
+            <returns>lista dos banners da operação</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.SaveCustomer(ias.Rebens.api.Models.OperationPartnerCustomerModel)">
+            <summary>
+            Cria um cliente de um parceiro da operação
+            </summary>
+            <param name="customer"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id e o Código do cliente criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.UpdateCustomerStatus(System.Int32,System.Int32)">
+            <summary>
+            Atualiza o status de cliente do parceiro da operação
+            </summary>
+            <param name="idCustomer">Id do cliente</param>
+            <param name="status">Satus (Aprovado = 2, Reprovado = 3)</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.PartnerController">
             <summary>
             Partner Controller
@@ -3677,6 +3769,104 @@
         <member name="M:ias.Rebens.api.Models.OperationModel.GetEntity">
             <summary>
             Retorna um objeto Operation com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.OperationPartnerCustomerModel">
+            <summary>
+            Cliente do parceiro da Operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.Email">
+            <summary>
+            Email
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.Cpf">
+            <summary>
+            CPF
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.IdOperationPartner">
+            <summary>
+            Id da Operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.Status">
+            <summary>
+            Status (Novo = 1, Aprovado = 2, Reprovado = 3, Cadastrado = 4)
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.StatusName">
+            <summary>
+            Nome do status
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationPartnerCustomerModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationPartnerCustomerModel.#ctor(ias.Rebens.OperationPartnerCustomer)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="customer"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationPartnerCustomerModel.GetEntity">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.OperationPartnerModel">
+            <summary>
+            Parceiro da Operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerModel.IdOperation">
+            <summary>
+            Id da Operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerModel.Active">
+            <summary>
+            Ativo
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationPartnerModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationPartnerModel.#ctor(ias.Rebens.OperationPartner)">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OperationPartnerModel.GetEntity">
+            <summary>
+            
             </summary>
             <returns></returns>
         </member>

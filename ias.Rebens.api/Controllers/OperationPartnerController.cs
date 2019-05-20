@@ -36,7 +36,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<OperationPartnerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Get([FromQuery]int id)
+        public IActionResult Get(int id)
         {
             var partner = repo.Read(id, out string error);
 
@@ -201,7 +201,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id e o Código do cliente criado</returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("SaveCustomer"), Authorize("Bearer", Roles = "customer")]
+        [HttpPost("SaveCustomer"), AllowAnonymous]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SaveCustomer([FromBody] OperationPartnerCustomerModel customer)
@@ -226,7 +226,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult UpdateCustomerStatus([FromQuery]int idCustomer, [FromQuery]int status)
         {
-            if(status != 3 && status != 4)
+            if(status != 2 && status != 3)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "O status deve ser 2, para cadastro aprovado, ou 3, para cadastro reprovado!" });
 
             if (repo.UpdateCustomerStatus(idCustomer, status, out string error))

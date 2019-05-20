@@ -233,6 +233,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     customer.Modified = customer.Created = DateTime.UtcNow;
+                    customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
                     db.OperationPartnerCustomer.Add(customer);
                     db.SaveChanges();
                     error = null;

@@ -42,7 +42,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Status (Novo = 1, Aprovado = 2, Reprovado = 3, Cadastrado = 4)
         /// </summary>
-        [Required]
         public int Status { get; set; }
 
         /// <summary>
@@ -50,6 +49,15 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string StatusName { get; set; }
 
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public OperationPartnerCustomerModel() { }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        /// <param name="customer"></param>
         public OperationPartnerCustomerModel(OperationPartnerCustomer customer)
         {
             this.Id = customer.Id;
@@ -61,6 +69,10 @@ namespace ias.Rebens.api.Models
             this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.OperationPartnerCustomerStatus)customer.Status);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public OperationPartnerCustomer GetEntity()
         {
             return new OperationPartnerCustomer()

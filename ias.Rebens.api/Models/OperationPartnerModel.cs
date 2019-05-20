@@ -33,6 +33,14 @@ namespace ias.Rebens.api.Models
         [Required]
         public bool Active { get; set; }
 
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public OperationPartnerModel() { }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
         public OperationPartnerModel(OperationPartner partner)
         {
             this.Id = partner.Id;
@@ -41,6 +49,10 @@ namespace ias.Rebens.api.Models
             this.Active = partner.Active;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public OperationPartner GetEntity()
         {
             return new OperationPartner()
