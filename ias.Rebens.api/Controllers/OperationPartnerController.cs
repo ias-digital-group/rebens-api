@@ -168,7 +168,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<OperationPartnerCustomerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBanners(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]int? status = null)
+        public IActionResult ListCustomers(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]int? status = null)
         {
             var list = repo.ListCustomers(id, page, pageItems, searchWord, sort, out string error, status);
 
@@ -224,7 +224,7 @@ namespace ias.Rebens.api.Controllers
         [HttpPut("UpdateCustomerStatus"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,partnerAdministrator,partnerApprover,administrator")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult UpdateCustomer([FromQuery]int idCustomer, [FromQuery]int status)
+        public IActionResult UpdateCustomerStatus([FromQuery]int idCustomer, [FromQuery]int status)
         {
             if(status != 3 && status != 4)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "O status deve ser 2, para cadastro aprovado, ou 3, para cadastro reprovado!" });

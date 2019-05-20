@@ -12,7 +12,6 @@ namespace ias.Rebens
         {
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
-
         
         public bool Create(OperationPartner partner, out string error)
         {
