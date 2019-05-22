@@ -67,6 +67,7 @@ namespace ias.Rebens.api.Controllers
                     //foreach (var policy in user.Permissions)
                     //    identity.AddClaim(new Claim("permissions", "permission1"));
 
+                    identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
                     identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
                     identity.AddClaim(new Claim("Id", user.Id.ToString()));
                     identity.AddClaim(new Claim("Name", user.Name));

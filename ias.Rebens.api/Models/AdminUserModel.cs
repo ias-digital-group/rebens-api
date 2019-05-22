@@ -35,6 +35,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public int? IdOperation { get; set; }
         /// <summary>
+        /// Id do parceiros da operação 
+        /// </summary>
+        public int? IdOperationPartner { get; set; }
+        /// <summary>
         /// Papéis do usuário
         /// </summary>
         [MaxLength(500)]
@@ -58,6 +62,7 @@ namespace ias.Rebens.api.Models
             this.Active = adminUser.Status == (int)Enums.AdminUserStatus.Active;
             this.IdOperation = adminUser.IdOperation;
             this.Roles = adminUser.Roles;
+            this.IdOperationPartner = adminUser.IdOperationPartner;
         }
 
         /// <summary>
@@ -75,6 +80,7 @@ namespace ias.Rebens.api.Models
                 Status = this.Active ? (int)Enums.AdminUserStatus.Active : (int)Enums.AdminUserStatus.Inactive,
                 IdOperation = this.IdOperation,
                 Roles = this.Roles,
+                IdOperationPartner = this.IdOperationPartner,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };

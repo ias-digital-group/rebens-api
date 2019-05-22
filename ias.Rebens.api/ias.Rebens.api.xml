@@ -1947,6 +1947,11 @@
             Id da operação do usuário
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.AdminUserModel.IdOperationPartner">
+            <summary>
+            Id do parceiros da operação 
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.AdminUserModel.Roles">
             <summary>
             Papéis do usuário
