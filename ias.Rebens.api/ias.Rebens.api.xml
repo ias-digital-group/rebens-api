@@ -1227,11 +1227,17 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="T:ias.Rebens.api.Controllers.OperationPartnerController">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.#ctor(ias.Rebens.IOperationPartnerRepository,ias.Rebens.IStaticTextRepository)">
             <summary>
             Construtor
             </summary>
             <param name="operationPartnerRepository">Injeção de dependencia do repositório de parceiro</param>
+            <param name="staticTextRepository">Injeção de dependencia do repositório de textos</param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.Get(System.Int32)">
             <summary>
@@ -3842,6 +3848,11 @@
         <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.OperationPartnerName">
             <summary>
             Nome do parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.AdminUserName">
+            <summary>
+            Nome do Usuário que aprovou ou reprovou o cadastro
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.OperationPartnerCustomerModel.#ctor">

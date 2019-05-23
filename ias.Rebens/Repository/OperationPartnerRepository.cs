@@ -97,7 +97,7 @@ namespace ias.Rebens
                                         && c.Status != (int)Enums.OperationPartnerCustomerStatus.deleted 
                                         && (!idOperationPartner.HasValue || idOperationPartner.Value == 0 || c.IdOperationPartner == idOperationPartner)
                                         && (!idOperation.HasValue || idOperation.Value == 0 || c.OperationPartner.IdOperation == idOperation)
-                                        && (!status.HasValue || c.Status == status.Value)
+                                        && (!status.HasValue || status.Value == 0 || c.Status == status.Value)
                                         && (string.IsNullOrEmpty(word) || c.Name.Contains(word) || c.Email.Contains(word)));
                     switch (sort.ToLower())
                     {
@@ -132,7 +132,7 @@ namespace ias.Rebens
                                         && c.Status != (int)Enums.OperationPartnerCustomerStatus.deleted
                                         && (!idOperationPartner.HasValue || idOperationPartner.Value == 0 || c.IdOperationPartner == idOperationPartner)
                                         && (!idOperation.HasValue || idOperation.Value == 0 || c.OperationPartner.IdOperation == idOperation)
-                                        && (!status.HasValue || c.Status == status.Value)
+                                        && (!status.HasValue || status.Value == 0 || c.Status == status.Value)
                                         && (string.IsNullOrEmpty(word) || c.Name.Contains(word) || c.Email.Contains(word)));
 
                     ret = new ResultPage<OperationPartnerCustomer>(list, page, pageItems, total);
@@ -294,7 +294,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool UpdateCustomerStatus(int idCustomer, int status, out string error, out Operation operation, out Customer customer)
+        public bool UpdateCustomerStatus(int idCustomer, int status, int idAdminUser, out string error, out Operation operation, out Customer customer)
         {
             bool ret = false;
             operation = null;
@@ -310,13 +310,15 @@ namespace ias.Rebens
                         {
                             update.Status = status;
                             update.Modified = DateTime.UtcNow;
+                            update.IdAdminUser = idAdminUser;
+                            db.SaveChanges();
 
-                            if(update.Status == (int)Enums.OperationPartnerCustomerStatus.approved)
+                            operation = db.Operation.Single(o => o.OperationPartners.Any(p => p.Id == update.IdOperationPartner));
+                            int idOperation = operation.Id;
+                            customer = db.Customer.SingleOrDefault(c => (c.Cpf == update.Cpf || c.Email == update.Email) && c.IdOperation == idOperation);
+
+                            if (update.Status == (int)Enums.OperationPartnerCustomerStatus.approved)
                             {
-                                operation = db.Operation.Single(o => o.OperationPartners.Any(p => p.Id == update.IdOperationPartner));
-                                int idOperation = operation.Id;
-
-                                customer = db.Customer.SingleOrDefault(c => (c.Cpf == update.Cpf || c.Email == update.Email) && c.IdOperation == idOperation);
                                 if(customer == null)
                                 {
                                     customer = new Customer()
@@ -334,13 +336,12 @@ namespace ias.Rebens
 
                                     db.Customer.Add(customer);
                                     db.SaveChanges();
-
-                                    update.IdCustomer = customer.Id;
-                                    db.SaveChanges();
                                 }
+
+                                update.IdCustomer = customer.Id;
+                                db.SaveChanges();
                             }
 
-                            db.SaveChanges();
                             error = null;
                             ret = true;
                         }

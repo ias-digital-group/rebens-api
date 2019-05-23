@@ -90,3 +90,14 @@ GO
 
 ALTER TABLE [dbo].[AdminUser] CHECK CONSTRAINT [FK_AdminUser_Operation]
 GO
+
+
+ALTER TABLE OperationPartnerCustomer ADD IdAdminUser INT NULL
+GO
+
+ALTER TABLE [dbo].[OperationPartnerCustomer]  WITH CHECK ADD  CONSTRAINT [FK_OperationPartnerCustomer_AdminUser] FOREIGN KEY([IdAdminUser])
+REFERENCES [dbo].[AdminUser] ([Id])
+GO
+
+ALTER TABLE [dbo].[OperationPartnerCustomer] CHECK CONSTRAINT [FK_OperationPartnerCustomer_AdminUser]
+GO

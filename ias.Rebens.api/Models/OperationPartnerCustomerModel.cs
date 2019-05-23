@@ -52,6 +52,10 @@ namespace ias.Rebens.api.Models
         /// Nome do parceiro
         /// </summary>
         public string OperationPartnerName { get; set; }
+        /// <summary>
+        /// Nome do Usuário que aprovou ou reprovou o cadastro
+        /// </summary>
+        public string AdminUserName { get; set; }
 
         /// <summary>
         /// Construtor
@@ -73,6 +77,8 @@ namespace ias.Rebens.api.Models
             this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.OperationPartnerCustomerStatus)customer.Status);
             if (customer.OperationPartner != null)
                 this.OperationPartnerName = customer.OperationPartner.Name;
+            if (customer.IdAdminUser.HasValue && customer.AdminUser != null)
+                this.AdminUserName = customer.AdminUser.Name;
         }
 
         /// <summary>

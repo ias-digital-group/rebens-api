@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ias.Rebens.api.Controllers
 {
+    /// <summary>
+    /// 
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class OperationPartnerController : ControllerBase
@@ -20,6 +23,7 @@ namespace ias.Rebens.api.Controllers
         /// Construtor
         /// </summary>
         /// <param name="operationPartnerRepository">Injeção de dependencia do repositório de parceiro</param>
+        /// <param name="staticTextRepository">Injeção de dependencia do repositório de textos</param>
         public OperationPartnerController(IOperationPartnerRepository operationPartnerRepository, IStaticTextRepository staticTextRepository)
         {
             this.repo = operationPartnerRepository;
@@ -173,8 +177,47 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCustomers([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? status = null, [FromQuery]int? idOperation = null, [FromQuery]int? idOperationPartner = null)
         {
-            var list = repo.ListCustomers(page, pageItems, searchWord, sort, out string error, status, idOperationPartner, idOperation);
+            var principal = HttpContext.User;
+            if (!idOperation.HasValue || idOperation.Value == 0)
+            {
+                if (principal.IsInRole("administrator") || principal.IsInRole("partnerAdministrator"))
+                {
+                    if (principal?.Claims != null)
+                    {
+                        var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                        if (operationId == null)
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                        if (int.TryParse(operationId.Value, out int tmpId))
+                            idOperation = tmpId;
+                        else
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    }
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+            }
+            if(!idOperationPartner.HasValue || idOperationPartner.Value == 0)
+            {
+                idOperationPartner = null;
+                if (principal.IsInRole("partnerAdministrator"))
+                {
+                    if (principal?.Claims != null)
+                    {
+                        var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
+                        if (partnerId == null)
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                        if (int.TryParse(partnerId.Value, out int tmpId))
+                            idOperationPartner = tmpId;
+                        else
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                    }
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                }
+            }
 
+
+            var list = repo.ListCustomers(page, pageItems, searchWord, sort, out string error, status, idOperationPartner, idOperation);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
@@ -212,6 +255,23 @@ namespace ias.Rebens.api.Controllers
         public IActionResult SaveCustomer([FromBody] OperationPartnerCustomerModel customer)
         {
             var cust = customer.GetEntity();
+            var principal = HttpContext.User;
+            if (principal.IsInRole("partnerAdministrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
+                    if (partnerId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                    if (int.TryParse(partnerId.Value, out int tmpId))
+                        cust.IdOperationPartner = tmpId;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+            }
+
             if (repo.CreateCustomer(cust, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = cust.Id });
 
@@ -231,14 +291,33 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult UpdateCustomerStatus([FromQuery]int idCustomer, [FromQuery]int status)
         {
-            if(status != 2 && status != 3)
+            if (status != 2 && status != 3)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "O status deve ser 2, para cadastro aprovado, ou 3, para cadastro reprovado!" });
 
-            if (repo.UpdateCustomerStatus(idCustomer, status, out string error, out Operation operation, out Customer customer))
+            var principal = HttpContext.User;
+            int idAdminUser;
+            if (principal?.Claims != null)
+            {
+                var id = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (id == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrada!" });
+                if (int.TryParse(id.Value, out int tmpId))
+                    idAdminUser = tmpId;
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+
+            if (repo.UpdateCustomerStatus(idCustomer, status, idAdminUser, out string error, out Operation operation, out Customer customer))
             {
                 if(status == (int)Enums.OperationPartnerCustomerStatus.approved)
                     Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
-
+                else if (status == (int)Enums.OperationPartnerCustomerStatus.reproved)
+                {
+                    string body = $"<p>Olá {customer.Name},</p><br /><p>Infelizmente o seu cadastro para acesso ao clube não foi aprovado.</p><br /><p>Grato</p>";
+                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, customer.IdOperation, $"{operation.Title} - Validação de Cadastro", body, out error);
+                }
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Status do cliente atualizado com sucesso!" });
             }
 

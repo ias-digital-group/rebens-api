@@ -13,10 +13,12 @@ namespace ias.Rebens
         public int? IdCustomer { get; set; }
         public int IdOperationPartner { get; set; }
         public int Status { get; set; }
+        public int? IdAdminUser { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
         public OperationPartner OperationPartner { get; set; }
         public Customer Customer { get; set; }
+        public AdminUser AdminUser { get; set; }
     }
 }
