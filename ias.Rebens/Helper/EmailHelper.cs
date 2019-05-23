@@ -14,7 +14,8 @@ namespace ias.Rebens.Helper
                 var sendingBlue = new Integration.SendinBlueHelper();
                 var link = operation.Domain + "#/?c=" + user.Code;
                 var body = staticText.Html.Replace("##NAME##", user.Name).Replace("##LINK##", link);
-                var result = sendingBlue.Send(user.Email, user.Name, "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
+                var listDestinataries = new Dictionary<string, string> { { user.Email, user.Name } };
+                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -30,7 +31,8 @@ namespace ias.Rebens.Helper
                 var sendingBlue = new Integration.SendinBlueHelper();
                 string link = (string.IsNullOrEmpty(operation.Domain) ? (operation.TemporarySubdomain + ".sistemarebens.com.br") : operation.Domain) + "/#/?c=" + customer.Code;
                 var body = staticText.Html.Replace("##LINK##", link);
-                var result = sendingBlue.Send(customer.Email, "", "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
+                var listDestinataries = new Dictionary<string, string> { { customer.Email, "" } };
+                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -64,7 +66,8 @@ namespace ias.Rebens.Helper
                     msg += $"<p>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
                 }
                 string body = staticText.Html.Replace("###BODY###", msg);
-                var result = sendingBlue.Send(referal.Email, referal.Name, "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);
+                var listDestinataries = new Dictionary<string, string> { { referal.Email, referal.Name } };
+                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -79,7 +82,8 @@ namespace ias.Rebens.Helper
             {
                 var sendingBlue = new Integration.SendinBlueHelper();
                 string message = staticText.Html.Replace("###BODY###", body);
-                var result = sendingBlue.Send(toEmail, toName, "contato@rebens.com.br", "Contato", subject, message);
+                var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
+                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", subject, message);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -87,10 +91,10 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendAdminEmail(string toEmail, string toName, string subject, string body, out string error)
+        public static bool SendAdminEmail(Dictionary<string, string> listDestinataries, string subject, string body, out string error)
         {
             var sendingBlue = new Integration.SendinBlueHelper();
-            var result = sendingBlue.Send(toEmail, toName, "contato@rebens.com.br", "Contato", subject, body);
+            var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", subject, body);
             if (result.Status)
             {
                 error = null;

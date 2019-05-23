@@ -154,37 +154,40 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Lista os clientes de um parceiro da operação 
         /// </summary>
-        /// <param name="id">id do parceiro da operação</param>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <param name="status">Status do cliente (Novo = 1, Aprovado = 2, Reprovado = 3, Cadastrado = 4), (default = null)</param>
+        /// <param name="idOperation">id da operação</param>
+        /// <param name="idOperationPartner">id do parceiro da operação</param>
         /// <returns>lista dos banners da operação</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/Customers"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,partnerAdministrator,partnerApprover,administrator")]
+        [HttpGet("ListCustomers"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,partnerAdministrator,partnerApprover,administrator")]
         [ProducesResponseType(typeof(ResultPageModel<OperationPartnerCustomerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListCustomers(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]int? status = null)
+        public IActionResult ListCustomers([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? status = null, [FromQuery]int? idOperation = null, [FromQuery]int? idOperationPartner = null)
         {
-            var list = repo.ListCustomers(id, page, pageItems, searchWord, sort, out string error, status);
+            var list = repo.ListCustomers(page, pageItems, searchWord, sort, out string error, status, idOperationPartner, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<OperationPartnerCustomerModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<OperationPartnerCustomerModel>();
+                var ret = new ResultPageModel<OperationPartnerCustomerModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<OperationPartnerCustomerModel>()
+                };
                 foreach (var customer in list.Page)
                     ret.Data.Add(new OperationPartnerCustomerModel(customer));
 

@@ -97,7 +97,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<AdminUser> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, string role = null)
+        public ResultPage<AdminUser> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, string role = null, int? idOperationPartner = null)
         {
             ResultPage<AdminUser> ret;
             try
@@ -105,11 +105,12 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.AdminUser.Where(a => !a.Deleted
-                                && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) 
+                                && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
                                 && (!idOperation.HasValue || (idOperation.HasValue && a.IdOperation == idOperation.Value))
                                 && (!status.HasValue || (status.HasValue && a.Status == (status.Value ? 1 : 2)))
+                                && (!idOperationPartner.HasValue || a.IdOperationPartner == idOperationPartner.Value)
                                 && (string.IsNullOrEmpty(role) || a.Roles == role)
-                                );
+                                ); ;
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -137,6 +138,7 @@ namespace ias.Rebens
                                 && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
                                 && (!idOperation.HasValue || (idOperation.HasValue && a.IdOperation == idOperation.Value))
                                 && (!status.HasValue || (status.HasValue && a.Status == (status.Value ? 1 : 2)))
+                                && (!idOperationPartner.HasValue || a.IdOperationPartner == idOperationPartner.Value)
                                 && (string.IsNullOrEmpty(role) || a.Roles == role));
 
                     ret = new ResultPage<AdminUser>(list, page, pageItems, total);
@@ -234,6 +236,16 @@ namespace ias.Rebens
                         update.Status = adminUser.Status;
                         if(!string.IsNullOrEmpty(adminUser.Roles))
                             update.Roles = adminUser.Roles;
+                        if (adminUser.Roles == "partnerApprover" || adminUser.Roles == "partnerAdministrator")
+                            update.IdOperationPartner = adminUser.IdOperationPartner;
+                        else
+                            update.IdOperationPartner = null;
+
+                        if (adminUser.Roles == "administratorRebens" || adminUser.Roles == "publisherRebens" || adminUser.Roles == "master")
+                            update.IdOperationPartner = update.IdOperationPartner = null;
+
+                        if (adminUser.Roles == "administrator" || adminUser.Roles == "publisher" || adminUser.Roles == "partnerAdministrator" || adminUser.Roles == "partnerApprover")
+                            update.IdOperation = adminUser.IdOperation;
 
                         db.SaveChanges();
                         error = null;

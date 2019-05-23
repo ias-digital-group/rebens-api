@@ -244,9 +244,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SendEmail([FromBody]EmailModel email)
         {
-            var model = new JsonModel();
             var sendingBlue = new Integration.SendinBlueHelper();
-            var result = sendingBlue.Send(email.ToEmail, email.ToName, email.FromEmail, email.FromName, email.Subject, email.Message);
+            var listDestinataries = new Dictionary<string, string>() { { email.ToEmail, email.ToName } };
+            var result = sendingBlue.Send(listDestinataries, email.FromEmail, email.FromName, email.Subject, email.Message);
             if (result.Status)
                 return Ok(new JsonModel() { Status = "ok", Message = result.Message });
 

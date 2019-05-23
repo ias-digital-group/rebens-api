@@ -24,6 +24,10 @@ namespace ias.Rebens
 
         OperationPartnerCustomer ReadCustomer(int idCustomer, out string error);
 
-        ResultPage<OperationPartnerCustomer> ListCustomers(int idOperationPartner, int page, int pageItems, string word, string sort, out string error, int? status = null);
+        ResultPage<OperationPartnerCustomer> ListCustomers(int page, int pageItems, string word, string sort, out string error, int? status = null, int? idOperationPartner = null, int? idOperation = null);
+
+        List<OperationPartner> ListActiveByOperation(Guid operationCode, out string error);
+
+        Dictionary<string, string> ListDestinataries(int idOperationPartner, out string error);
     }
 }

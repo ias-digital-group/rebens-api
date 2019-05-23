@@ -14,7 +14,7 @@ namespace ias.Rebens.api.Controllers
     /// AdminUser Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,administratorRebens")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,administratorRebens,partnerAdministrator")]
     [ApiController]
     public class AdminUserController : ControllerBase
     {
@@ -51,7 +51,7 @@ namespace ias.Rebens.api.Controllers
             [FromQuery]int? idOperation = null, [FromQuery]bool? active = null, [FromQuery]string role = null)
         {
             var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (principal.IsInRole("administrator") || principal.IsInRole("partnerAdministrator"))
             {
                 if (principal?.Claims != null)
                 {
@@ -66,8 +66,24 @@ namespace ias.Rebens.api.Controllers
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
+            int? idOperationPartner = null;
+            if (principal.IsInRole("partnerAdministrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
+                    if (partnerId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                    if (int.TryParse(partnerId.Value, out int tmpId))
+                        idOperationPartner = tmpId;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+            }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation, active, role);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation, active, role, idOperationPartner);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
@@ -154,7 +170,7 @@ namespace ias.Rebens.api.Controllers
             var admin = user.GetEntity();
 
             var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (principal.IsInRole("administrator") || principal.IsInRole("partnerAdministrator"))
             {
                 if (principal?.Claims != null)
                 {
@@ -169,13 +185,29 @@ namespace ias.Rebens.api.Controllers
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
+            if (principal.IsInRole("partnerAdministrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
+                    if (partnerId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                    if (int.TryParse(partnerId.Value, out int tmpId))
+                        admin.IdOperationPartner = tmpId;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+            }
 
             if (repo.Create(admin, out string error))
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
                 string body = $"<p>Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
                 body += $"<br /><br /><p><a href='{Constant.URL}#/validate?c={code}'>{Constant.URL}#/validate?c={code}</a></p>";
-                Helper.EmailHelper.SendAdminEmail(admin.Email, admin.Name, "Rebens - Validação de cadastro", body, out error);
+                var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };
+                Helper.EmailHelper.SendAdminEmail(listDestinataries, "Rebens - Validação de cadastro", body, out error);
 
 
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Usuário criado com sucesso!", Id = admin.Id });
@@ -222,7 +254,8 @@ namespace ias.Rebens.api.Controllers
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
                 string body = $"<p>Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
                 body += $"<br /><br /><p><a href='{Constant.URL}#/validate?c={code}'>{Constant.URL}#/validate?c={code}</a></p>";
-                Helper.EmailHelper.SendAdminEmail(admin.Email, admin.Name, "Rebens - Validação de cadastro", body, out error);
+                var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };
+                Helper.EmailHelper.SendAdminEmail(listDestinataries, "Rebens - Validação de cadastro", body, out error);
 
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail de validação reenviado com sucesso!" });
             }

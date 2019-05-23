@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace ias.Rebens
 {
@@ -85,16 +86,17 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<OperationPartnerCustomer> ListCustomers(int idOperationPartner, int page, int pageItems, string word, string sort, out string error, int? status = null)
+        public ResultPage<OperationPartnerCustomer> ListCustomers(int page, int pageItems, string word, string sort, out string error, int? status = null, int? idOperationPartner = null, int? idOperation = null)
         {
             ResultPage<OperationPartnerCustomer> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.OperationPartnerCustomer.Where(c => !c.OperationPartner.Deleted 
+                    var tmpList = db.OperationPartnerCustomer.Include("OperationPartner").Where(c => !c.OperationPartner.Deleted 
                                         && c.Status != (int)Enums.OperationPartnerCustomerStatus.deleted 
-                                        && c.IdOperationPartner == idOperationPartner 
+                                        && (!idOperationPartner.HasValue || idOperationPartner.Value == 0 || c.IdOperationPartner == idOperationPartner)
+                                        && (!idOperation.HasValue || idOperation.Value == 0 || c.OperationPartner.IdOperation == idOperation)
                                         && (!status.HasValue || c.Status == status.Value)
                                         && (string.IsNullOrEmpty(word) || c.Name.Contains(word) || c.Email.Contains(word)));
                     switch (sort.ToLower())
@@ -126,7 +128,12 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.OperationPartnerCustomer.Count(c => !c.OperationPartner.Deleted && c.Status != (int)Enums.OperationPartnerCustomerStatus.deleted && c.IdOperationPartner == idOperationPartner && (string.IsNullOrEmpty(word) || c.Name.Contains(word) || c.Email.Contains(word)));
+                    var total = db.OperationPartnerCustomer.Count(c => !c.OperationPartner.Deleted
+                                        && c.Status != (int)Enums.OperationPartnerCustomerStatus.deleted
+                                        && (!idOperationPartner.HasValue || idOperationPartner.Value == 0 || c.IdOperationPartner == idOperationPartner)
+                                        && (!idOperation.HasValue || idOperation.Value == 0 || c.OperationPartner.IdOperation == idOperation)
+                                        && (!status.HasValue || c.Status == status.Value)
+                                        && (string.IsNullOrEmpty(word) || c.Name.Contains(word) || c.Email.Contains(word)));
 
                     ret = new ResultPage<OperationPartnerCustomer>(list, page, pageItems, total);
                     error = null;
@@ -232,10 +239,13 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    customer.Modified = customer.Created = DateTime.UtcNow;
-                    customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
-                    db.OperationPartnerCustomer.Add(customer);
-                    db.SaveChanges();
+                    if(!db.OperationPartnerCustomer.Any(c => (c.Email == customer.Email || c.Cpf == customer.Cpf) && c.IdOperationPartner == customer.IdOperationPartner))
+                    {
+                        customer.Modified = customer.Created = DateTime.UtcNow;
+                        customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
+                        db.OperationPartnerCustomer.Add(customer);
+                        db.SaveChanges();
+                    }
                     error = null;
                 }
             }
@@ -243,6 +253,8 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OperationPartnerRepository.CreateCustomer", ex.Message, "", ex.StackTrace);
+                if(ex.InnerException != null)
+                    logError.Create("OperationPartnerRepository.CreateCustomer", ex.InnerException.Message, "", ex.InnerException.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o cliente. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -325,6 +337,56 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OperationPartnerRepository.UpdateCustomerStatus", ex.Message, $"idCustomer: {idCustomer}, status:{status}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o cliente. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public List<OperationPartner> ListActiveByOperation(Guid operationCode, out string error)
+        {
+            List<OperationPartner> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.OperationPartner.Where(p => !p.Deleted && p.Operation.Code == operationCode && p.Active).OrderBy(o => o.Name).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationPartnerRepository.ListActiveByOperation", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os parceiros ativos de uma operação. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public Dictionary<string, string> ListDestinataries(int idOperationPartner, out string error)
+        {
+            Dictionary<string, string> ret = new Dictionary<string, string>();
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var operation = db.Operation.Single(o => o.OperationPartners.Any(p => p.Id == idOperationPartner));
+                    var list = db.AdminUser.Where(a => a.IdOperationPartner == idOperationPartner);
+                    foreach (var user in list)
+                        ret.Add(user.Email, user.Name);
+                    if(ret.Count == 0)
+                    {
+                        list = db.AdminUser.Where(a => a.OperationPartner.IdOperation == idOperationPartner);
+                        foreach (var user in list)
+                            ret.Add(user.Email, user.Name);
+                    }
+                    error = null;
+                }
+            }
+            catch(Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationPartnerRepository.ListDestinataries", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os parceiros ativos de uma operação. (erro:" + idLog + ")";
             }
             return ret;
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -243,7 +244,8 @@ namespace ias.Rebens.api.Controllers
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(user.Email));
                 string body = $"<p>Olá {user.Name},</p> <br /><p>Clique no link abaixo para cadastrar uma nova senha.</p>";
                 body += $"<br /><br /><p><a href='{Constant.URL}#/validate?c={code}'>{Constant.URL}#/validate?c={code}</a></p>";
-                if(Helper.EmailHelper.SendAdminEmail(user.Email, user.Name, "Rebens - Redefinição de senha de cadastro", body, out error))
+                var listDestinataries = new Dictionary<string, string>() { { user.Email, user.Name } };
+                if (Helper.EmailHelper.SendAdminEmail(listDestinataries, "Rebens - Redefinição de senha de cadastro", body, out error))
                     return Ok(new JsonModel() { Status = "ok" });
                 return StatusCode(400, new JsonModel() { Status = "ok", Message = error });
             }

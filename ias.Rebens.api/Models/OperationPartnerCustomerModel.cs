@@ -14,7 +14,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Id
         /// </summary>
-        [Required]
         public int Id { get; set; }
         /// <summary>
         /// Nome
@@ -50,6 +49,11 @@ namespace ias.Rebens.api.Models
         public string StatusName { get; set; }
 
         /// <summary>
+        /// Nome do parceiro
+        /// </summary>
+        public string OperationPartnerName { get; set; }
+
+        /// <summary>
         /// Construtor
         /// </summary>
         public OperationPartnerCustomerModel() { }
@@ -67,6 +71,8 @@ namespace ias.Rebens.api.Models
             this.IdOperationPartner = customer.IdOperationPartner;
             this.Status = customer.Status;
             this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.OperationPartnerCustomerStatus)customer.Status);
+            if (customer.OperationPartner != null)
+                this.OperationPartnerName = customer.OperationPartner.Name;
         }
 
         /// <summary>

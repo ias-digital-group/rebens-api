@@ -12,13 +12,13 @@ namespace ias.Rebens.Integration
     {
         const string API_KEY = "dMt0h1FYL4yaOAIG";
 
-        public Models.SendinBlueModel Send(string toEmail, string toName, string fromEmail, string fromName, string subject, string body)
+        public Models.SendinBlueModel Send(Dictionary<string, string> listDestinataries, string fromEmail, string fromName, string subject, string body)
         {
             var resultModel = new Models.SendinBlueModel();
 
             Dictionary<string, Object> data = new Dictionary<string, Object>();
-            Dictionary<string, string> to = new Dictionary<string, string>();
-            to.Add(toEmail, toName);
+            //Dictionary<string, string> to = new Dictionary<string, string>();
+            //to.Add(toEmail, toName);
             List<string> from_name = new List<string>();
             from_name.Add(fromEmail);
             from_name.Add(fromName);
@@ -26,7 +26,7 @@ namespace ias.Rebens.Integration
             //attachment.Add("https://domain.com/path-to-file/filename1.pdf");
             //attachment.Add("https://domain.com/path-to-file/filename2.jpg");
 
-            data.Add("to", to);
+            data.Add("to", listDestinataries);
             data.Add("from", from_name);
             data.Add("subject", subject);
             data.Add("html", body);

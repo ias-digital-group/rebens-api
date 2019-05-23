@@ -38,6 +38,7 @@ namespace ias.Rebens.api.Controllers
         private IStaticTextRepository staticTextRepo;
         private IWithdrawRepository withdrawRepo;
         private IBankAccountRepository bankAccountRepo;
+        private IOperationPartnerRepository operationPartnerRepo;
 
         /// <summary>
         /// 
@@ -59,12 +60,13 @@ namespace ias.Rebens.api.Controllers
         /// <param name="operationCustomerRepository"></param>
         /// <param name="benefitViewRepository"></param>
         /// <param name="bankAccountRepository"></param>
+        /// <param name="operationPartnerRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
             IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository, ICouponRepository couponRepository, 
             IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository,
-            IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository)
+            IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -83,6 +85,7 @@ namespace ias.Rebens.api.Controllers
             this.staticTextRepo = staticTextRepository;
             this.withdrawRepo = withdrawRepository;
             this.bankAccountRepo = bankAccountRepository;
+            this.operationPartnerRepo = operationPartnerRepository;
         }
 
         /// <summary>
@@ -227,7 +230,8 @@ namespace ias.Rebens.api.Controllers
                 {
                     var sendingBlue = new Integration.SendinBlueHelper();
                     var body = $"<p>Nome: {formContact.Name}<br />Email: {formContact.Email}<br />Telefone: {formContact.Phone}<br />Mensagem: {formContact.Message}</p>";
-                    sendingBlue.Send(mailTo, operation.Title, "contato@rebens.com.br", "Contato", $"Novo Contato [{operation.Title}]", body);
+                    var listDestinataries = new Dictionary<string, string>() { { mailTo, operation.Title } };
+                    sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", $"Novo Contato [{operation.Title}]", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Contato enviado com sucesso!", Id = f.Id });
                 }
@@ -269,7 +273,8 @@ namespace ias.Rebens.api.Controllers
                 {
                     var sendingBlue = new Integration.SendinBlueHelper();
                     string body = $"<p>Nome: {formEstablishment.Name}<br />Email: {formEstablishment.Email}<br />Estabelecimento: {formEstablishment.Establishment}<br />Site: {formEstablishment.WebSite}<br />Responsável: {formEstablishment.Responsible}<br />Email Responsável: {formEstablishment.ResponsibleEmail}<br />Cidade: {formEstablishment.City}<br />Estado: {formEstablishment.State}</p>";
-                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"Novo Contato [{operation.Title}]", body);
+                    var listDestinataries = new Dictionary<string, string>() { { "cluberebens@gmail.com", "Clube Rebens" } };
+                    sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", $"Novo Contato [{operation.Title}]", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Indicação enviada com sucesso!", Id = f.Id });
                 }
@@ -530,7 +535,8 @@ namespace ias.Rebens.api.Controllers
                 {
                     var sendingBlue = new Integration.SendinBlueHelper();
                     var body = $"<p>Seu cadastro foi realizado com sucesso!</p><p>Segue a sua senha temporária, sugerimos que você troque essa senha imediatamente:<br />Senha:<b>{password}</b></p>";
-                    var result = sendingBlue.Send(cust.Email, cust.Name, "contato@rebens.com.br", operation.Title, "Cadatro realizado com sucesso", body);
+                    var listDestinataries = new Dictionary<string, string>() { { cust.Email, cust.Name } };
+                    var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Cadatro realizado com sucesso", body);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = cust.Id });
                 }
@@ -1028,7 +1034,8 @@ namespace ias.Rebens.api.Controllers
                     string body = $"Novo resgate: <b>{customerName}</b><br /><br />Banco: {bankAccount.Bank.Name} - {bankAccount.Bank.Code}<br />";
                     body += $"Tipo de conta:{(bankAccount.Type == "CC" ? "Poupança" : "Conta Corrente")}<br />Agência:{bankAccount.Branch}<br />";
                     body += $"Número:{bankAccount.AccountNumber}<br />Valor:{withdraw.Amount.ToString("N")}";
-                    sendingBlue.Send("cluberebens@gmail.com", "Clube Rebens", "contato@rebens.com.br", "Contato", $"[{operation.Title}] - Novo Resgate", body);
+                    var listDestinataries = new Dictionary<string, string>() { { "cluberebens@gmail.com", "Clube Rebens" } };
+                    sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", $"[{operation.Title}] - Novo Resgate", body);
 
                     string bodyCustomer = $"<p>Olá {customerName}, </p><br /><br /><p>Foi realizado um novo resgate conforme as informações abaixo:<br /><br />";
                     bodyCustomer += $"Banco: {bankAccount.Bank.Name} - {bankAccount.Bank.Code}<br />Tipo de conta:{(bankAccount.Type == "CC" ? "Poupança" : "Conta Corrente")}<br />Agência:{bankAccount.Branch}<br />";
@@ -1273,6 +1280,91 @@ namespace ias.Rebens.api.Controllers
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna uma lista com os parceiros da operação
+        /// </summary>
+        /// <param name="operationCode">código da operação, obrigatório</param>
+        /// <returns>Lista com os parceiros</returns>
+        /// <response code="200">Retorna a lista com os parceiros, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("ListOperationPartners")]
+        [ProducesResponseType(typeof(JsonDataModel<List<OperationPartnerModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListOperationPartners([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = operationPartnerRepo.ListActiveByOperation(operationGuid, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<OperationPartnerModel>>()
+                {
+                    Data = new List<OperationPartnerModel>()
+                };
+
+                foreach (var item in list)
+                    ret.Data.Add(new OperationPartnerModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Cria um novo cliente
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpPost("SaveOperationPartnerCustomer")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SaveOperationPartnerCustomer([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]OperationPartnerCustomerModel model)
+        {
+            Guid.TryParse(operationCode, out Guid operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.ReadForSignUp(operationGuid, out bool openSignUp, out string error);
+            if (operation != null)
+            {
+                var customer = model.GetEntity();
+                customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
+                if (operationPartnerRepo.CreateCustomer(customer, out error))
+                {
+                    string body = $"<p>Olá {customer.Name},</p><p>Recebemos o seu cadastro na nossa plataforma, o seu cadastro irá passar pro nosso processo de aprovação e logo entraremos em contato.</p>";
+
+                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, out error);
+
+                    body = $"<p>Olá, recebemos um novo cadastro de um parceiro, entre no nosso sistema para aprovar o cadastro.</p>";
+
+                    var listDestinataries = operationPartnerRepo.ListDestinataries(customer.IdOperationPartner, out error);
+                    Helper.EmailHelper.SendAdminEmail(listDestinataries, $"{operation.Title} - Novo cadastro de parceiro", body, out error);
+
+
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Seu cadastro ira passar por um processo de validação e em breve entraremos em contato.", Id = customer.Id });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
         }
 
         private PortalTokenModel LoadToken(Customer customer, helper.TokenOptions tokenConfigurations, helper.SigningConfigurations signingConfigurations)

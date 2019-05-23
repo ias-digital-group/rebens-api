@@ -1285,16 +1285,17 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.ListCustomers(System.Int32,System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.ListCustomers(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
             <summary>
             Lista os clientes de um parceiro da operação 
             </summary>
-            <param name="id">id do parceiro da operação</param>
             <param name="page">página, não obrigatório (default=0)</param>
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <param name="status">Status do cliente (Novo = 1, Aprovado = 2, Reprovado = 3, Cadastrado = 4), (default = null)</param>
+            <param name="idOperation">id da operação</param>
+            <param name="idOperationPartner">id do parceiro da operação</param>
             <returns>lista dos banners da operação</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -1470,7 +1471,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository,ias.Rebens.IOperationPartnerRepository)">
             <summary>
             
             </summary>
@@ -1491,6 +1492,7 @@
             <param name="operationCustomerRepository"></param>
             <param name="benefitViewRepository"></param>
             <param name="bankAccountRepository"></param>
+            <param name="operationPartnerRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -1727,6 +1729,26 @@
             <returns>Lista com o histórico de pagamento</returns>
             <response code="200">Retorna a lista com o histórico de pagamento, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListOperationPartners(System.String)">
+            <summary>
+            Retorna uma lista com os parceiros da operação
+            </summary>
+            <param name="operationCode">código da operação, obrigatório</param>
+            <returns>Lista com os parceiros</returns>
+            <response code="200">Retorna a lista com os parceiros, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.SaveOperationPartnerCustomer(System.String,ias.Rebens.api.Models.OperationPartnerCustomerModel)">
+            <summary>
+            Cria um novo cliente
+            </summary>
+            <param name="operationCode"></param>
+            <param name="model"></param>
+            <returns></returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.ReportController.#ctor(ias.Rebens.IReportRepository)">
@@ -3815,6 +3837,11 @@
         <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.StatusName">
             <summary>
             Nome do status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationPartnerCustomerModel.OperationPartnerName">
+            <summary>
+            Nome do parceiro
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.OperationPartnerCustomerModel.#ctor">

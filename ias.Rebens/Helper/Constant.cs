@@ -6,6 +6,6 @@ namespace ias.Rebens
 {
     public static class Constant
     {
-        public static string URL { get { return "http://admin.rebens.com.br/"; } }
+        public static string URL { get { return "http://dev.rebens.com.br/"; } }
     }
 }
