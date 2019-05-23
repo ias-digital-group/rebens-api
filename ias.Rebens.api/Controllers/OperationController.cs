@@ -349,11 +349,11 @@ namespace ias.Rebens.api.Controllers
             var serializedData = JsonConvert.SerializeObject(data);
             var jObj = JObject.Parse(serializedData);
 
-            if (bool.Parse(jObj["fields"][7]["data"].ToString()))
+            if (bool.Parse(jObj["fields"][8]["data"].ToString()))
             {
-                if(string.IsNullOrEmpty(jObj["fields"][8]["data"].ToString()))
+                if(string.IsNullOrEmpty(jObj["fields"][9]["data"].ToString()))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "O campo Token Wirecard é obrigatório quando o módulo de Raspadinha está habilitado!" });
-                if (string.IsNullOrEmpty(jObj["fields"][9]["data"].ToString()))
+                if (string.IsNullOrEmpty(jObj["fields"][10]["data"].ToString()))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "O campo Token JS Wirecard é obrigatório quando o módulo de Raspadinha está habilitado!" });
             }
 

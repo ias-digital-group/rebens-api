@@ -1227,7 +1227,7 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.#ctor(ias.Rebens.IOperationPartnerRepository)">
+        <member name="M:ias.Rebens.api.Controllers.OperationPartnerController.#ctor(ias.Rebens.IOperationPartnerRepository,ias.Rebens.IStaticTextRepository)">
             <summary>
             Construtor
             </summary>

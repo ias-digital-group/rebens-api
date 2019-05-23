@@ -44,6 +44,7 @@ CREATE TABLE [dbo].[OperationPartnerCustomer](
 	[Email] [nvarchar](300) NOT NULL,
 	[Cpf] [nvarchar](50) NOT NULL,
 	[IdOperationPartner] [int] NOT NULL,
+	[IdCustomer] [int] NULL,
 	[Status] [int] NOT NULL,
 	[Created] [datetime] NOT NULL,
 	[Modified] [datetime] NOT NULL,
@@ -59,6 +60,14 @@ REFERENCES [dbo].[OperationPartner] ([Id])
 GO
 
 ALTER TABLE [dbo].[OperationPartnerCustomer] CHECK CONSTRAINT [FK_OperationPartnerCustomer_OperationPartner]
+GO
+
+
+ALTER TABLE [dbo].[OperationPartnerCustomer]  WITH CHECK ADD  CONSTRAINT [FK_OperationPartnerCustomer_Customer] FOREIGN KEY([IdCustomer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[OperationPartnerCustomer] CHECK CONSTRAINT [FK_OperationPartnerCustomer_Customer]
 GO
 
 

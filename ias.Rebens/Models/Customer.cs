@@ -16,6 +16,7 @@ namespace ias.Rebens
             Withdraws = new HashSet<Withdraw>();
             ZanoxSales = new HashSet<ZanoxSale>();
             Signatures = new HashSet<MoipSignature>();
+            PartnerCustomers = new HashSet<OperationPartnerCustomer>();
         }
 
         public int Id { get; set; }
@@ -50,6 +51,7 @@ namespace ias.Rebens
         public virtual ICollection<MoipSignature> Signatures { get; set; }
         public virtual ICollection<Withdraw> Withdraws { get; set; }
         public virtual ICollection<ZanoxSale> ZanoxSales { get; set; }
+        public virtual ICollection<OperationPartnerCustomer> PartnerCustomers { get; set; }
 
 
         public void SetPassword(string password)

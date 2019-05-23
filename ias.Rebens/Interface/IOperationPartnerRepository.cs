@@ -20,7 +20,7 @@ namespace ias.Rebens
 
         bool DeleteCustomer(int idCustomer, out string error);
 
-        bool UpdateCustomerStatus(int idCustomer, int status, out string error);
+        bool UpdateCustomerStatus(int idCustomer, int status, out string error, out Operation operation, out Customer customer);
 
         OperationPartnerCustomer ReadCustomer(int idCustomer, out string error);
 

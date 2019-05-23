@@ -14,14 +14,16 @@ namespace ias.Rebens.api.Controllers
     public class OperationPartnerController : ControllerBase
     {
         private IOperationPartnerRepository repo;
+        private IStaticTextRepository staticTextRepo;
 
         /// <summary>
         /// Construtor
         /// </summary>
         /// <param name="operationPartnerRepository">Injeção de dependencia do repositório de parceiro</param>
-        public OperationPartnerController(IOperationPartnerRepository operationPartnerRepository)
+        public OperationPartnerController(IOperationPartnerRepository operationPartnerRepository, IStaticTextRepository staticTextRepository)
         {
             this.repo = operationPartnerRepository;
+            this.staticTextRepo = staticTextRepository;
         }
 
         /// <summary>
@@ -232,8 +234,13 @@ namespace ias.Rebens.api.Controllers
             if(status != 2 && status != 3)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "O status deve ser 2, para cadastro aprovado, ou 3, para cadastro reprovado!" });
 
-            if (repo.UpdateCustomerStatus(idCustomer, status, out string error))
+            if (repo.UpdateCustomerStatus(idCustomer, status, out string error, out Operation operation, out Customer customer))
+            {
+                if(status == (int)Enums.OperationPartnerCustomerStatus.approved)
+                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
+
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Status do cliente atualizado com sucesso!" });
+            }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

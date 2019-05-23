@@ -294,9 +294,11 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool UpdateCustomerStatus(int idCustomer, int status, out string error)
+        public bool UpdateCustomerStatus(int idCustomer, int status, out string error, out Operation operation, out Customer customer)
         {
             bool ret = false;
+            operation = null;
+            customer = null;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -311,14 +313,31 @@ namespace ias.Rebens
 
                             if(update.Status == (int)Enums.OperationPartnerCustomerStatus.approved)
                             {
-                                var customer = new Customer()
+                                operation = db.Operation.Single(o => o.OperationPartners.Any(p => p.Id == update.IdOperationPartner));
+                                int idOperation = operation.Id;
+
+                                customer = db.Customer.SingleOrDefault(c => (c.Cpf == update.Cpf || c.Email == update.Email) && c.IdOperation == idOperation);
+                                if(customer == null)
                                 {
-                                    Name = update.Name,
-                                    Cpf = update.Cpf,
-                                    Email = update.Email,
-                                    CustomerType = (int)Enums.CustomerType.Customer
-                                };
-                                /// TODO: create a customer if the status is approved, on the controler send the email for validation
+                                    customer = new Customer()
+                                    {
+                                        Name = update.Name,
+                                        Cpf = update.Cpf,
+                                        Email = update.Email,
+                                        CustomerType = (int)Enums.CustomerType.Customer,
+                                        Created = DateTime.Now,
+                                        Modified = DateTime.Now,
+                                        Status = (int)Enums.CustomerStatus.Validation,
+                                        Code = Helper.SecurityHelper.HMACSHA1(update.Email, update.Email + "|" + update.Cpf),
+                                        IdOperation = operation.Id
+                                    };
+
+                                    db.Customer.Add(customer);
+                                    db.SaveChanges();
+
+                                    update.IdCustomer = customer.Id;
+                                    db.SaveChanges();
+                                }
                             }
 
                             db.SaveChanges();

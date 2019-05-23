@@ -824,6 +824,12 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdOperationPartner)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_OperationPartnerCustomer_OperationPartner");
+
+                entity.HasOne(c => c.Customer)
+                    .WithMany(c => c.PartnerCustomers)
+                    .HasForeignKey(c => c.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OperationPartnerCustomer_Customer");
             });
 
             modelBuilder.Entity<Partner>(entity =>

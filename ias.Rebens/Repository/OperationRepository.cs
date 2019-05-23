@@ -712,7 +712,7 @@ namespace ias.Rebens
                         if((isTemporary && operation.TemporaryPublishStatus == (int)Enums.PublishStatus.publish) || (!isTemporary && operation.PublishStatus == (int)Enums.PublishStatus.publish))
                         {
                             string color = "", favicon = "", contactEmail = "", gaCode = "";
-                            bool couponEnable = false, customerReferalEnable = false;
+                            bool couponEnable = false, customerReferalEnable = false, operationPartnerEnable = false;
                             var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
                             if (configuration != null)
                             {
@@ -737,6 +737,9 @@ namespace ias.Rebens
                                         case "customer-referal":
                                             customerReferalEnable = bool.Parse(item["data"].ToString());
                                             break;
+                                        case "module-operation-partner":
+                                            operationPartnerEnable = bool.Parse(item["data"].ToString());
+                                            break;
                                         case "g-analytics":
                                             gaCode = item["data"].ToString();
                                             break;
@@ -750,6 +753,7 @@ namespace ias.Rebens
                                     Logo = operation.Image,
                                     Favicon = favicon,
                                     CouponEnabled = couponEnable,
+                                    OperationPartnerEnable = operationPartnerEnable,
                                     Domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain),
                                     CustomerReferalEnable = customerReferalEnable,
                                     GoogleAnalytics = gaCode
