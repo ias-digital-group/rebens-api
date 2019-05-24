@@ -294,11 +294,12 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool UpdateCustomerStatus(int idCustomer, int status, int idAdminUser, out string error, out Operation operation, out Customer customer)
+        public bool UpdateCustomerStatus(int idCustomer, int status, int idAdminUser, out string error, out Operation operation, out Customer customer, out OperationPartnerCustomer partnerCustomer)
         {
             bool ret = false;
             operation = null;
             customer = null;
+            partnerCustomer = null;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -342,6 +343,7 @@ namespace ias.Rebens
                                 db.SaveChanges();
                             }
 
+                            partnerCustomer = update;
                             error = null;
                             ret = true;
                         }

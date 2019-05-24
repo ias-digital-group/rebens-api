@@ -1354,7 +1354,7 @@ namespace ias.Rebens.api.Controllers
 
                     Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, out error);
 
-                    body = $"<p>Olá, recebemos um novo cadastro de um parceiro, entre no nosso sistema para aprovar o cadastro.</p><br /><p style=\"text-align:center;\"><a href=\"{Constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">CRIAR NOVA SENHA</a></p>";
+                    body = $"<p>Olá, recebemos um novo cadastro de um parceiro, entre no nosso sistema para aprovar o cadastro.</p><br /><p style=\"text-align:center;\"><a href=\"{Constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ACESSAR SISTEMA</a></p>";
                     var listDestinataries = operationPartnerRepo.ListDestinataries(customer.IdOperationPartner, out error);
                     Helper.EmailHelper.SendAdminEmail(listDestinataries, $"{operation.Title} - Novo cadastro de parceiro", body, out error);
 

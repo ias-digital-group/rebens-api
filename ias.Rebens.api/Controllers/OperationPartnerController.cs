@@ -309,14 +309,14 @@ namespace ias.Rebens.api.Controllers
             else
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
 
-            if (repo.UpdateCustomerStatus(idCustomer, status, idAdminUser, out string error, out Operation operation, out Customer customer))
+            if (repo.UpdateCustomerStatus(idCustomer, status, idAdminUser, out string error, out Operation operation, out Customer customer, out OperationPartnerCustomer partnerCustomer))
             {
                 if(status == (int)Enums.OperationPartnerCustomerStatus.approved)
                     Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
                 else if (status == (int)Enums.OperationPartnerCustomerStatus.reproved)
                 {
-                    string body = $"<p>Olá {customer.Name},</p><br /><p>Infelizmente o seu cadastro para acesso ao clube não foi aprovado.</p><br /><p>Grato</p>";
-                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, customer.IdOperation, $"{operation.Title} - Validação de Cadastro", body, out error);
+                    string body = $"<p>Olá {partnerCustomer.Name},</p><br /><p>Infelizmente o seu cadastro para acesso ao clube não foi aprovado.</p><br /><p>Grato</p>";
+                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, partnerCustomer.Email, partnerCustomer.Name, operation.Id, $"{operation.Title} - Validação de Cadastro", body, out error);
                 }
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Status do cliente atualizado com sucesso!" });
             }
