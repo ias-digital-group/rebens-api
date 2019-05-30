@@ -47,7 +47,7 @@ namespace ias.Rebens
         {
             bool ret = true;
             error = null;
-            if (idOperation == 2)
+            if (idOperation == 2 || idOperation == 52)
             {
                 try
                 {
@@ -129,7 +129,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.CustomerReferal.Count(a => string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word));
+                    var total = db.CustomerReferal.Count(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) && a.IdCustomer == idCustomer);
 
                     ret = new ResultPage<CustomerReferal>(list, page, pageItems, total);
 

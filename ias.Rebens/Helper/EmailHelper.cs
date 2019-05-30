@@ -12,7 +12,7 @@ namespace ias.Rebens.Helper
             if (staticText != null)
             {
                 var sendingBlue = new Integration.SendinBlueHelper();
-                var link = operation.Domain + "#/?c=" + user.Code;
+                var link = (string.IsNullOrEmpty(operation.Domain) ? (operation.TemporarySubdomain + ".sistemarebens.com.br") : operation.Domain) + "#/?c=" + user.Code;
                 var body = staticText.Html.Replace("##NAME##", user.Name).Replace("##LINK##", link);
                 var listDestinataries = new Dictionary<string, string> { { user.Email, user.Name } };
                 var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
@@ -50,21 +50,21 @@ namespace ias.Rebens.Helper
                 string domain = (string.IsNullOrEmpty(operation.Domain) ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                 if (operation.Id == 1)
                 {
-                    msg = $"<p>Olá {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
+                    msg = $"<p>Olá, {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
                     msg += $"<p>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
-                }
-                else if(operation.Id == 2)
-                {
-                    msg = $"<p>Olá {referal.Name}</p><br /><br />";
-                    msg += "<p><b>Você foi convidado</b> por um dos nossos participantes <b>para ingressar</b> em um <b>Clube de Vantagens Exclusivo</b>.</p><br />";
-                    msg += $"<p><a href='{domain}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#00b0d3;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>QUERO ME CADASTRAR</a></p>";
                 }
                 else
                 {
                     msg = $"<p>Olá {referal.Name}</p><br /><br />";
                     msg += "<p><b>Você foi convidado</b> por um dos nossos participantes <b>para ingressar</b> em um <b>Clube de Vantagens Exclusivo</b>.</p><br />";
-                    msg += $"<p>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
+                    msg += $"<p><a href='{domain}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#00b0d3;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>QUERO ME CADASTRAR</a></p>";
                 }
+                //else
+                //{
+                //    msg = $"<p>Olá {referal.Name}</p><br /><br />";
+                //    msg += "<p><b>Você foi convidado</b> por um dos nossos participantes <b>para ingressar</b> em um <b>Clube de Vantagens Exclusivo</b>.</p><br />";
+                //    msg += $"<p>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
+                //}
                 string body = staticText.Html.Replace("###BODY###", msg);
                 var listDestinataries = new Dictionary<string, string> { { referal.Email, referal.Name } };
                 var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);

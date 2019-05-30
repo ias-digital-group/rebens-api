@@ -204,7 +204,7 @@ namespace ias.Rebens.api.Controllers
             if (repo.Create(admin, out string error))
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
-                string body = $"<p>Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
+                string body = $"<p style=\"color:#444;\">Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
                 body += $"<br /><p style=\"text-align:center;\"><a href=\"{Constant.URL}#/validate?c={code}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ATIVAR CADASTRO</a></p>";
 
                 var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };

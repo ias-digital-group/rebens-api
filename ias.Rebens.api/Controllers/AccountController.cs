@@ -242,8 +242,10 @@ namespace ias.Rebens.api.Controllers
             if (user != null)
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(user.Email));
-                string body = $"<p>Olá {user.Name},</p> <br /><p>Clique no link abaixo para cadastrar uma nova senha.</p>";
-                body += $"<br /><br /><p><a href='{Constant.URL}#/validate?c={code}'>{Constant.URL}#/validate?c={code}</a></p>";
+                string body = $"<p style=\"color:#444;\">Olá, {user.Name}.</p> <br /><p style=\"color:#444;\">Clique no link abaixo para cadastrar uma nova senha.</p>";
+                body += $"<br /><br /><p style=\"text-align:center;\"><a href=\"{Constant.URL}#/validate?c={code}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ALTERAR SENHA</a></p>";
+
+                //body += $"<br /><p><a href='{Constant.URL}#/validate?c={code}'>{Constant.URL}#/validate?c={code}</a></p>";
                 var listDestinataries = new Dictionary<string, string>() { { user.Email, user.Name } };
                 if (Helper.EmailHelper.SendAdminEmail(listDestinataries, "Rebens - Redefinição de senha de cadastro", body, out error))
                     return Ok(new JsonModel() { Status = "ok" });

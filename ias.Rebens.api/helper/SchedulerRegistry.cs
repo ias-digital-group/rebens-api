@@ -86,8 +86,12 @@ namespace ias.Rebens.api.helper
             string conn = "Server=172.31.27.205;Database=Rebens;user id=Rebens_user;password=i$f6LiF*N2kv;";
             bool debug = false;
 
+            var log = new LogErrorRepository(conn);
             var customerRepo = new CustomerRepository(conn);
             var couponRepo = new CouponRepository(conn);
+
+            log.Create("CouponToolsGenerateJob", "START", "", "");
+
 
             var mail = new Integration.SendinBlueHelper();
             bool run = true;

@@ -1350,8 +1350,7 @@ namespace ias.Rebens.api.Controllers
                 customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
                 if (operationPartnerRepo.CreateCustomer(customer, out error))
                 {
-                    string body = $"<p>Olá {customer.Name},</p><p>Recebemos o seu cadastro na nossa plataforma, o seu cadastro irá passar pro nosso processo de aprovação e logo entraremos em contato.</p>";
-
+                    string body = $"<p>Olá, {customer.Name} obrigada pelo seu cadastro. </p><p>Estamos aguardando o RH da sua empresa validar seus dados e confirmar sua contratação.</p><br /><p>Enquanto isso, que tal dar uma olhada nos seguros que o ClubMMB pode te oferecer?</p>";
                     Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, out error);
 
                     body = $"<p>Olá, recebemos um novo cadastro de um parceiro, entre no nosso sistema para aprovar o cadastro.</p><br /><p style=\"text-align:center;\"><a href=\"{Constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ACESSAR SISTEMA</a></p>";
