@@ -50,13 +50,14 @@ namespace ias.Rebens.Helper
                 string domain = (string.IsNullOrEmpty(operation.Domain) ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                 if (operation.Id == 1)
                 {
-                    msg = $"<p>Olá, {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
-                    msg += $"<p>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
+                    msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
+                    msg += $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
                 }
                 else
                 {
-                    msg = $"<p>Olá {referal.Name}</p><br /><br />";
-                    msg += "<p><b>Você foi convidado</b> por um dos nossos participantes <b>para ingressar</b> em um <b>Clube de Vantagens Exclusivo</b>.</p><br />";
+                    msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá {referal.Name}</p><br /><br />";
+                    msg += "<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Você foi convidado por um dos nossos participantes para ingressar em um Clube de Vantagens Exclusivo.</p><br />";
+                    msg += "<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão <b>“Quero fazer parte”</b>.</p>";
                     msg += $"<p><a href='{domain}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#00b0d3;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>QUERO ME CADASTRAR</a></p>";
                 }
                 //else

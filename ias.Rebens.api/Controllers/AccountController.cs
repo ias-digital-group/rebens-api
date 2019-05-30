@@ -242,7 +242,7 @@ namespace ias.Rebens.api.Controllers
             if (user != null)
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(user.Email));
-                string body = $"<p style=\"color:#444;\">Olá, {user.Name}.</p> <br /><p style=\"color:#444;\">Clique no link abaixo para cadastrar uma nova senha.</p>";
+                string body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {user.Name}.</p> <br /><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão <b>“Alterar Senha”</b>  para cadastrar uma nova senha.</p>";
                 body += $"<br /><br /><p style=\"text-align:center;\"><a href=\"{Constant.URL}#/validate?c={code}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ALTERAR SENHA</a></p>";
 
                 //body += $"<br /><p><a href='{Constant.URL}#/validate?c={code}'>{Constant.URL}#/validate?c={code}</a></p>";
