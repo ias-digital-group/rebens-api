@@ -239,7 +239,12 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if(!db.OperationPartnerCustomer.Any(c => (c.Email == customer.Email || c.Cpf == customer.Cpf) && c.IdOperationPartner == customer.IdOperationPartner))
+                    var operation = db.Operation.Single(o => o.OperationPartners.Any(p => p.Id == customer.IdOperationPartner));
+                    if(db.Customer.Any(c => (c.Email == customer.Email || c.Cpf == customer.Cpf) && c.IdOperation == operation.Id))
+                    {
+                        error = "O CPF ou Email já estão cadastrados em nosso sistema.";
+                    }
+                    else if(!db.OperationPartnerCustomer.Any(c => (c.Email == customer.Email || c.Cpf == customer.Cpf) && c.IdOperationPartner == customer.IdOperationPartner))
                     {
                         customer.Modified = customer.Created = DateTime.UtcNow;
                         customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
