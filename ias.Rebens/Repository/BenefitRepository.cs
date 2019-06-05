@@ -882,7 +882,7 @@ namespace ias.Rebens
                 {
                     int total = 0;
                     var listPosition = db.Benefit.Include("Partner").Where(b => !b.Deleted && !b.Partner.Deleted && b.Active && b.HomeBenefitHighlight > 0 && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation));
-                    total = listPosition.Count();
+                    total = listPosition.Select(l => l.HomeBenefitHighlight).Distinct().Count();
 
                     List<Benefit> listRandom = null;
                     if (total < 12)

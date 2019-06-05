@@ -66,6 +66,8 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Name, Id, Email, Birthday), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="idPartner">id do parceiro (default=null)</param>
+        /// <param name="status">status do cliente (default=null)</param>
         /// <returns>Lista com os endereços encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -75,7 +77,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<CustomerListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListCustomers([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
+        public IActionResult ListCustomers([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null, [FromQuery]int? idPartner = null, [FromQuery]int? status = null)
         {
             var principal = HttpContext.User;
             if (principal.IsInRole("administrator"))
@@ -94,7 +96,11 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            var list = repo.ListCustomerPage(page, pageItems, searchWord, sort, out string error, idOperation);
+            if (idOperation == 0) idOperation = null;
+            if (idPartner == 0) idPartner = null;
+            if (status == 0) status = null;
+
+            var list = repo.ListCustomerPage(page, pageItems, searchWord, sort, out string error, idOperation, idPartner);
 
             if (string.IsNullOrEmpty(error))
             {

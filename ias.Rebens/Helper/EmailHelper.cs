@@ -15,7 +15,7 @@ namespace ias.Rebens.Helper
                 var link = (string.IsNullOrEmpty(operation.Domain) ? (operation.TemporarySubdomain + ".sistemarebens.com.br") : operation.Domain) + "#/?c=" + user.Code;
                 var body = staticText.Html.Replace("##NAME##", user.Name).Replace("##LINK##", link);
                 var listDestinataries = new Dictionary<string, string> { { user.Email, user.Name } };
-                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
+                var result = sendingBlue.Send(listDestinataries, operation.Id == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -32,7 +32,7 @@ namespace ias.Rebens.Helper
                 string link = (string.IsNullOrEmpty(operation.Domain) ? (operation.TemporarySubdomain + ".sistemarebens.com.br") : operation.Domain) + "/#/?c=" + customer.Code;
                 var body = staticText.Html.Replace("##LINK##", link);
                 var listDestinataries = new Dictionary<string, string> { { customer.Email, "" } };
-                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
+                var result = sendingBlue.Send(listDestinataries, operation.Id == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -68,7 +68,7 @@ namespace ias.Rebens.Helper
                 //}
                 string body = staticText.Html.Replace("###BODY###", msg);
                 var listDestinataries = new Dictionary<string, string> { { referal.Email, referal.Name } };
-                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);
+                var result = sendingBlue.Send(listDestinataries, operation.Id == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -84,7 +84,7 @@ namespace ias.Rebens.Helper
                 var sendingBlue = new Integration.SendinBlueHelper();
                 string message = staticText.Html.Replace("###BODY###", body);
                 var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", subject, message);
+                var result = sendingBlue.Send(listDestinataries, idOperation == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", "Contato", subject, message);
                 if (result.Status)
                     return true;
                 error = result.Message;

@@ -1769,7 +1769,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.ReportController.ListCustomers(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+        <member name="M:ias.Rebens.api.Controllers.ReportController.ListCustomers(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
             <summary>
             Relatório de clientes cadastrados no sistema
             </summary>
@@ -1778,6 +1778,8 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Name, Id, Email, Birthday), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idPartner">id do parceiro (default=null)</param>
+            <param name="status">status do cliente (default=null)</param>
             <returns>Lista com os endereços encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>

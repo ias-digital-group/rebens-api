@@ -16,7 +16,7 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public ResultPage<CustomerReportItem> ListCustomerPage(int page, int pageItems, string word, string sort, out string error, int? idOperation)
+        public ResultPage<CustomerReportItem> ListCustomerPage(int page, int pageItems, string word, string sort, out string error, int? idOperation, int? idPartner, int? status)
         {
             ResultPage<CustomerReportItem> ret;
             try
@@ -24,7 +24,9 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Customer.Include("Operation").Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
-                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
+                                    && (!idPartner.HasValue || (idPartner.HasValue && db.OperationPartnerCustomer.Any(c => c.IdOperationPartner == idPartner && a.Id == c.IdCustomer)))
+                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                    && (!status.HasValue || (status.HasValue && a.Status == status)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -54,8 +56,10 @@ namespace ias.Rebens
                     }
 
                     var customers = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Customer.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation)) 
-                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
+                    var total = db.Customer.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
+                                    && (!idPartner.HasValue || (idPartner.HasValue && db.OperationPartnerCustomer.Any(c => c.IdOperationPartner == idPartner && a.Id == c.IdCustomer)))
+                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                    && (!status.HasValue || (status.HasValue && a.Status == status)));
 
                     var list = new List<CustomerReportItem>();
                     customers.ForEach(c => {
