@@ -9,6 +9,7 @@ namespace ias.Rebens
         public AdminUser()
         {
             OperationPartnerCustomers = new HashSet<OperationPartnerCustomer>();
+            Courses = new HashSet<Course>();
         }
 
         public int Id { get; set; }
@@ -28,6 +29,7 @@ namespace ias.Rebens
         public virtual Operation Operation { get; set; }
         public virtual OperationPartner OperationPartner { get; set; }
         public virtual ICollection<OperationPartnerCustomer> OperationPartnerCustomers { get; set; }
+        public virtual ICollection<Course> Courses { get; set; }
 
         public void SetPassword(string password)
         {

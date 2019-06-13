@@ -8,6 +8,7 @@ namespace ias.Rebens
         public StaticText()
         {
             Partners = new HashSet<Partner>();
+            Courses = new HashSet<Course>();
         }
 
         public int Id { get; set; }
@@ -27,5 +28,6 @@ namespace ias.Rebens
         public virtual Benefit Benefit { get; set; }
 
         public virtual ICollection<Partner> Partners { get; set; }
+        public virtual ICollection<Course> Courses { get; set; }
     }
 }

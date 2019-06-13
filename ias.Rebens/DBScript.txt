@@ -1,1 +1,420 @@
-﻿
+﻿/****** Object:  Table [dbo].[CoursePeriod]    Script Date: 13/06/2019 1:39:55 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CoursePeriod](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdOperation] [int] NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[Active] [bit] NOT NULL,
+	[Deleted] [bit] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_CoursePeriod] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CoursePeriod]  WITH CHECK ADD  CONSTRAINT [FK_CoursePeriod_Operation] FOREIGN KEY([IdOperation])
+REFERENCES [dbo].[Operation] ([Id])
+GO
+
+ALTER TABLE [dbo].[CoursePeriod] CHECK CONSTRAINT [FK_CoursePeriod_Operation]
+GO
+
+/****** Object:  Table [dbo].[CourseModality]    Script Date: 13/06/2019 1:40:06 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseModality](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdOperation] [int] NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[Active] [bit] NOT NULL,
+	[Deleted] [bit] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_CourseModality] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseModality]  WITH CHECK ADD  CONSTRAINT [FK_CourseModality_Operation] FOREIGN KEY([IdOperation])
+REFERENCES [dbo].[Operation] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseModality] CHECK CONSTRAINT [FK_CourseModality_Operation]
+GO
+
+
+
+/****** Object:  Table [dbo].[CourseGraduationType]    Script Date: 13/06/2019 1:40:25 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseGraduationType](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdOperation] [int] NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[Active] [bit] NOT NULL,
+	[Deleted] [bit] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_CourseGraduationType] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseGraduationType]  WITH CHECK ADD  CONSTRAINT [FK_CourseGraduationType_Operation] FOREIGN KEY([IdOperation])
+REFERENCES [dbo].[Operation] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseGraduationType] CHECK CONSTRAINT [FK_CourseGraduationType_Operation]
+GO
+
+/****** Object:  Table [dbo].[CourseCollege]    Script Date: 13/06/2019 1:40:43 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseCollege](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdOperation] [int] NOT NULL,
+	[Name] [nvarchar](500) NOT NULL,
+	[IdAddress] [int] NULL,
+	[Logo] [nvarchar](500) NULL,
+	[Active] [bit] NOT NULL,
+	[Deleted] [bit] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_CourseCollege] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseCollege]  WITH CHECK ADD  CONSTRAINT [FK_CourseCollege_CourseCollege] FOREIGN KEY([IdAddress])
+REFERENCES [dbo].[Address] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseCollege] CHECK CONSTRAINT [FK_CourseCollege_CourseCollege]
+GO
+
+ALTER TABLE [dbo].[CourseCollege]  WITH CHECK ADD  CONSTRAINT [FK_CourseCollege_Operation] FOREIGN KEY([IdOperation])
+REFERENCES [dbo].[Operation] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseCollege] CHECK CONSTRAINT [FK_CourseCollege_Operation]
+GO
+
+
+/****** Object:  Table [dbo].[CourseCollegeAddress]    Script Date: 13/06/2019 1:41:09 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseCollegeAddress](
+	[IdCollege] [int] NOT NULL,
+	[IdAddress] [int] NOT NULL,
+ CONSTRAINT [PK_CourseCollegeAddress] PRIMARY KEY CLUSTERED 
+(
+	[IdCollege] ASC,
+	[IdAddress] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseCollegeAddress]  WITH CHECK ADD  CONSTRAINT [FK_CourseCollegeAddress_Address] FOREIGN KEY([IdAddress])
+REFERENCES [dbo].[Address] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseCollegeAddress] CHECK CONSTRAINT [FK_CourseCollegeAddress_Address]
+GO
+
+ALTER TABLE [dbo].[CourseCollegeAddress]  WITH CHECK ADD  CONSTRAINT [FK_CourseCollegeAddress_CourseCollege] FOREIGN KEY([IdCollege])
+REFERENCES [dbo].[CourseCollege] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseCollegeAddress] CHECK CONSTRAINT [FK_CourseCollegeAddress_CourseCollege]
+GO
+
+
+
+
+/****** Object:  Table [dbo].[CourseModality]    Script Date: 13/06/2019 1:45:50 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseModality](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdOperation] [int] NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[Active] [bit] NOT NULL,
+	[Deleted] [bit] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_CourseModality] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseModality]  WITH CHECK ADD  CONSTRAINT [FK_CourseModality_Operation] FOREIGN KEY([IdOperation])
+REFERENCES [dbo].[Operation] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseModality] CHECK CONSTRAINT [FK_CourseModality_Operation]
+GO
+
+
+
+
+/****** Object:  Table [dbo].[Course]    Script Date: 13/06/2019 1:39:36 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Course](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdOperation] [int] NOT NULL,
+	[IdCollege] [int] NOT NULL,
+	[IdGraduationType] [int] NOT NULL,
+	[IdModality] [int] NOT NULL,
+	[Title] [nvarchar](500) NOT NULL,
+	[OriginalPrice] [money] NOT NULL,
+	[Discount] [money] NOT NULL,
+	[FinalPrice] [money] NOT NULL,
+	[Duration] [nvarchar](200) NOT NULL,
+	[Image] [nvarchar](500) NULL,
+	[Rating] [decimal](15, 2) NOT NULL,
+	[IdAdminUser] [int] NOT NULL,
+	[DueDate] [datetime] NULL,
+	[StartDate] [datetime] NULL,
+	[EndDate] [datetime] NULL,
+	[VoucherText] [nvarchar](500) NULL,
+	[IdDescription] [int] NULL,
+	[Active] [bit] NOT NULL,
+	[Deleted] [bit] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_Course] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Course]  WITH CHECK ADD  CONSTRAINT [FK_Course_AdminUser] FOREIGN KEY([IdAdminUser])
+REFERENCES [dbo].[AdminUser] ([Id])
+GO
+
+ALTER TABLE [dbo].[Course] CHECK CONSTRAINT [FK_Course_AdminUser]
+GO
+
+ALTER TABLE [dbo].[Course]  WITH CHECK ADD  CONSTRAINT [FK_Course_CourseCollege] FOREIGN KEY([IdCollege])
+REFERENCES [dbo].[CourseCollege] ([Id])
+GO
+
+ALTER TABLE [dbo].[Course] CHECK CONSTRAINT [FK_Course_CourseCollege]
+GO
+
+ALTER TABLE [dbo].[Course]  WITH CHECK ADD  CONSTRAINT [FK_Course_CourseGraduationType] FOREIGN KEY([IdGraduationType])
+REFERENCES [dbo].[CourseGraduationType] ([Id])
+GO
+
+ALTER TABLE [dbo].[Course] CHECK CONSTRAINT [FK_Course_CourseGraduationType]
+GO
+
+ALTER TABLE [dbo].[Course]  WITH CHECK ADD  CONSTRAINT [FK_Course_CourseModality] FOREIGN KEY([IdModality])
+REFERENCES [dbo].[CourseModality] ([Id])
+GO
+
+ALTER TABLE [dbo].[Course] CHECK CONSTRAINT [FK_Course_CourseModality]
+GO
+
+ALTER TABLE [dbo].[Course]  WITH CHECK ADD  CONSTRAINT [FK_Course_Operation] FOREIGN KEY([IdOperation])
+REFERENCES [dbo].[Operation] ([Id])
+GO
+
+ALTER TABLE [dbo].[Course] CHECK CONSTRAINT [FK_Course_Operation]
+GO
+
+ALTER TABLE [dbo].[Course]  WITH CHECK ADD  CONSTRAINT [FK_Course_StaticText] FOREIGN KEY([IdDescription])
+REFERENCES [dbo].[StaticText] ([Id])
+GO
+
+ALTER TABLE [dbo].[Course] CHECK CONSTRAINT [FK_Course_StaticText]
+GO
+
+
+/****** Object:  Table [dbo].[CourseAddress]    Script Date: 13/06/2019 1:41:26 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseAddress](
+	[IdCourse] [int] NOT NULL,
+	[IdAddress] [int] NOT NULL,
+ CONSTRAINT [PK_CourseAddress] PRIMARY KEY CLUSTERED 
+(
+	[IdCourse] ASC,
+	[IdAddress] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseAddress]  WITH CHECK ADD  CONSTRAINT [FK_CourseAddress_Address] FOREIGN KEY([IdAddress])
+REFERENCES [dbo].[Address] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseAddress] CHECK CONSTRAINT [FK_CourseAddress_Address]
+GO
+
+ALTER TABLE [dbo].[CourseAddress]  WITH CHECK ADD  CONSTRAINT [FK_CourseAddress_Course] FOREIGN KEY([IdCourse])
+REFERENCES [dbo].[Course] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseAddress] CHECK CONSTRAINT [FK_CourseAddress_Course]
+GO
+
+
+
+/****** Object:  Table [dbo].[CourseUse]    Script Date: 13/06/2019 1:41:49 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseUse](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdCustomer] [int] NOT NULL,
+	[IdCourse] [int] NOT NULL,
+	[Name] [nvarchar](500) NOT NULL,
+	[OriginalPrice] [money] NOT NULL,
+	[Discount] [money] NOT NULL,
+	[FinalPrice] [money] NOT NULL,
+	[Code] [nvarchar](50) NOT NULL,
+	[Status] [int] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_CourseUse] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseUse]  WITH CHECK ADD  CONSTRAINT [FK_CourseUse_Course] FOREIGN KEY([IdCourse])
+REFERENCES [dbo].[Course] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseUse] CHECK CONSTRAINT [FK_CourseUse_Course]
+GO
+
+ALTER TABLE [dbo].[CourseUse]  WITH CHECK ADD  CONSTRAINT [FK_CourseUse_Customer] FOREIGN KEY([IdCustomer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseUse] CHECK CONSTRAINT [FK_CourseUse_Customer]
+GO
+
+
+
+/****** Object:  Table [dbo].[CourseView]    Script Date: 13/06/2019 1:42:07 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseView](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdCustomer] [int] NOT NULL,
+	[IdCourse] [int] NOT NULL,
+	[Created] [datetime] NOT NULL,
+ CONSTRAINT [PK_CourseView] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseView]  WITH CHECK ADD  CONSTRAINT [FK_CourseView_Course] FOREIGN KEY([IdCourse])
+REFERENCES [dbo].[Course] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseView] CHECK CONSTRAINT [FK_CourseView_Course]
+GO
+
+ALTER TABLE [dbo].[CourseView]  WITH CHECK ADD  CONSTRAINT [FK_CourseView_Customer] FOREIGN KEY([IdCustomer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseView] CHECK CONSTRAINT [FK_CourseView_Customer]
+GO
+
+
+
+
+
+/****** Object:  Table [dbo].[CourseCoursePeriod]    Script Date: 13/06/2019 1:45:03 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseCoursePeriod](
+	[IdCourse] [int] NOT NULL,
+	[IdPeriod] [int] NOT NULL,
+ CONSTRAINT [PK_CourseCoursePeriod] PRIMARY KEY CLUSTERED 
+(
+	[IdCourse] ASC,
+	[IdPeriod] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseCoursePeriod]  WITH CHECK ADD  CONSTRAINT [FK_CourseCoursePeriod_Course] FOREIGN KEY([IdCourse])
+REFERENCES [dbo].[Course] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseCoursePeriod] CHECK CONSTRAINT [FK_CourseCoursePeriod_Course]
+GO
+
+ALTER TABLE [dbo].[CourseCoursePeriod]  WITH CHECK ADD  CONSTRAINT [FK_CourseCoursePeriod_CoursePeriod] FOREIGN KEY([IdPeriod])
+REFERENCES [dbo].[CoursePeriod] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseCoursePeriod] CHECK CONSTRAINT [FK_CourseCoursePeriod_CoursePeriod]
+GO
+

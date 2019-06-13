@@ -12,6 +12,9 @@ namespace ias.Rebens
             PartnerAddresses = new HashSet<PartnerAddress>();
             OperationAddresses = new HashSet<OperationAddress>();
             Customers = new HashSet<Customer>();
+            CourseCollegeAddresses = new HashSet<CourseCollegeAddress>();
+            CourseColleges = new HashSet<CourseCollege>();
+            CourseAddresses = new HashSet<CourseAddress>();
         }
 
         public int Id { get; set; }
@@ -34,5 +37,8 @@ namespace ias.Rebens
         public virtual ICollection<PartnerAddress> PartnerAddresses { get; set; }
         public virtual ICollection<OperationAddress> OperationAddresses { get; set; }
         public virtual ICollection<Customer> Customers { get; set; }
+        public virtual ICollection<CourseCollegeAddress> CourseCollegeAddresses { get; set; }
+        public virtual ICollection<CourseCollege> CourseColleges { get; set; }
+        public virtual ICollection<CourseAddress> CourseAddresses { get; set; }
     }
 }

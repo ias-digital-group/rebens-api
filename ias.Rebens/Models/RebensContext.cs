@@ -37,6 +37,16 @@ namespace ias.Rebens
         public virtual DbSet<Contact> Contact { get; set; }
         public virtual DbSet<Coupon> Coupon { get; set; }
         public virtual DbSet<CouponCampaign> CouponCampaign { get; set; }
+        public virtual DbSet<Course> Course { get; set; }
+        public virtual DbSet<CourseAddress> CourseAddress { get; set; }
+        public virtual DbSet<CourseCollege> CourseCollege { get; set; }
+        public virtual DbSet<CourseCollegeAddress> CourseCollegeAddress { get; set; }
+        public virtual DbSet<CourseCoursePeriod> CourseCoursePeriod { get; set; }
+        public virtual DbSet<CourseGraduationType> CourseGraduationType { get; set; }
+        public virtual DbSet<CourseModality> CourseModality { get; set; }
+        public virtual DbSet<CoursePeriod> CoursePeriod { get; set; }
+        public virtual DbSet<CourseUse> CourseUse { get; set; }
+        public virtual DbSet<CourseView> CourseView { get; set; }
         public virtual DbSet<Customer> Customer { get; set; }
         public virtual DbSet<CustomerReferal> CustomerReferal { get; set; }
         public virtual DbSet<Faq> Faq { get; set; }
@@ -444,6 +454,161 @@ namespace ias.Rebens
                 entity.Property(e => e.Created).HasColumnType("datetime");
 
                 entity.Property(e => e.Modified).HasColumnType("datetime");
+            });
+
+            modelBuilder.Entity<Course>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.OriginalPrice).IsRequired().HasColumnType("money");
+                entity.Property(e => e.Discount).IsRequired().HasColumnType("money");
+                entity.Property(e => e.FinalPrice).IsRequired().HasColumnType("money");
+                entity.Property(e => e.Duration).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Image).HasMaxLength(500);
+                entity.Property(e => e.Rating).IsRequired().HasColumnType("decimal");
+                entity.Property(e => e.DueDate).HasColumnType("datetime");
+                entity.Property(e => e.StartDate).HasColumnType("datetime");
+                entity.Property(e => e.EndDate).HasColumnType("datetime");
+                entity.Property(e => e.VoucherText).HasMaxLength(500);
+            });
+
+            modelBuilder.Entity<CourseAddress>(entity =>
+            {
+                entity.HasKey(e => new { e.IdCourse, e.IdAddress });
+
+                entity.HasOne(d => d.Course)
+                    .WithMany(p => p.CourseAddresses)
+                    .HasForeignKey(d => d.IdCourse)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseAddress_Course");
+
+                entity.HasOne(d => d.Address)
+                    .WithMany(p => p.CourseAddresses)
+                    .HasForeignKey(d => d.IdAddress)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseAddress_Address");
+            });
+
+            modelBuilder.Entity<CourseCollege>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Logo).HasMaxLength(500);
+            });
+
+            modelBuilder.Entity<CourseCollegeAddress>(entity =>
+            {
+                entity.HasKey(e => new { e.IdCollege, e.IdAddress});
+
+                entity.HasOne(d => d.College)
+                    .WithMany(p => p.CollegeAddresses)
+                    .HasForeignKey(d => d.IdCollege)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseCollegeAddress_CourseCollege");
+
+                entity.HasOne(d => d.Address)
+                    .WithMany(p => p.CourseCollegeAddresses)
+                    .HasForeignKey(d => d.IdAddress)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseCollegeAddress_Address");
+            });
+
+            modelBuilder.Entity<CourseCoursePeriod>(entity =>
+            {
+                entity.HasKey(e => new { e.IdCourse, e.IdPeriod });
+
+                entity.HasOne(d => d.CoursePeriod)
+                    .WithMany(p => p.CoursePeriods)
+                    .HasForeignKey(d => d.IdPeriod)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseCoursePeriod_CoursePeriod");
+
+                entity.HasOne(d => d.Course)
+                    .WithMany(p => p.CoursePeriods)
+                    .HasForeignKey(d => d.IdCourse)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseCoursePeriod_Course");
+            });
+
+            modelBuilder.Entity<CourseGraduationType>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.CourseGraduationTypes)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseGraduationType_Operation");
+            });
+
+            modelBuilder.Entity<CourseModality>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.CourseModalities)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseModality_Operation");
+            });
+
+            modelBuilder.Entity<CoursePeriod>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.CoursePeriods)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CoursePeriod_Operation");
+            });
+
+            modelBuilder.Entity<CourseUse>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.OriginalPrice).IsRequired().HasColumnType("money");
+                entity.Property(e => e.Discount).IsRequired().HasColumnType("money");
+                entity.Property(e => e.FinalPrice).IsRequired().HasColumnType("money");
+
+                entity.HasOne(d => d.Course)
+                    .WithMany(p => p.CourseUses)
+                    .HasForeignKey(d => d.IdCourse)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseUse_Course");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.CourseUses)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseUse_Customer");
+            });
+
+            modelBuilder.Entity<CourseView>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Course)
+                                    .WithMany(p => p.CourseViews)
+                                    .HasForeignKey(d => d.IdCourse)
+                                    .OnDelete(DeleteBehavior.ClientSetNull)
+                                    .HasConstraintName("FK_CourseView_Course");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.CourseViews)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseView_Customer");
             });
 
             modelBuilder.Entity<Customer>(entity =>
