@@ -100,7 +100,7 @@ namespace ias.Rebens.api.Controllers
             if (idPartner == 0) idPartner = null;
             if (status == 0) status = null;
 
-            var list = repo.ListCustomerPage(page, pageItems, searchWord, sort, out string error, idOperation, idPartner);
+            var list = repo.ListCustomerPage(page, pageItems, searchWord, sort, out string error, idOperation, idPartner, status);
 
             if (string.IsNullOrEmpty(error))
             {
