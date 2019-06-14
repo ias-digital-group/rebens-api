@@ -14,6 +14,31 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public bool AddAddress(int id, int idAddress, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (!db.CourseCollegeAddress.Any(o => o.IdCollege == id && o.IdAddress == idAddress))
+                    {
+                        db.CourseCollegeAddress.Add(new CourseCollegeAddress() { IdAddress = idAddress, IdCollege = id });
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseCollegeRepository.AddAddress", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar adicionar o endereço. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
         public bool Create(CourseCollege college, out string error)
         {
             bool ret = true;
@@ -56,6 +81,29 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CourseCollegeRepository.Delete", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar excluir a faculdade. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool DeleteAddress(int id, int idAddress, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmp = db.CourseCollegeAddress.SingleOrDefault(o => o.IdCollege == id && o.IdAddress == idAddress);
+                    db.CourseCollegeAddress.Remove(tmp);
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseCollegeRepository.DeleteAddress", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar excluir o endereço. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;

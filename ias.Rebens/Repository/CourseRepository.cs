@@ -39,6 +39,31 @@ namespace ias.Rebens
             return ret;
         }
 
+        public bool AddPeriod(int idCourse, int idPeriod, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (!db.CourseCoursePeriod.Any(o => o.IdCourse == idCourse && o.IdPeriod == idPeriod))
+                    {
+                        db.CourseCoursePeriod.Add(new CourseCoursePeriod() { IdPeriod = idPeriod, IdCourse = idCourse });
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.AddPeriod", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar adicionar o periodo. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
         public bool Create(Course course, out string error)
         {
             bool ret = true;
@@ -112,6 +137,32 @@ namespace ias.Rebens
             return ret;
         }
 
+        public bool DeletePeriod(int idCourse, int idPeriod, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmp = db.CourseCoursePeriod.SingleOrDefault(o => o.IdCourse == idCourse && o.IdPeriod == idPeriod);
+                    if (tmp != null)
+                    {
+                        db.CourseCoursePeriod.Remove(tmp);
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.DeletePeriod", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar excluir o periodo. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
         public ResultPage<Course> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, 
             bool? status = null, int? idCollege = null, int? idAddress = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null)
         {
@@ -166,6 +217,28 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CourseRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os cursos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<int> ListPeriods(int id, out string error)
+        {
+            List<int> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.CourseCoursePeriod.Where(p => p.IdCourse == id).Select(p => p.IdPeriod).ToList();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.ListPeriods", ex.Message, $"id: {id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os períodos vinculados ao curso. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;

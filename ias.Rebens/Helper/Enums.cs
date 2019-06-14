@@ -254,6 +254,8 @@ namespace ias.Rebens.Enums
         EmailCustomerValidationDefault = 14,
         [Description("E-mail - Padrão")]
         EmailDefault = 15,
+        [Description("Descrição do curso")]
+        CourseDescription = 16,
     }
 
     public enum WithdrawStatus : int

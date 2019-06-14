@@ -10,35 +10,35 @@ namespace ias.Rebens.api.Controllers
     /// 
     /// </summary>
     [Produces("application/json")]
-    [Route("api/CoursePeriod"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
+    [Route("api/CourseGraduationType"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
     [ApiController]
-    public class CoursePeriodController : ControllerBase
+    public class CourseGraduationTypeController : ControllerBase
     {
-        private ICoursePeriodRepository repo;
+        private ICourseGraduationTypeRepository repo;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="coursePeriodRepository"></param>
-        public CoursePeriodController(ICoursePeriodRepository coursePeriodRepository)
+        /// <param name="courseGraduationTypeRepository"></param>
+        public CourseGraduationTypeController(ICourseGraduationTypeRepository courseGraduationTypeRepository)
         {
-            this.repo = coursePeriodRepository;
+            this.repo = courseGraduationTypeRepository;
         }
 
         /// <summary>
-        /// Lista os periodos conforme os parametros
+        /// Lista os tipos de graduação conforme os parametros
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <param name="idOperation">Id da Operação</param>
-        /// <returns>Lista com os períodos encontrados</returns>
+        /// <returns>Lista com os tipos de graduação encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet]
-        [ProducesResponseType(typeof(ResultPageModel<CoursePeriodModel>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<CourseGraduationTypeModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
@@ -67,7 +67,7 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.Count() == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<CoursePeriodModel>()
+                var ret = new ResultPageModel<CourseGraduationTypeModel>()
                 {
                     CurrentPage = list.CurrentPage,
                     HasNextPage = list.HasNextPage,
@@ -75,11 +75,11 @@ namespace ias.Rebens.api.Controllers
                     ItemsPerPage = list.ItemsPerPage,
                     TotalItems = list.TotalItems,
                     TotalPages = list.TotalPages,
-                    Data = new List<CoursePeriodModel>()
+                    Data = new List<CourseGraduationTypeModel>()
                 };
 
-                foreach (var period in list.Page)
-                    ret.Data.Add(new CoursePeriodModel(period));
+                foreach (var item in list.Page)
+                    ret.Data.Add(new CourseGraduationTypeModel(item));
 
                 return Ok(ret);
             }
@@ -88,60 +88,60 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Retorna um período de curso
+        /// Retorna um tipo de graduação de curso
         /// </summary>
-        /// <param name="id">Id do período de curso</param>
-        /// <returns>FAQ</returns>
-        /// <response code="200">Retorna o período do curso, ou algum erro caso interno</response>
+        /// <param name="id">Id do tipo de graduação de curso</param>
+        /// <returns>Tipo de graduação</returns>
+        /// <response code="200">Retorna o tipo de graduação de curso, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(JsonDataModel<CoursePeriodModel>), 200)]
+        [ProducesResponseType(typeof(JsonDataModel<CourseGraduationTypeModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Get(int id)
         {
-            var period = repo.Read(id, out string error);
+            var item = repo.Read(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (period == null || period.Id == 0)
+                if (item == null || item.Id == 0)
                     return NoContent();
-                return Ok(new JsonDataModel<CoursePeriodModel>() { Data = new CoursePeriodModel(period) });
+                return Ok(new JsonDataModel<CourseGraduationTypeModel>() { Data = new CourseGraduationTypeModel(item) });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
-        /// Atualiza um período de curso
+        /// Atualiza um tipo de graduação de curso
         /// </summary>
-        /// <param name="period">Período de Curso</param>
+        /// <param name="graduationType">Tipo de graduação de Curso</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="200">Se o objeto for atualizado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPut]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Put([FromBody]CoursePeriodModel period)
+        public IActionResult Put([FromBody]CourseGraduationTypeModel graduationType)
         {
-            if (repo.Update(period.GetEntity(), out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Período atualizado com sucesso!" });
+            if (repo.Update(graduationType.GetEntity(), out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Tipo de graduação atualizada com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
-        /// Cria um período de curso
+        /// Cria um tipo de graduação de curso
         /// </summary>
-        /// <param name="period"></param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do período criado</returns>
+        /// <param name="graduationType">tipo de graduação</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do tipo de graduação criado</returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Post([FromBody]CoursePeriodModel period)
+        public IActionResult Post([FromBody]CourseGraduationTypeModel graduationType)
         {
             int? idOperation = null;
             var principal = HttpContext.User;
@@ -161,19 +161,19 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            var p = period.GetEntity();
+            var p = graduationType.GetEntity();
             if (idOperation.HasValue)
                 p.IdOperation = idOperation.Value;
             if (repo.Create(p, out string error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Período de curso criado com sucesso!", Id = p.Id });
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Tipo de graduação de curso criada com sucesso!", Id = p.Id });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
-        /// Apaga um período de curso
+        /// Apaga um tipo de graduação de curso
         /// </summary>
-        /// <param name="id">Id do período de curso a ser apagada</param>
+        /// <param name="id">Id do tipo de graduação de curso a ser apagada</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
         /// <response code="200">Se o objeto for excluido com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
@@ -183,7 +183,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Delete(int id)
         {
             if (repo.Delete(id, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Período de curso apagado com sucesso!" });
+                return Ok(new JsonModel() { Status = "ok", Message = "Tipo de graduação de curso apagada com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

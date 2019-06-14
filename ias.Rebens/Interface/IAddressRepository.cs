@@ -21,5 +21,9 @@ namespace ias.Rebens
         ResultPage<Address> ListByPartner(int idPartner, int page, int pageItems, string word, string sort, out string error);
 
         ResultPage<Address> ListByBenefit(int idBenefit, int page, int pageItems, string word, string sort, out string error);
+
+        ResultPage<Address> ListByCourseCollege(int idCourseCollege, int page, int pageItems, string searchWord, string sort, out string error);
+
+        ResultPage<Address> ListByCourse(int idCourse, int page, int pageItems, string searchWord, string sort, out string error);
     }
 }

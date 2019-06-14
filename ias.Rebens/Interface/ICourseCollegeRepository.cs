@@ -17,5 +17,7 @@ namespace ias.Rebens
         bool Create(CourseCollege college, out string error);
 
         bool Update(CourseCollege college, out string error);
+        bool AddAddress(int id, int idAddress, out string error);
+        bool DeleteAddress(int id, int idAddress, out string error);
     }
 }

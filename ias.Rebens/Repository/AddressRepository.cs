@@ -378,5 +378,123 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public ResultPage<Address> ListByCourseCollege(int idCourseCollege, int page, int pageItems, string word, string sort, out string error)
+        {
+            ResultPage<Address> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Address.Where(a => a.CourseCollegeAddresses.Any(pa => pa.IdCollege == idCourseCollege) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "street asc":
+                            tmpList = tmpList.OrderBy(f => f.Street);
+                            break;
+                        case "street desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Street);
+                            break;
+                        case "city asc":
+                            tmpList = tmpList.OrderBy(f => f.City);
+                            break;
+                        case "city desc":
+                            tmpList = tmpList.OrderByDescending(f => f.City);
+                            break;
+                        case "state asc":
+                            tmpList = tmpList.OrderBy(f => f.State);
+                            break;
+                        case "state desc":
+                            tmpList = tmpList.OrderByDescending(f => f.State);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Address.Count(a => a.CourseCollegeAddresses.Any(pa => pa.IdCollege == idCourseCollege) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+
+                    ret = new ResultPage<Address>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.ListByCourseCollege", ex.Message, $"idCourseCollege: {idCourseCollege}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os endereços. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<Address> ListByCourse(int idCourse, int page, int pageItems, string word, string sort, out string error)
+        {
+            ResultPage<Address> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Address.Where(a => a.CourseAddresses.Any(pa => pa.IdCourse == idCourse) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "street asc":
+                            tmpList = tmpList.OrderBy(f => f.Street);
+                            break;
+                        case "street desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Street);
+                            break;
+                        case "city asc":
+                            tmpList = tmpList.OrderBy(f => f.City);
+                            break;
+                        case "city desc":
+                            tmpList = tmpList.OrderByDescending(f => f.City);
+                            break;
+                        case "state asc":
+                            tmpList = tmpList.OrderBy(f => f.State);
+                            break;
+                        case "state desc":
+                            tmpList = tmpList.OrderByDescending(f => f.State);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.Address.Count(a => a.CourseAddresses.Any(pa => pa.IdCourse == idCourse) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Street.Contains(word) || a.City.Contains(word) || a.State.Contains(word)));
+
+                    ret = new ResultPage<Address>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.ListByCourse", ex.Message, $"idCourse: {idCourse}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os endereços. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }
