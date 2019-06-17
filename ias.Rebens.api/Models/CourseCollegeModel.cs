@@ -64,6 +64,8 @@ namespace ias.Rebens.api.Models
             this.Active = courseCollege.Active;
             this.Logo = courseCollege.Logo;
             this.IdOperation = courseCollege.IdOperation;
+            if (courseCollege.Address != null)
+                this.Address = new AddressModel(courseCollege.Address);
         }
 
         /// <summary>

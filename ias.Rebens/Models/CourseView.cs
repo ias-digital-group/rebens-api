@@ -6,7 +6,7 @@ namespace ias.Rebens
 {
     public partial class CourseView
     {
-        int Id { get; set; }
+        public int Id { get; set; }
         public int IdCourse { get; set; }
         public int IdCustomer { get; set; }
         public DateTime Created { get; set; }

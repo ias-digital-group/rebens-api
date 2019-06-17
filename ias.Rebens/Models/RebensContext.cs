@@ -496,6 +496,20 @@ namespace ias.Rebens
                 entity.Property(e => e.Modified).HasColumnType("datetime");
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.Logo).HasMaxLength(500);
+
+
+                entity.HasOne(d => d.Address)
+                    .WithMany(p => p.CourseColleges)
+                    .HasForeignKey(d => d.IdAddress)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseCollege_Address");
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.CourseColleges)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseCollege_Operation");
+
             });
 
             modelBuilder.Entity<CourseCollegeAddress>(entity =>

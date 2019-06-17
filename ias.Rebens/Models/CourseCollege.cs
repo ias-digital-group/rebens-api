@@ -15,7 +15,7 @@ namespace ias.Rebens
         public int Id { get; set; }
         public int IdOperation { get; set; }
         public string Name { get; set; }
-        public int IdAddress { get; set; }
+        public int? IdAddress { get; set; }
         public string Logo { get; set; }
         public bool Active { get; set; }
         public bool Deleted { get; set; }

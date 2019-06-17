@@ -681,6 +681,416 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="T:ias.Rebens.api.Controllers.CourseCollegeController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.#ctor(ias.Rebens.ICourseCollegeRepository,ias.Rebens.IAddressRepository)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="courseCollegeRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Lista as faculdades conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da Operação</param>
+            <returns>Lista com as faculdades encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.Get(System.Int32)">
+            <summary>
+            Retorna uma faculdade
+            </summary>
+            <param name="id">Id da faculdade</param>
+            <returns>Modalidade</returns>
+            <response code="200">Retorna a faculdade, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.Put(ias.Rebens.api.Models.CourseCollegeModel)">
+            <summary>
+            Atualiza uma faculdade
+            </summary>
+            <param name="college">Faculdade</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.Post(ias.Rebens.api.Models.CourseCollegeModel)">
+            <summary>
+            Cria uma modalidade de curso
+            </summary>
+            <param name="college"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do período criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.Delete(System.Int32)">
+            <summary>
+            Apaga uma faculdade
+            </summary>
+            <param name="id">Id da faculdade a ser apagada</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.ListAddress(System.Int32,System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista os endereço de uma faculdade
+            </summary>
+            <param name="id">id da faculdade</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os endereços encontradas</returns>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.AddAddress(ias.Rebens.api.Models.CourseCollegeAddressModel)">
+            <summary>
+            Adiciona um endereço a uma faculdade
+            </summary>
+            <param name="model">{ idCourseCollege: 0, idAddress: 0 }</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Víncula uma faculdade com um endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.RemoveAddress(System.Int32,System.Int32)">
+            <summary>
+            Remove um endereço de uma faculdade
+            </summary>
+            <param name="id">id da faculdade</param>
+            <param name="idAddress">id do endereço</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Remove o vínculo de benefício com endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="T:ias.Rebens.api.Controllers.CourseController">
+            <summary>
+            Benefit Controller
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.#ctor(ias.Rebens.ICourseRepository,ias.Rebens.IAddressRepository,ias.Rebens.IStaticTextRepository)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="courseRepository">Injeção de dependencia do repositório de Curso</param>
+            <param name="addressRepository">Injeção de dependencia do repositório de Endereço</param>
+            <param name="staticTextRepository">Injeção de dependencia do repositório de Texto Estático</param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean})">
+            <summary>
+            Lista todos os cursos com paginação
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">id da operação, não obrigatório (default=null)</param>
+            <param name="active">active, não obrigatório (default=null)</param>
+            <returns>Lista com os cursos encontrados</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.Get(System.Int32)">
+            <summary>
+            Retorna o curso conforme o ID
+            </summary>
+            <param name="id">Id do curso</param>
+            <returns>Curso</returns>
+            <response code="200">Retorna o curso, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.Put(ias.Rebens.api.Models.CourseModel)">
+            <summary>
+            Atualiza um curso
+            </summary>
+            <param name="course"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.Post(ias.Rebens.api.Models.CourseModel)">
+            <summary>
+            Cria um curso
+            </summary>
+            <param name="course"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do curso criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.Delete(System.Int32)">
+            <summary>
+            Remove um curso
+            </summary>
+            <param name="id">id do curso</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Remove o curso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.ListAddress(System.Int32,System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista os endereço de um curso
+            </summary>
+            <param name="id">id do curso</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os endereços encontradas</returns>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.AddAddress(System.Int32,System.Int32)">
+            <summary>
+            Adiciona um endereço a um curso
+            </summary>
+            <param name="id">id do curso</param>
+            <param name="idAddress">id do endereço</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Víncula um curso com um endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.RemoveAddress(System.Int32,System.Int32)">
+            <summary>
+            Remove um endereço de um curso
+            </summary>
+            <param name="id">id do curso</param>
+            <param name="idAddress">id do endereço</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Remove o vínculo de benefício com endereço</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.ListPeriods(System.Int32)">
+            <summary>
+            Lista os ids dos períodos vínculados ao curso
+            </summary>
+            <param name="id">id do curso</param>
+            <returns>Lista com os Ids dos períodos</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.AddPeriod(System.Int32,System.Int32)">
+            <summary>
+            Adiciona um período à um curso
+            </summary>
+            <param name="id">id do curso</param>
+            <param name="idPeriod">id do período</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Víncula um benefício com uma categoria</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.RemoveCategory(System.Int32,System.Int32)">
+            <summary>
+            Remove um período de um curso
+            </summary>
+            <param name="id">id do curso</param>
+            <param name="idPeriod">id do período</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Remove o vínculo de benefício com uma categoria</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="T:ias.Rebens.api.Controllers.CourseGraduationTypeController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseGraduationTypeController.#ctor(ias.Rebens.ICourseGraduationTypeRepository)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="courseGraduationTypeRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseGraduationTypeController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Lista os tipos de graduação conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da Operação</param>
+            <returns>Lista com os tipos de graduação encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseGraduationTypeController.Get(System.Int32)">
+            <summary>
+            Retorna um tipo de graduação de curso
+            </summary>
+            <param name="id">Id do tipo de graduação de curso</param>
+            <returns>Tipo de graduação</returns>
+            <response code="200">Retorna o tipo de graduação de curso, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseGraduationTypeController.Put(ias.Rebens.api.Models.CourseGraduationTypeModel)">
+            <summary>
+            Atualiza um tipo de graduação de curso
+            </summary>
+            <param name="graduationType">Tipo de graduação de Curso</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseGraduationTypeController.Post(ias.Rebens.api.Models.CourseGraduationTypeModel)">
+            <summary>
+            Cria um tipo de graduação de curso
+            </summary>
+            <param name="graduationType">tipo de graduação</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do tipo de graduação criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseGraduationTypeController.Delete(System.Int32)">
+            <summary>
+            Apaga um tipo de graduação de curso
+            </summary>
+            <param name="id">Id do tipo de graduação de curso a ser apagada</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="T:ias.Rebens.api.Controllers.CourseModalityController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseModalityController.#ctor(ias.Rebens.ICourseModalityRepository)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="courseModalityRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseModalityController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Lista as modalidades conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da Operação</param>
+            <returns>Lista com as modalidades encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseModalityController.Get(System.Int32)">
+            <summary>
+            Retorna uma modalidade de curso
+            </summary>
+            <param name="id">Id da modalidade de curso</param>
+            <returns>Modalidade</returns>
+            <response code="200">Retorna a modalidade de curso, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseModalityController.Put(ias.Rebens.api.Models.CourseModalityModel)">
+            <summary>
+            Atualiza uma modalidade de curso
+            </summary>
+            <param name="modality">Modalidade de Curso</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseModalityController.Post(ias.Rebens.api.Models.CourseModalityModel)">
+            <summary>
+            Cria uma modalidade de curso
+            </summary>
+            <param name="modality"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do período criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseModalityController.Delete(System.Int32)">
+            <summary>
+            Apaga uma modalidade de curso
+            </summary>
+            <param name="id">Id da modalidade de curso a ser apagada</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="T:ias.Rebens.api.Controllers.CoursePeriodController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CoursePeriodController.#ctor(ias.Rebens.ICoursePeriodRepository)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="coursePeriodRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CoursePeriodController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Lista os periodos conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da Operação</param>
+            <returns>Lista com os períodos encontrados</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CoursePeriodController.Get(System.Int32)">
+            <summary>
+            Retorna um período de curso
+            </summary>
+            <param name="id">Id do período de curso</param>
+            <returns>FAQ</returns>
+            <response code="200">Retorna o período do curso, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CoursePeriodController.Put(ias.Rebens.api.Models.CoursePeriodModel)">
+            <summary>
+            Atualiza um período de curso
+            </summary>
+            <param name="period">Período de Curso</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CoursePeriodController.Post(ias.Rebens.api.Models.CoursePeriodModel)">
+            <summary>
+            Cria um período de curso
+            </summary>
+            <param name="period"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do período criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CoursePeriodController.Delete(System.Int32)">
+            <summary>
+            Apaga um período de curso
+            </summary>
+            <param name="id">Id do período de curso a ser apagada</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.CustomerController">
             <summary>
             Customer Controller
@@ -3025,6 +3435,367 @@
             <summary>
             Construtor
             </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CourseCollegeModel">
+            <summary>
+            Faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Id">
+            <summary>
+            Id da Faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Name">
+            <summary>
+            Nome da Faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Active">
+            <summary>
+            Se a Faculdade está ativa ou não
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Logo">
+            <summary>
+            Logo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Addresses">
+            <summary>
+            Endereços da Faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Address">
+            <summary>
+            Endereço da Faculdade
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseCollegeModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseCollegeModel.#ctor(ias.Rebens.CourseCollege)">
+            <summary>
+            Construtor que recebe um objeto CourseGraduationType e popula os atributos
+            </summary>
+            <param name="courseCollege"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseCollegeModel.GetEntity">
+            <summary>
+            Retorna um objeto CourseCollege com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CourseCollegeAddressModel">
+            <summary>
+            Relacionamento Faculdade com Endereço
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeAddressModel.IdCourseCollege">
+            <summary>
+            Id da faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeAddressModel.IdAddress">
+            <summary>
+            Id do endereço
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CourseGraduationTypeModel">
+            <summary>
+            Modalidade de curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseGraduationTypeModel.Id">
+            <summary>
+            Id do tipo de graduação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseGraduationTypeModel.Name">
+            <summary>
+            Nome do tipo de graduação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseGraduationTypeModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseGraduationTypeModel.Active">
+            <summary>
+            Se o tipo de graduação está ativa ou não
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseGraduationTypeModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseGraduationTypeModel.#ctor(ias.Rebens.CourseGraduationType)">
+            <summary>
+            Construtor que recebe um objeto CourseGraduationType e popula os atributos
+            </summary>
+            <param name="courseGraduationType"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseGraduationTypeModel.GetEntity">
+            <summary>
+            Retorna um objeto CourseGraduationType com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CourseModalityModel">
+            <summary>
+            Modalidade de curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModalityModel.Id">
+            <summary>
+            Id da modalidade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModalityModel.Name">
+            <summary>
+            Nome da modalidade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModalityModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModalityModel.Active">
+            <summary>
+            Se a modalidade está ativa ou não
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseModalityModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseModalityModel.#ctor(ias.Rebens.CourseModality)">
+            <summary>
+            Construtor que recebe um objeto CourseModality e popula os atributos
+            </summary>
+            <param name="coursePeriod"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseModalityModel.GetEntity">
+            <summary>
+            Retorna um objeto CourseModality com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CourseModel">
+            <summary>
+            Faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Id">
+            <summary>
+            Id da Faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Title">
+            <summary>
+            Título do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.IdCollege">
+            <summary>
+            Id da faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.IdGradutaionType">
+            <summary>
+            Id do tipo de graduação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.IdModality">
+            <summary>
+            Id da modalidade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.OriginalPrice">
+            <summary>
+            Preço original
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Discount">
+            <summary>
+            Desconto %
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.FinalPrice">
+            <summary>
+            Preço Final
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Duration">
+            <summary>
+            Duração do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Image">
+            <summary>
+            Imagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Rating">
+            <summary>
+            Nota
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.DueDate">
+            <summary>
+            Validade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.StartDate">
+            <summary>
+            Inicio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.EndDate">
+            <summary>
+            Fim
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.VoucherText">
+            <summary>
+            Texto do voucher
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Active">
+            <summary>
+            Se a Faculdade está ativa ou não
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Addresses">
+            <summary>
+            Endereços da Faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Address">
+            <summary>
+            Endereço da Faculdade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Periods">
+            <summary>
+            Periodos do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Description">
+            <summary>
+            Descrição do curso
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseModel.#ctor(ias.Rebens.Course)">
+            <summary>
+            Construtor que recebe um objeto Course e popula os atributos
+            </summary>
+            <param name="course"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseModel.GetEntity">
+            <summary>
+            Retorna um objeto Course com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseModel.GetDescription">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CourseAddressModel">
+            <summary>
+            Relacionamento Curso com Endereço
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseAddressModel.IdCourse">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseAddressModel.IdAddress">
+            <summary>
+            Id do endereço
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CourseCoursePeriodModel">
+            <summary>
+            Relacionamento Curso com Periodo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCoursePeriodModel.IdCourse">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCoursePeriodModel.IdPeriod">
+            <summary>
+            Id do periodo
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CoursePeriodModel">
+            <summary>
+            Período de curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CoursePeriodModel.Id">
+            <summary>
+            Id do período
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CoursePeriodModel.Name">
+            <summary>
+            Nome do período
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CoursePeriodModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CoursePeriodModel.Active">
+            <summary>
+            Se o período está ativo ou não
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CoursePeriodModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CoursePeriodModel.#ctor(ias.Rebens.CoursePeriod)">
+            <summary>
+            Construtor que recebe um objeto CoursePeriod e popula os atributos
+            </summary>
+            <param name="coursePeriod"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CoursePeriodModel.GetEntity">
+            <summary>
+            Retorna um objeto CoursePeriod com as informações
+            </summary>
+            <returns></returns>
         </member>
         <member name="T:ias.Rebens.api.Models.CustomerModel">
             <summary>

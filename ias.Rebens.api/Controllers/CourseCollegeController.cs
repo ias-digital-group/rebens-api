@@ -21,6 +21,7 @@ namespace ias.Rebens.api.Controllers
         /// Constructor
         /// </summary>
         /// <param name="courseCollegeRepository"></param>
+        /// <param name="addressRepository"></param>
         public CourseCollegeController(ICourseCollegeRepository courseCollegeRepository, IAddressRepository addressRepository)
         {
             this.repo = courseCollegeRepository;
@@ -164,6 +165,14 @@ namespace ias.Rebens.api.Controllers
             }
 
             var p = college.GetEntity();
+
+            if (college.Address != null)
+            {
+                var addr = college.Address.GetEntity();
+                if (addressRepo.Create(addr, out string errorAddr))
+                    p.IdAddress = addr.Id;
+            }
+
             if (idOperation.HasValue)
                 p.IdOperation = idOperation.Value;
             if (repo.Create(p, out string error))

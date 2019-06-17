@@ -123,8 +123,15 @@ namespace ias.Rebens.api
             services.AddTransient<IContactRepository, ContactRepository>();
             services.AddTransient<ICouponCampaignRepository, CouponCampaignRepository>();
             services.AddTransient<ICouponRepository, CouponRepository>();
-            services.AddTransient<ICustomerRepository, CustomerRepository>();
+            services.AddTransient<ICourseCollegeRepository, CourseCollegeRepository>();
+            services.AddTransient<ICourseGraduationTypeRepository, CourseGraduationTypeRepository>();
+            services.AddTransient<ICourseModalityRepository, CourseModalityRepository>();
+            services.AddTransient<ICoursePeriodRepository, CoursePeriodRepository>();
+            services.AddTransient<ICourseRepository, CourseRepository>();
+            services.AddTransient<ICourseUseRepository, CourseUseRepository>();
+            services.AddTransient<ICourseViewRepository, CourseViewRepository>();
             services.AddTransient<ICustomerReferalRepository, CustomerReferalRepository>();
+            services.AddTransient<ICustomerRepository, CustomerRepository>();
             services.AddTransient<IFaqRepository, FaqRepository>();
             services.AddTransient<IFormContactRepository, FormContactRepository>();
             services.AddTransient<IFormEstablishmentRepository, FormEstablishmentRepository>();
