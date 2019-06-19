@@ -94,7 +94,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.OperationCustomer.Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
-                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email1.Contains(word) || a.Email1.Contains(word)));
+                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.CPF.Contains(word) || a.Email1.Contains(word) || a.Email1.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -137,7 +137,7 @@ namespace ias.Rebens
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.OperationCustomer.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
-                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email1.Contains(word) || a.Email1.Contains(word)));
+                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.CPF.Contains(word) || a.Email1.Contains(word) || a.Email1.Contains(word)));
 
                     ret = new ResultPage<OperationCustomer>(list, page, pageItems, total);
 

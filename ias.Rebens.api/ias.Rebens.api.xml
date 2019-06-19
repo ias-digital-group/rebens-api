@@ -691,6 +691,7 @@
             Constructor
             </summary>
             <param name="courseCollegeRepository"></param>
+            <param name="addressRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CourseCollegeController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
             <summary>
