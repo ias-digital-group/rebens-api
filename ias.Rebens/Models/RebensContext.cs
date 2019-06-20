@@ -471,6 +471,43 @@ namespace ias.Rebens
                 entity.Property(e => e.StartDate).HasColumnType("datetime");
                 entity.Property(e => e.EndDate).HasColumnType("datetime");
                 entity.Property(e => e.VoucherText).HasMaxLength(500);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.Courses)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Course_Operation");
+
+                entity.HasOne(d => d.College)
+                    .WithMany(p => p.Courses)
+                    .HasForeignKey(d => d.IdCollege)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Course_CourseCollege");
+
+                entity.HasOne(d => d.GraduationType)
+                    .WithMany(p => p.Courses)
+                    .HasForeignKey(d => d.IdGraduationType)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Course_CourseGraduationType");
+
+                entity.HasOne(d => d.Modality)
+                    .WithMany(p => p.Courses)
+                    .HasForeignKey(d => d.IdModality)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Course_CourseModality");
+
+                entity.HasOne(d => d.AdminUser)
+                    .WithMany(p => p.Courses)
+                    .HasForeignKey(d => d.IdAdminUser)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Course_AdminUser");
+
+                entity.HasOne(d => d.Description)
+                    .WithMany(p => p.Courses)
+                    .HasForeignKey(d => d.IdDescription)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Course_StaticText");
+
             });
 
             modelBuilder.Entity<CourseAddress>(entity =>

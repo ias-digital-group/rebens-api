@@ -174,7 +174,7 @@ namespace ias.Rebens.api.Models
                 OriginalPrice = this.OriginalPrice,
                 Discount = this.Discount,
                 FinalPrice = this.FinalPrice,
-                Duration  = this.Duration,
+                Duration = this.Duration,
                 Rating = this.Rating,
                 DueDate = this.DueDate,
                 StartDate = this.StartDate,

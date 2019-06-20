@@ -93,170 +93,172 @@ namespace ias.Rebens.api.Controllers
                 return Ok(ret);
             }
 
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "" });
         }
 
+        ///// <summary>
+        ///// Retorna o curso conforme o ID
+        ///// </summary>
+        ///// <param name="id">Id do curso</param>
+        ///// <returns>Curso</returns>
+        ///// <response code="200">Retorna o curso, ou algum erro caso interno</response>
+        ///// <response code="204">Se não encontrar nada</response>
+        ///// <response code="400">Se ocorrer algum erro</response>
+        //[HttpGet("{id}")]
+        //[ProducesResponseType(typeof(JsonDataModel<CourseModel>), 200)]
+        //[ProducesResponseType(204)]
+        //[ProducesResponseType(typeof(JsonModel), 400)]
+        //public IActionResult Get(int id)
+        //{
+        //    var course = repo.Read(id, out string error);
+
+        //    if (string.IsNullOrEmpty(error))
+        //    {
+        //        if (course == null || course.Id == 0)
+        //            return NoContent();
+        //        return Ok(new JsonDataModel<CourseModel>() { Data = new CourseModel(course) });
+        //    }
+
+        //    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        //}
+
+        ///// <summary>
+        ///// Atualiza um curso
+        ///// </summary>
+        ///// <param name="course"></param>
+        ///// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+        ///// <response code="200">Se o objeto for atualizado com sucesso</response>
+        ///// <response code="400">Se ocorrer algum erro</response>
+        //[HttpPut]
+        //[ProducesResponseType(typeof(JsonModel), 200)]
+        //[ProducesResponseType(typeof(JsonModel), 400)]
+        //public IActionResult Put([FromBody]CourseModel course)
+        //{
+        //    var part = course.GetEntity();
+        //    if (repo.Update(part, out string error))
+        //    {
+        //        if (!string.IsNullOrEmpty(course.Description))
+        //        {
+        //            var detail = course.GetDescription();
+        //            staticTextRepo.Update(detail, out error);
+        //        }
+        //        return Ok(new JsonModel() { Status = "ok", Message = "Curso atualizado com sucesso!" });
+        //    }
+
+        //    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        //}
+
+        ///// <summary>
+        ///// Cria um curso
+        ///// </summary>
+        ///// <param name="course"></param>
+        ///// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do curso criado</returns>
+        ///// <response code="200">Se o objeto for criado com sucesso</response>
+        ///// <response code="400">Se ocorrer algum erro</response>
+        //[HttpPost]
+        //[ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        //[ProducesResponseType(typeof(JsonModel), 400)]
+        //public IActionResult Post([FromBody]CourseModel course)
+        //{
+        //    int? idOperation = null;
+        //    int idAdmin = 0;
+        //    var principal = HttpContext.User;
+        //    if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+        //    {
+        //        if (principal?.Claims != null)
+        //        {
+        //            var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+        //            if (operationId == null)
+        //                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+        //            if (int.TryParse(operationId.Value, out int tmpId))
+        //                idOperation = tmpId;
+        //            else
+        //                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+
+        //            var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+        //            if (customerId == null)
+        //                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+        //            if (!int.TryParse(customerId.Value, out idAdmin))
+        //                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+        //        }
+        //        else
+        //            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+        //    }
+
+        //    string error = null;
+        //    var model = new JsonModel();
+
+        //    var item = course.GetEntity();
+        //    item.IdAdminUser = idAdmin;
+        //    if (idOperation.HasValue)
+        //        item.IdOperation = idOperation.Value;
+
+
+        //    if (!string.IsNullOrEmpty(course.Description))
+        //    {
+        //        var detail = course.GetDescription();
+        //        if (staticTextRepo.Create(detail, out error))
+        //            item.IdDescription = detail.Id;
+        //    }
+        //    if (repo.Create(item, out error))
+        //        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Curso criado com sucesso!", Id = item.Id });
+
+        //    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        //}
+
+        ///// <summary>
+        ///// Remove um curso
+        ///// </summary>
+        ///// <param name="id">id do curso</param>
+        ///// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        ///// <response code="200">Remove o curso</response>
+        ///// <response code="400">Se ocorrer algum erro</response>
+        //[HttpDelete("{id}")]
+        //[ProducesResponseType(typeof(JsonModel), 200)]
+        //[ProducesResponseType(typeof(JsonModel), 400)]
+        //public IActionResult Delete(int id)
+        //{
+        //    if (repo.Delete(id, out string error))
+        //        return Ok(new JsonModel() { Status = "ok", Message = "Curso removido com sucesso!" });
+
+        //    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        //}
+
         /// <summary>
-        /// Retorna o curso conforme o ID
-        /// </summary>
-        /// <param name="id">Id do curso</param>
-        /// <returns>Curso</returns>
-        /// <response code="200">Retorna o curso, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}")]
-        [ProducesResponseType(typeof(JsonDataModel<CourseModel>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Get(int id)
-        {
-            var course = repo.Read(id, out string error);
-
-            if (string.IsNullOrEmpty(error))
-            {
-                if (course == null || course.Id == 0)
-                    return NoContent();
-                return Ok(new JsonDataModel<CourseModel>() { Data = new CourseModel(course) });
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Atualiza um curso
-        /// </summary>
-        /// <param name="course"></param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-        /// <response code="200">Se o objeto for atualizado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPut]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Put([FromBody]CourseModel course)
-        {
-            var part = course.GetEntity();
-            if (repo.Update(part, out string error))
-            {
-                if (!string.IsNullOrEmpty(course.Description))
-                {
-                    var detail = course.GetDescription();
-                    staticTextRepo.Update(detail, out error);
-                }
-                return Ok(new JsonModel() { Status = "ok", Message = "Curso atualizado com sucesso!" });
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Cria um curso
-        /// </summary>
-        /// <param name="course"></param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do curso criado</returns>
-        /// <response code="200">Se o objeto for criado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost]
-        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Post([FromBody]CourseModel course)
-        {
-            int? idOperation = null;
-            int idAdmin = 0;
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-
-                    var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                    if (customerId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                    if (!int.TryParse(customerId.Value, out idAdmin))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
-
-            string error = null;
-            var model = new JsonModel();
-
-            var item = course.GetEntity();
-            item.IdAdminUser = idAdmin;
-            if (idOperation.HasValue)
-                item.IdOperation = idOperation.Value;
-
-
-            if (!string.IsNullOrEmpty(course.Description))
-            {
-                var detail = course.GetDescription();
-                if (staticTextRepo.Create(detail, out error))
-                    item.IdDescription = detail.Id;
-            }
-            if (repo.Create(item, out error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Curso criado com sucesso!", Id = item.Id });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Remove um curso
-        /// </summary>
-        /// <param name="id">id do curso</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Remove o curso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Delete(int id)
-        {
-            if (repo.Delete(id, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Curso removido com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Lista os endereço de um curso
+        /// lista os endereço de um curso
         /// </summary>
         /// <param name="id">id do curso</param>
         /// <param name="page">página, não obrigatório (default=0)</param>
-        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
-        /// <param name="searchWord">Palavra à ser buscada</param>
-        /// <returns>Lista com os endereços encontradas</returns>
-        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/Address")]
+        /// <param name="pageitems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">ordenação campos (id, name, street, city, state), direção (asc, desc)</param>
+        /// <param name="searchword">palavra à ser buscada</param>
+        /// <returns>lista com os endereços encontradas</returns>
+        /// <response code="200">retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">se não encontrar nada</response>
+        /// <response code="400">se ocorrer algum erro</response>
+        [HttpGet("{id}/address")]
         [ProducesResponseType(typeof(ResultPageModel<AddressModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListAddress(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult listaddress(int id, [FromQuery]int page = 0, [FromQuery]int pageitems = 30, [FromQuery]string sort = "title asc", [FromQuery]string searchword = "")
         {
-            var list = addressRepo.ListByCourse(id, page, pageItems, searchWord, sort, out string error);
+            var list = addressRepo.ListByCourse(id, page, pageitems, searchword, sort, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<AddressModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<AddressModel>();
+                var ret = new ResultPageModel<AddressModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<AddressModel>()
+                };
                 foreach (var addr in list.Page)
                     ret.Data.Add(new AddressModel(addr));
 
