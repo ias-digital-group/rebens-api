@@ -805,56 +805,19 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.CourseController.Get(System.Int32)">
+        <member name="M:ias.Rebens.api.Controllers.CourseController.listaddress(System.Int32,System.Int32,System.Int32,System.String,System.String)">
             <summary>
-            Retorna o curso conforme o ID
-            </summary>
-            <param name="id">Id do curso</param>
-            <returns>Curso</returns>
-            <response code="200">Retorna o curso, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.CourseController.Put(ias.Rebens.api.Models.CourseModel)">
-            <summary>
-            Atualiza um curso
-            </summary>
-            <param name="course"></param>
-            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
-            <response code="200">Se o objeto for atualizado com sucesso</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.CourseController.Post(ias.Rebens.api.Models.CourseModel)">
-            <summary>
-            Cria um curso
-            </summary>
-            <param name="course"></param>
-            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do curso criado</returns>
-            <response code="200">Se o objeto for criado com sucesso</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.CourseController.Delete(System.Int32)">
-            <summary>
-            Remove um curso
-            </summary>
-            <param name="id">id do curso</param>
-            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-            <response code="200">Remove o curso</response>
-            <response code="400">Se ocorrer algum erro</response>
-        </member>
-        <member name="M:ias.Rebens.api.Controllers.CourseController.ListAddress(System.Int32,System.Int32,System.Int32,System.String,System.String)">
-            <summary>
-            Lista os endereço de um curso
+            lista os endereço de um curso
             </summary>
             <param name="id">id do curso</param>
             <param name="page">página, não obrigatório (default=0)</param>
-            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
-            <param name="searchWord">Palavra à ser buscada</param>
-            <returns>Lista com os endereços encontradas</returns>
-            <response code="200">Retorna a list, ou algum erro caso interno</response>
-            <response code="204">Se não encontrar nada</response>
-            <response code="400">Se ocorrer algum erro</response>
+            <param name="pageitems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">ordenação campos (id, name, street, city, state), direção (asc, desc)</param>
+            <param name="searchword">palavra à ser buscada</param>
+            <returns>lista com os endereços encontradas</returns>
+            <response code="200">retorna a list, ou algum erro caso interno</response>
+            <response code="204">se não encontrar nada</response>
+            <response code="400">se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CourseController.AddAddress(System.Int32,System.Int32)">
             <summary>
