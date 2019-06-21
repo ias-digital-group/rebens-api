@@ -64,52 +64,52 @@ namespace ias.Rebens
             return ret;
         }
 
-        //public bool Create(Course course, out string error)
-        //{
-        //    bool ret = true;
-        //    try
-        //    {
-        //        using (var db = new RebensContext(this._connectionString))
-        //        {
-        //            course.Modified = course.Created = DateTime.UtcNow;
-        //            db.Course.Add(course);
-        //            db.SaveChanges();
-        //            error = null;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var logError = new LogErrorRepository(this._connectionString);
-        //        int idLog = logError.Create("CourseRepository.Create", ex.Message, "", ex.StackTrace);
-        //        error = "Ocorreu um erro ao tentar criar um curso. (erro:" + idLog + ")";
-        //        ret = false;
-        //    }
-        //    return ret;
-        //}
+        public bool Create(Course course, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    course.Modified = course.Created = DateTime.UtcNow;
+                    db.Course.Add(course);
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.Create", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar um curso. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
 
-        //public bool Delete(int id, out string error)
-        //{
-        //    bool ret = true;
-        //    try
-        //    {
-        //        using (var db = new RebensContext(this._connectionString))
-        //        {
-        //            var course = db.Course.SingleOrDefault(c => c.Id == id);
-        //            course.Deleted = true;
-        //            course.Modified = DateTime.UtcNow;
-        //            db.SaveChanges();
-        //            error = null;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var logError = new LogErrorRepository(this._connectionString);
-        //        int idLog = logError.Create("CourseRepository.Delete", ex.Message, "", ex.StackTrace);
-        //        error = "Ocorreu um erro ao tentar excluir o curso. (erro:" + idLog + ")";
-        //        ret = false;
-        //    }
-        //    return ret;
-        //}
+        public bool Delete(int id, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var course = db.Course.SingleOrDefault(c => c.Id == id);
+                    course.Deleted = true;
+                    course.Modified = DateTime.UtcNow;
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.Delete", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar excluir o curso. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
 
         public bool DeleteAddress(int idCourse, int idAddress, out string error)
         {
@@ -245,71 +245,71 @@ namespace ias.Rebens
             return ret;
         }
 
-        //public Course Read(int id, out string error)
-        //{
-        //    Course ret;
-        //    try
-        //    {
-        //        using (var db = new RebensContext(this._connectionString))
-        //        {
-        //            ret = db.Course.SingleOrDefault(c => c.Id == id && !c.Deleted);
-        //            error = null;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var logError = new LogErrorRepository(this._connectionString);
-        //        int idLog = logError.Create("CourseRepository.Read", ex.Message, "", ex.StackTrace);
-        //        error = "Ocorreu um erro ao tentar ler o curso. (erro:" + idLog + ")";
-        //        ret = null;
-        //    }
-        //    return ret;
-        //}
+        public Course Read(int id, out string error)
+        {
+            Course ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Course.SingleOrDefault(c => c.Id == id && !c.Deleted);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o curso. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
 
-        //public bool Update(Course course, out string error)
-        //{
-        //    bool ret = true;
-        //    try
-        //    {
-        //        using (var db = new RebensContext(this._connectionString))
-        //        {
-        //            var update = db.Course.SingleOrDefault(c => c.Id == course.Id);
-        //            if (update != null)
-        //            {
-        //                update.IdCollege = course.IdCollege;
-        //                update.IdGraduationType = course.IdGraduationType;
-        //                update.IdModality = course.IdModality;
-        //                update.Title = course.Title;
-        //                update.OriginalPrice = course.OriginalPrice;
-        //                update.Discount = course.Discount;
-        //                update.FinalPrice = course.FinalPrice;
-        //                update.Duration = course.Duration;
-        //                update.Image = course.Image;
-        //                update.Rating = course.Rating;
-        //                update.IdAdminUser = course.IdAdminUser;
-        //                update.DueDate = course.DueDate;
-        //                update.StartDate = course.StartDate;
-        //                update.EndDate = course.EndDate;
-        //                update.VoucherText = course.VoucherText;
-        //                update.IdDescription = course.IdDescription;
-        //                update.Active = course.Active;
-        //                update.Modified = DateTime.UtcNow;
+        public bool Update(Course course, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Course.SingleOrDefault(c => c.Id == course.Id);
+                    if (update != null)
+                    {
+                        update.IdCollege = course.IdCollege;
+                        update.IdGraduationType = course.IdGraduationType;
+                        update.IdModality = course.IdModality;
+                        update.Title = course.Title;
+                        update.OriginalPrice = course.OriginalPrice;
+                        update.Discount = course.Discount;
+                        update.FinalPrice = course.FinalPrice;
+                        update.Duration = course.Duration;
+                        update.Image = course.Image;
+                        update.Rating = course.Rating;
+                        update.IdAdminUser = course.IdAdminUser;
+                        update.DueDate = course.DueDate;
+                        update.StartDate = course.StartDate;
+                        update.EndDate = course.EndDate;
+                        update.VoucherText = course.VoucherText;
+                        update.IdDescription = course.IdDescription;
+                        update.Active = course.Active;
+                        update.Modified = DateTime.UtcNow;
 
-        //                db.SaveChanges();
-        //                error = null;
-        //            }
-        //            else
-        //                error = "Curso não encontrado!";
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var logError = new LogErrorRepository(this._connectionString);
-        //        int idLog = logError.Create("CourseRepository.Update", ex.Message, "", ex.StackTrace);
-        //        error = "Ocorreu um erro ao tentar atualizar o curso. (erro:" + idLog + ")";
-        //        ret = false;
-        //    }
-        //    return ret;
-        //}
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                        error = "Curso não encontrado!";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.Update", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o curso. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
     }
 }

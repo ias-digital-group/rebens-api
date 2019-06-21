@@ -99,7 +99,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Tipo de Integração
         /// </summary>
-        public string IntegrationType { get { return Enums.EnumHelper.GetEnumDescription((Enums.IntegrationType)this.IdIntegrationType); } }
+        public string IntegrationType { get { return this.IdIntegrationType > 0 ? Enums.EnumHelper.GetEnumDescription((Enums.IntegrationType)this.IdIntegrationType) : ""; } }
         /// <summary>
         /// Chamada do Benefício
         /// </summary>

@@ -19,6 +19,7 @@ namespace ias.Rebens.api.Models
         /// Título do curso
         /// </summary>
         [Required]
+        [MaxLength(500)]
         public string Title { get; set; }
 
         /// <summary>
@@ -37,7 +38,7 @@ namespace ias.Rebens.api.Models
         /// Id do tipo de graduação
         /// </summary>
         [Required]
-        public int IdGradutaionType { get; set; }
+        public int IdGraduationType { get; set; }
 
         /// <summary>
         /// Id da modalidade
@@ -100,10 +101,15 @@ namespace ias.Rebens.api.Models
         public string VoucherText { get; set; }
 
         /// <summary>
-        /// Se a Faculdade está ativa ou não
+        /// Se o curso está ativa ou não
         /// </summary>
         [Required]
         public bool Active { get; set; }
+
+        /// <summary>
+        /// Status em string "Ativo" ou "Inativo"
+        /// </summary>
+        public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
 
         /// <summary>
         /// Endereços da Faculdade
@@ -126,6 +132,11 @@ namespace ias.Rebens.api.Models
         public string Description { get; set; }
 
         /// <summary>
+        /// Array com os Id's dos períodos
+        /// </summary>
+        public int[] PeriodIds { get; set; }
+
+        /// <summary>
         /// Construtor
         /// </summary>
         public CourseModel() { }
@@ -140,7 +151,7 @@ namespace ias.Rebens.api.Models
             this.Title = course.Title;
             this.Active = course.Active;
             this.IdOperation = course.IdOperation;
-            this.IdGradutaionType = course.IdGraduationType;
+            this.IdGraduationType = course.IdGraduationType;
             this.IdCollege = course.IdCollege;
             this.IdModality = course.IdModality;
             this.Image = course.Image;
@@ -167,7 +178,7 @@ namespace ias.Rebens.api.Models
                 Title = this.Title,
                 Active = this.Active,
                 IdOperation = this.IdOperation,
-                IdGraduationType = this.IdGradutaionType,
+                IdGraduationType = this.IdGraduationType,
                 IdCollege = this.IdCollege,
                 IdModality = this.IdModality,
                 Image = this.Image,
@@ -196,7 +207,6 @@ namespace ias.Rebens.api.Models
                 Active = true,
                 Created = DateTime.Now,
                 Html = this.Description,
-                IdBenefit = this.Id,
                 IdStaticTextType = (int)Enums.StaticTextType.CourseDescription,
                 Modified = DateTime.Now,
                 Order = 1,
