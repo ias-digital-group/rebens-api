@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace ias.Rebens.api.Models
 {
@@ -251,5 +252,89 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public int IdPeriod { get; set; }
+    }
+
+    /// <summary>
+    /// Item para listagem de cursos no portal
+    /// </summary>
+    public class CourseItemModel
+    {
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public string CollegeImage { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public string CollegeName { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public string Title { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public string Address { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public string GraduationType { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public string Modality { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public string Period { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public decimal Discount { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public decimal OriginalPrice { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public decimal FinalPrice { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public decimal Rating { get; set; }
+        /// <summary>
+        /// Id do curso
+        /// </summary>
+        public int Evaluations { get; set; }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public CourseItemModel() { }
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public CourseItemModel(CourseItem course)
+        {
+            this.Id = course.Id;
+            this.CollegeImage = course.CollegeImage;
+            this.CollegeName = course.CollegeName;
+            this.Title = course.Title;
+            this.Address = course.Address;
+            this.GraduationType = course.GraduationType;
+            this.Modality = course.Modality;
+            this.Period = course.Period;
+            this.Discount = course.Discount;
+            this.OriginalPrice = course.OriginalPrice;
+            this.FinalPrice = course.FinalPrice;
+            this.Rating = course.Rating;
+            this.Evaluations = course.Evaluations;
+        }
+
     }
 }

@@ -39,6 +39,11 @@ namespace ias.Rebens.api.Controllers
         private IWithdrawRepository withdrawRepo;
         private IBankAccountRepository bankAccountRepo;
         private IOperationPartnerRepository operationPartnerRepo;
+        private ICourseRepository courseRepo;
+        private ICourseCollegeRepository courseCollegeRepo;
+        private ICourseGraduationTypeRepository courseGraduationTypeRepo;
+        private ICoursePeriodRepository coursePeriodRepo;
+        private ICourseModalityRepository courseModalityRepo;
 
         /// <summary>
         /// 
@@ -61,12 +66,19 @@ namespace ias.Rebens.api.Controllers
         /// <param name="benefitViewRepository"></param>
         /// <param name="bankAccountRepository"></param>
         /// <param name="operationPartnerRepository"></param>
+        /// <param name="courseRepository"></param>
+        /// <param name="courseCollegeRepository"></param>
+        /// <param name="courseGraduationTypeRepository"></param>
+        /// <param name="courseModalityRepository"></param>
+        /// <param name="coursePeriodRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
             IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository, ICouponRepository couponRepository, 
             IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository,
-            IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository)
+            IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository,
+            ICourseRepository courseRepository, ICourseCollegeRepository courseCollegeRepository, ICourseGraduationTypeRepository courseGraduationTypeRepository, 
+            ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -86,6 +98,11 @@ namespace ias.Rebens.api.Controllers
             this.withdrawRepo = withdrawRepository;
             this.bankAccountRepo = bankAccountRepository;
             this.operationPartnerRepo = operationPartnerRepository;
+            this.courseRepo = courseRepository;
+            this.courseCollegeRepo = courseCollegeRepository;
+            this.courseGraduationTypeRepo = courseGraduationTypeRepository;
+            this.courseModalityRepo = courseModalityRepository;
+            this.coursePeriodRepo = coursePeriodRepository;
         }
 
         /// <summary>
@@ -1364,6 +1381,367 @@ namespace ias.Rebens.api.Controllers
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
         }
+
+        #region Course
+        /// <summary>
+        /// Lista os cursos da operação com paginação
+        /// </summary>
+        /// <param name="operationCode">código da operação</param>
+        /// <param name="idCollege">faculdade, não obrigatório (default=null)</param>
+        /// <param name="graduationTypes">tipos de graduação, array de inteiros, não obrigatório (default=null)</param>
+        /// <param name="modalities">modalidades, array de inteiros, não obirgatório (default=null)</param>
+        /// <param name="periods">períodos, array de inteiros, não obirgatório (default=null)</param>
+        /// <param name="address">endereço, não obirgatório (default=null)</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <returns>Lista com os cursos encontrados</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("Courses")]
+        [ProducesResponseType(typeof(ResultPageModel<CourseItemModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListCourses([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCollege = null, [FromQuery]string graduationTypes = null, 
+            [FromQuery]string modalities = null, [FromQuery]string periods = null, [FromQuery]string address = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, 
+            [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = null)
+        {
+            int idOperation = 0;
+            string error = null;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+            if (operationGuid == Guid.Empty)
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            List<int> listModalities = null;
+            List<int> listPeriods = null;
+            List<int> listGraduationTypes = null;
+            if(!string.IsNullOrEmpty(graduationTypes))
+            {
+                listGraduationTypes = new List<int>();
+                var array = graduationTypes.Split(',');
+                foreach(var id in array)
+                    if (int.TryParse(id, out int idItem))
+                        listGraduationTypes.Add(idItem);
+            }
+            if (!string.IsNullOrEmpty(periods))
+            {
+                listPeriods = new List<int>();
+                var array = periods.Split(',');
+                foreach (var id in array)
+                    if (int.TryParse(id, out int idItem))
+                        listPeriods.Add(idItem);
+            }
+            if (!string.IsNullOrEmpty(modalities))
+            {
+                listModalities = new List<int>();
+                var array = modalities.Split(',');
+                foreach (var id in array)
+                    if (int.TryParse(id, out int idItem))
+                        listModalities.Add(idItem);
+            }
+
+            var list = courseRepo.ListForPortal(page: page, pageItems: pageItems, word: searchWord, sort: sort, idOperation: idOperation,
+                idCollege: idCollege, graduationTypes: listGraduationTypes, modalities: listModalities, address: address, periods: listPeriods, error: out error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<CourseItemModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<CourseItemModel>()
+                };
+                foreach (var course in list.Page)
+                    ret.Data.Add(new CourseItemModel(course));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista os tipos de graduação da operação
+        /// </summary>
+        /// <param name="operationCode">código da operação</param>
+        /// <returns>Lista com os tipos de graduação</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("GraduationTypes")]
+        [ProducesResponseType(typeof(ResultPageModel<CourseGraduationTypeModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListGraduationTypes([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            string error = null;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = courseGraduationTypeRepo.ListActive(idOperation, out error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<CourseGraduationTypeModel>()
+                {
+                    CurrentPage = 0,
+                    HasNextPage = false,
+                    HasPreviousPage = false,
+                    ItemsPerPage = list.Count,
+                    TotalItems = list.Count,
+                    TotalPages = 1,
+                    Data = new List<CourseGraduationTypeModel>()
+                };
+                foreach (var item in list)
+                    ret.Data.Add(new CourseGraduationTypeModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista as Modalidades da operação
+        /// </summary>
+        /// <param name="operationCode">código da operação</param>
+        /// <returns>Lista com as modalidades</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("Modalities")]
+        [ProducesResponseType(typeof(ResultPageModel<CourseModalityModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListModalities([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            string error = null;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = courseModalityRepo.ListActive(idOperation, out error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<CourseModalityModel>()
+                {
+                    CurrentPage = 0,
+                    HasNextPage = false,
+                    HasPreviousPage = false,
+                    ItemsPerPage = list.Count,
+                    TotalItems = list.Count,
+                    TotalPages = 1,
+                    Data = new List<CourseModalityModel>()
+                };
+                foreach (var item in list)
+                    ret.Data.Add(new CourseModalityModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista os Períodos da operação
+        /// </summary>
+        /// <param name="operationCode">código da operação</param>
+        /// <returns>Lista com os períodos</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("Periods")]
+        [ProducesResponseType(typeof(ResultPageModel<CoursePeriodModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListPeriods([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            string error = null;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = coursePeriodRepo.ListActive(idOperation, out error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<CoursePeriodModel>()
+                {
+                    CurrentPage = 0,
+                    HasNextPage = false,
+                    HasPreviousPage = false,
+                    ItemsPerPage = list.Count,
+                    TotalItems = list.Count,
+                    TotalPages = 1,
+                    Data = new List<CoursePeriodModel>()
+                };
+                foreach (var item in list)
+                    ret.Data.Add(new CoursePeriodModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista as Faculdades da operação
+        /// </summary>
+        /// <param name="operationCode">código da operação</param>
+        /// <returns>Lista com as faculdades</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("Colleges")]
+        [ProducesResponseType(typeof(ResultPageModel<CourseCollegeModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListColleges([FromHeader(Name = "x-operation-code")]string operationCode = null)
+        {
+            int idOperation = 0;
+            string error;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if(idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = courseCollegeRepo.ListActive(idOperation, out error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<CourseCollegeModel>()
+                {
+                    CurrentPage = 0,
+                    HasNextPage = false,
+                    HasPreviousPage = false,
+                    ItemsPerPage = list.Count,
+                    TotalItems = list.Count,
+                    TotalPages = 1,
+                    Data = new List<CourseCollegeModel>()
+                };
+                foreach (var item in list)
+                    ret.Data.Add(new CourseCollegeModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion Course
 
         private PortalTokenModel LoadToken(Customer customer, helper.TokenOptions tokenConfigurations, helper.SigningConfigurations signingConfigurations)
         {

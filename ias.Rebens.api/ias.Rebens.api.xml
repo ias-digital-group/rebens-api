@@ -1888,7 +1888,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository,ias.Rebens.IOperationPartnerRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository,ias.Rebens.IOperationPartnerRepository,ias.Rebens.ICourseRepository,ias.Rebens.ICourseCollegeRepository,ias.Rebens.ICourseGraduationTypeRepository,ias.Rebens.ICourseModalityRepository,ias.Rebens.ICoursePeriodRepository)">
             <summary>
             
             </summary>
@@ -1910,6 +1910,11 @@
             <param name="benefitViewRepository"></param>
             <param name="bankAccountRepository"></param>
             <param name="operationPartnerRepository"></param>
+            <param name="courseRepository"></param>
+            <param name="courseCollegeRepository"></param>
+            <param name="courseGraduationTypeRepository"></param>
+            <param name="courseModalityRepository"></param>
+            <param name="coursePeriodRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -2166,6 +2171,65 @@
             <param name="model"></param>
             <returns></returns>
             <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListCourses(System.String,System.Nullable{System.Int32},System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Lista os cursos da operação com paginação
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <param name="idCollege">faculdade, não obrigatório (default=null)</param>
+            <param name="graduationTypes">tipos de graduação, array de inteiros, não obrigatório (default=null)</param>
+            <param name="modalities">modalidades, array de inteiros, não obirgatório (default=null)</param>
+            <param name="periods">períodos, array de inteiros, não obirgatório (default=null)</param>
+            <param name="address">endereço, não obirgatório (default=null)</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os cursos encontrados</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListGraduationTypes(System.String)">
+            <summary>
+            Lista os tipos de graduação da operação
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <returns>Lista com os tipos de graduação</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListModalities(System.String)">
+            <summary>
+            Lista as Modalidades da operação
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <returns>Lista com as modalidades</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListPeriods(System.String)">
+            <summary>
+            Lista os Períodos da operação
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <returns>Lista com os períodos</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListColleges(System.String)">
+            <summary>
+            Lista as Faculdades da operação
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <returns>Lista com as faculdades</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.ReportController.#ctor(ias.Rebens.IReportRepository)">
@@ -3764,6 +3828,86 @@
         <member name="P:ias.Rebens.api.Models.CourseCoursePeriodModel.IdPeriod">
             <summary>
             Id do periodo
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.CourseItemModel">
+            <summary>
+            Item para listagem de cursos no portal
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Id">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.CollegeImage">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.CollegeName">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Title">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Address">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.GraduationType">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Modality">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Period">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Discount">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.OriginalPrice">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.FinalPrice">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Rating">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Evaluations">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseItemModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.CourseItemModel.#ctor(ias.Rebens.CourseItem)">
+            <summary>
+            Construtor
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.CoursePeriodModel">

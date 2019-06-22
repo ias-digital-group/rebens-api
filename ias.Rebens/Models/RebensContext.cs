@@ -41,6 +41,7 @@ namespace ias.Rebens
         public virtual DbSet<CourseAddress> CourseAddress { get; set; }
         public virtual DbSet<CourseCollege> CourseCollege { get; set; }
         public virtual DbSet<CourseCollegeAddress> CourseCollegeAddress { get; set; }
+        public virtual DbSet<CourseCustomerRate> CourseCustomerRate { get; set; }
         public virtual DbSet<CourseCoursePeriod> CourseCoursePeriod { get; set; }
         public virtual DbSet<CourseGraduationType> CourseGraduationType { get; set; }
         public virtual DbSet<CourseModality> CourseModality { get; set; }
@@ -581,6 +582,23 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdCourse)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_CourseCoursePeriod_Course");
+            });
+
+            modelBuilder.Entity<CourseCustomerRate>(entity =>
+            {
+                entity.HasKey(e => new { e.IdCourse, e.IdCustomer });
+
+                entity.HasOne(d => d.Course)
+                    .WithMany(p => p.CourseCustomerRates)
+                    .HasForeignKey(d => d.IdCourse)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseCustomerRate_Course");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.CourseCustomerRates)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CourseCustomerRate_Customer");
             });
 
             modelBuilder.Entity<CourseGraduationType>(entity =>

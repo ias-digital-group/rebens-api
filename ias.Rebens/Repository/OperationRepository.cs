@@ -1018,5 +1018,27 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public int GetId(Guid operationGuid, out string error)
+        {
+            int ret = 0;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var operation = db.Operation.SingleOrDefault(o => o.Code == operationGuid);
+                    if (operation != null)
+                        ret = operation.Id;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.GetId", ex.Message, $"operationGuid: \"{operationGuid}\"", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar ler a operação. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

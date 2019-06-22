@@ -8,7 +8,11 @@ namespace ias.Rebens
     {
         Course Read(int id, out string error);
 
-        ResultPage<Course> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? active = null, int? idCollege = null, int? idAddress = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null);
+        ResultPage<Course> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null,
+            bool? status = null, int? idCollege = null, string address = null, int[] graduationTypes = null, int[] modalities = null, int[] periods = null);
+
+        ResultPage<CourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation,
+            int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null);
 
         bool Delete(int id, out string error);
 

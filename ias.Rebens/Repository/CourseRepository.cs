@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using System.Text;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace ias.Rebens
 {
@@ -164,7 +165,7 @@ namespace ias.Rebens
         }
 
         public ResultPage<Course> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null,
-            bool? status = null, int? idCollege = null, int? idAddress = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null)
+            bool? status = null, int? idCollege = null, string address = null, int[] graduationTypes = null, int[] modalities = null, int[] periods = null)
         {
             ResultPage<Course> ret;
             try
@@ -175,7 +176,7 @@ namespace ias.Rebens
                                     (!idOperation.HasValue || c.IdOperation == idOperation) &&
                                     (!status.HasValue || c.Active == status) &&
                                     (!idCollege.HasValue || c.IdCollege == idCollege) &&
-                                    (!idAddress.HasValue || c.CourseAddresses.Any(a => a.IdAddress == idAddress)) &&
+                                    (string.IsNullOrEmpty(address) || c.CourseAddresses.Any(a => a.Address.Street.Contains(address) || a.Address.City.Contains(address))) &&
                                     (graduationTypes == null || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
@@ -201,7 +202,7 @@ namespace ias.Rebens
                                     (!idOperation.HasValue || c.IdOperation == idOperation) &&
                                     (!status.HasValue || c.Active == status) &&
                                     (!idCollege.HasValue || c.IdCollege == idCollege) &&
-                                    (!idAddress.HasValue || c.CourseAddresses.Any(a => a.IdAddress == idAddress)) &&
+                                    (string.IsNullOrEmpty(address) || c.CourseAddresses.Any(a => a.Address.Street.Contains(address) || a.Address.City.Contains(address))) &&
                                     (graduationTypes == null || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
@@ -209,6 +210,95 @@ namespace ias.Rebens
 
 
                     ret = new ResultPage<Course>(list, page, pageItems, total);
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.ListPage", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os cursos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<CourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation,
+            int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null)
+        {
+            ResultPage<CourseItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation &&
+                                    (!idCollege.HasValue || c.IdCollege == idCollege) &&
+                                    (string.IsNullOrEmpty(address) || c.CourseAddresses.Any(a => a.Address.Street.Contains(address) || a.Address.City.Contains(address))) &&
+                                    (graduationTypes == null || graduationTypes.Count == 0 || graduationTypes.Any(t => t == c.IdGraduationType)) &&
+                                    (modalities == null || modalities.Count == 0 || modalities.Any(t => t == c.IdModality)) &&
+                                    (periods == null || periods.Count == 0 || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
+                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    var total = tmpList.Count();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+
+                    var resultList = new List<CourseItem>();
+                    foreach(var item in list)
+                    {
+                        var course = new CourseItem()
+                        {
+                            Id = item.Id,
+                            Title = item.Title,
+                            Discount = item.Discount,
+                            OriginalPrice = item.OriginalPrice,
+                            FinalPrice = item.FinalPrice,
+                            Rating = item.Rating
+                        };
+
+                        course.GraduationType = db.CourseGraduationType.Single(t => t.Id == item.IdGraduationType).Name;
+                        course.Modality = db.CourseModality.Single(m => m.Id == item.IdModality).Name;
+                        var college = db.CourseCollege.Single(c => c.Id == item.IdCollege);
+                        course.CollegeImage = college.Logo;
+                        course.CollegeName = college.Name;
+
+                        var periodList = db.CoursePeriod.Where(p => p.CoursePeriods.Any(c => c.IdCourse == item.Id)).Distinct().ToArray();
+                        for (int i = 0 ; i < periodList.Count() ; i++)
+                        {
+                            course.Period += periodList[i].Name;
+                            if ((i + 2) < periodList.Count()) course.Period += ", ";
+                            else if ((i + 2) == periodList.Count()) course.Period += " ou ";
+                        }
+
+                        var addr = db.Address.FirstOrDefault(a => a.CourseAddresses.Any(c => c.IdCourse == item.Id));
+                        if (addr != null)
+                            course.Address = addr.City + " - " + addr.State;
+
+                        course.Evaluations = db.CourseCustomerRate.Count(r => r.IdCourse == item.Id);
+                        course.Rating = db.CourseCustomerRate.Where(r => r.IdCourse == item.Id).Sum(r => (decimal?)r.Rate) ?? (decimal)0;
+                        if (course.Rating > 0 && course.Evaluations > 0)
+                            course.Rating = course.Rating / course.Evaluations;
+
+                        resultList.Add(course);
+                    }
+
+
+                    ret = new ResultPage<CourseItem>(resultList, page, pageItems, total);
 
                     error = null;
                 }
@@ -307,6 +397,32 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CourseRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o curso. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool SaveRate(CourseCustomerRate rate, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if(!db.CourseCustomerRate.Any(c => c.IdCourse == rate.IdCourse && c.IdCustomer == rate.IdCustomer))
+                    {
+                        rate.Created = DateTime.Now;
+                        db.CourseCustomerRate.Add(rate);
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.SaveRate", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar salvar a avaliação. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;

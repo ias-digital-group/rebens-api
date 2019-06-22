@@ -70,7 +70,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation: idOperation, active: active);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation: idOperation, status: active);
 
             if (string.IsNullOrEmpty(error))
             {
