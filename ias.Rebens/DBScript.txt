@@ -418,3 +418,40 @@ GO
 ALTER TABLE [dbo].[CourseView] CHECK CONSTRAINT [FK_CourseView_Customer]
 GO
 
+
+
+
+/****** Object:  Table [dbo].[CourseCustomerRate]    Script Date: 22/06/2019 10:34:02 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CourseCustomerRate](
+	[IdCustomer] [int] NOT NULL,
+	[IdCourse] [int] NOT NULL,
+	[Rate] [int] NOT NULL,
+	[Created] [datetime] NOT NULL,
+ CONSTRAINT [PK_CourseCustomerRate] PRIMARY KEY CLUSTERED 
+(
+	[IdCustomer] ASC,
+	[IdCourse] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CourseCustomerRate]  WITH CHECK ADD  CONSTRAINT [FK_CourseCustomerRate_Course] FOREIGN KEY([IdCourse])
+REFERENCES [dbo].[Course] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseCustomerRate] CHECK CONSTRAINT [FK_CourseCustomerRate_Course]
+GO
+
+ALTER TABLE [dbo].[CourseCustomerRate]  WITH CHECK ADD  CONSTRAINT [FK_CourseCustomerRate_Customer] FOREIGN KEY([IdCustomer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[CourseCustomerRate] CHECK CONSTRAINT [FK_CourseCustomerRate_Customer]
+GO
+
