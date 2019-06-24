@@ -290,9 +290,9 @@ namespace ias.Rebens
                             course.Address = addr.City + " - " + addr.State;
 
                         course.Evaluations = db.CourseCustomerRate.Count(r => r.IdCourse == item.Id);
-                        course.Rating = db.CourseCustomerRate.Where(r => r.IdCourse == item.Id).Sum(r => (decimal?)r.Rate) ?? (decimal)0;
-                        if (course.Rating > 0 && course.Evaluations > 0)
-                            course.Rating = course.Rating / course.Evaluations;
+                        var ratings = db.CourseCustomerRate.Where(r => r.IdCourse == item.Id).Sum(r => (decimal?)r.Rate) ?? (decimal)0;
+                        if (ratings > 0 && course.Evaluations > 0)
+                            course.Rating = ratings / course.Evaluations;
 
                         resultList.Add(course);
                     }

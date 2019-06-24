@@ -246,7 +246,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<AddressModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult listaddress(int id, [FromQuery]int page = 0, [FromQuery]int pageitems = 30, [FromQuery]string sort = "title asc", [FromQuery]string searchword = "")
+        public IActionResult Listaddress(int id, [FromQuery]int page = 0, [FromQuery]int pageitems = 30, [FromQuery]string sort = "title asc", [FromQuery]string searchword = "")
         {
             var list = addressRepo.ListByCourse(id, page, pageitems, searchword, sort, out string error);
 
