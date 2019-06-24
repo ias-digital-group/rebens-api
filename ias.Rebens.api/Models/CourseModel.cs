@@ -165,6 +165,12 @@ namespace ias.Rebens.api.Models
             this.StartDate = course.StartDate;
             this.EndDate = course.EndDate;
             this.VoucherText = course.VoucherText;
+            if(course.CoursePeriods != null)
+                this.PeriodIds = course.CoursePeriods.Select(p => p.IdPeriod).ToArray();            
+            else
+                this.PeriodIds = new List<int>().ToArray();
+            if (course.Description != null)
+                this.Description = course.Description.Html;
         }
 
         /// <summary>
@@ -311,6 +317,18 @@ namespace ias.Rebens.api.Models
         /// Id do curso
         /// </summary>
         public int Evaluations { get; set; }
+        /// <summary>
+        /// Duração
+        /// </summary>
+        public string Duration { get; set; }
+        /// <summary>
+        /// Descrição
+        /// </summary>
+        public string Description { get; set; }
+        /// <summary>
+        /// Imagem
+        /// </summary>
+        public string Image { get; set; }
 
         /// <summary>
         /// Construtor
@@ -334,6 +352,9 @@ namespace ias.Rebens.api.Models
             this.FinalPrice = course.FinalPrice;
             this.Rating = course.Rating;
             this.Evaluations = course.Evaluations;
+            this.Duration = course.Duration;
+            this.Description = course.Description;
+            this.Image = course.Image;
         }
 
     }

@@ -44,6 +44,7 @@ namespace ias.Rebens.api.Controllers
         private ICourseGraduationTypeRepository courseGraduationTypeRepo;
         private ICoursePeriodRepository coursePeriodRepo;
         private ICourseModalityRepository courseModalityRepo;
+        private ICourseViewRepository courseViewRepo;
 
         /// <summary>
         /// 
@@ -71,6 +72,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="courseGraduationTypeRepository"></param>
         /// <param name="courseModalityRepository"></param>
         /// <param name="coursePeriodRepository"></param>
+        /// <param name="courseViewRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
@@ -78,7 +80,7 @@ namespace ias.Rebens.api.Controllers
             IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository,
             IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository,
             ICourseRepository courseRepository, ICourseCollegeRepository courseCollegeRepository, ICourseGraduationTypeRepository courseGraduationTypeRepository, 
-            ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository)
+            ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -103,6 +105,7 @@ namespace ias.Rebens.api.Controllers
             this.courseGraduationTypeRepo = courseGraduationTypeRepository;
             this.courseModalityRepo = courseModalityRepository;
             this.coursePeriodRepo = coursePeriodRepository;
+            this.courseViewRepo = courseViewRepository;
         }
 
         /// <summary>
@@ -1481,6 +1484,66 @@ namespace ias.Rebens.api.Controllers
                     ret.Data.Add(new CourseItemModel(course));
 
                 return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna o Curson conforme o ID
+        /// </summary>
+        /// <param name="id">Id do curso</param>
+        /// <param name="operationCode">código da operação</param>
+        /// <returns>Curso</returns>
+        /// <response code="200">Retorna o curso</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("Courses/{id}")]
+        [ProducesResponseType(typeof(JsonDataModel<CourseItemModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetCourse(int id, [FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            int idCustomer = 0;
+            string error = null;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId != null)
+                    int.TryParse(customerId.Value, out idCustomer);
+            }
+
+            if (operationGuid == Guid.Empty)
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var course = courseRepo.ReadForPortal(id, out error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (course == null || course.Id == 0)
+                    return NoContent();
+
+                if(idCustomer > 0)
+                    courseViewRepo.SaveView(id, idCustomer, out string viewError);
+                return Ok(new JsonDataModel<CourseItemModel>() { Data = new CourseItemModel(course) });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

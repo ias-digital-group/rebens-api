@@ -32,9 +32,30 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.AddAddress", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.AddAddress", $"idCourse:{idCourse}, idAddress:{idAddress}", ex);
                 error = "Ocorreu um erro ao tentar adicionar o endereço. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool RemovePeriods(int idCourse, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var periods = db.CourseCoursePeriod.Where(o => o.IdCourse == idCourse);
+                    db.CourseCoursePeriod.RemoveRange(periods);
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.RemovePeriods", $"idCourse:{idCourse}", ex);
+                error = "Ocorreu um erro ao tentar remover os periodos. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
@@ -57,8 +78,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.AddPeriod", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.AddPeriod", $"idCourse:{idCourse}, idPeriod:{idPeriod}", ex);
                 error = "Ocorreu um erro ao tentar adicionar o periodo. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -80,8 +100,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.Create", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.Create", "", ex);
                 error = "Ocorreu um erro ao tentar criar um curso. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -104,8 +123,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.Delete", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.Delete", $"id:{id}", ex);
                 error = "Ocorreu um erro ao tentar excluir o curso. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -130,8 +148,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.DeleteAddress", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.DeleteAddress", $"idCourse:{idCourse}, idAddress:{idAddress}", ex);
                 error = "Ocorreu um erro ao tentar excluir o endereço. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -156,8 +173,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.DeletePeriod", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.DeletePeriod", $"idCourse:{idCourse}, idPeriod:{idPeriod}", ex);
                 error = "Ocorreu um erro ao tentar excluir o periodo. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -216,8 +232,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.ListPage", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.ListPage", "", ex);
                 error = "Ocorreu um erro ao tentar listar os cursos. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -261,15 +276,7 @@ namespace ias.Rebens
                     var resultList = new List<CourseItem>();
                     foreach(var item in list)
                     {
-                        var course = new CourseItem()
-                        {
-                            Id = item.Id,
-                            Title = item.Title,
-                            Discount = item.Discount,
-                            OriginalPrice = item.OriginalPrice,
-                            FinalPrice = item.FinalPrice,
-                            Rating = item.Rating
-                        };
+                        var course = new CourseItem(item);
 
                         course.GraduationType = db.CourseGraduationType.Single(t => t.Id == item.IdGraduationType).Name;
                         course.Modality = db.CourseModality.Single(m => m.Id == item.IdModality).Name;
@@ -290,9 +297,9 @@ namespace ias.Rebens
                             course.Address = addr.City + " - " + addr.State;
 
                         course.Evaluations = db.CourseCustomerRate.Count(r => r.IdCourse == item.Id);
-                        var ratings = db.CourseCustomerRate.Where(r => r.IdCourse == item.Id).Sum(r => (decimal?)r.Rate) ?? (decimal)0;
+                        var ratings = db.CourseCustomerRate.Where(r => r.IdCourse == item.Id).Sum(r => (int?)r.Rate) ?? (int)0;
                         if (ratings > 0 && course.Evaluations > 0)
-                            course.Rating = ratings / course.Evaluations;
+                            course.Rating = (decimal)(ratings / course.Evaluations);
 
                         resultList.Add(course);
                     }
@@ -305,8 +312,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.ListPage", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.ListForPortal", "", ex);
                 error = "Ocorreu um erro ao tentar listar os cursos. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -327,8 +333,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.ListPeriods", ex.Message, $"id: {id}", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.ListPeriods", $"id: {id}", ex);
                 error = "Ocorreu um erro ao tentar listar os períodos vinculados ao curso. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -342,14 +347,13 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Course.SingleOrDefault(c => c.Id == id && !c.Deleted);
+                    ret = db.Course.Include("CoursePeriods").Include("Description").SingleOrDefault(c => c.Id == id && !c.Deleted);
                     error = null;
                 }
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.Read", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.Read", $"id: {id}", ex);
                 error = "Ocorreu um erro ao tentar ler o curso. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -394,8 +398,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.Update", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.Update", "", ex);
                 error = "Ocorreu um erro ao tentar atualizar o curso. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -420,12 +423,70 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CourseRepository.SaveRate", ex.Message, "", ex.StackTrace);
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.SaveRate", "", ex);
                 error = "Ocorreu um erro ao tentar salvar a avaliação. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
+        }
+
+        public CourseItem ReadForPortal(int id, out string error)
+        {
+            CourseItem course;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var item = db.Course.SingleOrDefault(c => c.Id == id);
+                    if (item != null)
+                    {
+                        course = new CourseItem(item);
+
+                        course.GraduationType = db.CourseGraduationType.Single(t => t.Id == item.IdGraduationType).Name;
+                        course.Modality = db.CourseModality.Single(m => m.Id == item.IdModality).Name;
+                        var college = db.CourseCollege.Single(c => c.Id == item.IdCollege);
+                        course.CollegeImage = college.Logo;
+                        course.CollegeName = college.Name;
+
+                        var periodList = db.CoursePeriod.Where(p => p.CoursePeriods.Any(c => c.IdCourse == item.Id)).Distinct().ToArray();
+                        for (int i = 0; i < periodList.Count(); i++)
+                        {
+                            course.Period += periodList[i].Name;
+                            if ((i + 2) < periodList.Count()) course.Period += ", ";
+                            else if ((i + 2) == periodList.Count()) course.Period += " ou ";
+                        }
+
+                        var addr = db.Address.FirstOrDefault(a => a.CourseAddresses.Any(c => c.IdCourse == item.Id));
+                        if (addr != null)
+                            course.Address = addr.GetFullAddress();
+
+                        course.Evaluations = db.CourseCustomerRate.Count(r => r.IdCourse == item.Id);
+                        var ratings = db.CourseCustomerRate.Where(r => r.IdCourse == item.Id).Sum(r => (int?)r.Rate) ?? (int)0;
+                        if (ratings > 0 && course.Evaluations > 0)
+                            course.Rating = (decimal)(ratings / course.Evaluations);
+
+                        if (item.IdDescription.HasValue)
+                        {
+                            var desc = db.StaticText.SingleOrDefault(s => s.Id == item.IdDescription.Value);
+                            if (desc != null)
+                                course.Description = desc.Html;
+                        }
+                        error = null;
+                    }
+                    else
+                    {
+                        error = "Curso não encontrado";
+                        course = null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.ReadForPortal", $"id:{id}", ex);
+                error = "Ocorreu um erro ao tentar ler o curso. (erro:" + idLog + ")";
+                course = null;
+            }
+            return course;
         }
     }
 }

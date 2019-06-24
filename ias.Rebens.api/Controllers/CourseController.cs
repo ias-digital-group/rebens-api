@@ -134,7 +134,15 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]CourseModel course)
         {
+            var principal = HttpContext.User;
+            var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+            if (customerId == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            if (!int.TryParse(customerId.Value, out int idAdmin))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+
             var part = course.GetEntity();
+            part.IdAdminUser = idAdmin;
             if (repo.Update(part, out string error))
             {
                 if (!string.IsNullOrEmpty(course.Description))
@@ -142,6 +150,16 @@ namespace ias.Rebens.api.Controllers
                     var detail = course.GetDescription();
                     staticTextRepo.Update(detail, out error);
                 }
+
+                if (repo.RemovePeriods(part.Id, out error))
+                {
+                    if (course.PeriodIds != null && course.PeriodIds.Length > 0)
+                    {
+                        foreach (var periodId in course.PeriodIds)
+                            repo.AddPeriod(part.Id, periodId, out error);
+                    }
+                }
+
                 return Ok(new JsonModel() { Status = "ok", Message = "Curso atualizado com sucesso!" });
             }
 
