@@ -64,6 +64,18 @@ namespace ias.Rebens.Enums
         Withdraw = 5
     }
 
+    public enum CourseUseStatus : int
+    {
+        [Description("Gerado")]
+        Generated = 1,
+        [Description("Não Utilizado")]
+        NotUsed = 2,
+        [Description("Utilizado")]
+        Used = 3,
+        [Description("Cancelado")]
+        Canceled = 4
+    }
+
     public enum ConfigurationType
     {
         [Description("Cliente")]

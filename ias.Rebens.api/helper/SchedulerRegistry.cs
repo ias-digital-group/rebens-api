@@ -155,4 +155,13 @@ namespace ias.Rebens.api.helper
             }
         }
     }
+
+    public class WirecardJob : IJob
+    {
+        public void Execute()
+        {
+            var wirecard = new Integration.WirecardHelper();
+            var signatures = wirecard.ListSubscriptions();
+        }
+    }
 }

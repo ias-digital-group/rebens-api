@@ -111,5 +111,35 @@ namespace ias.Rebens.api.Controllers
 
             return new JsonResult(model);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        [HttpGet("TesteWirecard")]
+        public JsonResult TesteWirecard([FromQuery]string token)
+        {
+            var model = new JsonModel();
+            if (string.IsNullOrEmpty(token))
+            {
+                model.Status = "error";
+                model.Message = "wrong token";
+            }
+            else
+            {
+                var decryptedToken = Helper.SecurityHelper.SimpleDecryption(token);
+                if (decryptedToken.IndexOf('|') > 0 && decryptedToken.Split('|').Length == 2 && decryptedToken.Split('|')[0] == "ias_user" && decryptedToken.Split('|')[1] == "#K)YKb4B=&eN")
+                {
+                    var wirecardHelper = new Integration.WirecardHelper();
+                    var ret = wirecardHelper.ListSubscriptions();
+                    model.Status = "OK";
+                    model.Message = "Foi";
+                    model.Data = ret;
+                }
+            }
+
+            return new JsonResult(model);
+        }
     }
 }

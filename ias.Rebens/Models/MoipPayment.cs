@@ -13,7 +13,7 @@ namespace ias.Rebens
         public decimal Amount { get; set; }
         public int IdStatus { get; set; }
         public string Status { get; set; }
-        public int PaymentMethod { get; set; }
+        public string PaymentMethod { get; set; }
         public string Description { get; set; }
         public string Brand { get; set; }
         public string HolderName { get; set; }

@@ -1543,7 +1543,7 @@ namespace ias.Rebens.api.Controllers
 
                 if(idCustomer > 0)
                     courseViewRepo.SaveView(id, idCustomer, out string viewError);
-                return Ok(new JsonDataModel<CourseItemModel>() { Data = new CourseItemModel(course) });
+                return Ok(new JsonDataModel<CourseItemModel>() { Data = new CourseItemModel(course, idCustomer) });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

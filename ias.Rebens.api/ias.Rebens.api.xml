@@ -1367,6 +1367,13 @@
             <param name="token"></param>
             <returns></returns>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.LogErrorController.TesteWirecard(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.MoipNotificationController.Post(System.String,ias.Rebens.api.Models.MoipNotificationModel)">
             <summary>
             Webhook
@@ -2351,6 +2358,25 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.VoucherController.#ctor(ias.Rebens.IBenefitUseRepository,ias.Rebens.IBenefitRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IOperationRepository,ias.Rebens.ICourseUseRepository,ias.Rebens.ICourseRepository)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="benefitUseRepository"></param>
+            <param name="benefitRepository"></param>
+            <param name="customerRepository"></param>
+            <param name="operationRepository"></param>
+            <param name="courseUseRepository"></param>
+            <param name="courseRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.VoucherController.Index(System.String,System.String)">
+            <summary>
+            Method that generate the voucher
+            </summary>
+            <param name="tp">Tipo do voucher ("b" = beneficio, "c" = curso)</param>
+            <param name="code">Código enviado para o portal</param>
+            <returns></returns>
         </member>
         <member name="T:ias.Rebens.api.Models.AddressModel">
             <summary>
@@ -3798,7 +3824,7 @@
             <summary>
             Construtor que recebe um objeto Course e popula os atributos
             </summary>
-            <param name="course"></param>
+            <param name="course">objeto curso</param>
         </member>
         <member name="M:ias.Rebens.api.Models.CourseModel.GetEntity">
             <summary>
@@ -3927,15 +3953,22 @@
             Imagem
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Link">
+            <summary>
+            Link do benefício
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.CourseItemModel.#ctor">
             <summary>
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.CourseItemModel.#ctor(ias.Rebens.CourseItem)">
+        <member name="M:ias.Rebens.api.Models.CourseItemModel.#ctor(ias.Rebens.CourseItem,System.Nullable{System.Int32})">
             <summary>
             Construtor
             </summary>
+            <param name="course">objeto curso</param>
+            <param name="idCustomer">id do cliente para geração do voucher</param>
         </member>
         <member name="T:ias.Rebens.api.Models.CoursePeriodModel">
             <summary>

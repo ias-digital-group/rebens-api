@@ -136,6 +136,7 @@ namespace ias.Rebens.api.Models
         /// Array com os Id's dos períodos
         /// </summary>
         public int[] PeriodIds { get; set; }
+        
 
         /// <summary>
         /// Construtor
@@ -145,7 +146,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Construtor que recebe um objeto Course e popula os atributos
         /// </summary>
-        /// <param name="course"></param>
+        /// <param name="course">objeto curso</param>
         public CourseModel(Course course)
         {
             this.Id = course.Id;
@@ -329,15 +330,23 @@ namespace ias.Rebens.api.Models
         /// Imagem
         /// </summary>
         public string Image { get; set; }
+        /// <summary>
+        /// Link do benefício
+        /// </summary>
+        [MaxLength(500)]
+        public string Link { get; set; }
 
         /// <summary>
         /// Construtor
         /// </summary>
         public CourseItemModel() { }
+
         /// <summary>
         /// Construtor
         /// </summary>
-        public CourseItemModel(CourseItem course)
+        /// <param name="course">objeto curso</param>
+        /// <param name="idCustomer">id do cliente para geração do voucher</param>
+        public CourseItemModel(CourseItem course, int? idCustomer = null)
         {
             this.Id = course.Id;
             this.CollegeImage = course.CollegeImage;
@@ -355,6 +364,8 @@ namespace ias.Rebens.api.Models
             this.Duration = course.Duration;
             this.Description = course.Description;
             this.Image = course.Image;
+            if (idCustomer.HasValue)
+                this.Link = Constant.URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
         }
 
     }

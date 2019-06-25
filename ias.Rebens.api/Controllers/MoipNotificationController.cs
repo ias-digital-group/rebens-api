@@ -11,10 +11,12 @@ namespace ias.Rebens.api.Controllers
     public class MoipNotificationController : ControllerBase
     {
         public IMoipRepository moipRepo;
+        public ILogErrorRepository logErrorRepo;
 
-        public MoipNotificationController(IMoipRepository moipRepository)
+        public MoipNotificationController(IMoipRepository moipRepository, ILogErrorRepository logErrorRepository)
         {
             this.moipRepo = moipRepository;
+            this.logErrorRepo = logErrorRepository;
         }
 
         /// <summary>
@@ -30,6 +32,12 @@ namespace ias.Rebens.api.Controllers
             {
                 if (notification.Resource != null)
                 {
+                    try
+                    {
+                        logErrorRepo.Create(new LogError() { Reference = "Controller.MoipNotification.Post", Complement = "", Message = notification.Resource.ToString(), Created = DateTime.Now, StackTrace = "" });
+                    }
+                    catch { }
+
                     var jObj = JObject.Parse(notification.Resource.ToString());
 
                     if (notification.Event.ToLower().StartsWith("subscription.")
@@ -85,7 +93,7 @@ namespace ias.Rebens.api.Controllers
                         };
                         if (jObj["payment_method"] != null)
                         {
-                            payment.PaymentMethod = Convert.ToInt32(jObj["payment_method"]["code"].ToString());
+                            payment.PaymentMethod = jObj["payment_method"]["code"].ToString();
                             payment.Description = jObj["payment_method"]["description"].ToString();
                             if (jObj["payment_method"]["credit_card"] != null)
                             {
