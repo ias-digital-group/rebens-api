@@ -1374,12 +1374,32 @@
             <param name="token"></param>
             <returns></returns>
         </member>
+        <member name="T:ias.Rebens.api.Controllers.MoipNotificationController">
+            <summary>
+            Controller que recebe as notificações do moip
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.MoipNotificationController.#ctor(ias.Rebens.IMoipRepository,ias.Rebens.ILogErrorRepository)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="moipRepository"></param>
+            <param name="logErrorRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.MoipNotificationController.Test(System.String,ias.Rebens.api.Models.MoipNotificationModel)">
+            <summary>
+            Webhook GET
+            </summary>
+            <param name="authorization"></param>
+            <param name="notification"></param>
+            <returns></returns>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.MoipNotificationController.Post(System.String,ias.Rebens.api.Models.MoipNotificationModel)">
             <summary>
-            Webhook
+            Webhook POST
             </summary>
             <param name="notification"></param>
-            <param name="Authorization"></param>
+            <param name="authorization"></param>
             <returns></returns>
         </member>
         <member name="T:ias.Rebens.api.Controllers.OperationController">
@@ -4582,6 +4602,31 @@
         <member name="P:ias.Rebens.api.Models.UserModel.Email">
             <summary>
             Email
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.MoipNotificationModel">
+            <summary>
+            Objeto que retorna notificação do Moip
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.MoipNotificationModel.Event">
+            <summary>
+            Evento que gerou o webhook. Valores possíveis apresentados na lista abaixo.
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.MoipNotificationModel.Env">
+            <summary>
+            Ambiente onde o evento ocorreu (production/sandbox).
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.MoipNotificationModel.Date">
+            <summary>
+            Data da criação do evento.
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.MoipNotificationModel.Resource">
+            <summary>
+            Estrutura de recurso que gerou o webhook.
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.OperationAddressModel">
