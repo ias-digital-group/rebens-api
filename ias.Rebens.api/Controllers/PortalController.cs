@@ -1826,6 +1826,12 @@ namespace ias.Rebens.api.Controllers
             identity.AddClaim(new Claim("Email", customer.Email));
             identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
 
+            if(customer.IdOperation == 1)
+            {
+                bool planStatus = customerRepo.CheckPlanStatus(customer.Id);
+                identity.AddClaim(new Claim("planStatus", planStatus ? "1" : "0"));
+            }
+
             DateTime dataCriacao = DateTime.UtcNow;
             DateTime dataExpiracao = dataCriacao.AddDays(2);
 

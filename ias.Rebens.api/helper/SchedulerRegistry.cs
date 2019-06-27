@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace ias.Rebens.api.helper
 {
+    //internal string ConnectionString = "Server=SURFACE\\SQLEXPRESS;Database=Rebens;user id=ias_user;password=k4r0l1n4;";
     public class SchedulerRegistry : Registry
     {
         public SchedulerRegistry()
@@ -18,6 +19,8 @@ namespace ias.Rebens.api.helper
             Schedule<CouponToolsGenerateJob>().ToRunNow().AndEvery(1).Days().At(0, 30);
             //Schedule<CouponToolsUpdateJob>().ToRunEvery(1).Days().At(3, 0);
 
+            Schedule<WirecardJob>().ToRunNow().AndEvery(5).Minutes();
+
             Schedule<KeepAlive>().ToRunNow().AndEvery(15).Minutes();
         }
     }
@@ -26,6 +29,11 @@ namespace ias.Rebens.api.helper
     {
         public void Execute()
         {
+            if (Constant.DebugOn)
+            {
+                var log = new LogErrorRepository(Constant.ConnectionString);
+                log.Create("KeepAlive", "RUNNED", "", "");
+            }
             try
             {
                 var request = (HttpWebRequest)WebRequest.Create($"{Constant.URL}api/portal/homeLocked/");
@@ -42,20 +50,18 @@ namespace ias.Rebens.api.helper
     {
         public void Execute()
         {
-            string conn = "Server=172.31.27.205;Database=Rebens;user id=Rebens_user;password=4KRe*d9!cd&g;";
-            var log = new LogErrorRepository(conn);
-            var repo = new ZanoxSaleRepository(conn);
+            var log = new LogErrorRepository(Constant.ConnectionString);
+            var repo = new ZanoxSaleRepository(Constant.ConnectionString);
 
             log.Create("ZanoxUpdateJob", "START", "", "");
-
             int counter = 0;
             var zanox = new Integration.ZanoxHelper();
             var dt = DateTime.Now.AddMonths(-1);
-            while(dt < DateTime.Now)
+            while (dt < DateTime.Now)
             {
-                log.Create("ZanoxUpdateJob", "GetByDate", dt.ToString("dd/MM/yyyy"), "");
+                if (Constant.DebugOn) log.Create("ZanoxUpdateJob", "GetByDate", dt.ToString("dd/MM/yyyy"), "");
                 var list = zanox.UpdateZanoxSales(dt, out string error);
-                log.Create("ZanoxUpdateJob", "GetByDate", dt.ToString("dd/MM/yyyy"), $"total:{list.Count}");
+                if (Constant.DebugOn) log.Create("ZanoxUpdateJob", "GetByDate", dt.ToString("dd/MM/yyyy"), $"total:{list.Count}");
                 counter += list.Count;
                 foreach (var item in list)
                 {
@@ -81,17 +87,11 @@ namespace ias.Rebens.api.helper
     {
         public void Execute()
         {
-            //string conn = "Server=IAS-02;Database=Rebens;user id=ias_user;password=k4r0l1n4;";
-            //bool debug = false;
-            string conn = "Server=172.31.27.205;Database=Rebens;user id=Rebens_user;password=i$f6LiF*N2kv;";
-            bool debug = false;
-
-            var log = new LogErrorRepository(conn);
-            var customerRepo = new CustomerRepository(conn);
-            var couponRepo = new CouponRepository(conn);
+            var log = new LogErrorRepository(Constant.ConnectionString);
+            var customerRepo = new CustomerRepository(Constant.ConnectionString);
+            var couponRepo = new CouponRepository(Constant.ConnectionString);
 
             log.Create("CouponToolsGenerateJob", "START", "", "");
-
 
             var mail = new Integration.SendinBlueHelper();
             bool run = true;
@@ -108,7 +108,7 @@ namespace ias.Rebens.api.helper
                     run = false;
                     break;
                 }
-                if(list != null && list.Count > 0)
+                if (list != null && list.Count > 0)
                 {
                     foreach (var customer in list)
                     {
@@ -148,7 +148,9 @@ namespace ias.Rebens.api.helper
                     break;
                 }
             }
-            if (debug)
+
+            log.Create("CouponToolsGenerateJob", "FINISH", "", "");
+            if (Constant.DebugOn)
             {
                 var listDestinataries = new Dictionary<string, string>() { { "suporte@iasdigitalgroup.com", "Suporte" } };
                 mail.Send(listDestinataries, "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "End at: " + DateTime.Now.ToString("HH:mm:ss"));
@@ -160,8 +162,25 @@ namespace ias.Rebens.api.helper
     {
         public void Execute()
         {
-            var wirecard = new Integration.WirecardHelper();
-            var signatures = wirecard.ListSubscriptions();
+            var log = new LogErrorRepository(Constant.ConnectionString);
+            var notificationRepo = new MoipNotificationRepository(Constant.ConnectionString);
+            log.Create("WirecardJob", "START", "", "");
+
+            if (notificationRepo.HasSubscriptionToProcess())
+            {
+                notificationRepo.ProcessSubscription();
+                log.Create("WirecardJob", "FINISH", "Subscriptions", "");
+            }
+            else if (notificationRepo.HasInvoicesToProcess())
+            {
+                notificationRepo.ProcessInvoices();
+                log.Create("WirecardJob", "FINISH", "Invoices", "");
+            }
+            else if (notificationRepo.HasPaymentsToProcess())
+            {
+                notificationRepo.ProcessPayments();
+                log.Create("WirecardJob", "FINISH", "Payments", "");
+            }
         }
     }
 }

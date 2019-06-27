@@ -385,5 +385,23 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool CheckPlanStatus(int id)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.MoipSignature.Any(s => s.IdCustomer == id && s.Status.ToUpper() == "ACTIVE");
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.CheckPlanStatus", ex.Message, $"id:{id}", ex.StackTrace);
+            }
+            return ret;
+        }
     }
 }

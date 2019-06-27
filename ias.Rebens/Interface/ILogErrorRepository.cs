@@ -7,6 +7,7 @@ namespace ias.Rebens
     public interface ILogErrorRepository
     {
         int Create(LogError log);
+        int Create(string reference, string message, string complement, string stackTrace);
 
         bool Clear();
 

@@ -55,6 +55,7 @@ namespace ias.Rebens
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }
         public virtual DbSet<MoipInvoice> MoipInvoice { get; set; }
+        public virtual DbSet<MoipNotification> MoipNotification { get; set; }
         public virtual DbSet<MoipPayment> MoipPayment { get; set; }
         public virtual DbSet<MoipSignature> MoipSignature { get; set; }
         public virtual DbSet<Operation> Operation { get; set; }
@@ -840,6 +841,20 @@ namespace ias.Rebens
                        .HasForeignKey(d => d.IdMoipSignature)
                        .OnDelete(DeleteBehavior.ClientSetNull)
                        .HasConstraintName("FK_MoipInvoice_MoipSignature");
+            });
+
+            modelBuilder.Entity<MoipNotification>(entity =>
+            {
+                entity.Property(e => e.Event).IsRequired().HasMaxLength(200);
+
+                entity.Property(e => e.Envoirement).IsRequired().HasMaxLength(200);
+
+                entity.Property(e => e.Resources).IsRequired().HasColumnType("text");
+
+                entity.Property(e => e.Created).IsRequired().HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).IsRequired().HasColumnType("datetime");
+
             });
 
             modelBuilder.Entity<MoipPayment>(entity =>

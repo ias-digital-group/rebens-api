@@ -22,6 +22,7 @@ namespace ias.Rebens
         public string PaymentMethod { get; set; }
         public string Status { get; set; }
         public decimal Amount { get; set; }
+        public int IdOperation { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 

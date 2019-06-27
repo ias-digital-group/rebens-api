@@ -158,6 +158,36 @@ namespace ias.Rebens.Enums
         Own = 3
     }
 
+    public enum MoipNotificationEvent : int
+    {
+        [Description("subscription.created")]
+        SubscriptionCreated = 1,
+        [Description("subscription.updated")]
+        SubscriptionUpdated = 2,
+        [Description("invoice.created")]
+        InvoiceCreated = 3,
+        [Description("invoice.status_updated")]
+        InvoiceStatusUpdated = 4,
+        [Description("payment.created")]
+        PaymentCreated = 5,
+        [Description("payment.status_updated")]
+        PaymentStatusUpdated = 6
+    }
+
+    public enum MoipNotificationStatus : int
+    {
+        [Description("Nova")]
+        New = 1,
+        [Description("Ignorada")]
+        Ignored = 2,
+        [Description("Processada")]
+        Processed = 3,
+        [Description("Erro")]
+        Error = 4,
+        [Description("Cancelado")]
+        Canceled = 5
+    }
+
     public enum MoipPaymentStatus : int
     {
         [Description("Autorizado")]

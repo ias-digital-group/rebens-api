@@ -33,5 +33,6 @@ namespace ias.Rebens
         List<Customer> ListToGenerateCoupon(int idOperation, int totalItems);
 
         bool HasToGenerateCoupon(int idOperation);
+        bool CheckPlanStatus(int id);
     }
 }
