@@ -17,15 +17,18 @@ namespace ias.Rebens.api.Controllers
     {
         private ICategoryRepository repo;
         private ILogErrorRepository logRepo;
+        private IOperationRepository operationRepo;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="categoryRepository"></param>
         /// <param name="logErrorRepository"></param>
-        public CategoryController(ICategoryRepository categoryRepository, ILogErrorRepository logErrorRepository) {
+        /// <param name="operationRepository"></param>
+        public CategoryController(ICategoryRepository categoryRepository, ILogErrorRepository logErrorRepository, IOperationRepository operationRepository) {
             this.repo = categoryRepository;
             this.logRepo = logErrorRepository;
+            this.operationRepo = operationRepository;
         }
 
         /// <summary>
@@ -159,33 +162,46 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Retorna a arvore de categorias 
         /// </summary>
+        /// <param name="operationCode">código da operação, obrigatório</param>
         /// <returns>Lista com as categorias encontradas</returns>
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("ListTree"), Authorize("Bearer", Roles = "master,administrator,publiser,customer,administratorRebens,publisherRebens")]
+        [AllowAnonymous]
+        [HttpGet("ListTree")]
         [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListTree()
+        public IActionResult ListTree([FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int? idOperation = null;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+            int idOperation = 0;
+            string error;
+
             var principal = HttpContext.User;
-            if (principal.IsInRole("customer"))
+            if (operationGuid == Guid.Empty)
             {
                 if (principal?.Claims != null)
                 {
                     var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
                     if (operationId == null)
                         return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out int idOp))
+                    if (!int.TryParse(operationId.Value, out idOperation))
                         return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    idOperation = idOp;
                 }
             }
-            
+            else
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            if (idOperation == 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = repo.ListTree(principal.IsInRole("customer"), idOperation, out string error);
+            bool isCustomer = (operationGuid != Guid.Empty || principal.IsInRole("customer"));
+
+            var list = repo.ListTree(isCustomer, idOperation, out error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count() == 0)

@@ -408,6 +408,7 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Lista todos os benefícios da operação com paginação
         /// </summary>
+        /// <param name="operationCode">categoria, não obrigatório (default=null)</param>
         /// <param name="idCategory">categoria, não obrigatório (default=null)</param>
         /// <param name="idBenefitType">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
         /// <param name="latitude">latitude do usuário (default=null)</param>
@@ -420,25 +421,39 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
         [HttpGet("Benefits")]
         [ProducesResponseType(typeof(ResultPageModel<BenefitListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefits([FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, [FromQuery]decimal? latitude = null, [FromQuery]decimal? longitude = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListBenefits([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, [FromQuery]decimal? latitude = null, [FromQuery]decimal? longitude = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
             int idOperation = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
+            string error;
+
+            if (operationGuid == Guid.Empty)
             {
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
             }
+            else
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            if(idOperation == 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             ResultPage<Benefit> list;
-            string error;
             if (page == 0 && !idCategory.HasValue && string.IsNullOrEmpty(idBenefitType) && !latitude.HasValue && !longitude.HasValue && string.IsNullOrEmpty(searchWord))
                 list = benefitRepo.ListForHomeBenefitPortal(idOperation, out error);
             else
@@ -474,33 +489,49 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna o benefício, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
         [HttpGet("Benefits/{id}")]
         [ProducesResponseType(typeof(JsonDataModel<BenefitModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GetBenefit(int id)
+        public IActionResult GetBenefit([FromHeader(Name = "x-operation-code")]string operationCode, int id)
         {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
             int idCustomer = 0;
             int idOperation = 0;
+            string error;
+
             var principal = HttpContext.User;
+            if (operationGuid == Guid.Empty)
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            if (idOperation == 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
             if (principal?.Claims != null)
             {
                 var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                if (customerId != null)
+                    int.TryParse(customerId.Value, out idCustomer);
             }
 
-            var operation = operationRepo.Read(idOperation, out string error);
             var benefit = benefitRepo.Read(id, out error);
-            benefitViewRepo.SaveView(id, idCustomer, out string viewError);
+            if(idCustomer > 0)
+                benefitViewRepo.SaveView(id, idCustomer, out string viewError);
             if (string.IsNullOrEmpty(error))
             {
                 if (benefit == null || benefit.Id == 0)
@@ -1175,28 +1206,44 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Retorna a lista com os banners imperdíveis
         /// </summary>
+        /// <param name="operationCode">código da operação, obrigatório</param>
         /// <returns></returns>
         /// <response code="200">Retorna a lista com os banners Imperdíveis, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
         [HttpGet("UnmissableBanners")]
         [ProducesResponseType(typeof(ResultPageModel<BannerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListUnmissableBanners()
+        public IActionResult ListUnmissableBanners([FromHeader(Name = "x-operation-code")]string operationCode)
         {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
             int idOperation = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
+            string error;
 
-            var list = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.Benefit, out string error);
+            if (operationGuid == Guid.Empty)
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            if (idOperation == 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.Benefit, out error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
@@ -1218,6 +1265,7 @@ namespace ias.Rebens.api.Controllers
         /// <summary>
         /// Retorna as perguntas e respostas da página faq
         /// </summary>
+        /// <param name="operationCode">código da operação, obrigatório</param>
         /// <returns></returns>
         /// <response code="200">Retorna as perguntas e respostas da página faq, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>

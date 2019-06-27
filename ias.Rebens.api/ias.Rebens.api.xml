@@ -551,12 +551,13 @@
             Category Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.CategoryController.#ctor(ias.Rebens.ICategoryRepository,ias.Rebens.ILogErrorRepository)">
+        <member name="M:ias.Rebens.api.Controllers.CategoryController.#ctor(ias.Rebens.ICategoryRepository,ias.Rebens.ILogErrorRepository,ias.Rebens.IOperationRepository)">
             <summary>
             Constructor
             </summary>
             <param name="categoryRepository"></param>
             <param name="logErrorRepository"></param>
+            <param name="operationRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CategoryController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Int32})">
             <summary>
@@ -610,10 +611,11 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.CategoryController.ListTree">
+        <member name="M:ias.Rebens.api.Controllers.CategoryController.ListTree(System.String)">
             <summary>
             Retorna a arvore de categorias 
             </summary>
+            <param name="operationCode">código da operação, obrigatório</param>
             <returns>Lista com as categorias encontradas</returns>
             <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -1379,11 +1381,11 @@
             Controller que recebe as notificações do moip
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.MoipNotificationController.#ctor(ias.Rebens.IMoipRepository,ias.Rebens.ILogErrorRepository)">
+        <member name="M:ias.Rebens.api.Controllers.MoipNotificationController.#ctor(ias.Rebens.IMoipNotificationRepository,ias.Rebens.ILogErrorRepository)">
             <summary>
             Construtor
             </summary>
-            <param name="moipRepository"></param>
+            <param name="moipNotificationRepository"></param>
             <param name="logErrorRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.MoipNotificationController.Test(System.String,ias.Rebens.api.Models.MoipNotificationModel)">
@@ -2003,10 +2005,11 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.Nullable{System.Int32},System.String,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Int32,System.Int32,System.String,System.String)">
             <summary>
             Lista todos os benefícios da operação com paginação
             </summary>
+            <param name="operationCode">categoria, não obrigatório (default=null)</param>
             <param name="idCategory">categoria, não obrigatório (default=null)</param>
             <param name="idBenefitType">tipo de benefício, separado por vírgula, não obrigatório (default=null)</param>
             <param name="latitude">latitude do usuário (default=null)</param>
@@ -2020,7 +2023,7 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.GetBenefit(System.Int32)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.GetBenefit(System.String,System.Int32)">
             <summary>
             Retorna o benefício conforme o ID
             </summary>
@@ -2152,10 +2155,11 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.ListUnmissableBanners">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListUnmissableBanners(System.String)">
             <summary>
             Retorna a lista com os banners imperdíveis
             </summary>
+            <param name="operationCode">código da operação, obrigatório</param>
             <returns></returns>
             <response code="200">Retorna a lista com os banners Imperdíveis, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -2165,6 +2169,7 @@
             <summary>
             Retorna as perguntas e respostas da página faq
             </summary>
+            <param name="operationCode">código da operação, obrigatório</param>
             <returns></returns>
             <response code="200">Retorna as perguntas e respostas da página faq, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
