@@ -45,6 +45,7 @@ namespace ias.Rebens.api.Controllers
         private ICoursePeriodRepository coursePeriodRepo;
         private ICourseModalityRepository courseModalityRepo;
         private ICourseViewRepository courseViewRepo;
+        private IDrawRepository drawRepo;
 
         /// <summary>
         /// 
@@ -73,6 +74,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="courseModalityRepository"></param>
         /// <param name="coursePeriodRepository"></param>
         /// <param name="courseViewRepository"></param>
+        /// <param name="drawRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
@@ -80,7 +82,8 @@ namespace ias.Rebens.api.Controllers
             IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository,
             IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository,
             ICourseRepository courseRepository, ICourseCollegeRepository courseCollegeRepository, ICourseGraduationTypeRepository courseGraduationTypeRepository, 
-            ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository)
+            ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository,
+            IDrawRepository drawRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -106,6 +109,7 @@ namespace ias.Rebens.api.Controllers
             this.courseModalityRepo = courseModalityRepository;
             this.coursePeriodRepo = coursePeriodRepository;
             this.courseViewRepo = courseViewRepository;
+            this.drawRepo = drawRepository;
         }
 
         /// <summary>
@@ -1860,6 +1864,51 @@ namespace ias.Rebens.api.Controllers
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
         #endregion Course
+
+        /// <summary>
+        /// Retorna uma lista com os números da sorte
+        /// </summary>
+        /// <returns>Lista com os números</returns>
+        /// <response code="200">Retorna a lista com os números, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListLuckNumbers"), Authorize("Bearer", Roles = "customer")]
+        [ProducesResponseType(typeof(JsonDataModel<List<DrawItemModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListLuckNumbers()
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var list = drawRepo.ListDrawItems(idCustomer, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<DrawItemModel>>()
+                {
+                    Data = new List<DrawItemModel>()
+                };
+
+                foreach (var item in list)
+                    ret.Data.Add(new DrawItemModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
 
         private PortalTokenModel LoadToken(Customer customer, helper.TokenOptions tokenConfigurations, helper.SigningConfigurations signingConfigurations)
         {

@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace ias.Rebens
 {
@@ -156,35 +157,42 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool ItemSetCustomer(int idDraw, int idCustomer, out string error)
+        public void DistributeNumbers()
         {
-            bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var item = db.DrawItem.Where(d => d.IdDraw == idDraw && !d.IdCustomer.HasValue).OrderBy(d => Guid.NewGuid()).FirstOrDefault();
-                    if (item != null)
+                    var dt = DateTime.Now.Date;
+                    var listDraws = db.Draw.Where(d => d.Active && !d.Deleted && d.Generated && d.Operation.Active && d.StartDate <= dt && d.EndDate >= dt);
+                    if (listDraws != null && listDraws.Count() > 0)
                     {
-                        item.IdCustomer = idCustomer;
-                        db.SaveChanges();
-                        error = null;
-                    }
-                    else
-                    {
-                        ret = false;
-                        error = "Não existe item disponível";
+                        foreach (var draw in listDraws)
+                        {
+                            var listCustomers = db.Customer.Where(c => c.IdOperation == draw.IdOperation);
+                            foreach (var customer in  listCustomers)
+                            {
+                                if(!db.DrawItem.Any(d => d.IdCustomer == customer.Id && d.IdDraw == draw.Id && d.Modified.Year == DateTime.Now.Year && d.Modified.Month == DateTime.Now.Month))
+                                {
+                                    var item = db.DrawItem.Where(d => d.IdDraw == draw.Id && !d.IdCustomer.HasValue).OrderBy(d => Guid.NewGuid()).FirstOrDefault();
+                                    if (item != null)
+                                    {
+                                        item.IdCustomer = customer.Id;
+                                        item.Modified = DateTime.Now;
+                                    }
+                                }
+                            }
+                            db.SaveChanges();
+                            Thread.Sleep(50);
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("DrawRepository.ItemSetCustomer", ex.Message, $"idDraw{idDraw}, idCustomer:{idCustomer}", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar atribuir um cliente a um numero do sorteio. (erro:" + idLog + ")";
-                ret = false;
+                logError.Create("DrawRepository.DistributeNumbers", ex.Message, "", ex.StackTrace);
             }
-            return ret;
         }
 
         public ResultPage<Draw> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
@@ -313,6 +321,27 @@ namespace ias.Rebens
                 int idLog = logError.Create("DrawRepository.SetToGenerate", ex.Message, $"id{id}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar gerar os numeros do sorteio. (erro:" + idLog + ")";
                 ret = false;
+            }
+            return ret;
+        }
+
+        public List<DrawItem> ListDrawItems(int idCustomer, out string error)
+        {
+            List<DrawItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.DrawItem.Where(d => d.IdCustomer == idCustomer && d.Draw.Active && !d.Draw.Deleted).OrderByDescending(d => d.Created).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("DrawRepository.ItemListPage", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os itens do sorteio. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

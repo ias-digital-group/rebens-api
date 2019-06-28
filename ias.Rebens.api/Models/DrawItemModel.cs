@@ -35,6 +35,10 @@ namespace ias.Rebens.api.Models
         /// Sorteado
         /// </summary>
         public bool Drawn { get; set; }
+        /// <summary>
+        /// Data
+        /// </summary>
+        public string Date { get; set; }
 
         /// <summary>
         /// Construtor
@@ -52,6 +56,7 @@ namespace ias.Rebens.api.Models
             this.IdCustomer = item.IdCustomer;
             this.CustomerName = item.IdCustomer.HasValue && item.Customer != null ? item.Customer.Name : "";
             this.Drawn = item.Won;
+            this.Date = Enums.EnumHelper.GetEnumDescription((Enums.Months)item.Created.Month) + "/" + item.Created.Year;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace ias.Rebens
         ResultPage<Draw> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null);
         bool Delete(int id, out string error);
         ResultPage<DrawItem> ItemListPage(int page, int pageItems, string word, string sort, int idDraw, out string error);
-        bool ItemSetCustomer(int idDraw, int idCustomer, out string error);
         bool SetToGenerate(int id, out string error);
+        List<DrawItem> ListDrawItems(int idCustomer, out string error);
     }
 }

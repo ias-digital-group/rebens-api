@@ -14,7 +14,9 @@ namespace ias.Rebens.api.helper
     {
         public SchedulerRegistry()
         {
-            Schedule<GenerateDrawItems>().ToRunNow().AndEvery(15).Minutes();
+            Schedule<GenerateDrawItemsJob>().ToRunNow().AndEvery(15).Minutes();
+
+            Schedule<DistributeNumbersJob>().ToRunNow().AndEvery(1).Months();
 
             Schedule<ZanoxUpdateJob>().ToRunNow().AndEvery(2).Hours();
 
@@ -27,8 +29,14 @@ namespace ias.Rebens.api.helper
         }
     }
 
+    /// <summary>
+    /// Keep Alive
+    /// </summary>
     public class KeepAlive : IJob
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public void Execute()
         {
             if (Constant.DebugOn)
@@ -48,8 +56,14 @@ namespace ias.Rebens.api.helper
         }
     }
 
+    /// <summary>
+    /// Zanox Update Job
+    /// </summary>
     public class ZanoxUpdateJob : IJob
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public void Execute()
         {
             var log = new LogErrorRepository(Constant.ConnectionString);
@@ -77,16 +91,28 @@ namespace ias.Rebens.api.helper
         }
     }
 
+    /// <summary>
+    /// Coupon Tools Update Job
+    /// </summary>
     public class CouponToolsUpdateJob : IJob
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public void Execute()
         {
             throw new System.NotImplementedException();
         }
     }
 
+    /// <summary>
+    /// Coupon Tools Generate Job
+    /// </summary>
     public class CouponToolsGenerateJob : IJob
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public void Execute()
         {
             var log = new LogErrorRepository(Constant.ConnectionString);
@@ -160,8 +186,14 @@ namespace ias.Rebens.api.helper
         }
     }
 
+    /// <summary>
+    /// Wirecard Job
+    /// </summary>
     public class WirecardJob : IJob
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public void Execute()
         {
             var log = new LogErrorRepository(Constant.ConnectionString);
@@ -186,9 +218,14 @@ namespace ias.Rebens.api.helper
         }
     }
 
-
-    public class GenerateDrawItems : IJob
+    /// <summary>
+    /// Generate Draw Items
+    /// </summary>
+    public class GenerateDrawItemsJob : IJob
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public void Execute()
         {
             try
@@ -196,10 +233,32 @@ namespace ias.Rebens.api.helper
                 if (Constant.DebugOn)
                 {
                     var log = new LogErrorRepository(Constant.ConnectionString);
-                    log.Create("GenerateDrawItems", "RUNNED", "", "");
+                    log.Create("GenerateDrawItemsJob", "RUNNED", "", "");
                 }
                 var repo = new DrawRepository(Constant.ConnectionString);
                 repo.GenerateItems();
+            }
+            catch { }
+        }
+    }
+
+    /// <summary>
+    /// Generate Numbers Job
+    /// </summary>
+    public class DistributeNumbersJob : IJob
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Execute()
+        {
+            try
+            {
+                var log = new LogErrorRepository(Constant.ConnectionString);
+                log.Create("DistributeNumbersJob", "START", "", "");
+                var repo = new DrawRepository(Constant.ConnectionString);
+                repo.DistributeNumbers();
+                log.Create("DistributeNumbersJob", "END", "", "");
             }
             catch { }
         }

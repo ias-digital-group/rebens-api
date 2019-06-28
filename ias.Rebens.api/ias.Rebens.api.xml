@@ -2000,7 +2000,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository,ias.Rebens.IOperationPartnerRepository,ias.Rebens.ICourseRepository,ias.Rebens.ICourseCollegeRepository,ias.Rebens.ICourseGraduationTypeRepository,ias.Rebens.ICourseModalityRepository,ias.Rebens.ICoursePeriodRepository,ias.Rebens.ICourseViewRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository,ias.Rebens.IOperationPartnerRepository,ias.Rebens.ICourseRepository,ias.Rebens.ICourseCollegeRepository,ias.Rebens.ICourseGraduationTypeRepository,ias.Rebens.ICourseModalityRepository,ias.Rebens.ICoursePeriodRepository,ias.Rebens.ICourseViewRepository,ias.Rebens.IDrawRepository)">
             <summary>
             
             </summary>
@@ -2028,6 +2028,7 @@
             <param name="courseModalityRepository"></param>
             <param name="coursePeriodRepository"></param>
             <param name="courseViewRepository"></param>
+            <param name="drawRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -2359,6 +2360,15 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListLuckNumbers">
+            <summary>
+            Retorna uma lista com os números da sorte
+            </summary>
+            <returns>Lista com os números</returns>
+            <response code="200">Retorna a lista com os números, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.ReportController.#ctor(ias.Rebens.IReportRepository)">
             <summary>
             
@@ -2485,6 +2495,76 @@
             <param name="tp">Tipo do voucher ("b" = beneficio, "c" = curso)</param>
             <param name="code">Código enviado para o portal</param>
             <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.helper.KeepAlive">
+            <summary>
+            Keep Alive
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.KeepAlive.Execute">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.helper.ZanoxUpdateJob">
+            <summary>
+            Zanox Update Job
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.ZanoxUpdateJob.Execute">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.helper.CouponToolsUpdateJob">
+            <summary>
+            Coupon Tools Update Job
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.CouponToolsUpdateJob.Execute">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.helper.CouponToolsGenerateJob">
+            <summary>
+            Coupon Tools Generate Job
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.CouponToolsGenerateJob.Execute">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.helper.WirecardJob">
+            <summary>
+            Wirecard Job
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.WirecardJob.Execute">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.helper.GenerateDrawItemsJob">
+            <summary>
+            Generate Draw Items
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.GenerateDrawItemsJob.Execute">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.helper.DistributeNumbersJob">
+            <summary>
+            Generate Numbers Job
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.DistributeNumbersJob.Execute">
+            <summary>
+            
+            </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.AddressModel">
             <summary>
@@ -4379,6 +4459,11 @@
         <member name="P:ias.Rebens.api.Models.DrawItemModel.Drawn">
             <summary>
             Sorteado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawItemModel.Date">
+            <summary>
+            Data
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.DrawItemModel.#ctor">
