@@ -25,6 +25,7 @@ namespace ias.Rebens
             CourseGraduationTypes = new HashSet<CourseGraduationType>();
             CoursePeriods = new HashSet<CoursePeriod>();
             Courses = new HashSet<Course>();
+            Draws = new HashSet<Draw>();
         }
 
         public int Id { get; set; }
@@ -66,5 +67,6 @@ namespace ias.Rebens
         public virtual ICollection<CourseGraduationType> CourseGraduationTypes { get; set; }
         public virtual ICollection<CoursePeriod> CoursePeriods { get; set; }
         public virtual ICollection<Course> Courses { get; set; }
+        public virtual ICollection<Draw> Draws { get; set; }
     }
 }

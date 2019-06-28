@@ -386,14 +386,17 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool CheckPlanStatus(int id)
+        public int CheckPlanStatus(int id)
         {
-            bool ret = false;
+            int ret = -1;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.MoipSignature.Any(s => s.IdCustomer == id && s.Status.ToUpper() == "ACTIVE");
+                    if (db.MoipSignature.Any(s => s.IdCustomer == id && s.Status.ToUpper() == "ACTIVE"))
+                        ret = 1;
+                    else if (db.MoipSignature.Any(s => s.IdCustomer == id))
+                        ret = 0;
                 }
             }
             catch (Exception ex)

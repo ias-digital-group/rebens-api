@@ -501,3 +501,81 @@ GO
 
 ALTER TABLE MoipSignature ALTER COLUMN IdOperation INT NOT NULL
 GO
+
+
+
+
+
+/****** Object:  Table [dbo].[Draw]    Script Date: 6/28/2019 2:29:13 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Draw](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[StartDate] [date] NOT NULL,
+	[EndDate] [date] NOT NULL,
+	[Quantity] [int] NOT NULL,
+	[IdOperation] [int] NOT NULL,
+	[Active] [bit] NOT NULL,
+	[Generated] [bit] NOT NULL,
+	[Deleted] [bit] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_Draw] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Draw]  WITH CHECK ADD  CONSTRAINT [FK_Draw_Operation] FOREIGN KEY([IdOperation])
+REFERENCES [dbo].[Operation] ([Id])
+GO
+
+ALTER TABLE [dbo].[Draw] CHECK CONSTRAINT [FK_Draw_Operation]
+GO
+
+
+
+
+/****** Object:  Table [dbo].[DrawItem]    Script Date: 6/28/2019 2:29:53 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[DrawItem](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdDraw] [int] NOT NULL,
+	[LuckyNumber] [nvarchar](50) NOT NULL,
+	[IdCustomer] [int] NULL,
+	[Won] [bit] NOT NULL,
+	[IdPrize] [int] NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_DrawItem] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[DrawItem]  WITH CHECK ADD  CONSTRAINT [FK_DrawItem_Customer] FOREIGN KEY([IdCustomer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[DrawItem] CHECK CONSTRAINT [FK_DrawItem_Customer]
+GO
+
+ALTER TABLE [dbo].[DrawItem]  WITH CHECK ADD  CONSTRAINT [FK_DrawItem_Draw] FOREIGN KEY([IdDraw])
+REFERENCES [dbo].[Draw] ([Id])
+GO
+
+ALTER TABLE [dbo].[DrawItem] CHECK CONSTRAINT [FK_DrawItem_Draw]
+GO
+

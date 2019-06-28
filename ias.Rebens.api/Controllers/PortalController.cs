@@ -1313,7 +1313,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("ListPayments"), Authorize("Bearer", Roles = "customer")]
-        [ProducesResponseType(typeof(JsonDataModel<List<PaymentModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<PaymentModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListPayments([FromQuery]int page = 0, int pageItems = 30)
@@ -1333,12 +1333,19 @@ namespace ias.Rebens.api.Controllers
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count == 0)
+                if (list == null || list.Count() == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<PaymentModel>>()
+                var ret = new ResultPageModel<PaymentModel>()
                 {
-                    Data = new List<PaymentModel>()
+                    Data = new List<PaymentModel>(),
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+
                 };
 
                 foreach (var item in list)
@@ -1876,8 +1883,8 @@ namespace ias.Rebens.api.Controllers
 
             if(customer.IdOperation == 1)
             {
-                bool planStatus = customerRepo.CheckPlanStatus(customer.Id);
-                identity.AddClaim(new Claim("planStatus", planStatus ? "1" : "0"));
+                int planStatus = customerRepo.CheckPlanStatus(customer.Id);
+                identity.AddClaim(new Claim("planStatus", planStatus.ToString()));
             }
 
             DateTime dataCriacao = DateTime.UtcNow;

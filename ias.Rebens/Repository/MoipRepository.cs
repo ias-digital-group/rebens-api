@@ -13,14 +13,17 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public List<MoipPayment> ListPaymentsByCustomer(int idCustomer, int page, int pageItems, out string error)
+        public ResultPage<MoipPayment> ListPaymentsByCustomer(int idCustomer, int page, int pageItems, out string error)
         {
-            List<MoipPayment> ret;
+            ResultPage<MoipPayment> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.MoipPayment.Where(p => p.Signature.IdCustomer == idCustomer).OrderByDescending(p => p.Created).Skip(page * pageItems).Take(pageItems).ToList();
+                    var list = db.MoipPayment.Where(p => p.Signature.IdCustomer == idCustomer).OrderByDescending(p => p.Created).Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.MoipPayment.Count(p => p.Signature.IdCustomer == idCustomer);
+
+                    ret = new ResultPage<MoipPayment>(list, page, pageItems, total);
                     error = null;
                 }
             }

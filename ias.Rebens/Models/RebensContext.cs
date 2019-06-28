@@ -50,6 +50,8 @@ namespace ias.Rebens
         public virtual DbSet<CourseView> CourseView { get; set; }
         public virtual DbSet<Customer> Customer { get; set; }
         public virtual DbSet<CustomerReferal> CustomerReferal { get; set; }
+        public virtual DbSet<Draw> Draw { get; set; }
+        public virtual DbSet<DrawItem> DrawItem { get; set; }
         public virtual DbSet<Faq> Faq { get; set; }
         public virtual DbSet<FormContact> FormContact { get; set; }
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
@@ -739,6 +741,48 @@ namespace ias.Rebens
                     .HasForeignKey(e => e.IdCustomer)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_CustomerReferal_Customer");
+            });
+
+            modelBuilder.Entity<Draw>(entity =>
+            {
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+
+                entity.Property(e => e.StartDate).HasColumnType("date");
+
+                entity.Property(e => e.EndDate).HasColumnType("date");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(e => e.Operation)
+                    .WithMany(e => e.Draws)
+                    .HasForeignKey(e => e.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Draw_Operation");
+
+            });
+
+            modelBuilder.Entity<DrawItem>(entity =>
+            {
+                entity.Property(e => e.LuckyNumber).IsRequired().HasMaxLength(50);
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(e => e.Draw)
+                    .WithMany(e => e.DrawItems)
+                    .HasForeignKey(e => e.IdDraw)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_DrawItem_Draw");
+
+                entity.HasOne(e => e.Customer)
+                    .WithMany(e => e.DrawItems)
+                    .HasForeignKey(e => e.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_DrawItem_Customer");
+
             });
 
             modelBuilder.Entity<Faq>(entity =>
