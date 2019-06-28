@@ -19,6 +19,7 @@ namespace ias.Rebens
         public int IdOperation { get; set; }
         public bool Active { get; set; }
         public bool Deleted { get; set; }
+        public bool ToGenerate { get; set; }
         public bool Generated { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }

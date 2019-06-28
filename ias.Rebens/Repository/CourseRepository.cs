@@ -385,7 +385,10 @@ namespace ias.Rebens
                         update.StartDate = course.StartDate;
                         update.EndDate = course.EndDate;
                         update.VoucherText = course.VoucherText;
-                        update.IdDescription = course.IdDescription;
+                        if (course.IdDescription.HasValue)
+                            update.IdDescription = course.IdDescription;
+                        else
+                            course.IdDescription = update.IdDescription;
                         update.Active = course.Active;
                         update.Modified = DateTime.UtcNow;
 

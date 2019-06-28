@@ -50,8 +50,9 @@ namespace ias.Rebens.Helper
                 string domain = (string.IsNullOrEmpty(operation.Domain) ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                 if (operation.Id == 1)
                 {
-                    msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {referal.Name}<br /><br />Você foi convidado para participar do clube: {operation.Title}</p>";
-                    msg += $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
+                    msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {referal.Name}<br /><br />Você foi convidado para participar do {operation.Title}</p>";
+                    msg += $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão abaixo para se cadastrar</p><br /><br />";
+                    msg += $"<p style='text-align:center;'><a href='{domain}' target='_blank' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;font-size: 14px;padding: 15px 50px;font-family:verdana, arial, Helvetica; color: #ffffff;background-color:#427147;border-radius:50px;'>CADASTRAR</a></p>";
                 }
                 else
                 {

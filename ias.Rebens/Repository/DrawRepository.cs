@@ -1,6 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 
@@ -12,6 +15,11 @@ namespace ias.Rebens
         public DrawRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
+        public DrawRepository(string connectionString)
+        {
+            _connectionString = connectionString;
         }
 
         public bool Create(Draw draw, out string error)
@@ -62,59 +70,53 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool GenerateItems(int id, out string error)
+        public void GenerateItems()
         {
-            bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var draw = db.Draw.SingleOrDefault(d => d.Id == id);
+                    var draw = db.Draw.FirstOrDefault(d => d.ToGenerate && !d.Generated && !d.Deleted && d.Active);
                     if (draw != null)
                     {
                         var digits = draw.Quantity.ToString().Length;
                         if (draw.Quantity <= int.Parse("1" + 0.ToString($"d{(digits - 1)}")))
                             digits--;
 
-                        int counter = 0;
-                        for (int i = 0; i < draw.Quantity; i++)
+                        int counter = db.DrawItem.Count(d => d.IdDraw == draw.Id);
+                        int totalItems = 100000 + counter;
+
+                        if (totalItems > draw.Quantity)
+                            totalItems = draw.Quantity;
+
+                        var connection = ((SqlConnection)db.Database.GetDbConnection());
+                        connection.Open();
+
+                        var command = connection.CreateCommand();
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.CommandTimeout = 60;
+                        command.CommandText = "GenerateDrawItems";
+                        command.Parameters.AddWithValue("@id", draw.Id);
+                        command.Parameters.AddWithValue("@digits", digits);
+                        command.Parameters.AddWithValue("@totalItems", totalItems);
+                        command.Parameters.AddWithValue("@counter", counter);
+
+                        command.ExecuteNonQuery();
+
+                        if(draw.Quantity == totalItems)
                         {
-                            var item = new DrawItem()
-                            {
-                                Created = DateTime.UtcNow,
-                                IdDraw = id,
-                                LuckyNumber = i.ToString($"d{digits}"),
-                                Modified = DateTime.UtcNow,
-                                Won = false
-                            };
-                            db.DrawItem.Add(item);
-                            counter++;
-                            if (counter > 1000)
-                            {
-                                db.SaveChanges();
-                                counter = 0;
-                            }
+                            draw.Generated = true;
+                            draw.Modified = DateTime.UtcNow;
+                            db.SaveChanges();
                         }
-                        draw.Generated = true;
-                        draw.Modified = DateTime.UtcNow;
-                        db.SaveChanges();
-                        error = null;
-                    }
-                    else
-                    {
-                        ret = false;
-                        error = "Sorteio não encontrado!";
                     }
                 }
             }
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("DrawRepository.GenerateItems", ex.Message, $"id{id}", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar gerar os numeros do sorteio. (erro:" + idLog + ")";
-                ret = false;
+                int idLog = logError.Create("DrawRepository.GenerateItems", ex.Message, "", ex.StackTrace);
             }
-            return ret;
         }
 
         public ResultPage<DrawItem> ItemListPage(int page, int pageItems, string word, string sort, int idDraw, out string error)
@@ -278,6 +280,38 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("DrawRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o sorteio. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool SetToGenerate(int id, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var draw = db.Draw.SingleOrDefault(d => d.Id == id);
+                    if (draw != null)
+                    {
+                        draw.ToGenerate = true;
+                        draw.Modified = DateTime.UtcNow;
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Sorteio não encontrado!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("DrawRepository.SetToGenerate", ex.Message, $"id{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar gerar os numeros do sorteio. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;

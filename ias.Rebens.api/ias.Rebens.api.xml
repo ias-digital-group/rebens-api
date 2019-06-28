@@ -1206,6 +1206,89 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="T:ias.Rebens.api.Controllers.DrawController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.DrawController.#ctor(ias.Rebens.IDrawRepository)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="drawRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.DrawController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Retorna uma lista de sorteios conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Email, JobTitle), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da operação, não obrigatório (default = null)</param>
+            <returns>Lista com os contatos encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.DrawController.Get(System.Int32)">
+            <summary>
+            Retorna o sorteio conforme o ID
+            </summary>
+            <param name="id">Id do sorteio desejado</param>
+            <returns>Sorteio</returns>
+            <response code="200">Retorna o sorteio, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.DrawController.Put(ias.Rebens.api.Models.DrawModel)">
+            <summary>
+            Atualiza um sorteio
+            </summary>
+            <param name="draw"></param>
+            <returns></returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.DrawController.Post(ias.Rebens.api.Models.DrawModel)">
+            <summary>
+            Cria um novo sorteio
+            </summary>
+            <param name="draw"></param>
+            <returns></returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.DrawController.Delete(System.Int32)">
+            <summary>
+            Apaga um sorteio
+            </summary>
+            <param name="id">Id do sorteio a ser apagado</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.DrawController.ListItems(System.Int32,System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Retorna uma lista de números do sorteios conforme os parametros
+            </summary>
+            <param name="id">Id do sorteio</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Email, JobTitle), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <returns>Lista com os contatos encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.DrawController.GenerateNumbers(System.Int32)">
+            <summary>
+            Gera os números da sorte do sorteio
+            </summary>
+            <param name="id">id do sorteio</param>
+            <returns></returns>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.FaqController">
             <summary>
             Faq Controller
@@ -4262,6 +4345,114 @@
             Retorna um objeto CustomerReferal
             </summary>
             <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.DrawItemModel">
+            <summary>
+            Item do sorteio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawItemModel.Id">
+            <summary>
+            Id do item
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawItemModel.IdDraw">
+            <summary>
+            Id do sorteio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawItemModel.LuckyNumber">
+            <summary>
+            número da sorte
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawItemModel.IdCustomer">
+            <summary>
+            Id do cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawItemModel.CustomerName">
+            <summary>
+            Nome do cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawItemModel.Drawn">
+            <summary>
+            Sorteado
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.DrawItemModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.DrawItemModel.#ctor(ias.Rebens.DrawItem)">
+            <summary>
+            
+            </summary>
+            <param name="item"></param>
+        </member>
+        <member name="T:ias.Rebens.api.Models.DrawModel">
+            <summary>
+            Sorteio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawModel.Id">
+            <summary>
+            Id do sorteio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawModel.Name">
+            <summary>
+            Nome do sorteio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawModel.StartDate">
+            <summary>
+            Data inicial da vigência
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawModel.EndDate">
+            <summary>
+            Data final da vigência
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawModel.Quantity">
+            <summary>
+            Quantidade de números da sorte
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawModel.Active">
+            <summary>
+            se o sorteio está ativo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.DrawModel.Generated">
+            <summary>
+            se o já foram gerados os números da sorte
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.DrawModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.DrawModel.#ctor(ias.Rebens.Draw)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="draw"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.DrawModel.GetEntity">
+            <summary>
+            Retorna um objeto Draw com as informações
+            </summary>
+            <returns>Draw</returns>
         </member>
         <member name="P:ias.Rebens.api.Models.EmailModel.FromEmail">
             <summary>

@@ -14,6 +14,8 @@ namespace ias.Rebens.api.helper
     {
         public SchedulerRegistry()
         {
+            Schedule<GenerateDrawItems>().ToRunNow().AndEvery(15).Minutes();
+
             Schedule<ZanoxUpdateJob>().ToRunNow().AndEvery(2).Hours();
 
             Schedule<CouponToolsGenerateJob>().ToRunNow().AndEvery(1).Days().At(0, 30);
@@ -181,6 +183,25 @@ namespace ias.Rebens.api.helper
                 notificationRepo.ProcessPayments();
                 log.Create("WirecardJob", "FINISH", "Payments", "");
             }
+        }
+    }
+
+
+    public class GenerateDrawItems : IJob
+    {
+        public void Execute()
+        {
+            try
+            {
+                if (Constant.DebugOn)
+                {
+                    var log = new LogErrorRepository(Constant.ConnectionString);
+                    log.Create("GenerateDrawItems", "RUNNED", "", "");
+                }
+                var repo = new DrawRepository(Constant.ConnectionString);
+                repo.GenerateItems();
+            }
+            catch { }
         }
     }
 }

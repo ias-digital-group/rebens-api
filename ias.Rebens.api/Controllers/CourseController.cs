@@ -148,7 +148,17 @@ namespace ias.Rebens.api.Controllers
                 if (!string.IsNullOrEmpty(course.Description))
                 {
                     var detail = course.GetDescription();
-                    staticTextRepo.Update(detail, out error);
+                    if (part.IdDescription.HasValue)
+                    {
+                        detail.Id = part.IdDescription.Value;
+                        staticTextRepo.Update(detail, out error);
+                    }
+                    else
+                    {
+                        staticTextRepo.Create(detail, out error);
+                        part.IdDescription = detail.Id;
+                        repo.Update(part, out error);
+                    }
                 }
 
                 if (repo.RemovePeriods(part.Id, out error))

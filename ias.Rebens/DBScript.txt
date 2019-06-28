@@ -522,6 +522,7 @@ CREATE TABLE [dbo].[Draw](
 	[IdOperation] [int] NOT NULL,
 	[Active] [bit] NOT NULL,
 	[Generated] [bit] NOT NULL,
+	[ToGenerate] [bit] NOT NULL,
 	[Deleted] [bit] NOT NULL,
 	[Created] [datetime] NOT NULL,
 	[Modified] [datetime] NOT NULL,
@@ -579,3 +580,18 @@ GO
 ALTER TABLE [dbo].[DrawItem] CHECK CONSTRAINT [FK_DrawItem_Draw]
 GO
 
+
+
+
+
+CREATE PROCEDURE [dbo].[GenerateDrawItems]( @id int, @digits int, @totalItems int, @counter int)
+AS 
+BEGIN
+	WHILE @counter < @totalItems
+	BEGIN
+		insert into DrawItem 
+		select @id, REPLICATE('0',@digits-LEN(@counter)) + cast(@counter as varchar), null, 0, null, GETDATE(), GETDATE()
+		
+		SET @counter = @counter + 1
+	END;
+END
