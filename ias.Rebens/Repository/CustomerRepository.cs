@@ -355,7 +355,11 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var dt = DateTime.Now.Date;
-                    ret = db.Customer.Where(c => c.IdOperation == idOperation && !string.IsNullOrEmpty(c.Name)  && !c.Coupons.Any(cp => cp.Created > dt)).Take(totalItems).ToList();
+                    ret = db.Customer.Where(c => c.IdOperation == idOperation && !string.IsNullOrEmpty(c.Name)  
+                                && !c.Coupons.Any(cp => cp.Created > dt)
+                                //&& c.Signatures.Any(s => s.Status.ToUpper() == "ACTIVE")
+                                )
+                            .Take(totalItems).ToList();
                 }
             }
             catch (Exception ex)

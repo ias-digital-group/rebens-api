@@ -76,7 +76,7 @@ namespace ias.Rebens.api.Controllers
         [HttpPost]
         public IActionResult Post([FromHeader]string authorization, [FromBody]MoipNotificationModel notification)
         {
-            if(authorization == "c7c609fcdb7ef70ac57afdc782574ee3")
+            if(authorization == Constant.MoipNotificationAuthorization)
             {
                 if (notification != null && notification.Resource != null)
                 {

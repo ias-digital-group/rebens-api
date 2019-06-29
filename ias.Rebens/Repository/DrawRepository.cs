@@ -169,7 +169,9 @@ namespace ias.Rebens
                     {
                         foreach (var draw in listDraws)
                         {
-                            var listCustomers = db.Customer.Where(c => c.IdOperation == draw.IdOperation);
+                            var listCustomers = db.Customer.Where(c => c.IdOperation == draw.IdOperation 
+                            //                        && c.Signatures.Any(s => s.Status == "ACTIVE")
+                                                    );
                             foreach (var customer in  listCustomers)
                             {
                                 if(!db.DrawItem.Any(d => d.IdCustomer == customer.Id && d.IdDraw == draw.Id && d.Modified.Year == DateTime.Now.Year && d.Modified.Month == DateTime.Now.Month))

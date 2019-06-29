@@ -121,7 +121,7 @@ namespace ias.Rebens.api.helper
 
             log.Create("CouponToolsGenerateJob", "START", "", "");
 
-            var mail = new Integration.SendinBlueHelper();
+            //var mail = new Integration.SendinBlueHelper();
             bool run = true;
             while (run)
             {
@@ -178,11 +178,11 @@ namespace ias.Rebens.api.helper
             }
 
             log.Create("CouponToolsGenerateJob", "FINISH", "", "");
-            if (Constant.DebugOn)
-            {
-                var listDestinataries = new Dictionary<string, string>() { { "suporte@iasdigitalgroup.com", "Suporte" } };
-                mail.Send(listDestinataries, "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "End at: " + DateTime.Now.ToString("HH:mm:ss"));
-            }
+            //if (Constant.DebugOn)
+            //{
+            //    var listDestinataries = new Dictionary<string, string>() { { "suporte@iasdigitalgroup.com", "Suporte" } };
+            //    mail.Send(listDestinataries, "contato@rebens.com.br", "Rebens", "[Rebens] CouponToolsGenerateJob", "End at: " + DateTime.Now.ToString("HH:mm:ss"));
+            //}
         }
     }
 

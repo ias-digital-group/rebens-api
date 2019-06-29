@@ -237,6 +237,43 @@ namespace ias.Rebens
 
                                     item.Status = (int)MoipNotificationStatus.Processed;
                                     item.Modified = DateTime.UtcNow;
+
+                                    //if(signature.Status == "ACTIVE")
+                                    //{
+                                        if (!db.DrawItem.Any(d => d.IdCustomer == customer.Id && d.IdDraw == 1 && d.Modified.Year == DateTime.Now.Year && d.Modified.Month == DateTime.Now.Month))
+                                        {
+                                            var di = db.DrawItem.Where(d => d.IdDraw == 1 && !d.IdCustomer.HasValue).OrderBy(d => Guid.NewGuid()).FirstOrDefault();
+                                            if (di != null)
+                                            {
+                                                di.IdCustomer = customer.Id;
+                                                di.Modified = DateTime.Now;
+                                                db.SaveChanges();
+                                            }
+                                        }
+
+                                        if(!db.Coupon.Any(c => c.IdCustomer == customer.Id && c.Modified.Year == DateTime.Now.Year && c.Modified.Month == DateTime.Now.Month && c.Modified.Day == DateTime.Now.Day))
+                                        {
+                                            var couponHelper = new Integration.CouponToolsHelper();
+                                            var coupon = new Coupon()
+                                            {
+                                                Campaign = "Raspadinha Unicap",
+                                                IdCustomer = customer.Id,
+                                                IdCouponCampaign = 1,
+                                                ValidationCode = Helper.SecurityHelper.GenerateCode(18),
+                                                Locked = false,
+                                                Status = (int)Enums.CouponStatus.pendent,
+                                                VerifiedDate = DateTime.UtcNow,
+                                                Created = DateTime.UtcNow,
+                                                Modified = DateTime.UtcNow
+                                            };
+
+                                            if (couponHelper.CreateSingle(customer, coupon, out string error))
+                                            {
+                                                db.Coupon.Add(coupon);
+                                                db.SaveChanges();
+                                            }
+                                        }
+                                    //}
                                 }
                                 else
                                 {
