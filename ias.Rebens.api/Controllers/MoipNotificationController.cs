@@ -76,16 +76,15 @@ namespace ias.Rebens.api.Controllers
         [HttpPost]
         public IActionResult Post([FromHeader]string authorization, [FromBody]MoipNotificationModel notification)
         {
-            if(authorization == Constant.MoipNotificationAuthorization)
+            try
+            {
+                logErrorRepo.Create(new LogError() { Reference = "Controller.MoipNotification.Post", Complement = $"authorization:{authorization}, event:{notification.Event}", Message = notification.Resource.ToString(), Created = DateTime.Now, StackTrace = "Env:" + notification.Env });
+            }
+            catch { }
+            if (authorization == Constant.MoipNotificationAuthorization)
             {
                 if (notification != null && notification.Resource != null)
                 {
-                    try
-                    {
-                        logErrorRepo.Create(new LogError() { Reference = "Controller.MoipNotification.Post", Complement = "event:" + notification.Event, Message = notification.Resource.ToString(), Created = DateTime.Now, StackTrace = "Env:" + notification.Env });
-                    }
-                    catch { }
-
                     var moipNotification = new MoipNotification()
                     {
                         Created = DateTime.UtcNow,

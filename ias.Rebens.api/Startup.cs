@@ -147,6 +147,8 @@ namespace ias.Rebens.api
             services.AddTransient<IStaticTextRepository, StaticTextRepository>();
             services.AddTransient<IWithdrawRepository, WithdrawRepository>();
             services.AddTransient<IZanoxSaleRepository, ZanoxSaleRepository>();
+            services.AddTransient<IMoipNotificationRepository, MoipNotificationRepository>();
+            
 
             services.AddDbContext<RebensContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
         }
