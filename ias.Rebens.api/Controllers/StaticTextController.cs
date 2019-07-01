@@ -76,14 +76,16 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.Count() == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<StaticTextModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<StaticTextModel>();
+                var ret = new ResultPageModel<StaticTextModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<StaticTextModel>()
+                };
                 foreach (var staticText in list.Page)
                     ret.Data.Add(new StaticTextModel(staticText));
 
