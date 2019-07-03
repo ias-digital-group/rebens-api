@@ -379,6 +379,7 @@ namespace ias.Rebens
                         update.FinalPrice = course.FinalPrice;
                         update.Duration = course.Duration;
                         update.Image = course.Image;
+                        update.ListImage = course.ListImage;
                         update.Rating = course.Rating;
                         update.IdAdminUser = course.IdAdminUser;
                         update.DueDate = course.DueDate;

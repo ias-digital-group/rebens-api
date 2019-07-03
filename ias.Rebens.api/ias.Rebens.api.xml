@@ -3940,7 +3940,12 @@
         </member>
         <member name="P:ias.Rebens.api.Models.CourseModel.Image">
             <summary>
-            Imagem
+            Imagem (1200x500)
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.ListImage">
+            <summary>
+            Imagem da listagem
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseModel.Rating">
@@ -4139,6 +4144,11 @@
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Image">
             <summary>
             Imagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.ListImage">
+            <summary>
+            Imagem da listagem
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Link">

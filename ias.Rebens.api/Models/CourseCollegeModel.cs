@@ -34,7 +34,7 @@ namespace ias.Rebens.api.Models
         public bool Active { get; set; }
 
         /// <summary>
-        /// Logo
+        /// Logo (184x44)
         /// </summary>
         public string Logo { get; set; }
 

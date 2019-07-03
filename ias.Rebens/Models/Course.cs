@@ -26,6 +26,7 @@ namespace ias.Rebens
         public decimal FinalPrice { get; set; }
         public string Duration { get; set; }
         public string Image { get; set; }
+        public string ListImage { get; set; }
         public decimal Rating { get; set; }
         public int IdAdminUser { get; set; }
         public DateTime? DueDate { get; set; }

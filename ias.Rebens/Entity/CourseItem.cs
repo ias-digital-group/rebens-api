@@ -22,6 +22,7 @@ namespace ias.Rebens
         public int Evaluations { get; set; }
         public string Description { get; set; }
         public string Image { get; set; }
+        public string ListImage { get; set; }
 
         public CourseItem() { }
         public CourseItem(Course course)
@@ -34,6 +35,7 @@ namespace ias.Rebens
             this.Rating = course.Rating;
             this.Duration = course.Duration;
             this.Image = course.Image;
+            this.ListImage = course.ListImage;
         }
     }
 }

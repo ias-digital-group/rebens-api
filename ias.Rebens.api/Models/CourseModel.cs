@@ -69,12 +69,19 @@ namespace ias.Rebens.api.Models
         /// Duração do curso
         /// </summary>
         [Required]
+        [MaxLength(200)]
         public string Duration { get; set; }
 
         /// <summary>
-        /// Imagem
+        /// Imagem (1200x500)
         /// </summary>
+        [MaxLength(500)]
         public string Image { get; set; }
+        /// <summary>
+        /// Imagem da listagem (216x174)
+        /// </summary>
+        [MaxLength(500)]
+        public string ListImage { get; set; }
 
         /// <summary>
         /// Nota
@@ -99,6 +106,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Texto do voucher
         /// </summary>
+        [MaxLength(500)]
         public string VoucherText { get; set; }
 
         /// <summary>
@@ -157,6 +165,7 @@ namespace ias.Rebens.api.Models
             this.IdCollege = course.IdCollege;
             this.IdModality = course.IdModality;
             this.Image = course.Image;
+            this.ListImage = course.ListImage;
             this.OriginalPrice = course.OriginalPrice;
             this.Discount = course.Discount;
             this.FinalPrice = course.FinalPrice;
@@ -190,6 +199,7 @@ namespace ias.Rebens.api.Models
                 IdCollege = this.IdCollege,
                 IdModality = this.IdModality,
                 Image = this.Image,
+                ListImage = this.ListImage,
                 OriginalPrice = this.OriginalPrice,
                 Discount = this.Discount,
                 FinalPrice = this.FinalPrice,
@@ -331,6 +341,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string Image { get; set; }
         /// <summary>
+        /// Imagem da listagem
+        /// </summary>
+        public string ListImage { get; set; }
+        /// <summary>
         /// Link do benefício
         /// </summary>
         [MaxLength(500)]
@@ -364,6 +378,7 @@ namespace ias.Rebens.api.Models
             this.Duration = course.Duration;
             this.Description = course.Description;
             this.Image = course.Image;
+            this.ListImage = course.ListImage;
             if (idCustomer.HasValue)
                 this.Link = Constant.URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
         }
