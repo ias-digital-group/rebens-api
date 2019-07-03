@@ -3754,7 +3754,7 @@
         </member>
         <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Logo">
             <summary>
-            Logo
+            Logo (184x44)
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Addresses">
@@ -3945,7 +3945,7 @@
         </member>
         <member name="P:ias.Rebens.api.Models.CourseModel.ListImage">
             <summary>
-            Imagem da listagem
+            Imagem da listagem (216x174)
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseModel.Rating">
