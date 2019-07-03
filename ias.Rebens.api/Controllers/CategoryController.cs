@@ -58,14 +58,16 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<CategoryModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<CategoryModel>();
+                var ret = new ResultPageModel<CategoryModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<CategoryModel>()
+                };
                 foreach (var cat in list.Page)
                     ret.Data.Add(new CategoryModel(cat));
 
@@ -202,6 +204,35 @@ namespace ias.Rebens.api.Controllers
             bool isCustomer = (operationGuid != Guid.Empty || principal.IsInRole("customer"));
 
             var list = repo.ListTree(isCustomer, idOperation, out error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count() == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<CategoryModel>>();
+                ret.Data = new List<CategoryModel>();
+                list.ForEach(item => { ret.Data.Add(new CategoryModel(item)); });
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna a arvore de categorias 
+        /// </summary>
+        /// <returns>Lista com as categorias encontradas</returns>
+        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListTreeAdm"), Authorize("Bearer", Roles = "master,administrator,publiser,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListTreeAdm()
+        {
+            var list = repo.ListTree(false, null, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count() == 0)

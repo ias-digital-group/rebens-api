@@ -621,6 +621,15 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.CategoryController.ListTreeAdm">
+            <summary>
+            Retorna a arvore de categorias 
+            </summary>
+            <returns>Lista com as categorias encontradas</returns>
+            <response code="200">Retorna a list, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.ContactController">
             <summary>
             Contact Controller
