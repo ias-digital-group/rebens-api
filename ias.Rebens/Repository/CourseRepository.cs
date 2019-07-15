@@ -253,22 +253,22 @@ namespace ias.Rebens
                                     (graduationTypes == null || graduationTypes.Count == 0 || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Count == 0 || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Count == 0 || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
-                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word)));
-                    switch (sort.ToLower())
-                    {
-                        case "title asc":
-                            tmpList = tmpList.OrderBy(f => f.Title);
-                            break;
-                        case "title desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Title);
-                            break;
-                        case "id asc":
-                            tmpList = tmpList.OrderBy(f => f.Id);
-                            break;
-                        case "id desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Id);
-                            break;
-                    }
+                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word))).OrderBy(c => c.Title);
+                    //switch (sort.ToLower())
+                    //{
+                    //    case "title asc":
+                    //        tmpList = tmpList.OrderBy(f => f.Title);
+                    //        break;
+                    //    case "title desc":
+                    //        tmpList = tmpList.OrderByDescending(f => f.Title);
+                    //        break;
+                    //    case "id asc":
+                    //        tmpList = tmpList.OrderBy(f => f.Id);
+                    //        break;
+                    //    case "id desc":
+                    //        tmpList = tmpList.OrderByDescending(f => f.Id);
+                    //        break;
+                    //}
 
                     var total = tmpList.Count();
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
@@ -276,13 +276,15 @@ namespace ias.Rebens
                     var resultList = new List<CourseItem>();
                     foreach(var item in list)
                     {
-                        var course = new CourseItem(item);
+                        var college = db.CourseCollege.Single(c => c.Id == item.IdCollege);
+                        var course = new CourseItem(item)
+                        {
+                            CollegeImage = college.Logo,
+                            CollegeName = college.Name
+                        };
 
                         course.GraduationType = db.CourseGraduationType.Single(t => t.Id == item.IdGraduationType).Name;
                         course.Modality = db.CourseModality.Single(m => m.Id == item.IdModality).Name;
-                        var college = db.CourseCollege.Single(c => c.Id == item.IdCollege);
-                        course.CollegeImage = college.Logo;
-                        course.CollegeName = college.Name;
 
                         var periodList = db.CoursePeriod.Where(p => p.CoursePeriods.Any(c => c.IdCourse == item.Id)).Distinct().ToArray();
                         for (int i = 0 ; i < periodList.Count() ; i++)
