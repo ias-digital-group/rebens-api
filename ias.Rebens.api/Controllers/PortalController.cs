@@ -1931,11 +1931,13 @@ namespace ias.Rebens.api.Controllers
             identity.AddClaim(new Claim("Name", string.IsNullOrEmpty(customer.Name) ? "" : customer.Name));
             identity.AddClaim(new Claim("Email", customer.Email));
             identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
+            identity.AddClaim(new Claim("cpf", customer.Cpf));
 
             if(customer.IdOperation == 1)
             {
-                int planStatus = customerRepo.CheckPlanStatus(customer.Id);
-                identity.AddClaim(new Claim("planStatus", planStatus.ToString()));
+                var plan = customerRepo.CheckPlanStatus(customer.Id);
+                identity.AddClaim(new Claim("planStatus", plan != null ? (plan.Status == "ACTIVE" ? "1" : "0") : "-1"));
+                identity.AddClaim(new Claim("subscriptionCode", plan != null ? plan.Code : ""));
             }
 
             DateTime dataCriacao = DateTime.UtcNow;

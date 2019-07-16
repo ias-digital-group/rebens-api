@@ -390,23 +390,21 @@ namespace ias.Rebens
             return ret;
         }
 
-        public int CheckPlanStatus(int id)
+        public MoipSignature CheckPlanStatus(int id)
         {
-            int ret = -1;
+            MoipSignature ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if (db.MoipSignature.Any(s => s.IdCustomer == id && s.Status.ToUpper() == "ACTIVE"))
-                        ret = 1;
-                    else if (db.MoipSignature.Any(s => s.IdCustomer == id))
-                        ret = 0;
+                    ret = db.MoipSignature.SingleOrDefault(s => s.IdCustomer == id);
                 }
             }
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CustomerRepository.CheckPlanStatus", ex.Message, $"id:{id}", ex.StackTrace);
+                ret = null;
             }
             return ret;
         }
