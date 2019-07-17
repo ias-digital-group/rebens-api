@@ -1936,7 +1936,17 @@ namespace ias.Rebens.api.Controllers
             if(customer.IdOperation == 1)
             {
                 var plan = customerRepo.CheckPlanStatus(customer.Id);
-                identity.AddClaim(new Claim("planStatus", plan != null ? (plan.Status == "ACTIVE" ? "1" : "0") : "-1"));
+                string planStatus = "-1";
+                if(plan != null)
+                {
+                    switch(plan.Status.ToUpper())
+                    {
+                        case "ACTIVE": planStatus = "1";break;
+                        case "CANCELED": planStatus = "2";break;
+                        default: planStatus = "0";break;
+                    }
+                }
+                identity.AddClaim(new Claim("planStatus", planStatus));
                 identity.AddClaim(new Claim("subscriptionCode", plan != null ? plan.Code : ""));
             }
 
