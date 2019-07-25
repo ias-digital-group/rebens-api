@@ -397,7 +397,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.MoipSignature.SingleOrDefault(s => s.IdCustomer == id);
+                    ret = db.MoipSignature.Where(s => s.IdCustomer == id).OrderByDescending(s => s.Created).FirstOrDefault();
                 }
             }
             catch (Exception ex)

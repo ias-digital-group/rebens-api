@@ -215,19 +215,21 @@ namespace ias.Rebens
                                 if (customer != null)
                                 {
                                     string code = jObj["code"].ToString();
-                                    MoipSignature signature = new MoipSignature();
+                                    MoipSignature signature = new MoipSignature()
+                                    {
+                                        IdCustomer = customer.Id,
+                                        Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100,
+                                        Code = code,
+                                        Created = DateTime.Now,
+                                        CreationDate = new DateTime(Convert.ToInt32(jObj["creation_date"]["year"].ToString()), Convert.ToInt32(jObj["creation_date"]["month"].ToString()), Convert.ToInt32(jObj["creation_date"]["day"].ToString())),
+                                        Modified = DateTime.Now,
+                                        NextInvoiceDate = new DateTime(Convert.ToInt32(jObj["next_invoice_date"]["year"].ToString()), Convert.ToInt32(jObj["next_invoice_date"]["month"].ToString()), Convert.ToInt32(jObj["next_invoice_date"]["day"].ToString())),
+                                        PaymentMethod = jObj["payment_method"].ToString(),
+                                        PlanCode = jObj["plan"]["code"].ToString(),
+                                        Status = jObj["status"].ToString(),
+                                        IdOperation = item.IdOperation
+                                    };
 
-                                    signature.IdCustomer = customer.Id;
-                                    signature.Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100;
-                                    signature.Code = code;
-                                    signature.Created = DateTime.Now;
-                                    signature.CreationDate = new DateTime(Convert.ToInt32(jObj["creation_date"]["year"].ToString()), Convert.ToInt32(jObj["creation_date"]["month"].ToString()), Convert.ToInt32(jObj["creation_date"]["day"].ToString()));
-                                    signature.Modified = DateTime.Now;
-                                    signature.NextInvoiceDate = new DateTime(Convert.ToInt32(jObj["next_invoice_date"]["year"].ToString()), Convert.ToInt32(jObj["next_invoice_date"]["month"].ToString()), Convert.ToInt32(jObj["next_invoice_date"]["day"].ToString()));
-                                    signature.PaymentMethod = jObj["payment_method"].ToString();
-                                    signature.PlanCode = jObj["plan"]["code"].ToString();
-                                    signature.Status = jObj["status"].ToString();
-                                    signature.IdOperation = item.IdOperation;
                                     if(jObj["expiration_date"] != null)
                                         signature.ExpirationDate = new DateTime(Convert.ToInt32(jObj["expiration_date"]["year"].ToString()), Convert.ToInt32(jObj["expiration_date"]["month"].ToString()), Convert.ToInt32(jObj["expiration_date"]["day"].ToString()));
                                     else
@@ -414,15 +416,17 @@ namespace ias.Rebens
                                 var signature = db.MoipSignature.SingleOrDefault(s => s.Code == code);
                                 if (signature != null)
                                 {
-                                    var invoice = new MoipInvoice();
-                                    invoice.Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100;
-                                    invoice.Created = DateTime.Now;
-                                    invoice.Modified = DateTime.Now;
-                                    invoice.Status = jObj["status"]["description"].ToString();
-                                    invoice.IdStatus = Convert.ToInt32(jObj["status"]["code"].ToString());
-                                    invoice.Id = Convert.ToInt32(jObj["id"].ToString());
-                                    invoice.Occurrence = 0;
-                                    invoice.IdMoipSignature = signature.Id;
+                                    var invoice = new MoipInvoice()
+                                    {
+                                        Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100,
+                                        Created = DateTime.Now,
+                                        Modified = DateTime.Now,
+                                        Status = jObj["status"]["description"].ToString(),
+                                        IdStatus = Convert.ToInt32(jObj["status"]["code"].ToString()),
+                                        Id = Convert.ToInt32(jObj["id"].ToString()),
+                                        Occurrence = 0,
+                                        IdMoipSignature = signature.Id
+                                    };
 
                                     db.MoipInvoice.Add(invoice);
 
@@ -431,8 +435,11 @@ namespace ias.Rebens
                                 }
                                 else
                                 {
-                                    item.Status = (int)MoipNotificationStatus.Ignored;
-                                    item.Modified = DateTime.UtcNow;
+                                    if (item.Modified.AddDays(1) < DateTime.UtcNow)
+                                    {
+                                        item.Status = (int)MoipNotificationStatus.Ignored;
+                                        item.Modified = DateTime.UtcNow;
+                                    }
                                 }
                             }
                             catch(Exception ex)
@@ -553,16 +560,19 @@ namespace ias.Rebens
                                 var signature = db.MoipSignature.SingleOrDefault(s => s.Code == code);
                                 if (signature != null)
                                 {
-                                    var payment = new MoipPayment();
-                                    payment.Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100;
-                                    payment.Created = DateTime.Now;
-                                    payment.Modified = DateTime.Now;
-                                    payment.Id = Convert.ToInt32(jObj["id"].ToString());
-                                    payment.IdMoipInvoice = Convert.ToInt32(jObj["invoice_id"].ToString());
-                                    payment.MoipId = Convert.ToInt32(jObj["moip_id"].ToString());
-                                    payment.Status = jObj["status"]["description"].ToString();
-                                    payment.IdStatus = Convert.ToInt32(jObj["status"]["code"].ToString());
-                                    payment.IdMoipSignature = signature.Id;
+                                    var payment = new MoipPayment()
+                                    {
+                                        Created = DateTime.Now,
+                                        Modified = DateTime.Now,
+                                        Id = Convert.ToInt32(jObj["id"].ToString()),
+                                        IdMoipInvoice = Convert.ToInt32(jObj["invoice_id"].ToString()),
+                                        Status = jObj["status"]["description"].ToString(),
+                                        IdStatus = Convert.ToInt32(jObj["status"]["code"].ToString()),
+                                        IdMoipSignature = signature.Id,
+                                        Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100,
+                                        MoipId = 0
+
+                                    };
 
                                     if (jObj["payment_method"] != null)
                                     {
@@ -641,58 +651,18 @@ namespace ias.Rebens
                                     var payment = db.MoipPayment.SingleOrDefault(p => p.Id == paymentId);
                                     if (payment != null)
                                     {
-                                        payment.Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100;
                                         payment.Modified = DateTime.Now;
-                                        payment.IdMoipInvoice = Convert.ToInt32(jObj["invoice_id"].ToString());
-                                        payment.MoipId = Convert.ToInt32(jObj["moip_id"].ToString());
                                         payment.Status = jObj["status"]["description"].ToString();
                                         payment.IdStatus = Convert.ToInt32(jObj["status"]["code"].ToString());
 
-                                        if (jObj["payment_method"] != null)
-                                        {
-                                            payment.PaymentMethod = jObj["payment_method"]["code"].ToString();
-                                            payment.Description = jObj["payment_method"]["description"].ToString();
-                                            if (jObj["payment_method"]["credit_card"] != null)
-                                            {
-                                                payment.Brand = jObj["payment_method"]["credit_card"]["brand"].ToString();
-                                                payment.HolderName = jObj["payment_method"]["credit_card"]["holder_name"].ToString();
-                                                payment.FirstSixDigits = jObj["payment_method"]["credit_card"]["first_six_digits"].ToString();
-                                                payment.LastFourDigits = jObj["payment_method"]["credit_card"]["last_four_digits"].ToString();
-                                                payment.Vault = jObj["payment_method"]["credit_card"]["vault"].ToString();
-                                            }
-                                        }
+                                        item.Status = (int)MoipNotificationStatus.Processed;
+                                        item.Modified = DateTime.UtcNow;
                                     }
                                     else
                                     {
-                                        payment = new MoipPayment();
-                                        payment.Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100;
-                                        payment.Created = DateTime.Now;
-                                        payment.Modified = DateTime.Now;
-                                        payment.Id = paymentId;
-                                        payment.IdMoipInvoice = Convert.ToInt32(jObj["invoice_id"].ToString());
-                                        payment.MoipId = Convert.ToInt32(jObj["moip_id"].ToString());
-                                        payment.Status = jObj["status"]["description"].ToString();
-                                        payment.IdStatus = Convert.ToInt32(jObj["status"]["code"].ToString());
-                                        payment.IdMoipSignature = signature.Id;
-
-                                        if (jObj["payment_method"] != null)
-                                        {
-                                            payment.PaymentMethod = jObj["payment_method"]["code"].ToString();
-                                            payment.Description = jObj["payment_method"]["description"].ToString();
-                                            if (jObj["payment_method"]["credit_card"] != null)
-                                            {
-                                                payment.Brand = jObj["payment_method"]["credit_card"]["brand"].ToString();
-                                                payment.HolderName = jObj["payment_method"]["credit_card"]["holder_name"].ToString();
-                                                payment.FirstSixDigits = jObj["payment_method"]["credit_card"]["first_six_digits"].ToString();
-                                                payment.LastFourDigits = jObj["payment_method"]["credit_card"]["last_four_digits"].ToString();
-                                                payment.Vault = jObj["payment_method"]["credit_card"]["vault"].ToString();
-                                            }
-                                        }
-
-                                        db.MoipPayment.Add(payment);
+                                        item.Status = (int)MoipNotificationStatus.Ignored;
+                                        item.Modified = DateTime.UtcNow;
                                     }
-                                    item.Status = (int)MoipNotificationStatus.Processed;
-                                    item.Modified = DateTime.UtcNow;
                                 }
                                 else
                                 {

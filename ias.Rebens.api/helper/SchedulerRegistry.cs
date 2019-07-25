@@ -23,7 +23,7 @@ namespace ias.Rebens.api.helper
             Schedule<CouponToolsGenerateJob>().ToRunNow().AndEvery(1).Days().At(0, 30);
             //Schedule<CouponToolsUpdateJob>().ToRunEvery(1).Days().At(3, 0);
 
-            Schedule<WirecardJob>().ToRunNow().AndEvery(5).Minutes();
+            Schedule<WirecardJob>().ToRunNow().AndEvery(1).Minutes();
 
             Schedule<KeepAlive>().ToRunNow().AndEvery(15).Minutes();
         }
@@ -205,12 +205,12 @@ namespace ias.Rebens.api.helper
                 notificationRepo.ProcessSubscription();
                 log.Create("WirecardJob", "FINISH", "Subscriptions", "");
             }
-            else if (notificationRepo.HasInvoicesToProcess())
+            if (notificationRepo.HasInvoicesToProcess())
             {
                 notificationRepo.ProcessInvoices();
                 log.Create("WirecardJob", "FINISH", "Invoices", "");
             }
-            else if (notificationRepo.HasPaymentsToProcess())
+            if (notificationRepo.HasPaymentsToProcess())
             {
                 notificationRepo.ProcessPayments();
                 log.Create("WirecardJob", "FINISH", "Payments", "");

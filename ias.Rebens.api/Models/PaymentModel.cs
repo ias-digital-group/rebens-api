@@ -46,7 +46,7 @@ namespace ias.Rebens.api.Models
             this.Id = payment.Id;
             this.DueDate = payment.Created.ToString("dd/MM/yyyy");
             this.PayDate = payment.IdStatus == (int)Enums.MoipPaymentStatus.authorized || payment.IdStatus == (int)Enums.MoipPaymentStatus.done ? payment.Modified.ToString("dd/MM/yyyy") : "";
-            this.Receipt = payment.MoipId.ToString();
+            this.Receipt = payment.IdMoipInvoice.ToString();
             this.PaymentMethod = string.IsNullOrEmpty(payment.Brand) || string.IsNullOrEmpty(payment.LastFourDigits) ? "" : payment.Brand + " final " + payment.LastFourDigits;
             this.Amount = payment.Amount.ToString("N");
             this.Status = Enums.EnumHelper.GetEnumDescription((Enums.MoipPaymentStatus)payment.IdStatus);
