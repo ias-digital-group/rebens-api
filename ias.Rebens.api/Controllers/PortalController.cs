@@ -421,6 +421,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="benefitIds">Lista dos benefícios que já foram exibidos</param>
         /// <returns>Lista com os benefícios encontrados</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -430,7 +431,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<BenefitListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefits([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, [FromQuery]decimal? latitude = null, [FromQuery]decimal? longitude = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
+        public IActionResult ListBenefits([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, [FromQuery]decimal? latitude = null, [FromQuery]decimal? longitude = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]string benefitIds = "")
         {
             Guid operationGuid = Guid.Empty;
             Guid.TryParse(operationCode, out operationGuid);
@@ -454,19 +455,18 @@ namespace ias.Rebens.api.Controllers
                 var operation = operationRepo.Read(operationGuid, out error);
                 idOperation = operation.Id;
             }
-            if(idOperation == 0)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            if(idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             ResultPage<Benefit> list;
             if (idOperation != 1 && page == 0 && !idCategory.HasValue && string.IsNullOrEmpty(idBenefitType) && !latitude.HasValue && !longitude.HasValue && string.IsNullOrEmpty(searchWord))
                 list = benefitRepo.ListForHomeBenefitPortal(idOperation, out error);
             else
-                list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, latitude, longitude, page, pageItems, searchWord, sort, out error);
+                list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, latitude, longitude, page, pageItems, searchWord, sort, benefitIds, out error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.TotalItems == 0)
-                    return NoContent();
+                if (list == null || list.TotalItems == 0) return NoContent();
 
                 var ret = new ResultPageModel<BenefitListItem>()
                 {
@@ -478,8 +478,8 @@ namespace ias.Rebens.api.Controllers
                     TotalPages = list.TotalPages,
                     Data = new List<BenefitListItem>()
                 };
-                foreach (var benefit in list.Page)
-                    ret.Data.Add(new BenefitListItem(benefit));
+
+                foreach (var benefit in list.Page) ret.Data.Add(new BenefitListItem(benefit));
 
                 return Ok(ret);
             }

@@ -446,7 +446,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, decimal? latitude, decimal? longitude, int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, decimal? latitude, decimal? longitude, int page, int pageItems, string word, string sort, string idBenefits, out string error)
         {
             ResultPage<Benefit> ret;
             try
@@ -483,13 +483,19 @@ namespace ias.Rebens
                         }
                     }
 
+                    List<int> listIds = new List<int>();
+                    if (!string.IsNullOrEmpty(idBenefits)) {
+                        foreach (var id in idBenefits.Split(',')) listIds.Add(int.Parse(id));
+                    }
+
                     var tmpList = db.Benefit.Include("Partner")
                                     .Where(b => !b.Deleted && !b.Partner.Deleted && ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation)) 
-                                    && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word))
-                                    && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
-                                    && b.Active
-                                    && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
-                                    && (boundingBox == null || benefitIds.Any(bi => bi == b.Id))
+                                        && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word))
+                                        && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
+                                        && b.Active
+                                        && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
+                                        && (boundingBox == null || benefitIds.Any(bi => bi == b.Id))
+                                        && !listIds.Any(i => i == b.Id)
                                     );
 
                     switch (sort.ToLower())
@@ -508,10 +514,6 @@ namespace ias.Rebens
                             break;
                     }
 
-                    if (tmpList.Count() < pageItems)
-                        page = 0;
-
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation))
                                     && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word))
                                     && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
@@ -519,6 +521,11 @@ namespace ias.Rebens
                                     && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
                                     );
 
+                    if (total < pageItems)
+                        page = 0;
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                   
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
                 }
