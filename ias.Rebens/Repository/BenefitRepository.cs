@@ -514,15 +514,17 @@ namespace ias.Rebens
                             break;
                     }
 
-                    var total = db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation))
-                                    && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word))
-                                    && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
-                                    && b.Active
-                                    && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
-                                    );
+                    var total = tmpList.Count();
+                        //db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation))
+                        //            && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word))
+                        //            && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
+                        //            && b.Active
+                        //            && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
+                        //            );
 
-                    if (total < pageItems)
+                    if (total < pageItems || total < (page * pageItems))
                         page = 0;
+                    
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                    
