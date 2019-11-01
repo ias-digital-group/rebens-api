@@ -16,15 +16,20 @@ namespace ias.Rebens.api.Controllers
     {
         private IOrderRepository repo;
         private IWirecardPaymentRepository paymentRepo;
+        private ICustomerRepository customerRepo;
+        private IAddressRepository addrRepo;
 
         /// <summary>
         /// Construtor
         /// </summary>
         /// <param name="orderRepository"></param>
-        public OrderController(IOrderRepository orderRepository, IWirecardPaymentRepository wirecardPaymentRepository)
+        public OrderController(IOrderRepository orderRepository, IWirecardPaymentRepository wirecardPaymentRepository, 
+            ICustomerRepository customerRepository, IAddressRepository addressRepository)
         {
             this.repo = orderRepository;
             this.paymentRepo = wirecardPaymentRepository;
+            this.customerRepo = customerRepository;
+            this.addrRepo = addressRepository;
         }
 
         /// <summary>
@@ -82,6 +87,15 @@ namespace ias.Rebens.api.Controllers
                 if (!int.TryParse(customerId.Value, out idCustomer))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
             }
+
+            var addr = order.Customer.Address.GetEntity();
+            if (addr.Id == 0)
+                addrRepo.Create(addr, out _);
+            else
+                addrRepo.Update(addr, out _);
+            var custo = order.Customer.GetEntity();
+            custo.IdAddress = addr.Id;
+            customerRepo.Update(custo, out _);
 
             var o = order.GetEntity();
             o.IdCustomer = idCustomer;

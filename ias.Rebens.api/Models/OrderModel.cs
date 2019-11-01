@@ -69,6 +69,8 @@ namespace ias.Rebens.api.Models
         public List<OrderItemModel> Items { get; set; }
         public WirecardPaymentModel Payment { get; set; }
 
+        public CustomerModel Customer { get; set; }
+
         /// <summary>
         /// Construtor
         /// </summary>

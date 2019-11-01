@@ -14,7 +14,9 @@ namespace ias.Rebens.api.Controllers
         private ICustomerRepository customerRepo;
         private IOperationRepository operationRepo;
         private ICourseRepository courseRepo;
+        private ICourseCollegeRepository courseCollegeRepo;
         private ICourseUseRepository courseUseRepo;
+        private IOrderRepository orderRepo;
 
         /// <summary>
         /// Construtor
@@ -26,7 +28,8 @@ namespace ias.Rebens.api.Controllers
         /// <param name="courseUseRepository"></param>
         /// <param name="courseRepository"></param>
         public VoucherController(IBenefitUseRepository benefitUseRepository, IBenefitRepository benefitRepository, ICustomerRepository customerRepository, 
-            IOperationRepository operationRepository, ICourseUseRepository courseUseRepository, ICourseRepository courseRepository)
+            IOperationRepository operationRepository, ICourseUseRepository courseUseRepository, ICourseRepository courseRepository,
+            IOrderRepository orderRepository, ICourseCollegeRepository courseCollegeRepository)
         {
             this.benefitUseRepo = benefitUseRepository;
             this.benefitRepo = benefitRepository;
@@ -34,6 +37,8 @@ namespace ias.Rebens.api.Controllers
             this.operationRepo = operationRepository;
             this.courseRepo = courseRepository;
             this.courseUseRepo = courseUseRepository;
+            this.orderRepo = orderRepository;
+            this.courseCollegeRepo = courseCollegeRepository;
         }
 
 
@@ -45,7 +50,6 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         public IActionResult Index(string code, string tp)
         {
-            Models.VoucherModel model = null;
             try
             {
                 var ids = Helper.SecurityHelper.SimpleDecryption(code);
@@ -58,13 +62,12 @@ namespace ias.Rebens.api.Controllers
                     if (string.IsNullOrEmpty(error))
                     {
                         if (tp == "b")
-                            model = GenerateBenefitVoucher(id, customer, operation, out error);
-                        else if(tp == "c")
-                            model = GenerateBenefitVoucher(id, customer, operation, out error);
+                        {
+                            Models.VoucherModel model = GenerateBenefitVoucher(id, customer, operation, out error);
+                            if (model != null)
+                                return new ViewAsPdf("Index", "voucher.pdf", model);
+                        }
                     }
-                    
-                    if(model != null)
-                        return new ViewAsPdf("Index", "voucher.pdf", model);
                 }
             }
             catch { }
@@ -109,42 +112,28 @@ namespace ias.Rebens.api.Controllers
             return model;
         }
 
-        private Models.VoucherModel GenerateCourseVoucher(int idCourse, Customer customer, Operation operation, out string error)
+
+        public IActionResult Course(string code)
         {
-            Models.VoucherModel model;
-            var course = courseRepo.Read(idCourse, out error);
 
-            var courseUse = new CourseUse()
+            if (!string.IsNullOrEmpty(code))
             {
-                Created = DateTime.Now,
-                Discount = course.Discount,
-                FinalPrice = course.FinalPrice,
-                IdCourse = course.Id,
-                IdCustomer = customer.Id,
-                OriginalPrice = course.OriginalPrice,
-                Modified = DateTime.Now,
-                Name = course.Title,
-                Status = (int)Enums.CourseUseStatus.Generated,
-            };
-
-            if (courseUseRepo.Create(courseUse, out error))
-            {
-                model = new Models.VoucherModel()
+                try
                 {
-                    ClubLogo = operation.Image,
-                    Code = courseUse.Code,
-                    CustomerDoc = customer.Cpf,
-                    CustomerName = customer.Name,
-                    PartnerLogo = course.College.Logo,
-                    Discount = course.Discount.ToString().Substring(0, course.Discount.ToString().IndexOf(".")) + "%",
-                    ExpireDate = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy"),
-                    HowToUse = course.VoucherText
-                };
+                    var model = new Models.VoucherCourseModel();
+                    model.Order = orderRepo.ReadByWirecardId(code, out string error);
+                    if(model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count == 1)
+                    {
+                        model.Course = courseRepo.Read(model.Order.OrderItems.First().IdCourse, out _);
+                        model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);
+                        model.College = courseCollegeRepo.Read(model.Course.IdCollege, out _);
+                        return new ViewAsPdf("Course", "voucher.pdf", model);
+                    }
+                }
+                catch { }
             }
-            else
-                model = null;
 
-            return model;
+            return View("Error");
         }
     }
 }
