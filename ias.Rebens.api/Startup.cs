@@ -137,17 +137,19 @@ namespace ias.Rebens.api
             services.AddTransient<IFormContactRepository, FormContactRepository>();
             services.AddTransient<IFormEstablishmentRepository, FormEstablishmentRepository>();
             services.AddTransient<ILogErrorRepository, LogErrorRepository>();
+            services.AddTransient<IMoipNotificationRepository, MoipNotificationRepository>();
             services.AddTransient<IMoipRepository, MoipRepository>();
             services.AddTransient<IOperationRepository, OperationRepository>();
             services.AddTransient<IOperationCustomerRepository, OperationCustomerRepository>();
             services.AddTransient<IOperationPartnerRepository, OperationPartnerRepository>();
+            services.AddTransient<IOrderRepository, OrderRepository>();
             services.AddTransient<IPartnerRepository, PartnerRepository>();
             services.AddTransient<IProfileRepository, ProfileRepository>();
             services.AddTransient<IReportRepository, ReportRepository>();
             services.AddTransient<IStaticTextRepository, StaticTextRepository>();
+            services.AddTransient<IWirecardPaymentRepository, WirecardPaymentRepository>();
             services.AddTransient<IWithdrawRepository, WithdrawRepository>();
             services.AddTransient<IZanoxSaleRepository, ZanoxSaleRepository>();
-            services.AddTransient<IMoipNotificationRepository, MoipNotificationRepository>();
             
 
             services.AddDbContext<RebensContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));

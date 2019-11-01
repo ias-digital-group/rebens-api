@@ -431,7 +431,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<BenefitListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefits([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, [FromQuery]decimal? latitude = null, [FromQuery]decimal? longitude = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]string benefitIds = "")
+        public IActionResult ListBenefits([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, 
+                                [FromQuery]decimal? latitude = null, [FromQuery]decimal? longitude = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, 
+                                [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]string benefitIds = "")
         {
             Guid operationGuid = Guid.Empty;
             Guid.TryParse(operationCode, out operationGuid);

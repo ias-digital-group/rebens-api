@@ -66,12 +66,15 @@ namespace ias.Rebens
         public virtual DbSet<OperationCustomer> OperationCustomer { get; set; }
         public virtual DbSet<OperationPartner> OperationPartner { get; set; }
         public virtual DbSet<OperationPartnerCustomer> OperationPartnerCustomer { get; set; }
+        public virtual DbSet<Order> Order { get; set; }
+        public virtual DbSet<OrderItem> OrderItem { get; set; }
         public virtual DbSet<Partner> Partner { get; set; }
         public virtual DbSet<PartnerAddress> PartnerAddress { get; set; }
         public virtual DbSet<PartnerContact> PartnerContact { get; set; }
         public virtual DbSet<Permission> Permission { get; set; }
         public virtual DbSet<Profile> Profile { get; set; }
         public virtual DbSet<StaticText> StaticText { get; set; }
+        public virtual DbSet<WirecardPayment> WirecardPayment { get; set; }
         public virtual DbSet<Withdraw> Withdraw { get; set; }
         public virtual DbSet<ZanoxSale> ZanoxSale { get; set; }
 
@@ -1131,6 +1134,60 @@ namespace ias.Rebens
                     .HasConstraintName("FK_OperationPartnerCustomer_AdminUser");
             });
 
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Subtotal).IsRequired().HasColumnType("money");
+                entity.Property(e => e.Discount).IsRequired().HasColumnType("money");
+                entity.Property(e => e.Total).IsRequired().HasColumnType("money");
+
+                entity.Property(e => e.DispId)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.Orders)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Order_Customer");
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.Orders)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Order_Operation");
+            });
+
+            modelBuilder.Entity<OrderItem>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Price).IsRequired().HasColumnType("money");
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+
+                entity.HasOne(d => d.Order)
+                    .WithMany(p => p.OrderItems)
+                    .HasForeignKey(d => d.IdOrder)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OrderItem_Order");
+
+                entity.HasOne(d => d.Course)
+                    .WithMany(p => p.OrderItems)
+                    .HasForeignKey(d => d.IdCourse)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OrderItem_Course");
+            });
+
             modelBuilder.Entity<Partner>(entity =>
             {
                 entity.Property(e => e.Created).HasColumnType("datetime");
@@ -1215,6 +1272,21 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdBenefit)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_StaticText_Benefit");
+            });
+
+            modelBuilder.Entity<WirecardPayment>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Amount).IsRequired().HasColumnType("money");
+
+                entity.HasOne(d => d.Order)
+                    .WithMany(p => p.WirecardPayments)
+                    .HasForeignKey(d => d.IdOrder)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_WirecardPayment_Order");
             });
 
             modelBuilder.Entity<Withdraw>(entity => {
