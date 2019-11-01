@@ -21,6 +21,7 @@ namespace ias.Rebens
             CourseUses = new HashSet<CourseUse>();
             CourseCustomerRates = new HashSet<CourseCustomerRate>();
             DrawItems = new HashSet<DrawItem>();
+            Orders = new HashSet<Order>();
         }
 
         public int Id { get; set; }
@@ -42,6 +43,7 @@ namespace ias.Rebens
         public string Code { get; set; }
         public string Picture { get; set; }
         public int Status { get; set; }
+        public string WirecardId { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
@@ -60,6 +62,7 @@ namespace ias.Rebens
         public virtual ICollection<CourseUse> CourseUses { get; set; }
         public virtual ICollection<CourseCustomerRate> CourseCustomerRates { get; set; }
         public virtual ICollection<DrawItem> DrawItems { get; set; }
+        public virtual ICollection<Order> Orders { get; set; }
 
         public void SetPassword(string password)
         {

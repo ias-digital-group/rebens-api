@@ -1,0 +1,189 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace ias.Rebens
+{
+    public class OrderRepository : IOrderRepository
+    {
+        private string _connectionString;
+        public OrderRepository(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
+        public bool Create(Order order, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    string dispId = "";
+                    while (true)
+                    {
+                        dispId = Helper.SecurityHelper.GenerateCode(12);
+                        if (!db.Order.Any(o => o.DispId == dispId))
+                            break;
+                    }
+
+                    order.DispId = dispId;
+                    order.Modified = order.Created = DateTime.UtcNow;
+                    db.Order.Add(order);
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.Create", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar o pedido. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public ResultPage<Order> ListByCustomer(int idCustomer, int page, int pageItems, string word, string sort, out string error)
+        {
+            ResultPage<Order> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Order.Where(o => o.IdCustomer == idCustomer &&
+                                    (string.IsNullOrEmpty(word) || o.DispId.Contains(word) 
+                                    || (!string.IsNullOrEmpty(o.WirecardId) && o.WirecardId.Contains(word)) 
+                                    || o.PaymentType.Contains(word) || o.Status.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "disId asc":
+                            tmpList = tmpList.OrderBy(f => f.DispId);
+                            break;
+                        case "disId desc":
+                            tmpList = tmpList.OrderByDescending(f => f.DispId);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "total asc":
+                            tmpList = tmpList.OrderBy(f => f.Total);
+                            break;
+                        case "total desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Total);
+                            break;
+                        case "paymentType asc":
+                            tmpList = tmpList.OrderBy(f => f.PaymentType);
+                            break;
+                        case "paymentType desc":
+                            tmpList = tmpList.OrderByDescending(f => f.PaymentType);
+                            break;
+                        case "date asc":
+                            tmpList = tmpList.OrderBy(f => f.Created);
+                            break;
+                        default:
+                            tmpList = tmpList.OrderByDescending(f => f.Created);
+                            break;
+                    }
+
+                    var total = tmpList.Count();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+
+                    ret = new ResultPage<Order>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.ListByCustomer", ex.Message, $"idCustomer: {idCustomer}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os pedidos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Order> ListToUpdate(int count, out string error)
+        {
+            List<Order> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var dt = DateTime.Now.AddHours(-2);
+                    ret = db.Order.Where(o => (o.Status == "CREATED" || o.Status == "WAITING") 
+                                && (!o.WirecardDate.HasValue || o.WirecardDate.Value < dt))
+                            .OrderBy(o => o.WirecardDate).Take(count).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.ListToUpdate", ex.Message, null, ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os pedidos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public Order Read(int id, out string error)
+        {
+            Order ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Order.Include("OrderItems").Include("WirecardPayments").SingleOrDefault(o => o.Id == id);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar ler o pedido. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public bool SaveWirecardInfo(int id, string wirecardId, string status, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Order.SingleOrDefault(c => c.Id == id);
+                    if (update != null)
+                    {
+                        update.WirecardId = wirecardId;
+                        update.Status = status;
+                        update.WirecardDate = DateTime.UtcNow;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                        error = "Pedido não encontrado!";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.SaveWirecardInfo", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o pedido. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+    }
+}

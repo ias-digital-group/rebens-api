@@ -524,7 +524,9 @@ namespace ias.Rebens
                     if (total < pageItems)
                         page = 0;
 
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    int skip = page * pageItems;
+                    skip -= listIds.Count;
+                    var list = tmpList.Skip(skip).Take(pageItems).ToList();
                    
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
