@@ -240,7 +240,8 @@ namespace ias.Rebens
         }
 
         public ResultPage<CourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation,
-            int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null)
+            int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null,
+            List<string> courseBegin = null)
         {
             ResultPage<CourseItem> ret;
             try
@@ -253,22 +254,9 @@ namespace ias.Rebens
                                     (graduationTypes == null || graduationTypes.Count == 0 || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Count == 0 || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Count == 0 || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
-                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word))).OrderBy(c => c.Title);
-                    //switch (sort.ToLower())
-                    //{
-                    //    case "title asc":
-                    //        tmpList = tmpList.OrderBy(f => f.Title);
-                    //        break;
-                    //    case "title desc":
-                    //        tmpList = tmpList.OrderByDescending(f => f.Title);
-                    //        break;
-                    //    case "id asc":
-                    //        tmpList = tmpList.OrderBy(f => f.Id);
-                    //        break;
-                    //    case "id desc":
-                    //        tmpList = tmpList.OrderByDescending(f => f.Id);
-                    //        break;
-                    //}
+                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word)) &&
+                                    (courseBegin == null || courseBegin.Any(cb => c.CourseBegin == cb))).OrderBy(c => c.Title);
+                    
 
                     var total = tmpList.Count();
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
@@ -394,6 +382,7 @@ namespace ias.Rebens
                             course.IdDescription = update.IdDescription;
                         update.Active = course.Active;
                         update.Modified = DateTime.UtcNow;
+                        update.CourseBegin = course.CourseBegin;
 
                         db.SaveChanges();
                         error = null;
@@ -464,7 +453,10 @@ namespace ias.Rebens
 
                         var addr = db.Address.FirstOrDefault(a => a.CourseAddresses.Any(c => c.IdCourse == item.Id));
                         if (addr != null)
+                        {
                             course.Address = addr.GetFullAddress();
+                            course.AddressShort = addr.GetShortAddress();
+                        }
 
                         course.Evaluations = db.CourseCustomerRate.Count(r => r.IdCourse == item.Id);
                         var ratings = db.CourseCustomerRate.Where(r => r.IdCourse == item.Id).Sum(r => (int?)r.Rate) ?? (int)0;
@@ -493,6 +485,27 @@ namespace ias.Rebens
                 course = null;
             }
             return course;
+        }
+
+        public List<string> ListCourseBegins(int idOperation, out string error)
+        {
+            List<string> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Course.Where(c => c.IdOperation == idOperation && c.Active && c.StartDate > DateTime.UtcNow).Select(c => c.CourseBegin).Distinct().ToList();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.ListCourseBegins", $"idOperation: {idOperation}", ex);
+                error = "Ocorreu um erro ao tentar listar os períodos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
         }
     }
 }

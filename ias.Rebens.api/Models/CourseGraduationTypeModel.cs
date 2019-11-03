@@ -33,6 +33,16 @@ namespace ias.Rebens.api.Models
         public bool Active { get; set; }
 
         /// <summary>
+        /// Id do Pai (1=graduação, 2=Pós Graduação)
+        /// </summary>
+        public int ParentId { get; set; }
+
+        /// <summary>
+        /// Nome do Pai
+        /// </summary>
+        public string ParentName { get; set; }
+
+        /// <summary>
         /// Construtor
         /// </summary>
         public CourseGraduationTypeModel() { }
@@ -47,6 +57,8 @@ namespace ias.Rebens.api.Models
             this.Name = courseGraduationType.Name;
             this.Active = courseGraduationType.Active;
             this.IdOperation = courseGraduationType.IdOperation;
+            this.ParentId = courseGraduationType.Parent;
+            this.ParentName = Enums.EnumHelper.GetEnumDescription((Enums.GraduationTypeParent)this.ParentId);
         }
 
         /// <summary>
@@ -62,7 +74,8 @@ namespace ias.Rebens.api.Models
                 IdOperation = this.IdOperation,
                 Active = this.Active,
                 Created = DateTime.UtcNow,
-                Modified = DateTime.UtcNow
+                Modified = DateTime.UtcNow,
+                Parent = this.ParentId
             };
         }
     }

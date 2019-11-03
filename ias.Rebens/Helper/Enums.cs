@@ -364,6 +364,14 @@ namespace ias.Rebens.Enums
         partnerApprover
     }
 
+    public enum GraduationTypeParent : int
+    {
+        [Description("Graduação")]
+        graduation = 1,
+        [Description("Pós Graduação")]
+        postGradutaion = 2
+    }
+
     public static class EnumHelper
     {
         public static string GetEnumDescription(Enum value)

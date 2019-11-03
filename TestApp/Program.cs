@@ -17,19 +17,27 @@ namespace TestApp
             var sw = new Stopwatch();
             sw.Start();
 
-            string connectionString = "Server=SURFACE\\SQLEXPRESS;Database=Rebens;user id=ias_user;password=k4r0l1n4;";
+            //string connectionString = "Server=SURFACE\\SQLEXPRESS;Database=Rebens;user id=ias_user;password=k4r0l1n4;";
 
 
-            using (var db = new RebensContext(connectionString))
-            {
-                var tmp = db.StaticText.Single(s => s.Id == 1845);
+            //using (var db = new RebensContext(connectionString))
+            //{
+            //    var tmp = db.StaticText.Single(s => s.Id == 1845);
 
-                var writer = new System.IO.StreamWriter("tmp.txt");
-                writer.Write(tmp.Html);
-                writer.Close();
-            }
+            //    var writer = new System.IO.StreamWriter("tmp.txt");
+            //    writer.Write(tmp.Html);
+            //    writer.Close();
+            //}
+
+            var list = new List<string>(){
+                "1º Semestre de 2020",
+                "1º Semestre de 2021",
+                "2º Semestre de 2020"
+            };
 
 
+            foreach (var item in list)
+                Console.WriteLine(item);
 
 
                 sw.Stop();

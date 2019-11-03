@@ -1473,22 +1473,20 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCourses([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCollege = null, [FromQuery]string graduationTypes = null, 
             [FromQuery]string modalities = null, [FromQuery]string periods = null, [FromQuery]string address = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, 
-            [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = null)
+            [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = null, [FromQuery]string courseBegin = null)
         {
             int idOperation = 0;
             string error = null;
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-            if (operationGuid == Guid.Empty)
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
             {
                 var principal = HttpContext.User;
                 if (principal?.Claims != null)
                 {
                     var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
                     if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
                     if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
                 }
             }
             else
@@ -1500,6 +1498,7 @@ namespace ias.Rebens.api.Controllers
             List<int> listModalities = null;
             List<int> listPeriods = null;
             List<int> listGraduationTypes = null;
+            List<string> listCourseBegin = null;
             if(!string.IsNullOrEmpty(graduationTypes))
             {
                 listGraduationTypes = new List<int>();
@@ -1524,9 +1523,17 @@ namespace ias.Rebens.api.Controllers
                     if (int.TryParse(id, out int idItem))
                         listModalities.Add(idItem);
             }
+            if (!string.IsNullOrEmpty(courseBegin))
+            {
+                listCourseBegin = new List<string>();
+                var array = courseBegin.Split(',');
+                foreach (var item in array)
+                    listCourseBegin.Add(item);
+            }
 
             var list = courseRepo.ListForPortal(page: page, pageItems: pageItems, word: searchWord, sort: sort, idOperation: idOperation,
-                idCollege: idCollege, graduationTypes: listGraduationTypes, modalities: listModalities, address: address, periods: listPeriods, error: out error);
+                idCollege: idCollege, graduationTypes: listGraduationTypes, modalities: listModalities, address: address, periods: listPeriods, 
+                error: out error, courseBegin: listCourseBegin);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -1741,6 +1748,65 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Lista os Períodos de inicio dos cursos da operação
+        /// </summary>
+        /// <param name="operationCode">código da operação</param>
+        /// <returns>Lista com as modalidades</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("ListCoursesBegin")]
+        [ProducesResponseType(typeof(ResultPageModel<CourseModalityModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListCoursesBegin([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            string error = null;
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = courseRepo.ListCourseBegins(idOperation, out error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<string>()
+                {
+                    CurrentPage = 0,
+                    HasNextPage = false,
+                    HasPreviousPage = false,
+                    ItemsPerPage = list.Count,
+                    TotalItems = list.Count,
+                    TotalPages = 1,
+                    Data = list
+                };
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
         /// Lista os Períodos da operação
         /// </summary>
         /// <param name="operationCode">código da operação</param>
@@ -1757,10 +1823,8 @@ namespace ias.Rebens.api.Controllers
         {
             int idOperation = 0;
             string error = null;
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            
+            if(!Guid.TryParse(operationCode, out Guid operationGuid))
             {
                 var principal = HttpContext.User;
                 if (principal?.Claims != null)

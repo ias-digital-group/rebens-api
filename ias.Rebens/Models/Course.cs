@@ -39,6 +39,7 @@ namespace ias.Rebens
         public bool Deleted { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public string CourseBegin { get; set; }
 
         public virtual Operation Operation { get; set; }
         public virtual CourseCollege College { get; set; }

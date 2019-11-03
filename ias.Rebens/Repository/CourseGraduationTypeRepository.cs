@@ -158,6 +158,7 @@ namespace ias.Rebens
                         update.Modified = DateTime.UtcNow;
                         update.Name = graduationType.Name;
                         update.Active = graduationType.Active;
+                        update.Parent = graduationType.Parent;
 
                         db.SaveChanges();
                         error = null;

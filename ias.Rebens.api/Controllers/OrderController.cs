@@ -170,7 +170,10 @@ namespace ias.Rebens.api.Controllers
             var wp = payment.GetEntity();
 
             if (paymentRepo.Create(wp, out string error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Pagamento criado com sucesso!" });
+            {
+                repo.SendOrderConfirmationEmail(wp.IdOrder, out error);
+                return Ok(value: new JsonCreateResultModel() { Status = "ok", Message = "Pagamento criado com sucesso!" });
+            }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

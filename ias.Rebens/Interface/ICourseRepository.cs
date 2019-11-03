@@ -10,7 +10,8 @@ namespace ias.Rebens
         ResultPage<Course> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null,
             bool? status = null, int? idCollege = null, string address = null, int[] graduationTypes = null, int[] modalities = null, int[] periods = null);
         ResultPage<CourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation,
-            int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null);
+            int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null,
+            List<string> courseBegin = null);
         bool Delete(int id, out string error);
         bool Create(Course course, out string error);
         bool Update(Course course, out string error);
@@ -21,5 +22,6 @@ namespace ias.Rebens
         bool DeletePeriod(int idCourse, int idPeriod, out string error);
         List<int> ListPeriods(int id, out string error);
         CourseItem ReadForPortal(int id, out string error);
+        List<string> ListCourseBegins(int idOperation, out string error);
     }
 }

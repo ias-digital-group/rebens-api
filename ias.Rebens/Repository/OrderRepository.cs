@@ -185,5 +185,42 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool SendOrderConfirmationEmail(int idOrder, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var order = db.Order.SingleOrDefault(o => o.Id == idOrder);
+                    if(order != null)
+                    {
+                        string body = $"<p>Olá {order.Customer.Name}, </p><br />";
+                        body += $"<h2>Recebemos o seu pedido #{order.DispId}</h2><br /><br />";
+                        body += $"<p>Estamos aguardando a confirmação do pagamento, e assim que for autorizado enviaremos um e-mail com todas as informações necessárias para você. </p>";
+
+                        var staticText = db.StaticText.Where(t => t.IdOperation == order.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
+                                            .OrderByDescending(t => t.Modified).FirstOrDefault();
+                        string message = staticText.Html.Replace("###BODY###", body);
+
+                        if(Helper.EmailHelper.SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"UNICANPI EDUCAÇÃO - Pedido #{order.DispId}", message, out error))
+                        {
+                            error = null;
+                            ret = true;
+                        }
+                    }
+                    else
+                        error = "Pedido não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.Create", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar enviar a confirmação do pedido para o cliente. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

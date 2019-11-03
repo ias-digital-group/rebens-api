@@ -122,3 +122,25 @@ GO
 ALTER TABLE [dbo].[WirecardPayment] CHECK CONSTRAINT [FK_WirecardPayment_Order]
 GO
 
+
+
+ALTER TABLE CourseGraduationType ADD Parent INT NULL
+GO
+
+UPDATE CourseGraduationType SET Parent = 1
+GO
+
+ALTER TABLE CourseGraduationType ALTER COLUMN Parent INT NOT NULL
+GO
+
+
+
+ALTER TABLE Course ADD CourseBegin NVARCHAR(100) NULL
+GO
+
+
+UPDATE Course SET CourseBegin = '2º Semestre de 2019' WHERE StartDate IS NOT NULL AND StartDate BETWEEN '2019-07-01' AND '2019-12-31'
+UPDATE Course SET CourseBegin = '1º Semestre de 2020' WHERE StartDate IS NOT NULL AND StartDate BETWEEN '2020-01-01' AND '2020-06-30'
+UPDATE Course SET CourseBegin = '2º Semestre de 2020' WHERE StartDate IS NOT NULL AND StartDate BETWEEN '2020-07-01' AND '2020-12-31'
+UPDATE Course SET CourseBegin = '1º Semestre de 2021' WHERE StartDate IS NOT NULL AND StartDate BETWEEN '2021-01-01' AND '2021-06-30'
+UPDATE Course SET CourseBegin = '2º Semestre de 2021' WHERE StartDate IS NOT NULL AND StartDate BETWEEN '2021-07-01' AND '2021-12-31'

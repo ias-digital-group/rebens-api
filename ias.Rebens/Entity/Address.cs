@@ -13,5 +13,12 @@ namespace ias.Rebens
                 return $"{this.Street}, {this.Number} - {this.Neighborhood}, {this.City} - {this.State}, {this.Zipcode}";
             return "";
         }
+
+        public string GetShortAddress()
+        {
+            if (!string.IsNullOrEmpty(this.Neighborhood) && !string.IsNullOrEmpty(this.City))
+                return $"{this.Neighborhood} - {this.City}";
+            return "";
+        }
     }
 }

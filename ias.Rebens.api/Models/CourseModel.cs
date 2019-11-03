@@ -144,6 +144,11 @@ namespace ias.Rebens.api.Models
         /// Array com os Id's dos períodos
         /// </summary>
         public int[] PeriodIds { get; set; }
+
+        /// <summary>
+        /// Texto que descreve o início das aulas (ex. 2º semestre 2020)
+        /// </summary>
+        public string CourseBegin { get; set; }
         
 
         /// <summary>
@@ -175,6 +180,7 @@ namespace ias.Rebens.api.Models
             this.StartDate = course.StartDate;
             this.EndDate = course.EndDate;
             this.VoucherText = course.VoucherText;
+            this.CourseBegin = course.CourseBegin;
             if(course.CoursePeriods != null)
                 this.PeriodIds = course.CoursePeriods.Select(p => p.IdPeriod).ToArray();            
             else
@@ -210,7 +216,8 @@ namespace ias.Rebens.api.Models
                 EndDate = this.EndDate,
                 VoucherText = this.VoucherText,
                 Created = DateTime.UtcNow,
-                Modified = DateTime.UtcNow
+                Modified = DateTime.UtcNow,
+                CourseBegin = this.CourseBegin
             };
         }
 
@@ -281,51 +288,55 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public int Id { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Logo da faculdade
         /// </summary>
         public string CollegeImage { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Nome da faculdade
         /// </summary>
         public string CollegeName { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Nome do curso
         /// </summary>
         public string Title { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Endereço do curso
         /// </summary>
         public string Address { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Endereço resumido do curso
+        /// </summary>
+        public string AddressShort { get; set; }
+        /// <summary>
+        /// Tipo de graduação
         /// </summary>
         public string GraduationType { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Modalidade
         /// </summary>
         public string Modality { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Período
         /// </summary>
         public string Period { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Desconto
         /// </summary>
         public decimal Discount { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Preço original
         /// </summary>
         public decimal OriginalPrice { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Preço final
         /// </summary>
         public decimal FinalPrice { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Nota
         /// </summary>
         public decimal Rating { get; set; }
         /// <summary>
-        /// Id do curso
+        /// Avaliações
         /// </summary>
         public int Evaluations { get; set; }
         /// <summary>
@@ -351,6 +362,11 @@ namespace ias.Rebens.api.Models
         public string Link { get; set; }
 
         /// <summary>
+        /// Texto informando o período de inicio das aulas
+        /// </summary>
+        public string CourseBegin { get; set; }
+
+        /// <summary>
         /// Construtor
         /// </summary>
         public CourseItemModel() { }
@@ -362,25 +378,30 @@ namespace ias.Rebens.api.Models
         /// <param name="idCustomer">id do cliente para geração do voucher</param>
         public CourseItemModel(CourseItem course, int? idCustomer = null)
         {
-            this.Id = course.Id;
-            this.CollegeImage = course.CollegeImage;
-            this.CollegeName = course.CollegeName;
-            this.Title = course.Title;
-            this.Address = course.Address;
-            this.GraduationType = course.GraduationType;
-            this.Modality = course.Modality;
-            this.Period = course.Period;
-            this.Discount = course.Discount;
-            this.OriginalPrice = course.OriginalPrice;
-            this.FinalPrice = course.FinalPrice;
-            this.Rating = course.Rating;
-            this.Evaluations = course.Evaluations;
-            this.Duration = course.Duration;
-            this.Description = course.Description;
-            this.Image = course.Image;
-            this.ListImage = course.ListImage;
-            if (idCustomer.HasValue)
-                this.Link = Constant.URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+            if (course != null)
+            {
+                Id = course.Id;
+                this.CollegeImage = course.CollegeImage;
+                this.CollegeName = course.CollegeName;
+                this.Title = course.Title;
+                this.Address = course.Address;
+                this.GraduationType = course.GraduationType;
+                this.Modality = course.Modality;
+                this.Period = course.Period;
+                this.Discount = course.Discount;
+                this.OriginalPrice = course.OriginalPrice;
+                this.FinalPrice = course.FinalPrice;
+                this.Rating = course.Rating;
+                this.Evaluations = course.Evaluations;
+                this.Duration = course.Duration;
+                this.Description = course.Description;
+                this.Image = course.Image;
+                this.ListImage = course.ListImage;
+                this.CourseBegin = course.CourseBegin;
+                this.AddressShort = course.AddressShort;
+                if (idCustomer.HasValue)
+                    this.Link = Constant.URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+            }
         }
 
     }

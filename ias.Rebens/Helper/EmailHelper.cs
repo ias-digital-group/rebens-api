@@ -93,6 +93,18 @@ namespace ias.Rebens.Helper
             return false;
         }
 
+        public static bool SendDefaultEmail(string toEmail, string toName, int idOperation, string subject, string body, out string error)
+        {
+            error = "";
+            var sendingBlue = new Integration.SendinBlueHelper();
+            var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
+            var result = sendingBlue.Send(listDestinataries, idOperation == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", "Contato", subject, body);
+            if (result.Status)
+                return true;
+            error = result.Message;
+            return false;
+        }
+
         public static bool SendAdminEmail(Dictionary<string, string> listDestinataries, string subject, string body, out string error)
         {
             var sendingBlue = new Integration.SendinBlueHelper();
