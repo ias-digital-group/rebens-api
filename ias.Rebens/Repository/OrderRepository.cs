@@ -186,6 +186,27 @@ namespace ias.Rebens
             return ret;
         }
 
+        public Order ReadByWirecardId(string id, out string error)
+        {
+            Order ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Order.Include("OrderItems").SingleOrDefault(o => o.WirecardId == id);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.ReadByWirecardId", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar ler o pedido. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public bool SendOrderConfirmationEmail(int idOrder, out string error)
         {
             bool ret = false;

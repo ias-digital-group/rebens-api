@@ -2098,7 +2098,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Int32,System.Int32,System.String,System.String,System.String)">
             <summary>
             Lista todos os benefícios da operação com paginação
             </summary>
@@ -2111,6 +2111,7 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="benefitIds">Lista dos benefícios que já foram exibidos</param>
             <returns>Lista com os benefícios encontrados</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>

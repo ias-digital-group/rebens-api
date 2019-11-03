@@ -232,7 +232,7 @@ namespace ias.Rebens
                         update.Status = customer.Status;
                         update.Picture = customer.Picture;
 
-                        if (customer.IdAddress.HasValue)
+                        if (customer.IdAddress.HasValue && customer.IdAddress.Value != 0)
                             update.IdAddress = customer.IdAddress.Value;
 
                         db.SaveChanges();

@@ -1,0 +1,102 @@
+﻿@model ias.Rebens.api.Models.VoucherCourseModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <style>
+        .box{width:798px;height:398px;font-family:Arial, Helvetica, sans-serif;}
+        .box .top{width:100%;height:120px;}
+        .box .top .logo{width:200px;height:120px;float:left;text-align:center;position:relative;}
+        .box .top .logo img{max-width:160px;top:0;left:0;position:absolute;right:0;bottom:0;margin:auto;}
+        .box .top .infoes{width:598px;float:left;}
+        .box .top .infoes h1{margin:50px 0;font-size:16px;text-align:center;}
+        .box .content h2{font-size:15px;margin:25px 0 10px 0;}
+        .box .content p{font-size:14px;margin:0 0 10px 0;}
+        .box .content p.strong{font-weight:bold;}
+
+        .box .bottom{width:100%;height:109px;margin-top:60px;}
+        .box .bottom .signature{display:inline-block;margin-top:50px;padding:5px 170px 0 0;border-top:1px solid #000;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="top">
+            <div class="logo">
+                <img src="@Model.College.Logo" alt="@Model.College.Name" />
+            </div>
+            <div class="infoes">
+                <h1>
+                    CARTA DE APROVAÇÃO DA BOLSA DE ESTUDO<br />
+                    UNICAMPI EDUCACAO - ENSINO SUPERIOR
+                </h1>
+            </div>
+        </div>
+        <div class="content">
+            <h2>(I) ALUNO BENEFICIADO</h2>
+            <p>@Model.Customer.Name, @Model.Customer.Cpf , doravante denominado "ALUNO BENEFICIADO".</p>
+            <h2>(II) INSTITUICAO DE ENSINO CONCEDENTE</h2>
+            <p>
+                xxxxxxxxxxxxx, estabelecida na cidade de xxxxxxxxxxxxx, Estado do xxxxxxxxxxxxx, na xxxxxxxxxxxxx, CNPJ xxxxxxxxxxxxx,
+                doravante simplesmente denominada "IES",
+            </p>
+            <h2>(III) INTERVENIENTE ANUENTE</h2>
+            <p>
+                xxxxxxxxxxxxx, pessoa jurídica de direito privado, inscrita no CNPJ sob n.º , estabelecida na cidade de Xxxxxxxxxxxxx,
+                CEP xxxxxxxxxxxxx, Caixa Postal xxxxxxxxxxxxx, doravante simplesmente denominada "CAPTADOR".<br />
+                - O ALUNO BENEFICIADO em conformidade com os dados cadastrais e socioeconômicos informados no site
+                www.educamaisbrasil.com.br, foi contemplado com uma bolsa de estudo, condicionada a existência de vagas no ato da
+                matrícula, estando ainda sujeito a atender os requisitos previstos no Regulamento do programa CAPTADOR, incluindo, mas não se
+                limitando a: (i) ter sido aprovado no processo seletivo da IES; (ii) não estar matriculado na IES; (iii) nos casos de cursos de
+                graduação, nunca esteve matriculado na IES e já concluiu o ensino médio; e (iv) nos casos de cursos de pós graduação já ter
+                concluído o curso de graduação.
+            </p>
+            <h2>(IV) DAS CONDIÇÕES DA BOLSA DE ESTUDO</h2>
+            <p class="strong">
+                A IES concederá ao ALUNO BENEFICIADO, oriundo do programa de bolsas de estudo do CAPTADOR, e aprovado no
+                processo seletivo e/ou análise documental da IES, uma bolsa de estudos:
+            </p>
+            <p class="strong">
+                (A) Para o período letivo: xxxxxxxxxxxxx
+            </p>
+            <p class="strong">
+                (B) Curso: @Model.Course.Title
+            </p>
+            <p class="strong">
+                (C) Turno: xxxxxxxxxxxxx
+            </p>
+            <p class="strong">
+                (D) Modalidade: xxxxxxxxxxxxx
+            </p>
+            <p class="strong">
+                (E) Tipo: xxxxxxxxxxxxx
+            </p>
+            <p class="strong">
+                (F) Percentual da bolsa para a primeira mensalidade: %
+            </p>
+            <p>
+                Tratando-se de cursos de graduação, o benefício da alínea “G” inclui as mensalidades correspondentes às rematrículas de cada
+                período letivo subsequente ao ingresso do ALUNO BENEFICIADO na IES. Tratando-se de curso de pós-graduação, as Taxas de
+                Inscrição e de Matrícula serão devidas pelo ALUNO BENEFICIADO e que também serão pagas diretamente à IES. Fica
+                resguardado o direito da IES em ajustar os valores das mensalidades na forma da Legislação em vigor.
+            </p>
+            <p>- O ALUNO BENEFICIADO está ciente que, caso entre a data de aprovação e a data de matrícula do ALUNO BENEFICIADO, a IES reduza o valor da mensalidade do curso, o percentual da bolsa do inciso II acima será reduzido na mesma proporção da redução da mensalidade;</p>
+            <p>- O ALUNO BENEFICIADO está ciente que DEVERÁ, na periodicidade prevista no contrato, aditar o seu contrato de bolsa de estudos na forma prevista no regulamento e que, para tanto deverá pagar ao CAPTADOR, as Taxas Administrativas para renovação do beneficio junto à IES, remunerando o CAPTADOR com o valor correspondente a % (xxxxxxxxxxxxx) do valor pago a título de Taxa de Adesão, sendo que o referido valor será atualizado pelo INPC até a data do seu efetivo pagamento. Em caso de impontualidade, incidirá penalidades de mora previstas em Lei;</p>
+            <p>O CAPTADOR compromete-se a restituir a quantia equivalente a 100% (cem por cento) do valor da Taxa de Adesão/Administrativa paga pelo ALUNO BENEFICIADO, devendo ser solicitada diretamente no Portal do Aluno, nos casos em que:</p>
+            <p>a) desista do curso para o qual aderiu ou renovou, até 07 (sete) dias após o pagamento da Taxa de Adesão ou Administrativa, e não efetivar a sua matrícula/rematrícula na IES, ou ainda,</p>
+            <p>b) não seja aprovado no processo seletivo da IES, não exista vagas ou não ocorra a abertura de turma, e que nestas duas últimas condições não tenha ocorrido o remanejamento do benefício ora concedido para outro curso, devendo efetuar a solicitação do reembolso até 15 (quinze) dias após a comunicação da IES;</p>
+            <p>- O ALUNO BENEFICIADO declara conhecer e aceitar os termos e condições que regem o Regulamento e o Contrato de Bolsa de Estudos do programa do CAPTADOR, registrado no Cartório de Títulos e Documentos da Cidade de Lauro de Freitas, Estado da Bahia, sob o número xxxxxxxxxxxxx, tendo sido disponibilizado, quando da inscrição no site, uma cópia dos mesmos, obrigando-se neste ato, a cumprir todas as Cláusulas e condições ali estipuladas, vigentes e exigíveis para todos os fins de direito.</p>
+            <div class="bottom">
+                <p>Xxxxxxxxxxxxx (xxxxxxxxxxxxx), @DateTime.Now.Day de @ias.Rebens.Enums.EnumHelper.GetEnumDescription((ias.Rebens.Enums.Months)DateTime.Now.Month) de @DateTime.Now.Year.</p>
+                <p class="signature">(I) ALUNO BENEFICIADO</p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
