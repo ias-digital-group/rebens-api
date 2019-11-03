@@ -14,18 +14,18 @@ namespace ias.Rebens.api.helper
     {
         public SchedulerRegistry()
         {
-            Schedule<GenerateDrawItemsJob>().ToRunNow().AndEvery(15).Minutes();
+            //Schedule<GenerateDrawItemsJob>().ToRunNow().AndEvery(15).Minutes();
 
-            Schedule<DistributeNumbersJob>().ToRunNow().AndEvery(1).Months();
+            //Schedule<DistributeNumbersJob>().ToRunNow().AndEvery(1).Months();
 
             Schedule<ZanoxUpdateJob>().ToRunNow().AndEvery(2).Hours();
 
             Schedule<CouponToolsGenerateJob>().ToRunNow().AndEvery(1).Days().At(0, 30);
             //Schedule<CouponToolsUpdateJob>().ToRunEvery(1).Days().At(3, 0);
 
-            Schedule<WirecardJob>().ToRunNow().AndEvery(1).Minutes();
+            Schedule<WirecardJob>().ToRunNow().AndEvery(15).Minutes();
 
-            Schedule<KeepAlive>().ToRunNow().AndEvery(15).Minutes();
+            //Schedule<KeepAlive>().ToRunNow().AndEvery(15).Minutes();
         }
     }
 
@@ -197,23 +197,20 @@ namespace ias.Rebens.api.helper
         public void Execute()
         {
             var log = new LogErrorRepository(Constant.ConnectionString);
-            var notificationRepo = new MoipNotificationRepository(Constant.ConnectionString);
+            var wirecardPaymentRepo = new WirecardPaymentRepository(Constant.ConnectionString);
+            var orderRepo = new OrderRepository(Constant.ConnectionString);
             log.Create("WirecardJob", "START", "", "");
 
-            if (notificationRepo.HasSubscriptionToProcess())
+            if (wirecardPaymentRepo.HasPaymentToProcess())
             {
-                notificationRepo.ProcessSubscription();
-                log.Create("WirecardJob", "FINISH", "Subscriptions", "");
-            }
-            if (notificationRepo.HasInvoicesToProcess())
-            {
-                notificationRepo.ProcessInvoices();
-                log.Create("WirecardJob", "FINISH", "Invoices", "");
-            }
-            if (notificationRepo.HasPaymentsToProcess())
-            {
-                notificationRepo.ProcessPayments();
+                wirecardPaymentRepo.ProcessPayments();
                 log.Create("WirecardJob", "FINISH", "Payments", "");
+            }
+
+            if (orderRepo.HasOrderToProcess())
+            {
+                orderRepo.ProcessOrder();
+                log.Create("WirecardJob", "FINISH", "Orders", "");
             }
         }
     }

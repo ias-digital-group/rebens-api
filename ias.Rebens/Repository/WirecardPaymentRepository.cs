@@ -14,6 +14,11 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public WirecardPaymentRepository(string connectionString)
+        {
+            this._connectionString = connectionString;
+        }
+
         public bool Create(WirecardPayment wirecardPayment, out string error)
         {
             bool ret = true;
@@ -95,6 +100,52 @@ namespace ias.Rebens
                 ret = false;
             }
             return ret;
+        }
+
+        public bool HasPaymentToProcess()
+        {
+            bool ret = false;
+            try
+            {
+                using(var db = new RebensContext(this._connectionString))
+                {
+                    var dt = DateTime.UtcNow.AddMinutes(-15);
+                    ret = db.WirecardPayment.Any(p => (p.Status == "CREATED" || p.Status == "WAITING" || p.Status == "IN_ANALYSIS")
+                                && p.Modified < dt);
+                }
+            }
+            catch(Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("WirecardPaymentRepository.HasPaymentToProcess", ex.Message, "", ex.StackTrace);
+            }
+            return ret;
+        }
+
+        public void ProcessPayments()
+        {
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var dt = DateTime.UtcNow.AddMinutes(-15);
+                    var list = db.WirecardPayment
+                        .Where(p => (p.Status == "CREATED" || p.Status == "WAITING" || p.Status == "IN_ANALYSIS") && p.Modified < dt)
+                        .OrderBy(p => p.Modified).Take(10);
+                    var wcHelper = new Integration.WirecardHelper();
+                    foreach(var item in list)
+                    {
+                        wcHelper.CheckPaymentStatus(item);
+                    }
+
+                    db.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("WirecardPaymentRepository.ProcessPayments", ex.Message, "", ex.StackTrace);
+            }
         }
     }
 }

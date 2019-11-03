@@ -15,6 +15,11 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public OrderRepository(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
         public bool Create(Order order, out string error)
         {
             bool ret = true;
@@ -214,8 +219,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var order = db.Order.SingleOrDefault(o => o.Id == idOrder);
-                    if(order != null)
+                    var order = db.Order.Include("Customer").SingleOrDefault(o => o.Id == idOrder);
+                   if(order != null)
                     {
                         string body = $"<p>Olá {order.Customer.Name}, </p><br />";
                         body += $"<h2>Recebemos o seu pedido #{order.DispId}</h2><br /><br />";
@@ -242,6 +247,75 @@ namespace ias.Rebens
                 error = "Ocorreu um erro ao tentar enviar a confirmação do pedido para o cliente. (erro:" + idLog + ")";
             }
             return ret;
+        }
+
+        public bool HasOrderToProcess()
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var dt = DateTime.UtcNow.AddMinutes(-15);
+                    ret = db.Order.Any(o => (o.Status == "CREATED" || o.Status == "WAITING") 
+                                && o.WirecardPayments.Any(p => p.Status != "CREATED" && p.Status != "WAITING" && p.Status != "IN_ANALYSIS")
+                                && o.Modified < dt);
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("WirecardPaymentRepository.HasPaymentToProcess", ex.Message, "", ex.StackTrace);
+            }
+            return ret;
+        }
+
+        public void ProcessOrder()
+        {
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var dt = DateTime.UtcNow.AddMinutes(-15);
+                    var list = db.Order
+                        .Where(o => (o.Status == "CREATED" || o.Status == "WAITING")
+                                && o.WirecardPayments.Any(p => p.Status != "CREATED" && p.Status != "WAITING" && p.Status != "IN_ANALYSIS")
+                                && o.Modified < dt)
+                        .OrderBy(o => o.Modified).Take(10);
+                    var wcHelper = new Integration.WirecardHelper();
+                    foreach (var item in list)
+                    {
+                        if (wcHelper.CheckOrderStatus(item))
+                        {
+                            if(item.Status == "PAID")
+                            {
+                                var customer = db.Customer.Single(c => c.Id == item.IdCustomer);
+                                string body = $"<p>Olá {customer.Name}, </p><br />";
+                                body += $"<h2>O seu pedido #{item.DispId} foi aprovado.</h2><br /><br />";
+                                body += $"<p><a href='http://unicampi.sistemarebens.com.br/voucher/course/?code={item.WirecardId}'>Clique aqui</a> para gerar o seu voucher. </p>";
+
+                                var staticText = db.StaticText.Where(t => t.IdOperation == item.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
+                                                    .OrderByDescending(t => t.Modified).FirstOrDefault();
+                                string message = staticText.Html.Replace("###BODY###", body);
+
+                                if(!Helper.EmailHelper.SendDefaultEmail(customer.Email, customer.Name, item.IdOperation, $"UNICANPI EDUCAÇÃO - Pedido #{item.DispId}", message, out string error))
+                                {
+                                    var logError = new LogErrorRepository(this._connectionString);
+                                    logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");
+                                }
+                               
+                            }
+                            db.SaveChanges();
+                        }
+                            
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("WirecardPaymentRepository.ProcessPayments", ex.Message, "", ex.StackTrace);
+            }
         }
     }
 }

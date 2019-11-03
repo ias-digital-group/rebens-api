@@ -9,17 +9,62 @@ namespace ias.Rebens.Integration
 {
     public class WirecardHelper
     {
-        //private const string TOKEN = "TEhFUUxVRDdPOE9QT0pWU0U1SkZFRzVJRjhXWU5HMlM6TkZWSzlVRUJHVEJJSVUwWE9KMkdFWUc3TUU5S0xaQUNDWkJCUEhEUQ=="; //sandbox
-        //private const string URL = "https://sandbox.moip.com.br/assinaturas/v1/";//sandbox
-        private const string TOKEN = "MkdQN1pHWEk3QTBYUkJZT0ZISjlUSVg1Qk1HQ0xKTUs6UUgyT0JGQVBaNjFJSEdMVU9TVzg3WURXRjNYTVpFNU9HMEFOQlE2VQ==";
-        private const string URL = "https://api.moip.com.br/assinaturas/v1/";
+        // Sandbox
+        private const string TOKEN = "TEhFUUxVRDdPOE9QT0pWU0U1SkZFRzVJRjhXWU5HMlM6TkZWSzlVRUJHVEJJSVUwWE9KMkdFWUc3TUU5S0xaQUNDWkJCUEhEUQ==";
+        private const string SIGNATURE_URL = "https://sandbox.moip.com.br/assinaturas/v1/";
+        private const string PAYMENT_URL = "https://sandbox.moip.com.br/v2/";
+        // Production
+        //private const string TOKEN = "MkdQN1pHWEk3QTBYUkJZT0ZISjlUSVg1Qk1HQ0xKTUs6UUgyT0JGQVBaNjFJSEdMVU9TVzg3WURXRjNYTVpFNU9HMEFOQlE2VQ==";
+        //private const string SIGNATURE_URL = "https://api.moip.com.br/assinaturas/v1/";
+        //private const string PAYMENT_URL = "https://sandbox.moip.com.br/assinaturas/v1/";
 
+        #region Order
+        public bool CheckPaymentStatus(WirecardPayment payment)
+        {
+            bool ret = false;
+            try
+            {
+                string resp = CallApi("GET", $"payments/{payment.Id}", null, PAYMENT_URL);
+                if (resp != null) 
+                {
+                    var jObj = JObject.Parse(resp);
+                    payment.Status = jObj["status"].ToString();
+                    payment.Modified = DateTime.UtcNow;
+                    ret = true;
+                }
+            }
+            catch { }
+
+            return ret;
+        }
+
+        public bool CheckOrderStatus(Order order)
+        {
+            bool ret = false;
+            try
+            {
+                string resp = CallApi("GET", $"orders/{order.WirecardId}", null, PAYMENT_URL);
+                if (resp != null)
+                {
+                    var jObj = JObject.Parse(resp);
+                    order.Status = jObj["status"].ToString();
+                    order.Modified = DateTime.UtcNow;
+                    ret = true;
+                }
+            }
+            catch { }
+
+            return ret;
+        }
+        #endregion Order
+
+        #region Signature
         public List<MoipSignature> ListSubscriptions()
         {
             var list = new List<MoipSignature>();
             try
             {
-                string ret = CallApi("GET", "subscriptions", null);
+                string ret = CallApi("GET", "subscriptions", null, SIGNATURE_URL);
                 var jObj = JObject.Parse(ret);
 
                 var objList = jObj["subscriptions"].Children();
@@ -85,8 +130,10 @@ namespace ias.Rebens.Integration
 
             return list;
         }
+        #endregion Signature
 
-        private string CallApi(string method, string uri, string serializedObject)
+        #region CallApi
+        private string CallApi(string method, string uri, string serializedObject, string apiUrl)
         {
             string ret = null;
             var timestamp = DateTime.UtcNow;
@@ -94,7 +141,7 @@ namespace ias.Rebens.Integration
             string stringToSign = method + uri + timestamp.ToString("r") + nonce;
             string autorization = $"Basic {TOKEN}";
 
-            string apiroot = URL + uri;
+            string apiroot = apiUrl + uri;
             var request = (HttpWebRequest)WebRequest.Create(apiroot);
             request.Method = method;
             request.Timeout = 50000;
@@ -131,5 +178,6 @@ namespace ias.Rebens.Integration
             }
             return ret;
         }
+        #endregion CallApi
     }
 }

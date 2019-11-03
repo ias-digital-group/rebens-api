@@ -163,10 +163,14 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SaveWirecardInfo([FromBody] OrderWirecardInfo info)
         {
-            if (repo.SaveWirecardInfo(info.Id, info.WirecardId, info.Status, out string error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Pedido atualizado com sucesso!" });
+            if (info != null)
+            {
+                if (repo.SaveWirecardInfo(info.Id, info.WirecardId, info.Status, out string error))
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Pedido atualizado com sucesso!" });
 
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto vazio" });
         }
 
         /// <summary>
@@ -181,15 +185,19 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult CreatePayment([FromBody] WirecardPaymentModel payment)
         {
-            var wp = payment.GetEntity();
-
-            if (paymentRepo.Create(wp, out string error))
+            if (payment != null)
             {
-                repo.SendOrderConfirmationEmail(wp.IdOrder, out error);
-                return Ok(value: new JsonCreateResultModel() { Status = "ok", Message = "Pagamento criado com sucesso!" });
-            }
+                var wp = payment.GetEntity();
 
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                if (paymentRepo.Create(wp, out string error))
+                {
+                    repo.SendOrderConfirmationEmail(wp.IdOrder, out error);
+                    return Ok(value: new JsonCreateResultModel() { Status = "ok", Message = "Pagamento criado com sucesso!" });
+                }
+
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto vazio" });
         }
 
 
@@ -205,12 +213,17 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult UpdatePayment([FromBody] WirecardPaymentModel payment)
         {
-            var wp = payment.GetEntity();
+            if (payment != null)
+            {
+                var wp = payment.GetEntity();
 
-            if (paymentRepo.Update(wp, out string error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Pagamento atualizado com sucesso!" });
+                if (paymentRepo.Update(wp, out string error))
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Pagamento atualizado com sucesso!" });
 
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto vazio" });
         }
     }
 }
