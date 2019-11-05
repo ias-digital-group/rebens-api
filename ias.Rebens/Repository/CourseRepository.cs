@@ -282,7 +282,7 @@ namespace ias.Rebens
                             else if ((i + 2) == periodList.Count()) course.Period += " ou ";
                         }
 
-                        var addr = db.Address.FirstOrDefault(a => a.CourseAddresses.Any(c => c.IdCourse == item.Id));
+                        var addr = db.Address.FirstOrDefault(a => a.CourseCollegeAddresses.Any(c => c.IdCollege == item.IdCollege));
                         if (addr != null)
                             course.Address = addr.City + " - " + addr.State;
 
