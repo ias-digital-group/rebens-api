@@ -292,7 +292,7 @@ namespace ias.Rebens
                                 var customer = db.Customer.Single(c => c.Id == item.IdCustomer);
                                 string body = $"<p>Olá {customer.Name}, </p><br />";
                                 body += $"<h2>O seu pedido #{item.DispId} foi aprovado.</h2><br /><br />";
-                                body += $"<p><a href='http://unicampi.sistemarebens.com.br/voucher/course/?code={item.WirecardId}'>Clique aqui</a> para gerar o seu voucher. </p>";
+                                body += $"<p><a href='https://admin.rebens.com.br/voucher/course/?code={item.WirecardId}'>Clique aqui</a> para gerar o seu voucher. </p>";
 
                                 var staticText = db.StaticText.Where(t => t.IdOperation == item.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
                                                     .OrderByDescending(t => t.Modified).FirstOrDefault();

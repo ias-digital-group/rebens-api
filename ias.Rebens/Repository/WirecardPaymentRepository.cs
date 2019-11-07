@@ -111,8 +111,7 @@ namespace ias.Rebens
                 {
                     var dt = DateTime.UtcNow.AddMinutes(-15);
                     ret = db.WirecardPayment.Any(p => (p.Status == "CREATED" || p.Status == "WAITING" || p.Status == "IN_ANALYSIS")
-                                && p.Modified < dt);
-                }
+                                && p.Modified < dt);                }
             }
             catch(Exception ex)
             {

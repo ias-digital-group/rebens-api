@@ -203,15 +203,22 @@ namespace ias.Rebens.api.helper
 
             if (wirecardPaymentRepo.HasPaymentToProcess())
             {
+                log.Create("WirecardJob", "START", "Payments", "");
                 wirecardPaymentRepo.ProcessPayments();
                 log.Create("WirecardJob", "FINISH", "Payments", "");
             }
+            else
+                log.Create("WirecardJob", "NO-PAYMENTS", "Payments", "");
+
 
             if (orderRepo.HasOrderToProcess())
             {
+                log.Create("WirecardJob", "START", "Orders", "");
                 orderRepo.ProcessOrder();
                 log.Create("WirecardJob", "FINISH", "Orders", "");
             }
+            else
+                log.Create("WirecardJob", "NO-ORDERS", "Orders", "");
         }
     }
 
