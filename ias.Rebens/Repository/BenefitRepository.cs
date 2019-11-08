@@ -172,8 +172,10 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    if (!int.TryParse(word, out int benefitId))
+                        benefitId = 0;
                     var tmpList = db.Benefit.Where(b => !b.Deleted 
-                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word))
+                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word) || b.Id == benefitId)
                                     && (!status.HasValue || (status.HasValue && b.Active == status.Value))
                                     && (!type.HasValue || (type.HasValue && b.IdBenefitType == type.Value))
                                     && (!idOperation.HasValue || (idOperation.HasValue && 
@@ -210,7 +212,7 @@ namespace ias.Rebens
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.Benefit.Count(b => !b.Deleted
-                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word))
+                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word) || b.Id == benefitId)
                                     && (!status.HasValue || (status.HasValue && b.Active == status.Value))
                                     && (!type.HasValue || (type.HasValue && b.IdBenefitType == type.Value))
                                     && (!idOperation.HasValue || (idOperation.HasValue &&

@@ -124,7 +124,7 @@ namespace ias.Rebens.api.Controllers
                     model.Order = orderRepo.ReadByWirecardId(code, out string error);
                     if(model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count == 1)
                     {
-                        model.Course = courseRepo.Read(model.Order.OrderItems.First().IdCourse, out _);
+                        model.Course = courseRepo.ReadForContract(model.Order.OrderItems.First().IdCourse, out _);
                         model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);
                         model.College = courseCollegeRepo.Read(model.Course.IdCollege, out _);
                         return new ViewAsPdf("Course", "voucher.pdf", model);

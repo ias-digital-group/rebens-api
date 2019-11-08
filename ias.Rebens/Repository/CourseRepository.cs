@@ -188,6 +188,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    if (!int.TryParse(word, out int courseId))
+                        courseId = 0;
                     var tmpList = db.Course.Where(c => !c.Deleted &&
                                     (!idOperation.HasValue || c.IdOperation == idOperation) &&
                                     (!status.HasValue || c.Active == status) &&
@@ -196,7 +198,7 @@ namespace ias.Rebens
                                     (graduationTypes == null || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
-                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word)));
+                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word) || c.Id == courseId));
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -222,7 +224,7 @@ namespace ias.Rebens
                                     (graduationTypes == null || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
-                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word)));
+                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word) || c.Id == courseId));
 
 
                     ret = new ResultPage<Course>(list, page, pageItems, total);
@@ -338,6 +340,26 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Course.Include("CoursePeriods").Include("Description").SingleOrDefault(c => c.Id == id && !c.Deleted);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.Read", $"id: {id}", ex);
+                error = "Ocorreu um erro ao tentar ler o curso. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public Course ReadForContract(int id, out string error)
+        {
+            Course ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Course.Include("Modality").Include("GraduationType").SingleOrDefault(c => c.Id == id && !c.Deleted);
                     error = null;
                 }
             }

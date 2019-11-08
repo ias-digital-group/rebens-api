@@ -10,17 +10,18 @@
     <meta name="viewport" content="width=device-width" />
     <title></title>
     <style>
-        .box{width:798px;height:398px;font-family:Arial, Helvetica, sans-serif;}
-        .box .top{width:100%;height:120px;}
-        .box .top .logo{width:200px;height:120px;float:left;text-align:center;position:relative;}
+        body{mar}
+        .box{width:798px;font-family:Arial, Helvetica, sans-serif;margin:0;padding:0;}
+        .box .top{width:100%;height:80px;}
+        .box .top .logo{width:200px;height:80px;float:left;text-align:center;position:relative;}
         .box .top .logo img{max-width:160px;top:0;left:0;position:absolute;right:0;bottom:0;margin:auto;}
         .box .top .infoes{width:598px;float:left;}
-        .box .top .infoes h1{margin:50px 0;font-size:16px;text-align:center;}
-        .box .content h2{font-size:15px;margin:25px 0 10px 0;}
-        .box .content p{font-size:14px;margin:0 0 10px 0;}
+        .box .top .infoes h1{margin:20px 0;font-size:16px;text-align:center;}
+        .box .content h2{font-size:15px;margin:10px 0 6px 0;}
+        .box .content p{font-size:14px;margin:0 0 6px 0;}
         .box .content p.strong{font-weight:bold;}
 
-        .box .bottom{width:100%;height:109px;margin-top:60px;}
+        .box .bottom{width:100%;height:109px;margin-top:30px;}
         .box .bottom .signature{display:inline-block;margin-top:50px;padding:5px 170px 0 0;border-top:1px solid #000;}
     </style>
 </head>
@@ -42,13 +43,19 @@
             <p>@Model.Customer.Name, @Model.Customer.Cpf , doravante denominado "ALUNO BENEFICIADO".</p>
             <h2>(II) INSTITUICAO DE ENSINO CONCEDENTE</h2>
             <p>
-                xxxxxxxxxxxxx, estabelecida na cidade de xxxxxxxxxxxxx, Estado do xxxxxxxxxxxxx, na xxxxxxxxxxxxx, CNPJ xxxxxxxxxxxxx,
+                @Model.College.Name,
+                @if (Model.College.Address != null)
+                {
+                    <text>
+                    estabelecida na cidade de @Model.College.Address.City, Estado do @Model.College.Address.State, na @Model.College.Address.Street @Model.College.Address.Number, CNPJ xxxxxxxxxxxxx,
+                    </text>
+                }
                 doravante simplesmente denominada "IES",
             </p>
             <h2>(III) INTERVENIENTE ANUENTE</h2>
             <p>
-                xxxxxxxxxxxxx, pessoa jurídica de direito privado, inscrita no CNPJ sob n.º , estabelecida na cidade de Xxxxxxxxxxxxx,
-                CEP xxxxxxxxxxxxx, Caixa Postal xxxxxxxxxxxxx, doravante simplesmente denominada "CAPTADOR".<br />
+                @Model.College.Name, pessoa jurídica de direito privado, inscrita no CNPJ sob n.º , estabelecida na cidade de @(Model.College.Address != null ? Model.College.Address.City : ""),
+                CEP @(Model.College.Address != null ? Model.College.Address.Zipcode : ""), Caixa Postal xxxxxxxxxxxxx, doravante simplesmente denominada "CAPTADOR".<br />
                 - O ALUNO BENEFICIADO em conformidade com os dados cadastrais e socioeconômicos informados no site
                 www.educamaisbrasil.com.br, foi contemplado com uma bolsa de estudo, condicionada a existência de vagas no ato da
                 matrícula, estando ainda sujeito a atender os requisitos previstos no Regulamento do programa CAPTADOR, incluindo, mas não se
@@ -62,19 +69,25 @@
                 processo seletivo e/ou análise documental da IES, uma bolsa de estudos:
             </p>
             <p class="strong">
-                (A) Para o período letivo: xxxxxxxxxxxxx
+                (A) Para o período letivo: 
+                @if(Model.Course.StartDate.HasValue && Model.Course.EndDate.HasValue)
+                {
+                    <text>
+                    @Model.Course.StartDate.Value.ToString("MM/yyyy") - @Model.Course.EndDate.Value.ToString("MM/yyyy")
+                    </text>
+                }
             </p>
             <p class="strong">
                 (B) Curso: @Model.Course.Title
             </p>
+            @*<p class="strong">
+                (C) Turno: @Model.Course.
+            </p>*@
             <p class="strong">
-                (C) Turno: xxxxxxxxxxxxx
+                (D) Modalidade: @Model.Course.Modality.Name
             </p>
             <p class="strong">
-                (D) Modalidade: xxxxxxxxxxxxx
-            </p>
-            <p class="strong">
-                (E) Tipo: xxxxxxxxxxxxx
+                (E) Tipo: @Model.Course.GraduationType.Name
             </p>
             <p class="strong">
                 (F) Percentual da bolsa para a primeira mensalidade: %
@@ -92,7 +105,7 @@
             <p>b) não seja aprovado no processo seletivo da IES, não exista vagas ou não ocorra a abertura de turma, e que nestas duas últimas condições não tenha ocorrido o remanejamento do benefício ora concedido para outro curso, devendo efetuar a solicitação do reembolso até 15 (quinze) dias após a comunicação da IES;</p>
             <p>- O ALUNO BENEFICIADO declara conhecer e aceitar os termos e condições que regem o Regulamento e o Contrato de Bolsa de Estudos do programa do CAPTADOR, registrado no Cartório de Títulos e Documentos da Cidade de Lauro de Freitas, Estado da Bahia, sob o número xxxxxxxxxxxxx, tendo sido disponibilizado, quando da inscrição no site, uma cópia dos mesmos, obrigando-se neste ato, a cumprir todas as Cláusulas e condições ali estipuladas, vigentes e exigíveis para todos os fins de direito.</p>
             <div class="bottom">
-                <p>Xxxxxxxxxxxxx (xxxxxxxxxxxxx), @DateTime.Now.Day de @ias.Rebens.Enums.EnumHelper.GetEnumDescription((ias.Rebens.Enums.Months)DateTime.Now.Month) de @DateTime.Now.Year.</p>
+                <p>@(Model.College.Address != null ? Model.College.Address.City : "São Paulo"), @DateTime.Now.Day de @ias.Rebens.Enums.EnumHelper.GetEnumDescription((ias.Rebens.Enums.Months)DateTime.Now.Month) de @DateTime.Now.Year.</p>
                 <p class="signature">(I) ALUNO BENEFICIADO</p>
             </div>
         </div>

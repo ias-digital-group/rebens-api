@@ -7,6 +7,7 @@ namespace ias.Rebens
     public interface ICourseRepository
     {
         Course Read(int id, out string error);
+        Course ReadForContract(int id, out string error);
         ResultPage<Course> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null,
             bool? status = null, int? idCollege = null, string address = null, int[] graduationTypes = null, int[] modalities = null, int[] periods = null);
         ResultPage<CourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation,
