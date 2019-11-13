@@ -144,3 +144,11 @@ UPDATE Course SET CourseBegin = '1º Semestre de 2020' WHERE StartDate IS NOT NU
 UPDATE Course SET CourseBegin = '2º Semestre de 2020' WHERE StartDate IS NOT NULL AND StartDate BETWEEN '2020-07-01' AND '2020-12-31'
 UPDATE Course SET CourseBegin = '1º Semestre de 2021' WHERE StartDate IS NOT NULL AND StartDate BETWEEN '2021-01-01' AND '2021-06-30'
 UPDATE Course SET CourseBegin = '2º Semestre de 2021' WHERE StartDate IS NOT NULL AND StartDate BETWEEN '2021-07-01' AND '2021-12-31'
+
+
+ALTER TABLE Course ADD [Name] NVARCHAR(200) NULL
+GO
+UPDATE Course SET [Name] = Title 
+GO
+ALTER TABLE Course ALTER COLUMN [Name] NVARCHAR(200) NOT NULL
+GO

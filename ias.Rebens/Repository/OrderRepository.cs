@@ -230,7 +230,7 @@ namespace ias.Rebens
                                             .OrderByDescending(t => t.Modified).FirstOrDefault();
                         string message = staticText.Html.Replace("###BODY###", body);
 
-                        if(Helper.EmailHelper.SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"UNICANPI EDUCAÇÃO - Pedido #{order.DispId}", message, out error))
+                        if(Helper.EmailHelper.SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"UNICAMPI EDUCAÇÃO - Pedido #{order.DispId}", message, out error))
                         {
                             error = null;
                             ret = true;
