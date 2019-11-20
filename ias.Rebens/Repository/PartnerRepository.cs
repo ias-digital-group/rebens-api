@@ -302,5 +302,27 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public List<Partner> ListFreeCoursePartners(int idOperation, out string error)
+        {
+            List<Partner> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Partner.Where(p => !p.Deleted && p.Active && p.FreeCourses.Any(f => !f.Deleted && f.Active && f.IdOperation == idOperation)).OrderBy(p => p.Name).ToList();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("PartnerRepository.ListFreeCoursePartners", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os parceiros. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

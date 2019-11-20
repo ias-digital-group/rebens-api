@@ -8,7 +8,7 @@ using System.Linq;
 namespace ias.Rebens.api.Controllers
 {
     /// <summary>
-    /// Benefit Controller
+    /// Course Controller
     /// </summary>
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]

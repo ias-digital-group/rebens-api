@@ -46,6 +46,8 @@ namespace ias.Rebens.api.Controllers
         private ICourseModalityRepository courseModalityRepo;
         private ICourseViewRepository courseViewRepo;
         private IDrawRepository drawRepo;
+        private IFreeCourseRepository freeCourseRepo;
+        private IPartnerRepository partnerRepo;
 
         /// <summary>
         /// 
@@ -75,6 +77,8 @@ namespace ias.Rebens.api.Controllers
         /// <param name="coursePeriodRepository"></param>
         /// <param name="courseViewRepository"></param>
         /// <param name="drawRepository"></param>
+        /// <param name="freeCourseRepository"></param>
+        /// <param name="partnerRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
@@ -83,7 +87,7 @@ namespace ias.Rebens.api.Controllers
             IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository,
             ICourseRepository courseRepository, ICourseCollegeRepository courseCollegeRepository, ICourseGraduationTypeRepository courseGraduationTypeRepository, 
             ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository,
-            IDrawRepository drawRepository)
+            IDrawRepository drawRepository, IFreeCourseRepository freeCourseRepository, IPartnerRepository partnerRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -110,6 +114,8 @@ namespace ias.Rebens.api.Controllers
             this.coursePeriodRepo = coursePeriodRepository;
             this.courseViewRepo = courseViewRepository;
             this.drawRepo = drawRepository;
+            this.freeCourseRepo = freeCourseRepository;
+            this.partnerRepo = partnerRepository;
         }
 
         /// <summary>
@@ -1932,6 +1938,179 @@ namespace ias.Rebens.api.Controllers
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
         #endregion Course
+
+        #region FreeCourse
+        /// <summary>
+        /// Lista os cursos da operação com paginação
+        /// </summary>
+        /// <param name="operationCode">código da operação</param>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="idPartner">Id do Parceiro (default=null)</param>
+        /// <returns>Lista com os cursos livres encontrados</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("FreeCourses")]
+        [ProducesResponseType(typeof(ResultPageModel<FreeCourseItemModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListFreeCourses([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int page = 0, [FromQuery]int pageItems = 30,
+            [FromQuery]string sort = "name ASC", [FromQuery]string searchWord = null, [FromQuery]int? idPartner = null)
+        {
+            int idOperation = 0;
+            string error = null;
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = freeCourseRepo.ListForPortal(page: page, pageItems: pageItems, word: searchWord, sort: sort, idOperation: idOperation,
+                idPartner: idPartner, error: out error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<FreeCourseItemModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<FreeCourseItemModel>()
+                };
+                foreach (var course in list.Page)
+                    ret.Data.Add(new FreeCourseItemModel(course));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna o Curson conforme o ID
+        /// </summary>
+        /// <param name="id">Id do curso</param>
+        /// <param name="operationCode">código da operação</param>
+        /// <returns>Curso</returns>
+        /// <response code="200">Retorna o curso</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("FreeCourses/{id}")]
+        [ProducesResponseType(typeof(JsonDataModel<FreeCourseModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetFreeCourse(int id, [FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            string error = null;
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+            var principal = HttpContext.User;
+
+            if (operationGuid == Guid.Empty)
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var course = freeCourseRepo.ReadForPortal(id, out error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (course == null || course.Id == 0)
+                    return NoContent();
+
+                return Ok(new JsonDataModel<FreeCourseModel>() { Data = new FreeCourseModel(course) });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista de parceiros que possuem cursos livres
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("FreeCoursesPartners")]
+        [ProducesResponseType(typeof(JsonDataModel<List<PartnerModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListFreeCoursePartners([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            string error = null;
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+                idOperation = operationRepo.GetId(operationGuid, out error);
+
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = partnerRepo.ListFreeCoursePartners(idOperation, out error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<PartnerModel>>()
+                {
+                    Data = new List<PartnerModel>()
+                };
+                foreach (var partner in list)
+                    ret.Data.Add(new PartnerModel(partner));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion FreeCourse
 
         /// <summary>
         /// Retorna uma lista com os números da sorte

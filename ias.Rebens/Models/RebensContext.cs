@@ -55,6 +55,7 @@ namespace ias.Rebens
         public virtual DbSet<Faq> Faq { get; set; }
         public virtual DbSet<FormContact> FormContact { get; set; }
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
+        public virtual DbSet<FreeCourse> FreeCourse { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }
         public virtual DbSet<MoipInvoice> MoipInvoice { get; set; }
         public virtual DbSet<MoipNotification> MoipNotification { get; set; }
@@ -854,6 +855,36 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_FormEstablishment_Operation");
+            });
+
+            modelBuilder.Entity<FreeCourse>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(300);
+                entity.Property(e => e.Price).IsRequired().HasColumnType("money");
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Summary).HasMaxLength(500);
+                entity.Property(e => e.Image).HasMaxLength(300);
+                entity.Property(e => e.ListImage).HasMaxLength(300);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.FreeCourses)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FreeCourse_Operation");
+
+                entity.HasOne(d => d.AdminUser)
+                    .WithMany(p => p.FreeCourses)
+                    .HasForeignKey(d => d.IdAdminUser)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FreeCourse_AdminUser");
+
+                entity.HasOne(d => d.Partner)
+                    .WithMany(p => p.FreeCourses)
+                    .HasForeignKey(d => d.IdPartner)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FreeCourse_Partner");
             });
 
             modelBuilder.Entity<LogError>(entity =>

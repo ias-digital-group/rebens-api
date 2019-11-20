@@ -27,6 +27,7 @@ namespace ias.Rebens
             Courses = new HashSet<Course>();
             Draws = new HashSet<Draw>();
             Orders = new HashSet<Order>();
+            FreeCourses = new HashSet<FreeCourse>();
         }
 
         public int Id { get; set; }
@@ -70,5 +71,6 @@ namespace ias.Rebens
         public virtual ICollection<Course> Courses { get; set; }
         public virtual ICollection<Draw> Draws { get; set; }
         public virtual ICollection<Order> Orders { get; set; }
+        public virtual ICollection<FreeCourse> FreeCourses { get; set; }
     }
 }

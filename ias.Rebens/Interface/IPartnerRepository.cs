@@ -25,5 +25,7 @@ namespace ias.Rebens
         bool DeleteAddress(int idPartner, int idAddress, out string error);
 
         bool SetTextId(int id, int idText, out string error);
+
+        List<Partner> ListFreeCoursePartners(int idOperation, out string error);
     }
 }

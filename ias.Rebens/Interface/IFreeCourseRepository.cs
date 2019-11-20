@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ias.Rebens
+{
+    public interface IFreeCourseRepository
+    {
+        FreeCourse Read(int id, out string error);
+        ResultPage<FreeCourseItem> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null);
+        ResultPage<FreeCourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation, int? idPartner = null);
+        bool Delete(int id, out string error);
+        bool Create(FreeCourse course, out string error);
+        bool Update(FreeCourse course, out string error);
+        FreeCourse ReadForPortal(int id, out string error);
+    }
+}
