@@ -385,6 +385,7 @@ namespace ias.Rebens
                         update.IdCollege = course.IdCollege;
                         update.IdGraduationType = course.IdGraduationType;
                         update.IdModality = course.IdModality;
+                        update.Name = course.Name;
                         update.Title = course.Title;
                         update.OriginalPrice = course.OriginalPrice;
                         update.Discount = course.Discount;

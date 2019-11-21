@@ -24,6 +24,13 @@ namespace ias.Rebens.api.Models
         public string Title { get; set; }
 
         /// <summary>
+        /// Nome do curso - apenas para admin
+        /// </summary>
+        [Required]
+        [MaxLength(200)]
+        public string Name { get; set; }
+
+        /// <summary>
         /// Id da operação
         /// </summary>
         [Required]

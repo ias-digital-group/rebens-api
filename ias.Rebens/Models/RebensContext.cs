@@ -469,6 +469,7 @@ namespace ias.Rebens
                 entity.Property(e => e.Created).HasColumnType("datetime");
                 entity.Property(e => e.Modified).HasColumnType("datetime");
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.OriginalPrice).IsRequired().HasColumnType("money");
                 entity.Property(e => e.Discount).IsRequired().HasColumnType("money");
                 entity.Property(e => e.FinalPrice).IsRequired().HasColumnType("money");

@@ -21,6 +21,7 @@ namespace ias.Rebens
         public int IdCollege { get; set; }
         public int IdGraduationType { get; set; }
         public int IdModality { get; set; }
+        public string Name { get; set; }
         public string Title { get; set; }
         public decimal OriginalPrice { get; set; }
         public decimal Discount { get; set; }
