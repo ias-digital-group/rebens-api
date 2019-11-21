@@ -10,6 +10,7 @@ namespace ias.Rebens
         public string CollegeImage { get; set; }
         public string CollegeName { get; set; }
         public string Title { get; set; }
+        public string Name { get; set; }
         public string Address { get; set; }
         public string GraduationType { get; set; }
         public string Duration { get; set; }
@@ -31,6 +32,7 @@ namespace ias.Rebens
         {
             this.Id = course.Id;
             this.Title = course.Title;
+            this.Name = course.Name;
             this.Discount = course.Discount;
             this.OriginalPrice = course.OriginalPrice;
             this.FinalPrice = course.FinalPrice;

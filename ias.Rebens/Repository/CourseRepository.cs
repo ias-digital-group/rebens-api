@@ -198,7 +198,7 @@ namespace ias.Rebens
                                     (graduationTypes == null || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
-                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word) || c.Id == courseId));
+                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word) || c.Name.Contains(word) || c.Id == courseId));
                     switch (sort.ToLower())
                     {
                         case "title asc":
@@ -215,17 +215,8 @@ namespace ias.Rebens
                             break;
                     }
 
+                    var total = tmpList.Count();
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Course.Count(c => !c.Deleted &&
-                                    (!idOperation.HasValue || c.IdOperation == idOperation) &&
-                                    (!status.HasValue || c.Active == status) &&
-                                    (!idCollege.HasValue || c.IdCollege == idCollege) &&
-                                    (string.IsNullOrEmpty(address) || c.CourseAddresses.Any(a => a.Address.Street.Contains(address) || a.Address.City.Contains(address))) &&
-                                    (graduationTypes == null || graduationTypes.Any(t => t == c.IdGraduationType)) &&
-                                    (modalities == null || modalities.Any(t => t == c.IdModality)) &&
-                                    (periods == null || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
-                                    (string.IsNullOrEmpty(word) || c.Title.Contains(word) || c.Id == courseId));
-
 
                     ret = new ResultPage<Course>(list, page, pageItems, total);
 

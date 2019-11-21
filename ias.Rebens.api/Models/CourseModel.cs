@@ -171,6 +171,7 @@ namespace ias.Rebens.api.Models
         {
             this.Id = course.Id;
             this.Title = course.Title;
+            this.Name = course.Name;
             this.Active = course.Active;
             this.IdOperation = course.IdOperation;
             this.IdGraduationType = course.IdGraduationType;
@@ -206,6 +207,7 @@ namespace ias.Rebens.api.Models
             {
                 Id = this.Id,
                 Title = this.Title,
+                Name = this.Name,
                 Active = this.Active,
                 IdOperation = this.IdOperation,
                 IdGraduationType = this.IdGraduationType,
@@ -303,9 +305,13 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string CollegeName { get; set; }
         /// <summary>
-        /// Nome do curso
+        /// Título do curso
         /// </summary>
         public string Title { get; set; }
+        /// <summary>
+        /// Nome do curso
+        /// </summary>
+        public string Name { get; set; }
         /// <summary>
         /// Endereço do curso
         /// </summary>
@@ -391,6 +397,7 @@ namespace ias.Rebens.api.Models
                 this.CollegeImage = course.CollegeImage;
                 this.CollegeName = course.CollegeName;
                 this.Title = course.Title;
+                this.Name = course.Name;
                 this.Address = course.Address;
                 this.GraduationType = course.GraduationType;
                 this.Modality = course.Modality;
