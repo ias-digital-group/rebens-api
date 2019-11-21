@@ -8,7 +8,8 @@ namespace ias.Rebens
     {
         public int Id { get; set; }
         public int IdOrder { get; set; }
-        public int IdCourse { get; set; }
+        public int? IdCourse { get; set; }
+        public int? IdFreeCourse { get; set; }
         public string Name { get; set; }
         public decimal Price { get; set; }
         public string Voucher { get; set; }
@@ -17,5 +18,6 @@ namespace ias.Rebens
 
         public virtual Order Order { get; set; }
         public virtual Course Course { get; set; }
+        public virtual FreeCourse FreeCourse { get; set; }
     }
 }

@@ -1217,6 +1217,12 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdCourse)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_OrderItem_Course");
+
+                entity.HasOne(d => d.FreeCourse)
+                    .WithMany(p => p.OrderItems)
+                    .HasForeignKey(d => d.IdFreeCourse)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OrderItem_FreeCourse");
             });
 
             modelBuilder.Entity<Partner>(entity =>

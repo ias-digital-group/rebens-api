@@ -61,3 +61,19 @@ GO
 
 insert into StaticText values ('Cursos Livres', 'freeCourse', '{"fields":[{"name":"image","label":"Header (1200x500)","type":"image","data":"https://res.cloudinary.com/rebens/image/upload/v1561492541/Portal/benefit-banner.jpg","isRequired":false},{"name":"title","label":"Título","type":"text","data":"CURSOS LIVRES","isRequired":false},{"name":"subtitle","label":"Subtítulo","type":"text","data":"Cursos Livres.","isRequired":false}]}',
 null, 0, 4, 1, 1, GETUTCDATE(), GETUTCDATE(), null)
+
+
+ALTER TABLE OrderItem ALTER COLUMN IdCourse INT NULL
+GO
+
+ALTER TABLE OrderItem ADD IdFreeCourse INT NULL
+GO
+
+
+
+ALTER TABLE [dbo].[OrderItem]  WITH CHECK ADD  CONSTRAINT [FK_OrderItem_FreeCourse] FOREIGN KEY([IdFreeCourse])
+REFERENCES [dbo].[FreeCourse] ([Id])
+GO
+
+ALTER TABLE [dbo].[OrderItem] CHECK CONSTRAINT [FK_OrderItem_FreeCourse]
+GO

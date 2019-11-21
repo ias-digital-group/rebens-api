@@ -6,6 +6,11 @@ namespace ias.Rebens
 {
     public partial class FreeCourse
     {
+        public FreeCourse() 
+        { 
+            OrderItems = new HashSet<OrderItem>();
+        }
+
         public int Id { get; set; }
         public int IdAdminUser { get; set; }
         public int IdPartner { get; set; }
@@ -26,5 +31,7 @@ namespace ias.Rebens
         public virtual Operation Operation { get; set; }
         public virtual AdminUser AdminUser { get; set; }
         public virtual Partner Partner { get; set; }
+        public virtual ICollection<OrderItem> OrderItems { get; set; }
+
     }
 }
