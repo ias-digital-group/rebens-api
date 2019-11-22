@@ -298,6 +298,10 @@ namespace ias.Rebens.Enums
         EmailDefault = 15,
         [Description("Descrição do curso")]
         CourseDescription = 16,
+        [Description("Cursos - Perguntas Frequentes")]
+        CourseFAQ = 17,
+        [Description("Cursos - Regulamentos")]
+        CourseRegulation = 18,
     }
 
     public enum WithdrawStatus : int

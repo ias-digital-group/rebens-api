@@ -42,6 +42,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public bool Active { get; set; }
+        /// <summary>
+        /// Id do tipo de texto estático
+        /// </summary>
+        public int IdStaticTextType { get; set; }
 
         /// <summary>
         /// Construtor
@@ -58,8 +62,9 @@ namespace ias.Rebens.api.Models
             this.Name = staticText.Title;
             this.Page = staticText.Url;
             this.Data = JObject.Parse(staticText.Html);
-            this.IdOperation = staticText.IdOperation.Value;
+            this.IdOperation = staticText.IdOperation.HasValue ? staticText.IdOperation.Value : 0;
             this.Active = staticText.Active;
+            this.IdStaticTextType = staticText.IdStaticTextType;
         }
 
         /// <summary>
@@ -76,8 +81,8 @@ namespace ias.Rebens.api.Models
                 Html = JsonConvert.SerializeObject(this.Data),
                 Style = "",
                 Order = 0,
-                IdStaticTextType = (int)Enums.StaticTextType.Pages,
-                IdOperation = this.IdOperation,
+                IdStaticTextType = this.IdStaticTextType == 0 ? (int)Enums.StaticTextType.Pages : this.IdStaticTextType,
+                IdOperation = this.IdOperation != 0 ? (int?)this.IdOperation : null,
                 IdBenefit = null,
                 Active = this.Active,
                 Created = DateTime.UtcNow,

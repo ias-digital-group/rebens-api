@@ -32,6 +32,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Title, Order), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="idStaticTextType">Id do tipo de texto estático (default=paginas)</param>
         /// <param name="idOperation">Id da operação (default=null)</param>
         /// <returns>Lista com os textos encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
@@ -41,7 +42,8 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<StaticTextModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", 
+            [FromQuery]int idStaticTextType = (int)Enums.StaticTextType.Pages, [FromQuery]int? idOperation = null)
         {
             var principal = HttpContext.User;
             if (principal.IsInRole("administrator"))
@@ -69,11 +71,11 @@ namespace ias.Rebens.api.Controllers
                 }
             }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, idStaticTextType, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Count() == 0)
+                if (list == null || !list.Any())
                     return NoContent();
 
                 var ret = new ResultPageModel<StaticTextModel>()
