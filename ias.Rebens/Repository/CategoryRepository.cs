@@ -176,13 +176,13 @@ namespace ias.Rebens
                     {
                         ret = new List<Category>();
                         var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active
-                                && ((c.FreeCourseCategories.Count > 0) 
-                                || (c.Categories.Any(cc => cc.Active && cc.FreeCourseCategories.Count > 0))
+                                && ((c.FreeCourseCategories.Any()) 
+                                || (c.Categories.Any(cc => cc.Active && cc.FreeCourseCategories.Any()))
                                     ))
                                 .OrderBy(c => c.Name).ToList();
                         foreach (var parent in listParent)
                         {
-                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.FreeCourseCategories.Count > 0).OrderBy(c => c.Name).ToList();
+                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.FreeCourseCategories.Any()).OrderBy(c => c.Name).ToList();
                             ret.Add(parent);
                         }
                     }

@@ -293,7 +293,7 @@ namespace ias.Rebens.api.Controllers
             var list = repo.ListFreeCourseTree(isCustomer, out error);
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.Any())
+                if (list == null || !list.Any())
                     return NoContent();
 
                 var ret = new JsonDataModel<List<CategoryModel>>();
