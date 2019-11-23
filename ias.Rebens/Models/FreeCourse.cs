@@ -31,6 +31,7 @@ namespace ias.Rebens
         public virtual Operation Operation { get; set; }
         public virtual AdminUser AdminUser { get; set; }
         public virtual Partner Partner { get; set; }
+        public virtual ICollection<FreeCourseCategory> FreeCourseCategories { get; set; }
         public virtual ICollection<OrderItem> OrderItems { get; set; }
 
     }

@@ -31,6 +31,7 @@ namespace ias.Rebens
 
         public virtual Category Parent { get; set; }
         public virtual ICollection<BenefitCategory> BenefitCategories { get; set; }
+        public virtual ICollection<FreeCourseCategory> FreeCourseCategories { get; set; }
         public virtual ICollection<Category> Categories { get; set; }
     }
 }

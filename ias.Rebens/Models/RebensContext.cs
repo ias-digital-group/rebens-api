@@ -28,6 +28,7 @@ namespace ias.Rebens
         public virtual DbSet<BannerOperation> BannerOperation { get; set; }
         public virtual DbSet<Benefit> Benefit { get; set; }
         public virtual DbSet<BenefitAddress> BenefitAddress { get; set; }
+        public virtual DbSet<FreeCourseCategory> FreeCourseCategory { get; set; }
         public virtual DbSet<BenefitCategory> BenefitCategory { get; set; }
         public virtual DbSet<BenefitOperation> BenefitOperation { get; set; }
         public virtual DbSet<BenefitOperationPosition> BenefitOperationPosition { get; set; }
@@ -886,6 +887,23 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdPartner)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_FreeCourse_Partner");
+            });
+
+            modelBuilder.Entity<FreeCourseCategory>(entity =>
+            {
+                entity.HasKey(e => new { e.IdFreeCourse, e.IdCategory });
+
+                entity.HasOne(d => d.FreeCourse)
+                    .WithMany(p => p.FreeCourseCategories)
+                    .HasForeignKey(d => d.IdFreeCourse)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FreeCourseCategory_FreeCourse");
+
+                entity.HasOne(d => d.Category)
+                    .WithMany(p => p.FreeCourseCategories)
+                    .HasForeignKey(d => d.IdCategory)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FreeCourseCategory_Category");
             });
 
             modelBuilder.Entity<LogError>(entity =>

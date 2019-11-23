@@ -18,15 +18,16 @@ namespace ias.Rebens.api.Controllers
     public class FreeCourseController : ControllerBase
     {
         private IFreeCourseRepository repo;
+        private ICategoryRepository categoryRepo;
 
         /// <summary>
         /// Construtor
         /// </summary>
         /// <param name="freeCourseRepository">Injeção de dependencia do repositório de Curso Livres</param>
-        public FreeCourseController(IFreeCourseRepository freeCourseRepository)
+        public FreeCourseController(IFreeCourseRepository freeCourseRepository, ICategoryRepository categoryRepository)
         {
             this.repo = freeCourseRepository;
-
+            this.categoryRepo = categoryRepository;
         }
 
         /// <summary>
@@ -211,6 +212,93 @@ namespace ias.Rebens.api.Controllers
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = "" });
+        }
+
+        /// <summary>
+        /// Lista os ids das categorias vínculadas ao curso
+        /// </summary>
+        /// <param name="id">id do curso livre</param>
+        /// <returns>Lista com os Ids das categorias</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/Category")]
+        [ProducesResponseType(typeof(JsonDataModel<List<int>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListCategories(int id)
+        {
+            var list = categoryRepo.ListByFreeCourse(id, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<int>>()
+                {
+                    Data = list
+                };
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Adiciona uma categoria a um curso livre
+        /// </summary>
+        /// <param name="model">{ IdFreeCourse: 0, IdCategory: 0 }</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Víncula um curso livre com uma categoria</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("AddCategory")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult AddCategory([FromBody]FreeCourseCategoryModel model)
+        {
+            if (repo.AddCategory(model.IdFreeCourse, model.IdCategory, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Categoria adicionada com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Adiciona categorias a um curso livre
+        /// </summary>
+        /// <param name="model">{ IdFreeCourse: 0, IdCategory: 0 }</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Víncula um curso livre com uma categoria</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("SaveCategories")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SaveCategories([FromBody]FreeCourseCategoriesModel model)
+        {
+            if (repo.SaveCategories(model.IdFreeCourse, model.CategoryIds, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Categorias salvas com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Remove uma categoria de um curso livre
+        /// </summary>
+        /// <param name="id">id do curso livre</param>
+        /// <param name="idCategory">id da categoria</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+        /// <response code="200">Remove o vínculo de benefício com uma categoria</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpDelete("{id}/Category/{idCategory}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult RemoveCategory(int id, int idCategory)
+        {
+            if (repo.DeleteCategory(id, idCategory, out string error))
+                return Ok(new JsonModel() { Status = "ok", Message = "Categoria removida com sucesso!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }

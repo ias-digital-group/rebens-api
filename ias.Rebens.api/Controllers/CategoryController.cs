@@ -247,5 +247,63 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+
+        /// <summary>
+        /// Retorna a arvore de categorias 
+        /// </summary>
+        /// <param name="operationCode">código da operação, obrigatório</param>
+        /// <returns>Lista com as categorias encontradas</returns>
+        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("ListFreeCourseTree")]
+        [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListFreeCourseTree([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+            int idOperation = 0;
+            string error;
+
+            var principal = HttpContext.User;
+            if (operationGuid == Guid.Empty)
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            if (idOperation == 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            bool isCustomer = (operationGuid != Guid.Empty || principal.IsInRole("customer"));
+
+            var list = repo.ListFreeCourseTree(isCustomer, out error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Any())
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<CategoryModel>>();
+                ret.Data = new List<CategoryModel>();
+                list.ForEach(item => { ret.Data.Add(new CategoryModel(item)); });
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
     }
 }

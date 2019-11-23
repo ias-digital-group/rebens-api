@@ -18,7 +18,11 @@ namespace ias.Rebens
 
         List<Category> ListTree(bool isCustomer, int? idOperation, out string error);
 
+        List<Category> ListFreeCourseTree(bool isCustomer, out string error);
+
         List<int> ListByBenefit(int idBenefit, out string error);
+
+        List<int> ListByFreeCourse(int idFreeCourse, out string error);
 
         List<Category> ListChildren(int idParent, out string error);
     }

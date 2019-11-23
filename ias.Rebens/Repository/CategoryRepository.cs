@@ -165,6 +165,42 @@ namespace ias.Rebens
             return ret;
         }
 
+        public List<Category> ListFreeCourseTree(bool isCustomer, out string error)
+        {
+            List<Category> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (isCustomer)
+                    {
+                        ret = new List<Category>();
+                        var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active
+                                && ((c.FreeCourseCategories.Count > 0) 
+                                || (c.Categories.Any(cc => cc.Active && cc.FreeCourseCategories.Count > 0))
+                                    ))
+                                .OrderBy(c => c.Name).ToList();
+                        foreach (var parent in listParent)
+                        {
+                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.FreeCourseCategories.Count > 0).OrderBy(c => c.Name).ToList();
+                            ret.Add(parent);
+                        }
+                    }
+                    else
+                        ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active).OrderBy(c => c.Name).ToList();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.ListFreeCourseTree", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public Category Read(int id, out string error)
         {
             Category ret;
@@ -260,6 +296,28 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CategoryRepository.ListChildren", ex.Message, $"idParent: {idParent}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<int> ListByFreeCourse(int idFreeCourse, out string error)
+        {
+            List<int> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.FreeCourseCategory.Where(bc => bc.IdFreeCourse == idFreeCourse).Select(bc => bc.IdCategory).ToList();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.ListByFreeCourse", ex.Message, $"idFreeCourse: {idFreeCourse}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as categorias vinculadas ao curso livre. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;

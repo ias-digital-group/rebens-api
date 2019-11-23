@@ -1959,7 +1959,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListFreeCourses([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int page = 0, [FromQuery]int pageItems = 30,
-            [FromQuery]string sort = "name ASC", [FromQuery]string searchWord = null, [FromQuery]int? idPartner = null)
+            [FromQuery]string sort = "name ASC", [FromQuery]string searchWord = null, [FromQuery]int? idPartner = null, [FromQuery]int? idCategory = null)
         {
             int idOperation = 0;
             string error = null;
@@ -1982,7 +1982,7 @@ namespace ias.Rebens.api.Controllers
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var list = freeCourseRepo.ListForPortal(page: page, pageItems: pageItems, word: searchWord, sort: sort, idOperation: idOperation,
-                idPartner: idPartner, error: out error);
+                idPartner: idPartner, error: out error, idCategory: idCategory);
 
             if (string.IsNullOrEmpty(error))
             {

@@ -15,6 +15,31 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public bool AddCategory(int idFreeCourse, int idCategory, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (!db.FreeCourseCategory.Any(o => o.IdFreeCourse == idFreeCourse && o.IdCategory == idCategory))
+                    {
+                        db.FreeCourseCategory.Add(new FreeCourseCategory() { IdCategory = idCategory, IdFreeCourse = idFreeCourse });
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FreeCourseRepository.AddCategory", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar adicionar a categoria. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
         public bool Create(FreeCourse course, out string error)
         {
             bool ret = true;
@@ -61,7 +86,77 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<FreeCourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation, int? idPartner = null)
+        public bool DeleteCategory(int idFreeCourse, int idCategory, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmp = db.FreeCourseCategory.SingleOrDefault(o => o.IdFreeCourse == idFreeCourse && o.IdCategory == idCategory);
+                    if (tmp != null)
+                    {
+                        db.FreeCourseCategory.Remove(tmp);
+                        db.SaveChanges();
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FreeCourseRepository.DeleteCategory", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar excluir o categoria. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public ResultPage<FreeCourse> ListByCategory(int idCategory, int page, int pageItems, string word, string sort, out string error)
+        {
+            ResultPage<FreeCourse> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.FreeCourse.Where(b => !b.Deleted && !b.Partner.Deleted && b.FreeCourseCategories.Any(bc => bc.IdCategory == idCategory) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+                    switch (sort.ToLower())
+                    {
+                        case "title asc":
+                            tmpList = tmpList.OrderBy(f => f.Title);
+                            break;
+                        case "title desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Title);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                    }
+
+                    if (tmpList.Count() < pageItems)
+                        page = 0;
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.FreeCourse.Count(b => !b.Deleted && !b.Partner.Deleted && b.FreeCourseCategories.Any(bc => bc.IdCategory == idCategory) && (string.IsNullOrEmpty(word) || b.Title.Contains(word)));
+
+                    ret = new ResultPage<FreeCourse>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FreeCourseRepository.ListByCategory", ex.Message, $"idCategory: {idCategory}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os Cursos Livres. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<FreeCourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation, int? idPartner = null, int? idCategory = null)
         {
             ResultPage<FreeCourseItem> ret;
             try
@@ -72,6 +167,7 @@ namespace ias.Rebens
                         courseId = 0;
                     var tmpList = db.FreeCourse.Where(c => !c.Deleted && c.IdOperation == idOperation && c.Active &&
                                     (!idPartner.HasValue || c.IdPartner == idPartner) &&
+                                    (!idCategory.HasValue || c.FreeCourseCategories.Any(fc => fc.IdCategory == idCategory.Value)) &&
                                     (string.IsNullOrEmpty(word) || c.Title.Contains(word) || c.Name.Contains(word) || c.Id == courseId
                                         || c.Description.Contains(word) || c.HowToUse.Contains(word)));
                     switch (sort.ToLower())
@@ -225,6 +321,41 @@ namespace ias.Rebens
                 int idLog = Helper.LogErrorHelper.Create(this._connectionString, "FreeCourseRepository.ReadForPortal", $"id: {id}", ex);
                 error = "Ocorreu um erro ao tentar ler o curso. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public bool SaveCategories(int idFreeCourse, string categoryIds, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var categories = db.FreeCourseCategory.Where(b => b.IdFreeCourse == idFreeCourse);
+                    db.FreeCourseCategory.RemoveRange(categories);
+                    db.SaveChanges();
+
+                    if (!string.IsNullOrEmpty(categoryIds))
+                    {
+                        var ids = categoryIds.Split(',');
+                        if (ids.Length > 0)
+                        {
+                            foreach (var id in ids)
+                                db.FreeCourseCategory.Add(new FreeCourseCategory() { IdCategory = int.Parse(id), IdFreeCourse = idFreeCourse });
+
+                            db.SaveChanges();
+                        }
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FreeCourseRepository.SaveCategories", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar salvar as categorias. (erro:" + idLog + ")";
+                ret = false;
             }
             return ret;
         }

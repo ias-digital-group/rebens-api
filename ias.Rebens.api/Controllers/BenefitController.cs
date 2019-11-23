@@ -29,7 +29,8 @@ namespace ias.Rebens.api.Controllers
         /// <param name="categoryRepository">Injeção de dependencia do repositório de Categoria</param>
         /// <param name="operationRepository">Injeção de dependencia do repositório de Operação</param>
         /// <param name="staticTextRepository">Injeção de dependencia do repositório de Texto Estático</param>
-        public BenefitController(IBenefitRepository benefitRepository, IAddressRepository addressRepository, ICategoryRepository categoryRepository, IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
+        public BenefitController(IBenefitRepository benefitRepository, IAddressRepository addressRepository, ICategoryRepository categoryRepository, 
+            IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
         {
             this.repo = benefitRepository;
             this.addressRepo = addressRepository;
