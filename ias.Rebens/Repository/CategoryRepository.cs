@@ -139,14 +139,16 @@ namespace ias.Rebens
                         ret = new List<Category>();
                         var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active 
                                 && ((
-                                    c.BenefitCategories.Count > 0 && c.BenefitCategories.Any(bc => bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))
+                                    c.BenefitCategories.Count > 0 && c.BenefitCategories.Any(bc => bc.Benefit.Active && bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))
                                     ) || (
-                                    c.Categories.Any(cc => cc.Active && cc.BenefitCategories.Count > 0 && cc.BenefitCategories.Any(bc => bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))))
+                                    c.Categories.Any(cc => cc.Active && cc.BenefitCategories.Count > 0 && cc.BenefitCategories.Any(bc => bc.Benefit.Active && bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))))
                                     ))
                                 .OrderBy(c => c.Name).ToList();
                         foreach(var parent in listParent)
                         {
-                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.BenefitCategories.Count > 0).OrderBy(c => c.Name).ToList();
+                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.BenefitCategories.Count > 0 
+                                                        && c.BenefitCategories.Any(bc => bc.Benefit.Active))
+                                                    .OrderBy(c => c.Name).ToList();
                             ret.Add(parent);
                         }
                     }
