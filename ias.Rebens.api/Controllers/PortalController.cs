@@ -230,6 +230,62 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Retorna o texto da página requerida
+        /// </summary>
+        /// <param name="operationCode">código da operação</param>
+        /// <param name="id">Id do texto</param>
+        /// <returns>Retorna o objeto StaticText com as informações solicitadas</returns>
+        /// <response code="200">Retorna o model, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("GetText")]
+        [ProducesResponseType(typeof(JsonDataModel<StaticTextModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetText([FromQuery]int id, [FromHeader(Name = "x-operation-code")]string operationCode = null)
+        {
+            int idOperation = 0;
+            Guid operationGuid = Guid.Empty;
+            StaticText text = null;
+            string error;
+            if (string.IsNullOrEmpty(operationCode))
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+                    text = staticTextRepo.Read(id, out error);
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+            }
+            else
+            {
+                Guid.TryParse(operationCode, out operationGuid);
+                if (operationGuid == Guid.Empty)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                text = staticTextRepo.Read(id, out error);
+            }
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (text == null || text.Id == 0)
+                    return NoContent();
+
+                var ret = new StaticTextModel(text);
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
         /// Salvar um contato
         /// </summary>
         /// <param name="operationCode"></param>
