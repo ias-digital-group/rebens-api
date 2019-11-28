@@ -409,5 +409,38 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+
+        /// <summary>
+        /// lista os itens procurados
+        /// </summary>
+        /// <returns>lista com os itens buscados</returns>
+        /// <response code="200">retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">se não encontrar nada</response>
+        /// <response code="400">se ocorrer algum erro</response>
+        [HttpGet("items/{idType}")]
+        [ProducesResponseType(typeof(JsonDataModel<List<ListItem>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListItems(int idType)
+        {
+            var list = staticTextRepo.ListByType(idType, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || !list.Any())
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<ListItem>>()
+                {
+                    Data = new List<ListItem>()
+                };
+                foreach (var text in list)
+                    ret.Data.Add(new ListItem(text));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
     }
 }

@@ -156,7 +156,56 @@ namespace ias.Rebens.api.Models
         /// Texto que descreve o início das aulas (ex. 2º semestre 2020)
         /// </summary>
         public string CourseBegin { get; set; }
-        
+
+        /// <summary>
+        /// Id das perguntas frequentes
+        /// </summary>
+        [Required]
+        public int IdFaq { get; set; }
+
+        /// <summary>
+        /// Id do regulamento
+        /// </summary>
+        [Required]
+        public int IdRegulation { get; set; }
+
+        /// <summary>
+        /// Aviso para tela de detalhe
+        /// </summary>
+        [Required]
+        [MaxLength(300)]
+        public string Disclaimer { get; set; }
+        /// <summary>
+        /// Descrição dos tipos de cursos
+        /// </summary>
+        [Required]
+        [MaxLength(4000)]
+        public string CourseTypeDescription { get; set; }
+        /// <summary>
+        /// Título do box de benefícios
+        /// </summary>
+        [Required]
+        [MaxLength(200)]
+        public string BenefitBoxTitle { get; set; }
+        /// <summary>
+        /// Texto do box de benefícios
+        /// </summary>
+        [Required]
+        [MaxLength(1000)]
+        public string BenefitBoxDescription { get; set; }
+        /// <summary>
+        /// Título ajude um aluno
+        /// </summary>
+        [Required]
+        [MaxLength(200)]
+        public string HelpStudentTitle { get; set; }
+        /// <summary>
+        /// Texto ajude um aluno
+        /// </summary>
+        [Required]
+        [MaxLength(1000)]
+        public string HelpStudentDescription { get; set; }
+
 
         /// <summary>
         /// Construtor
@@ -189,12 +238,20 @@ namespace ias.Rebens.api.Models
             this.EndDate = course.EndDate;
             this.VoucherText = course.VoucherText;
             this.CourseBegin = course.CourseBegin;
+            this.IdFaq = course.IdFaq;
+            this.IdRegulation = course.IdRegulation;
             if(course.CoursePeriods != null)
                 this.PeriodIds = course.CoursePeriods.Select(p => p.IdPeriod).ToArray();            
             else
                 this.PeriodIds = new List<int>().ToArray();
             if (course.Description != null)
                 this.Description = course.Description.Html;
+            this.Disclaimer = course.Disclaimer;
+            this.BenefitBoxTitle = course.BenefitBoxTitle;
+            this.BenefitBoxDescription = course.BenefitBoxDescription;
+            this.CourseTypeDescription = course.CourseTypeDescription;
+            this.HelpStudentTitle = course.HelpStudentTitle;
+            this.HelpStudentDescription = course.HelpStudentDescription;
         }
 
         /// <summary>
@@ -226,7 +283,15 @@ namespace ias.Rebens.api.Models
                 VoucherText = this.VoucherText,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow,
-                CourseBegin = this.CourseBegin
+                CourseBegin = this.CourseBegin,
+                IdFaq = this.IdFaq,
+                IdRegulation = this.IdRegulation,
+                Disclaimer = this.Disclaimer,
+                BenefitBoxTitle = this.BenefitBoxTitle,
+                BenefitBoxDescription = this.BenefitBoxDescription,
+                CourseTypeDescription = this.CourseTypeDescription,
+                HelpStudentTitle = this.HelpStudentTitle,
+                HelpStudentDescription = this.HelpStudentDescription
             };
         }
 
@@ -380,6 +445,58 @@ namespace ias.Rebens.api.Models
         public string CourseBegin { get; set; }
 
         /// <summary>
+        /// Id das perguntas frequentes
+        /// </summary>
+        [Required]
+        public int IdFaq { get; set; }
+
+        /// <summary>
+        /// Id do regulamento
+        /// </summary>
+        [Required]
+        public int IdRegulation { get; set; }
+
+        /// <summary>
+        /// Aviso para tela de detalhe
+        /// </summary>
+        [Required]
+        [MaxLength(300)]
+        public string Disclaimer { get; set; }
+        /// <summary>
+        /// Descrição dos tipos de cursos
+        /// </summary>
+        [Required]
+        [MaxLength(4000)]
+        public string CourseTypeDescription { get; set; }
+        /// <summary>
+        /// Título do box de benefícios
+        /// </summary>
+        [Required]
+        [MaxLength(200)]
+        public string BenefitBoxTitle { get; set; }
+        /// <summary>
+        /// Texto do box de benefícios
+        /// </summary>
+        [Required]
+        [MaxLength(1000)]
+        public string BenefitBoxDescription { get; set; }
+        /// <summary>
+        /// Título ajude um aluno
+        /// </summary>
+        [Required]
+        [MaxLength(200)]
+        public string HelpStudentTitle { get; set; }
+        /// <summary>
+        /// Texto ajude um aluno
+        /// </summary>
+        [Required]
+        [MaxLength(1000)]
+        public string HelpStudentDescription { get; set; }
+        public string Faqs { get; set; }
+        public string Regulation { get; set; }
+
+
+        /// <summary>
         /// Construtor
         /// </summary>
         public CourseItemModel() { }
@@ -413,6 +530,15 @@ namespace ias.Rebens.api.Models
                 this.ListImage = course.ListImage;
                 this.CourseBegin = course.CourseBegin;
                 this.AddressShort = course.AddressShort;
+                this.IdFaq = course.IdFaq;
+                this.IdRegulation = course.IdRegulation;
+                this.Disclaimer = course.Disclaimer;
+                this.CourseTypeDescription = course.CourseTypeDescription;
+                this.BenefitBoxTitle = course.BenefitBoxTitle;
+                this.BenefitBoxDescription = course.BenefitBoxDescription;
+                this.HelpStudentTitle = course.HelpStudentTitle;
+                this.HelpStudentDescription = course.HelpStudentDescription;
+
                 if (idCustomer.HasValue)
                     this.Link = Constant.URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
             }

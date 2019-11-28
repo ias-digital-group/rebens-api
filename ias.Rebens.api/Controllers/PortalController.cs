@@ -239,11 +239,11 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [AllowAnonymous]
-        [HttpGet("GetText")]
+        [HttpGet("ReadText")]
         [ProducesResponseType(typeof(JsonDataModel<StaticTextModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GetText([FromQuery]int id, [FromHeader(Name = "x-operation-code")]string operationCode = null)
+        public IActionResult ReadText([FromQuery]int id, [FromHeader(Name = "x-operation-code")]string operationCode = null)
         {
             int idOperation = 0;
             Guid operationGuid = Guid.Empty;
@@ -1675,7 +1675,16 @@ namespace ias.Rebens.api.Controllers
 
                 if(idCustomer > 0)
                     courseViewRepo.SaveView(id, idCustomer, out string viewError);
-                return Ok(new JsonDataModel<CourseItemModel>() { Data = new CourseItemModel(course, idCustomer) });
+
+                var data = new CourseItemModel(course, idCustomer);
+                var faqs = staticTextRepo.Read(course.IdFaq, out _);
+                if(faqs != null)
+                    data.Faqs = faqs.Html;
+                var regulation = staticTextRepo.Read(course.IdRegulation, out _);
+                if (regulation != null)
+                    data.Regulation = regulation.Html;
+
+                return Ok(new JsonDataModel<CourseItemModel>() { Data = data });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -2279,5 +2288,7 @@ namespace ias.Rebens.api.Controllers
 
             return Data;
         }
+
+
     }
 }

@@ -25,5 +25,7 @@ namespace ias.Rebens
         ResultPage<StaticText> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
 
         StaticText ReadOperationConfiguration(int idOperation, out string error);
+
+        List<StaticText> ListByType(int idStaticTextType, out string error);
     }
 }

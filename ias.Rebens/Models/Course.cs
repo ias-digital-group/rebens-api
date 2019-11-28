@@ -41,6 +41,15 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
         public string CourseBegin { get; set; }
+        public int IdFaq { get; set; }
+        public int IdRegulation { get; set; }
+
+        public string Disclaimer { get; set; }
+        public string CourseTypeDescription { get; set; }
+        public string BenefitBoxTitle { get; set; }
+        public string BenefitBoxDescription { get; set; }
+        public string HelpStudentTitle { get; set; }
+        public string HelpStudentDescription { get; set; }
 
         public virtual Operation Operation { get; set; }
         public virtual CourseCollege College { get; set; }

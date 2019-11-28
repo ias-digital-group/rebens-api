@@ -342,5 +342,33 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public List<StaticText> ListByType(int idStaticTextType, out string error)
+        {
+            List<StaticText> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = (from s in db.StaticText
+                           where s.IdStaticTextType == idStaticTextType
+                           select new StaticText()
+                           {
+                               Id = s.Id,
+                               Title = s.Title
+                           }).ToList();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextRepository.ListByType", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os textos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

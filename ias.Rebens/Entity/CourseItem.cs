@@ -26,6 +26,15 @@ namespace ias.Rebens
         public string ListImage { get; set; }
         public string CourseBegin { get; set; }
         public string AddressShort { get; set; }
+        public int IdFaq { get; set; }
+        public int IdRegulation { get; set; }
+
+        public string Disclaimer { get; set; }
+        public string CourseTypeDescription { get; set; }
+        public string BenefitBoxTitle { get; set; }
+        public string BenefitBoxDescription { get; set; }
+        public string HelpStudentTitle { get; set; }
+        public string HelpStudentDescription { get; set; }
 
         public CourseItem() { }
         public CourseItem(Course course)
@@ -41,6 +50,14 @@ namespace ias.Rebens
             this.Image = course.Image;
             this.ListImage = course.ListImage;
             this.CourseBegin = course.CourseBegin;
+            this.IdFaq = course.IdFaq;
+            this.IdRegulation = course.IdRegulation;
+            this.Disclaimer = course.Disclaimer;
+            this.CourseTypeDescription = course.CourseTypeDescription;
+            this.BenefitBoxTitle = course.BenefitBoxTitle;
+            this.BenefitBoxDescription = course.BenefitBoxDescription;
+            this.HelpStudentTitle = course.HelpStudentTitle;
+            this.HelpStudentDescription = course.HelpStudentDescription;
         }
     }
 }
