@@ -206,6 +206,13 @@ namespace ias.Rebens.api.Models
         [MaxLength(1000)]
         public string HelpStudentDescription { get; set; }
 
+        /// <summary>
+        /// Link ajude um aluno
+        /// </summary>
+        [Required]
+        [MaxLength(500)]
+        public string HelpStudentLink { get; set; }
+
 
         /// <summary>
         /// Construtor
@@ -252,6 +259,7 @@ namespace ias.Rebens.api.Models
             this.CourseTypeDescription = course.CourseTypeDescription;
             this.HelpStudentTitle = course.HelpStudentTitle;
             this.HelpStudentDescription = course.HelpStudentDescription;
+            this.HelpStudentLink = course.HelpStudentLink;
         }
 
         /// <summary>
@@ -291,7 +299,8 @@ namespace ias.Rebens.api.Models
                 BenefitBoxDescription = this.BenefitBoxDescription,
                 CourseTypeDescription = this.CourseTypeDescription,
                 HelpStudentTitle = this.HelpStudentTitle,
-                HelpStudentDescription = this.HelpStudentDescription
+                HelpStudentDescription = this.HelpStudentDescription,
+                HelpStudentLink = this.HelpStudentLink
             };
         }
 

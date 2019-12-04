@@ -397,6 +397,15 @@ namespace ias.Rebens
                         update.Active = course.Active;
                         update.Modified = DateTime.UtcNow;
                         update.CourseBegin = course.CourseBegin;
+                        update.IdFaq = course.IdFaq;
+                        update.IdRegulation = course.IdRegulation;
+                        update.Disclaimer = course.Disclaimer;
+                        update.CourseTypeDescription = course.CourseTypeDescription;
+                        update.BenefitBoxTitle = course.BenefitBoxTitle;
+                        update.BenefitBoxDescription = course.BenefitBoxDescription;
+                        update.HelpStudentTitle = course.HelpStudentTitle;
+                        update.HelpStudentDescription = course.HelpStudentDescription;
+                        update.HelpStudentLink = course.HelpStudentLink;
 
                         db.SaveChanges();
                         error = null;

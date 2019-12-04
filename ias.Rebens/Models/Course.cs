@@ -50,6 +50,7 @@ namespace ias.Rebens
         public string BenefitBoxDescription { get; set; }
         public string HelpStudentTitle { get; set; }
         public string HelpStudentDescription { get; set; }
+        public string HelpStudentLink { get; set; }
 
         public virtual Operation Operation { get; set; }
         public virtual CourseCollege College { get; set; }
