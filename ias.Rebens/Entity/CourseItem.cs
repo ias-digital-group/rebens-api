@@ -35,6 +35,7 @@ namespace ias.Rebens
         public string BenefitBoxDescription { get; set; }
         public string HelpStudentTitle { get; set; }
         public string HelpStudentDescription { get; set; }
+        public string HelpStudentLink { get; set; }
 
         public CourseItem() { }
         public CourseItem(Course course)

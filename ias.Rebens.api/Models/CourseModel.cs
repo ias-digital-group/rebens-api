@@ -501,6 +501,7 @@ namespace ias.Rebens.api.Models
         [Required]
         [MaxLength(1000)]
         public string HelpStudentDescription { get; set; }
+        public string HelpStudentLink { get; set; }
         public string Faqs { get; set; }
         public string Regulation { get; set; }
 
@@ -547,6 +548,7 @@ namespace ias.Rebens.api.Models
                 this.BenefitBoxDescription = course.BenefitBoxDescription;
                 this.HelpStudentTitle = course.HelpStudentTitle;
                 this.HelpStudentDescription = course.HelpStudentDescription;
+                this.HelpStudentLink = course.HelpStudentLink;
 
                 if (idCustomer.HasValue)
                     this.Link = Constant.URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
