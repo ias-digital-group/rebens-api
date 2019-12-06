@@ -59,6 +59,7 @@ namespace ias.Rebens
             this.BenefitBoxDescription = course.BenefitBoxDescription;
             this.HelpStudentTitle = course.HelpStudentTitle;
             this.HelpStudentDescription = course.HelpStudentDescription;
+            this.HelpStudentLink = course.HelpStudentLink;
         }
     }
 }
