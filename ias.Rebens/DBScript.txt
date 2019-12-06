@@ -2,8 +2,8 @@
 GO
 UPDATE Course SET [Name] = Title 
 GO
-ALTER TABLE Course ALTER COLUMN [Name] NVARCHAR(200) NOT NULL
-GO
+ALTER TABLE dbo.course ALTER COLUMN [Name] nvarchar(200) COLLATE SQL_Latin1_General_CP1_CI_AI NOT NULL
+
 
 
 
