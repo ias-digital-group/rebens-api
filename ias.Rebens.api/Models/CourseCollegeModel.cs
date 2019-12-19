@@ -49,6 +49,16 @@ namespace ias.Rebens.api.Models
         public AddressModel Address { get; set; }
 
         /// <summary>
+        /// Razão social
+        /// </summary>
+        public string LegalName { get; set; }
+
+        /// <summary>
+        /// CNPJ
+        /// </summary>
+        public string Doc { get; set; }
+
+        /// <summary>
         /// Construtor
         /// </summary>
         public CourseCollegeModel() { }
@@ -64,6 +74,8 @@ namespace ias.Rebens.api.Models
             this.Active = courseCollege.Active;
             this.Logo = courseCollege.Logo;
             this.IdOperation = courseCollege.IdOperation;
+            this.LegalName = courseCollege.LegalName;
+            this.Doc = courseCollege.Doc;
             if (courseCollege.Address != null)
                 this.Address = new AddressModel(courseCollege.Address);
         }
@@ -82,7 +94,9 @@ namespace ias.Rebens.api.Models
                 Active = this.Active,
                 Logo = this.Logo,
                 Created = DateTime.UtcNow,
-                Modified = DateTime.UtcNow
+                Modified = DateTime.UtcNow,
+                LegalName = this.LegalName,
+                Doc = this.Doc
             };
         }
     }
