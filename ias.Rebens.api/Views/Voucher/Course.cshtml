@@ -33,77 +33,68 @@
             </div>
             <div class="infoes">
                 <h1>
-                    CARTA DE APROVAÇÃO DA BOLSA DE ESTUDO<br />
-                    UNICAMPI EDUCACAO - ENSINO SUPERIOR
+                    TERMO DE APROVAÇÃO PARA CONCESSÃO DE BOLSA DE ESTUDO PROGRAMA<br />
+                    UNICAMPI EDUCAÇÃO - CEBRACOOPE
                 </h1>
             </div>
         </div>
         <div class="content">
-            <h2>(I) ALUNO BENEFICIADO</h2>
-            <p>@Model.Customer.Name, @Model.Customer.Cpf , doravante denominado "ALUNO BENEFICIADO".</p>
-            <h2>(II) INSTITUICAO DE ENSINO CONCEDENTE</h2>
+            <p>São partes neste instrumento particular de contrato:</p>
+            <h2>1. INSTITUICAO DE ENSINO CONCEDENTE IES</h2>
             <p>
-                @Model.College.Name,
-                @if (Model.College.Address != null)
+                @Model.College.LegalName, estabelecida na cidade de @Model.College.Address.City,
+                Estado de/do @Model.College.Address.State, na @Model.College.Address.Street, @Model.College.Address.Number, @Model.College.Address.Neighborhood, Cep: @Model.College.Address.Zipcode, CNPJ @Model.College.Doc,
+                doravante simplesmente denominada <b>IES</b>
+            </p>
+            <h2>2. ALUNO BENEFICIADO</h2>
+            <p>
+                @Model.Customer.Name.ToUpper(), como contratante, CPF @Model.Customer.Cpf
+                @if (Model.Customer.Address != null)
                 {
                     <text>
-                    estabelecida na cidade de @Model.College.Address.City, Estado do @Model.College.Address.State, na @Model.College.Address.Street @Model.College.Address.Number, CNPJ xxxxxxxxxxxxx,
+                        residente na cidade de @Model.Customer.Address.City,
+                        Estado @Model.Customer.Address.State, na @Model.Customer.Address.Street, @Model.Customer.Address.Number @Model.Customer.Address.Complement,
+                        BAIRRO @Model.Customer.Address.Neighborhood CEP @Model.Customer.Address.Zipcode,
                     </text>
                 }
-                doravante simplesmente denominada "IES",
+                doravante denominado <b>ALUNO BENEFICIADO</b>
             </p>
-            <h2>(III) INTERVENIENTE ANUENTE</h2>
+            <h2>3. INTERVENIENTE ANUENTE</h2>
             <p>
-                @Model.College.Name, pessoa jurídica de direito privado, inscrita no CNPJ sob n.º , estabelecida na cidade de @(Model.College.Address != null ? Model.College.Address.City : ""),
-                CEP @(Model.College.Address != null ? Model.College.Address.Zipcode : ""), Caixa Postal xxxxxxxxxxxxx, doravante simplesmente denominada "CAPTADOR".<br />
-                - O ALUNO BENEFICIADO em conformidade com os dados cadastrais e socioeconômicos informados no site
-                www.educamaisbrasil.com.br, foi contemplado com uma bolsa de estudo, condicionada a existência de vagas no ato da
-                matrícula, estando ainda sujeito a atender os requisitos previstos no Regulamento do programa CAPTADOR, incluindo, mas não se
-                limitando a: (i) ter sido aprovado no processo seletivo da IES; (ii) não estar matriculado na IES; (iii) nos casos de cursos de
-                graduação, nunca esteve matriculado na IES e já concluiu o ensino médio; e (iv) nos casos de cursos de pós graduação já ter
-                concluído o curso de graduação.
-            </p>
-            <h2>(IV) DAS CONDIÇÕES DA BOLSA DE ESTUDO</h2>
-            <p class="strong">
-                A IES concederá ao ALUNO BENEFICIADO, oriundo do programa de bolsas de estudo do CAPTADOR, e aprovado no
-                processo seletivo e/ou análise documental da IES, uma bolsa de estudos:
-            </p>
-            <p class="strong">
-                (A) Para o período letivo: 
-                @if(Model.Course.StartDate.HasValue && Model.Course.EndDate.HasValue)
-                {
-                    <text>
-                    @Model.Course.StartDate.Value.ToString("MM/yyyy") - @Model.Course.EndDate.Value.ToString("MM/yyyy")
-                    </text>
-                }
-            </p>
-            <p class="strong">
-                (B) Curso: @Model.Course.Title
-            </p>
-            @*<p class="strong">
-                (C) Turno: @Model.Course.
-            </p>*@
-            <p class="strong">
-                (D) Modalidade: @Model.Course.Modality.Name
-            </p>
-            <p class="strong">
-                (E) Tipo: @Model.Course.GraduationType.Name
-            </p>
-            <p class="strong">
-                (F) Percentual da bolsa para a primeira mensalidade: %
+                CENTRAL BRASILEIRA DAS COOPERATIVAS EDUCACIONAIS - CEBRACOOPE, pessoa jurídica de direito privado,
+                inscrita no CNPJ 27.929.906/0001, estabelecida no endereço: Rua Herval, 488 – Belenzinho – CEP: 03062-000 na
+                Cidade de São Paulo no Estado de São Paulo, doravante simplesmente denominada CEBRACOOPE - UNICAMPI EDUCAÇÃO
             </p>
             <p>
-                Tratando-se de cursos de graduação, o benefício da alínea “G” inclui as mensalidades correspondentes às rematrículas de cada
-                período letivo subsequente ao ingresso do ALUNO BENEFICIADO na IES. Tratando-se de curso de pós-graduação, as Taxas de
-                Inscrição e de Matrícula serão devidas pelo ALUNO BENEFICIADO e que também serão pagas diretamente à IES. Fica
-                resguardado o direito da IES em ajustar os valores das mensalidades na forma da Legislação em vigor.
+                O ALUNO BENEFICIADO em conformidade com os dados cadastrais e socioeconômicos informados no site www.unicampieducacao.com.br, foi contemplado com uma bolsa de estudo, condicionada a existência de vagas no ato da matrícula, estando ainda sujeito a atender os requisitos previstos no Regulamento do programa CEBRACOOPE - UNICAMPI EDUCAÇÃO, incluindo, mas não se limitando a:<br />
+                1.	ter sido aprovado no processo seletivo da IES;<br />
+                2.	não estar matriculado na IES;<br />
+                3.	nos casos de cursos de graduação, nunca esteve matriculado na IES e já concluiu o ensino médio; e<br />
+                4.	nos casos de cursos de pós-graduação já ter concluído o curso de graduação.
             </p>
-            <p>- O ALUNO BENEFICIADO está ciente que, caso entre a data de aprovação e a data de matrícula do ALUNO BENEFICIADO, a IES reduza o valor da mensalidade do curso, o percentual da bolsa do inciso II acima será reduzido na mesma proporção da redução da mensalidade;</p>
-            <p>- O ALUNO BENEFICIADO está ciente que DEVERÁ, na periodicidade prevista no contrato, aditar o seu contrato de bolsa de estudos na forma prevista no regulamento e que, para tanto deverá pagar ao CAPTADOR, as Taxas Administrativas para renovação do beneficio junto à IES, remunerando o CAPTADOR com o valor correspondente a % (xxxxxxxxxxxxx) do valor pago a título de Taxa de Adesão, sendo que o referido valor será atualizado pelo INPC até a data do seu efetivo pagamento. Em caso de impontualidade, incidirá penalidades de mora previstas em Lei;</p>
-            <p>O CAPTADOR compromete-se a restituir a quantia equivalente a 100% (cem por cento) do valor da Taxa de Adesão/Administrativa paga pelo ALUNO BENEFICIADO, devendo ser solicitada diretamente no Portal do Aluno, nos casos em que:</p>
-            <p>a) desista do curso para o qual aderiu ou renovou, até 07 (sete) dias após o pagamento da Taxa de Adesão ou Administrativa, e não efetivar a sua matrícula/rematrícula na IES, ou ainda,</p>
-            <p>b) não seja aprovado no processo seletivo da IES, não exista vagas ou não ocorra a abertura de turma, e que nestas duas últimas condições não tenha ocorrido o remanejamento do benefício ora concedido para outro curso, devendo efetuar a solicitação do reembolso até 15 (quinze) dias após a comunicação da IES;</p>
-            <p>- O ALUNO BENEFICIADO declara conhecer e aceitar os termos e condições que regem o Regulamento e o Contrato de Bolsa de Estudos do programa do CAPTADOR, registrado no Cartório de Títulos e Documentos da Cidade de Lauro de Freitas, Estado da Bahia, sob o número xxxxxxxxxxxxx, tendo sido disponibilizado, quando da inscrição no site, uma cópia dos mesmos, obrigando-se neste ato, a cumprir todas as Cláusulas e condições ali estipuladas, vigentes e exigíveis para todos os fins de direito.</p>
+            <h2>DAS CONDIÇÕES DA BOLSA DE ESTUDO</h2>
+            <p>
+                A IES concederá ao ALUNO BENEFICIADO, oriundo do programa de bolsas de estudo da CEBRACOOPE - UNICAMPI EDUCAÇÃO, e aprovado no processo seletivo e/ou análise documental da IES, uma bolsa de estudos:<br />
+                A.	Para o período letivo: @Model.Course.CourseBegin<br />
+                B.	Curso: @Model.Course.Title<br />
+                @*C.	Turno: ONLINE<br />*@
+                C.	Modalidade: @Model.Course.Modality.Name<br />
+                D.	Tipo: @Model.Course.GraduationType.Name<br />
+                E.	Percentual da bolsa para a primeira mensalidade: @Model.Course.Discount.ToString("N").Split(",")[0]% (@ias.Rebens.Helper.DecimalHelper.ToPercentageExtensive(Model.Course.Discount) por cento)
+            </p>
+            <p>Tratando-se de cursos de graduação, o benefício de @Model.Course.Discount.ToString("N").Split(",")[0]% (@ias.Rebens.Helper.DecimalHelper.ToPercentageExtensive(Model.Course.Discount) por cento) inclui as mensalidades correspondentes às rematrículas de cada período letivo subsequente ao ingresso do ALUNO BENEFICIADO na IES. Tratando-se de curso de pós-graduação, as Taxas de Inscrição e de Matrícula serão devidas pelo ALUNO BENEFICIADO e que também serão pagas diretamente à IES. Fica resguardado o direito da IES em ajustar os valores das mensalidades na forma da Legislação em vigor.</p>
+            <p>- O ALUNO BENEFICIADO está ciente que, caso entre a data de aprovação e a data de matrícula do ALUNO BENEFICIADO, a IES reduza o valor da mensalidade do curso, o percentual da bolsa do acima será reduzido na mesma proporção da redução da mensalidade;</p>
+            <p>- O ALUNO BENEFICIADO está ciente que DEVERÁ, na periodicidade prevista no contrato, aditar o seu contrato de bolsa de estudos na forma prevista no regulamento e que, para tanto deverá pagar a CEBRACOOPE, as Taxas Administrativas para renovação do beneficio junto à IES, remunerando a CEBRACOOPE com o valor correspondente a @Model.Course.Discount.ToString("N").Split(",")[0]% (@ias.Rebens.Helper.DecimalHelper.ToPercentageExtensive(Model.Course.Discount) por cento) do valor pago a título de Taxa de Adesão, sendo que o referido valor será atualizado pelo INPC até a data do seu efetivo pagamento. Em caso de impontualidade, incidirá penalidades de mora previstas em Lei;</p>
+            <p>
+                A CEBRACOOPE compromete-se a restituir a quantia equivalente a 100% (cem por cento) do valor da Taxa de Adesão/Administrativa paga pelo ALUNO BENEFICIADO, devendo ser solicitada diretamente no Portal do Aluno, nos casos em que:
+                desista do curso para o qual aderiu ou renovou, até 07 (sete) dias após o pagamento da Taxa de Adesão ou Administrativa, e não efetivar a sua matrícula/rematrícula na IES, ou ainda, não seja aprovado no processo seletivo da IES, não exista vagas ou não ocorra a abertura de turma, e que nestas duas últimas condições não tenha ocorrido o remanejamento do benefício ora concedido para outro curso, devendo efetuar a solicitação do reembolso até 15 (quinze) dias após a comunicação da IES;
+            </p>
+            <p>
+                - O ALUNO BENEFICIADO declara conhecer e aceitar os termos e condições que regem o Regulamento e o Contrato de Bolsa de Estudos do programa CEBRACOOPE,
+                registrado no Cartório de Títulos e Documentos da Cidade de @Model.Customer.Address.City, @Model.Customer.Address.State, sob o número xxxxxxxxxxxxx,
+                tendo sido disponibilizado, quando da inscrição no site, uma cópia dos mesmos, obrigando-se neste ato, a cumprir todas as Cláusulas e condições ali
+                estipuladas, vigentes e exigíveis para todos os fins de direito.
+            </p>
             <div class="bottom">
                 <p>@(Model.College.Address != null ? Model.College.Address.City : "São Paulo"), @DateTime.Now.Day de @ias.Rebens.Enums.EnumHelper.GetEnumDescription((ias.Rebens.Enums.Months)DateTime.Now.Month) de @DateTime.Now.Year.</p>
                 <p class="signature">(I) ALUNO BENEFICIADO</p>
