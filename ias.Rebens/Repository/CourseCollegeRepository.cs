@@ -208,6 +208,8 @@ namespace ias.Rebens
                         update.Logo = college.Logo;
                         update.Active = college.Active;
                         update.Modified = DateTime.Now;
+                        update.LegalName = college.LegalName;
+                        update.Doc = college.Doc;
 
                         db.SaveChanges();
                         error = null;
