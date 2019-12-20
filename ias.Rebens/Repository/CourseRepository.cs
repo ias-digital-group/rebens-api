@@ -243,7 +243,7 @@ namespace ias.Rebens
 
         public ResultPage<CourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation,
             int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null,
-            List<string> courseBegin = null)
+            List<string> courseBegin = null, string state = null, string city = null)
         {
             ResultPage<CourseItem> ret;
             try
@@ -257,7 +257,9 @@ namespace ias.Rebens
                                     (modalities == null || modalities.Count == 0 || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Count == 0 || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
                                     (string.IsNullOrEmpty(word) || c.Title.Contains(word)) &&
-                                    (courseBegin == null || courseBegin.Any(cb => c.CourseBegin == cb))).OrderBy(c => c.Title);
+                                    (courseBegin == null || courseBegin.Any(cb => c.CourseBegin == cb)) &&
+                                    (string.IsNullOrEmpty(state) || c.CourseAddresses.Any(a => a.Address.State == state)) &&
+                                    (string.IsNullOrEmpty(city) || c.CourseAddresses.Any(a => a.Address.City == city))).OrderBy(c => c.Title);
                     
 
                     var total = tmpList.Count();
@@ -525,6 +527,60 @@ namespace ias.Rebens
             {
                 int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.ListCourseBegins", $"idOperation: {idOperation}", ex);
                 error = "Ocorreu um erro ao tentar listar os períodos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Tuple<string, string>> ListCities(int idOperation, out string error, string state = null)
+        {
+            List<Tuple<string, string>> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation && c.CourseAddresses.Any()).Select(c => c.Id);
+                    var list = db.Address.Where(a => a.CourseAddresses.Any(b => tmpList.Any(l => l == b.IdCourse)) && (string.IsNullOrEmpty(state) || a.State == state)).Select(a => a.City).Distinct();
+                    ret = new List<Tuple<string, string>>();
+                    foreach (var city in list)
+                    {
+                        ret.Add(new Tuple<string, string>(city, city));
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.ListCities", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os estados dos cursos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Tuple<string, string>> ListStates(int idOperation, out string error)
+        {
+            List<Tuple<string, string>> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation && c.CourseAddresses.Any()).Select(c => c.Id);
+                    var list = db.Address.Where(a => a.CourseAddresses.Any(b => tmpList.Any(l => l == b.IdCourse))).Select(a => a.State).Distinct();
+                    ret = new List<Tuple<string, string>>();
+                    foreach (var state in list)
+                    {
+                        ret.Add(new Tuple<string, string>(state, state));
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.ListStates", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os estados dos cursos. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;

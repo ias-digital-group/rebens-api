@@ -448,7 +448,8 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, decimal? latitude, decimal? longitude, int page, int pageItems, string word, string sort, string idBenefits, out string error)
+        public ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, decimal? latitude, decimal? longitude, int page, 
+                                    int pageItems, string word, string sort, string idBenefits, string state, string city, out string error)
         {
             ResultPage<Benefit> ret;
             try
@@ -497,6 +498,8 @@ namespace ias.Rebens
                                         && b.Active
                                         && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
                                         && (boundingBox == null || benefitIds.Any(bi => bi == b.Id))
+                                        && (string.IsNullOrEmpty(state) || b.BenefitAddresses.Any(a => a.Address.State == state))
+                                        && (string.IsNullOrEmpty(city) || b.BenefitAddresses.Any(a => a.Address.City == city))
                                         && !listIds.Any(i => i == b.Id)
                                     );
 
@@ -517,12 +520,6 @@ namespace ias.Rebens
                     }
 
                     var total = tmpList.Count();
-                        //db.Benefit.Count(b => !b.Deleted && !b.Partner.Deleted && ((!b.Exclusive && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)) || (b.Exclusive && b.IdOperation == idOperation))
-                        //            && (string.IsNullOrEmpty(word) || b.Title.Contains(word) || b.Name.Contains(word) || b.Call.Contains(word) || b.Partner.Name.Contains(word))
-                        //            && (string.IsNullOrEmpty(benefitTypes) || types.Contains(b.IdBenefitType))
-                        //            && b.Active
-                        //            && (!idCategory.HasValue || (idCategory.HasValue && b.BenefitCategories.Any(bc => bc.IdCategory == idCategory.Value || bc.Category.IdParent == idCategory.Value)))
-                        //            );
 
                     if (total < pageItems || total < (page * pageItems))
                         page = 0;
@@ -938,6 +935,60 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("BenefitRepository.ListForHomeBenefitPortal", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Tuple<string, string>> ListStates(int idOperation, out string error)
+        {
+            List<Tuple<string, string>> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Benefit.Where(b => !b.Deleted && !b.Partner.Deleted && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).Select(b => b.Id);
+                    var list = db.Address.Where(a => a.BenefitAddresses.Any(b => tmpList.Any(l => l == b.IdBenefit))).Select(a => a.State).Distinct();
+                    ret = new List<Tuple<string, string>>();
+                    foreach(var state in list)
+                    {
+                        ret.Add(new Tuple<string, string>(state, state));
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ListStates", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os estados dos benefício. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+        
+        public List<Tuple<string, string>> ListCities(int idOperation, out string error, string state = null)
+        {
+            List<Tuple<string, string>> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Benefit.Where(b => !b.Deleted && !b.Partner.Deleted && b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)).Select(b => b.Id);
+                    var list = db.Address.Where(a => a.BenefitAddresses.Any(b => tmpList.Any(l => l == b.IdBenefit)) && (string.IsNullOrEmpty(state) || a.State == state)).Select(a => a.City).Distinct();
+                    ret = new List<Tuple<string, string>>();
+                    foreach (var city in list)
+                    {
+                        ret.Add(new Tuple<string, string>(city, city));
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ListCities", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as cidades dos benefício. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;

@@ -12,7 +12,7 @@ namespace ias.Rebens
             bool? status = null, int? idCollege = null, string address = null, int[] graduationTypes = null, int[] modalities = null, int[] periods = null);
         ResultPage<CourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation,
             int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null,
-            List<string> courseBegin = null);
+            List<string> courseBegin = null, string state = null, string city = null);
         bool Delete(int id, out string error);
         bool Create(Course course, out string error);
         bool Update(Course course, out string error);
@@ -24,5 +24,8 @@ namespace ias.Rebens
         List<int> ListPeriods(int id, out string error);
         CourseItem ReadForPortal(int id, out string error);
         List<string> ListCourseBegins(int idOperation, out string error);
+
+        List<Tuple<string, string>> ListStates(int idOperation, out string error);
+        List<Tuple<string, string>> ListCities(int idOperation, out string error, string state = null);
     }
 }

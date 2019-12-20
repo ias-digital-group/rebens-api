@@ -422,6 +422,8 @@ namespace ias.Rebens.api.Controllers
         /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <param name="benefitIds">Lista dos benefícios que já foram exibidos</param>
+        /// <param name="state">estado em que o benefício é válido</param>
+        /// <param name="city">cidade em que o benefício é válido</param>
         /// <returns>Lista com os benefícios encontrados</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -433,7 +435,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListBenefits([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCategory = null, [FromQuery]string idBenefitType = null, 
                                 [FromQuery]decimal? latitude = null, [FromQuery]decimal? longitude = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, 
-                                [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]string benefitIds = "")
+                                [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]string benefitIds = "", [FromQuery]string state = "", [FromQuery]string city = "")
         {
             Guid operationGuid = Guid.Empty;
             Guid.TryParse(operationCode, out operationGuid);
@@ -464,7 +466,7 @@ namespace ias.Rebens.api.Controllers
             if (idOperation != 1 && page == 0 && !idCategory.HasValue && string.IsNullOrEmpty(idBenefitType) && !latitude.HasValue && !longitude.HasValue && string.IsNullOrEmpty(searchWord))
                 list = benefitRepo.ListForHomeBenefitPortal(idOperation, out error);
             else
-                list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, latitude, longitude, page, pageItems, searchWord, sort, benefitIds, out error);
+                list = benefitRepo.ListByOperation(idOperation, idCategory, idBenefitType, latitude, longitude, page, pageItems, searchWord, sort, benefitIds, state, city, out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -483,6 +485,108 @@ namespace ias.Rebens.api.Controllers
 
                 foreach (var benefit in list.Page) ret.Data.Add(new BenefitListItem(benefit));
 
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="operationCode">código da operação, não obrigatório (default=null)</param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("ListBenefitStates")]
+        [ProducesResponseType(typeof(JsonDataModel<List<FilterListItem>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListBenefitStates([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            string error;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            else
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+                
+            }
+
+            if (idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = benefitRepo.ListStates(idOperation, out error);
+            if (string.IsNullOrEmpty(error))
+            {
+                JsonDataModel<List<FilterListItem>> ret = new JsonDataModel<List<FilterListItem>>();
+                ret.Data = list.Select(l => new FilterListItem()
+                {
+                    Value = l.Item1,
+                    Text = l.Item2
+                }).ToList();
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="operationCode">código da operação, não obrigatório (default=null)</param>
+        /// <param name="state">Estado, não obrigatório (default=null)</param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("ListBenefitCities")]
+        [ProducesResponseType(typeof(JsonDataModel<List<FilterListItem>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListBenefitCities([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]string state = null)
+        {
+            int idOperation = 0;
+            string error;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            else
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+
+            }
+
+            if (idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = benefitRepo.ListCities(idOperation, out error, state);
+            if (string.IsNullOrEmpty(error))
+            {
+                JsonDataModel<List<FilterListItem>> ret = new JsonDataModel<List<FilterListItem>>();
+                ret.Data = list.Select(l => new FilterListItem()
+                            {
+                                Value = l.Item1,
+                                Text = l.Item2
+                            }).ToList();
+                
                 return Ok(ret);
             }
 
@@ -1462,6 +1566,8 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="state">Palavra à ser buscada</param>
+        /// <param name="city">Palavra à ser buscada</param>
         /// <returns>Lista com os cursos encontrados</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -1473,7 +1579,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCourses([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int? idCollege = null, [FromQuery]string graduationTypes = null, 
             [FromQuery]string modalities = null, [FromQuery]string periods = null, [FromQuery]string address = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, 
-            [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = null, [FromQuery]string courseBegin = null)
+            [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = null, [FromQuery]string courseBegin = null, [FromQuery]string state = "", [FromQuery]string city = "")
         {
             int idOperation = 0;
             string error = null;
@@ -1533,7 +1639,7 @@ namespace ias.Rebens.api.Controllers
 
             var list = courseRepo.ListForPortal(page: page, pageItems: pageItems, word: searchWord, sort: sort, idOperation: idOperation,
                 idCollege: idCollege, graduationTypes: listGraduationTypes, modalities: listModalities, address: address, periods: listPeriods, 
-                error: out error, courseBegin: listCourseBegin);
+                error: out error, courseBegin: listCourseBegin, state: state, city: city);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -1925,6 +2031,108 @@ namespace ias.Rebens.api.Controllers
                 };
                 foreach (var item in list)
                     ret.Data.Add(new CourseCollegeModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="operationCode">código da operação, não obrigatório (default=null)</param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("ListCourseStates")]
+        [ProducesResponseType(typeof(JsonDataModel<List<FilterListItem>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListCourseStates([FromHeader(Name = "x-operation-code")]string operationCode)
+        {
+            int idOperation = 0;
+            string error;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            else
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+
+            }
+
+            if (idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = courseRepo.ListStates(idOperation, out error);
+            if (string.IsNullOrEmpty(error))
+            {
+                JsonDataModel<List<FilterListItem>> ret = new JsonDataModel<List<FilterListItem>>();
+                ret.Data = list.Select(l => new FilterListItem()
+                {
+                    Value = l.Item1,
+                    Text = l.Item2
+                }).ToList();
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="operationCode">código da operação, não obrigatório (default=null)</param>
+        /// <param name="state">estado, não obrigatório (default=null)</param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("ListCourseCities")]
+        [ProducesResponseType(typeof(JsonDataModel<List<FilterListItem>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListCourseCities([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]string state = null)
+        {
+            int idOperation = 0;
+            string error;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            else
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+
+            }
+
+            if (idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = courseRepo.ListCities(idOperation, out error, state);
+            if (string.IsNullOrEmpty(error))
+            {
+                JsonDataModel<List<FilterListItem>> ret = new JsonDataModel<List<FilterListItem>>();
+                ret.Data = list.Select(l => new FilterListItem()
+                {
+                    Value = l.Item1,
+                    Text = l.Item2
+                }).ToList();
 
                 return Ok(ret);
             }
