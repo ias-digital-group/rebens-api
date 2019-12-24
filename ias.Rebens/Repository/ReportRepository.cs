@@ -229,7 +229,10 @@ namespace ias.Rebens
                                      select new { Title = g.Key, Total = g.Count() }).Take(10).ToList();
                     foreach (var i in tmpUsed)
                     {
-                        ret.BenefitUse.Labels.Add(i.Title);
+                        string tit = i.Title;
+                        if (tit.Length > 14)
+                            tit = tit.Substring(0, 11) + "...";
+                        ret.BenefitUse.Labels.Add(tit);
                         ret.BenefitUse.Data.Add(i.Total);
                     }
 

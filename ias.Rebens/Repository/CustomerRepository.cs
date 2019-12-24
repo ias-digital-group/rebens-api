@@ -229,7 +229,8 @@ namespace ias.Rebens
                         update.Surname = customer.Surname;
                         update.Phone = customer.Phone;
                         update.RG = customer.RG;
-                        update.Status = customer.Status;
+                        if(customer.Status != 0)
+                            update.Status = customer.Status;
                         update.Picture = customer.Picture;
 
                         if (customer.IdAddress.HasValue && customer.IdAddress.Value != 0)
