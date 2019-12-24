@@ -40,7 +40,7 @@ namespace ias.Rebens
 
         ResultPage<Benefit> ListByIntegrationType(int idIntegrationType, int page, int pageItems, string word, string sort, out string error);
 
-        ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, decimal? latitude, decimal? longitude, int page, int pageItems, string word, string sort, string idBenefits, out string error);
+        ResultPage<Benefit> ListByOperation(int idOperation, int? idCategory, string benefitTypes, decimal? latitude, decimal? longitude, int page, int pageItems, string word, string sort, string idBenefits, string state, string city, out string error);
 
         List<BenefitOperationPosition> ListPositions(out string error);
 
@@ -53,5 +53,8 @@ namespace ias.Rebens
         ResultPage<Benefit> ListForHomePortal(int idOperation, out string error);
 
         ResultPage<Benefit> ListForHomeBenefitPortal(int idOperation, out string error);
+
+        List<Tuple<string, string>> ListStates(int idOperation, out string error);
+        List<Tuple<string, string>> ListCities(int idOperation, out string error, string state = null);
     }
 }

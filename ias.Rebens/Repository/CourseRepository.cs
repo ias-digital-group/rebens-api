@@ -234,7 +234,7 @@ namespace ias.Rebens
 
         public ResultPage<CourseItem> ListForPortal(int page, int pageItems, string word, string sort, out string error, int idOperation,
             int? idCollege = null, string address = null, List<int> graduationTypes = null, List<int> modalities = null, List<int> periods = null,
-            List<string> courseBegin = null)
+            List<string> courseBegin = null, string state = null, string city = null)
         {
             ResultPage<CourseItem> ret;
             try
@@ -243,12 +243,14 @@ namespace ias.Rebens
                 {
                     var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation &&
                                     (!idCollege.HasValue || c.IdCollege == idCollege) &&
-                                    (string.IsNullOrEmpty(address) || c.CourseAddresses.Any(a => a.Address.Street.Contains(address) || a.Address.City.Contains(address))) &&
+                                    (string.IsNullOrEmpty(address) || c.College.CollegeAddresses.Any(a => a.Address.Street.Contains(address) || a.Address.City.Contains(address))) &&
                                     (graduationTypes == null || graduationTypes.Count == 0 || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Count == 0 || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Count == 0 || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
                                     (string.IsNullOrEmpty(word) || c.Title.Contains(word)) &&
-                                    (courseBegin == null || courseBegin.Any(cb => c.CourseBegin == cb))).OrderBy(c => c.Title);
+                                    (courseBegin == null || courseBegin.Any(cb => c.CourseBegin == cb)) &&
+                                    (string.IsNullOrEmpty(state) || c.College.CollegeAddresses.Any(a => a.Address.State == state)) &&
+                                    (string.IsNullOrEmpty(city) || c.College.CollegeAddresses.Any(a => a.Address.City == city))).OrderBy(c => c.Title);
                     
 
                     var total = tmpList.Count();
@@ -526,6 +528,61 @@ namespace ias.Rebens
             {
                 int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.ListCourseBegins", $"idOperation: {idOperation}", ex);
                 error = "Ocorreu um erro ao tentar listar os períodos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Tuple<string, string>> ListCities(int idOperation, out string error, string state = null)
+        {
+            List<Tuple<string, string>> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation && c.College.CollegeAddresses.Any()).Select(c => c.IdCollege);
+                    var list = db.Address.Where(a => a.CourseCollegeAddresses.Any(b => tmpList.Any(l => l == b.IdCollege)) && (string.IsNullOrEmpty(state) || a.State == state))
+                                    .Select(a => a.City).Distinct();
+                    ret = new List<Tuple<string, string>>();
+                    foreach (var city in list)
+                    {
+                        ret.Add(new Tuple<string, string>(city, city));
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.ListCities", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os estados dos cursos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Tuple<string, string>> ListStates(int idOperation, out string error)
+        {
+            List<Tuple<string, string>> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation && c.College.CollegeAddresses.Any()).Select(c => c.IdCollege);
+                    var list = db.Address.Where(a => a.CourseCollegeAddresses.Any(b => tmpList.Any(l => l == b.IdCollege))).Select(a => a.State).Distinct();
+                    ret = new List<Tuple<string, string>>();
+                    foreach (var state in list)
+                    {
+                        ret.Add(new Tuple<string, string>(state, state));
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CourseRepository.ListStates", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os estados dos cursos. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
