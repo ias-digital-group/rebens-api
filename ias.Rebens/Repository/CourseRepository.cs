@@ -252,14 +252,14 @@ namespace ias.Rebens
                 {
                     var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation &&
                                     (!idCollege.HasValue || c.IdCollege == idCollege) &&
-                                    (string.IsNullOrEmpty(address) || c.CourseAddresses.Any(a => a.Address.Street.Contains(address) || a.Address.City.Contains(address))) &&
+                                    (string.IsNullOrEmpty(address) || c.College.CollegeAddresses.Any(a => a.Address.Street.Contains(address) || a.Address.City.Contains(address))) &&
                                     (graduationTypes == null || graduationTypes.Count == 0 || graduationTypes.Any(t => t == c.IdGraduationType)) &&
                                     (modalities == null || modalities.Count == 0 || modalities.Any(t => t == c.IdModality)) &&
                                     (periods == null || periods.Count == 0 || periods.Any(t => c.CoursePeriods.Any(p => p.IdPeriod == t))) &&
                                     (string.IsNullOrEmpty(word) || c.Title.Contains(word)) &&
                                     (courseBegin == null || courseBegin.Any(cb => c.CourseBegin == cb)) &&
-                                    (string.IsNullOrEmpty(state) || c.CourseAddresses.Any(a => a.Address.State == state)) &&
-                                    (string.IsNullOrEmpty(city) || c.CourseAddresses.Any(a => a.Address.City == city))).OrderBy(c => c.Title);
+                                    (string.IsNullOrEmpty(state) || c.College.CollegeAddresses.Any(a => a.Address.State == state)) &&
+                                    (string.IsNullOrEmpty(city) || c.College.CollegeAddresses.Any(a => a.Address.City == city))).OrderBy(c => c.Title);
                     
 
                     var total = tmpList.Count();
@@ -539,8 +539,9 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation && c.CourseAddresses.Any()).Select(c => c.Id);
-                    var list = db.Address.Where(a => a.CourseAddresses.Any(b => tmpList.Any(l => l == b.IdCourse)) && (string.IsNullOrEmpty(state) || a.State == state)).Select(a => a.City).Distinct();
+                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation && c.College.CollegeAddresses.Any()).Select(c => c.IdCollege);
+                    var list = db.Address.Where(a => a.CourseCollegeAddresses.Any(b => tmpList.Any(l => l == b.IdCollege)) && (string.IsNullOrEmpty(state) || a.State == state))
+                                    .Select(a => a.City).Distinct();
                     ret = new List<Tuple<string, string>>();
                     foreach (var city in list)
                     {
@@ -566,8 +567,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation && c.CourseAddresses.Any()).Select(c => c.Id);
-                    var list = db.Address.Where(a => a.CourseAddresses.Any(b => tmpList.Any(l => l == b.IdCourse))).Select(a => a.State).Distinct();
+                    var tmpList = db.Course.Where(c => !c.Deleted && c.Active && c.IdOperation == idOperation && c.College.CollegeAddresses.Any()).Select(c => c.IdCollege);
+                    var list = db.Address.Where(a => a.CourseCollegeAddresses.Any(b => tmpList.Any(l => l == b.IdCollege))).Select(a => a.State).Distinct();
                     ret = new List<Tuple<string, string>>();
                     foreach (var state in list)
                     {
