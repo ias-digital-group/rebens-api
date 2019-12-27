@@ -61,7 +61,7 @@ namespace ias.Rebens.api.Models
             this.Id = staticText.Id;
             this.Name = staticText.Title;
             this.Page = staticText.Url;
-            this.Data = JObject.Parse(staticText.Html);
+            this.Data = staticText.Html;
             this.IdOperation = staticText.IdOperation.HasValue ? staticText.IdOperation.Value : 0;
             this.Active = staticText.Active;
             this.IdStaticTextType = staticText.IdStaticTextType;
