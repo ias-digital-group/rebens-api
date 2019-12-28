@@ -1,14 +1,1 @@
-﻿ALTER TABLE CourseCollege ADD LegalName NVARCHAR(500) NULL
-GO
-
-ALTER TABLE CourseCollege ADD Doc NVARCHAR(50) NULL
-GO
-
-/*
-ROLLBACK
-ALTER TABLE CourseCollege DROP COLUMN LegalName
-GO
-
-ALTER TABLE CourseCollege DROP COLUMN Doc
-GO
-*/
+﻿
