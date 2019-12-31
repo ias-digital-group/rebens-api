@@ -16,6 +16,7 @@ namespace ias.Rebens.api.Controllers
     {
         public IMoipNotificationRepository moipNotificationRepo;
         public ILogErrorRepository logErrorRepo;
+        private Constant constant;
 
         /// <summary>
         /// Construtor
@@ -26,6 +27,7 @@ namespace ias.Rebens.api.Controllers
         {
             this.moipNotificationRepo = moipNotificationRepository;
             this.logErrorRepo = logErrorRepository;
+            this.constant = new Constant();
         }
 
         /// <summary>
@@ -81,7 +83,7 @@ namespace ias.Rebens.api.Controllers
                 logErrorRepo.Create(new LogError() { Reference = "Controller.MoipNotification.Post", Complement = $"authorization:{authorization}, event:{notification.Event}", Message = notification.Resource.ToString(), Created = DateTime.Now, StackTrace = "Env:" + notification.Env });
             }
             catch { }
-            if (authorization == Constant.MoipNotificationAuthorization)
+            if (authorization == constant.MoipNotificationAuthorization)
             {
                 if (notification != null && notification.Resource != null)
                 {

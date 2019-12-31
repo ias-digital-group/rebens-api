@@ -21,6 +21,7 @@ namespace ias.Rebens.api.Controllers
     public class AccountController : ControllerBase
     {
         private IAdminUserRepository repo;
+        private Constant constant;
 
         /// <summary>
         /// Constructor
@@ -29,6 +30,7 @@ namespace ias.Rebens.api.Controllers
         public AccountController(IAdminUserRepository adminUserRepository)
         {
             this.repo = adminUserRepository;
+            this.constant = new Constant();
         }
 
         /// <summary>
@@ -243,7 +245,7 @@ namespace ias.Rebens.api.Controllers
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(user.Email));
                 string body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {user.Name}.</p> <br /><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão <b>“Alterar Senha”</b>  para cadastrar uma nova senha.</p>";
-                body += $"<br /><br /><p style=\"text-align:center;\"><a href=\"{Constant.URL}#/validate?c={code}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ALTERAR SENHA</a></p>";
+                body += $"<br /><br /><p style=\"text-align:center;\"><a href=\"{constant.AppSettings.App.URL}#/validate?c={code}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ALTERAR SENHA</a></p>";
 
                 //body += $"<br /><p><a href='{Constant.URL}#/validate?c={code}'>{Constant.URL}#/validate?c={code}</a></p>";
                 var listDestinataries = new Dictionary<string, string>() { { user.Email, user.Name } };

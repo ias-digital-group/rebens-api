@@ -516,7 +516,7 @@ namespace ias.Rebens.api.Models
         /// </summary>
         /// <param name="course">objeto curso</param>
         /// <param name="idCustomer">id do cliente para geração do voucher</param>
-        public CourseItemModel(CourseItem course, int? idCustomer = null)
+        public CourseItemModel(string URL, CourseItem course, int? idCustomer = null)
         {
             if (course != null)
             {
@@ -551,7 +551,7 @@ namespace ias.Rebens.api.Models
                 this.HelpStudentLink = course.HelpStudentLink;
 
                 if (idCustomer.HasValue)
-                    this.Link = Constant.URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+                    this.Link = URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
             }
         }
 

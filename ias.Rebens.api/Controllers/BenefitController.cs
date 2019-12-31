@@ -20,6 +20,7 @@ namespace ias.Rebens.api.Controllers
         private IStaticTextRepository staticTextRepo;
         private ICategoryRepository categoryRepo;
         private IOperationRepository operationRepo;
+        private Constant constant;
 
         /// <summary>
         /// Construtor
@@ -37,6 +38,7 @@ namespace ias.Rebens.api.Controllers
             this.categoryRepo = categoryRepository;
             this.operationRepo = operationRepository;
             this.staticTextRepo = staticTextRepository;
+            this.constant = new Constant();
         }
 
         /// <summary>
@@ -97,7 +99,7 @@ namespace ias.Rebens.api.Controllers
                     Data = new List<BenefitModel>()
                 };
                 foreach (var benefit in list.Page)
-                    ret.Data.Add(new BenefitModel(benefit));
+                    ret.Data.Add(new BenefitModel(this.constant.URL, benefit));
 
                 return Ok(ret);
             }
@@ -125,7 +127,7 @@ namespace ias.Rebens.api.Controllers
             {
                 if (benefit == null || benefit.Id == 0)
                     return NoContent();
-                return Ok(new JsonDataModel<BenefitModel>() { Data = new BenefitModel(benefit) });
+                return Ok(new JsonDataModel<BenefitModel>() { Data = new BenefitModel(this.constant.URL, benefit) });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

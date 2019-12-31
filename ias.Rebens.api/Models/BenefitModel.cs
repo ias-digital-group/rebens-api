@@ -158,7 +158,7 @@ namespace ias.Rebens.api.Models
         /// </summary>
         /// <param name="benefit"></param>
         /// <param name="idCustomer"></param>
-        public BenefitModel(Benefit benefit, int? idCustomer = null)
+        public BenefitModel(string URL, Benefit benefit, int? idCustomer = null)
         {
             this.Id = benefit.Id;
             this.Name = benefit.Name;
@@ -184,7 +184,7 @@ namespace ias.Rebens.api.Models
             this.HomeBenefitHighlight = benefit.HomeBenefitHighlight;
 
             if (this.IdBenefitType == (int)Enums.BenefitType.OffLine && idCustomer.HasValue)
-                this.Link = Constant.URL + "Voucher/?tp=b&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+                this.Link = URL + "Voucher/?tp=b&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
             if (this.IdBenefitType == (int)Enums.BenefitType.Cashback && idCustomer.HasValue)
                 this.Link = benefit.Link + (benefit.Link.IndexOf('?') > 0 ? "&" : "?") + "zpar0=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
 

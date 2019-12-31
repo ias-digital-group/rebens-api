@@ -106,10 +106,13 @@ namespace ias.Rebens.api.Controllers
         {
             var model = new JsonModel();
 
-            if (repo.Update(address.GetEntity(), out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Endereço atualizado com sucesso!" });
-            
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            if (address != null)
+            {
+                if (repo.Update(address.GetEntity(), out string error))
+                    return Ok(new JsonModel() { Status = "ok", Message = "Endereço atualizado com sucesso!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Endereço inválido!" });
         }
 
         /// <summary>
@@ -124,12 +127,16 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] AddressModel address)
         {
-            var addr = address.GetEntity();
+            if (address != null)
+            {
+                var addr = address.GetEntity();
 
-            if (repo.Create(addr, out string error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Endereço criado com sucesso!", Id = addr.Id });
+                if (repo.Create(addr, out string error))
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Endereço criado com sucesso!", Id = addr.Id });
 
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Endereço Inválido" });
         }
 
         /// <summary>

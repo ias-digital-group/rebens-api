@@ -277,12 +277,14 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var dt = DateTime.UtcNow.AddMinutes(-15);
-                    var list = db.Order
+                    var list = db.Order.Include("OrderItems")
                         .Where(o => (o.Status == "CREATED" || o.Status == "WAITING")
                                 && o.WirecardPayments.Any(p => p.Status != "CREATED" && p.Status != "WAITING" && p.Status != "IN_ANALYSIS")
                                 && o.Modified < dt)
                         .OrderBy(o => o.Modified).Take(10);
                     var wcHelper = new Integration.WirecardHelper();
+                    var staticText = db.StaticText.Where(t => t.IdOperation == 1 && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
+                    var operation = db.Operation.Single(o => o.Id == 1);
                     foreach (var item in list)
                     {
                         if (wcHelper.CheckOrderStatus(item))
@@ -290,31 +292,34 @@ namespace ias.Rebens
                             if(item.Status == "PAID")
                             {
                                 var customer = db.Customer.Single(c => c.Id == item.IdCustomer);
-                                string body = $"<p>Olá {customer.Name}, </p><br />";
-                                body += $"<h2>O seu pedido #{item.DispId} foi aprovado.</h2><br /><br />";
-                                body += $"<p><a href='https://admin.rebens.com.br/voucher/course/?code={item.WirecardId}'>Clique aqui</a> para gerar o seu voucher. </p>";
-
-                                var staticText = db.StaticText.Where(t => t.IdOperation == item.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
-                                                    .OrderByDescending(t => t.Modified).FirstOrDefault();
-                                string message = staticText.Html.Replace("###BODY###", body);
-
-                                if(!Helper.EmailHelper.SendDefaultEmail(customer.Email, customer.Name, item.IdOperation, $"UNICANPI EDUCAÇÃO - Pedido #{item.DispId}", message, out string error))
+                                if (Helper.EmailHelper.SendCourseVoucher(staticText, operation, customer, item, out string error))
                                 {
                                     var logError = new LogErrorRepository(this._connectionString);
                                     logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");
                                 }
-                               
+                                //string body = $"<p>Olá {customer.Name}, </p><br />";
+                                //body += $"<h2>O seu pedido #{item.DispId} foi aprovado.</h2><br /><br />";
+                                //body += $"<p><a href='https://admin.rebens.com.br/voucher/course/?code={item.WirecardId}'>Clique aqui</a> para gerar o seu voucher. </p>";
+
+                                //var staticText = db.StaticText.Where(t => t.IdOperation == item.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
+                                //                    .OrderByDescending(t => t.Modified).FirstOrDefault();
+                                //string message = staticText.Html.Replace("###BODY###", body);
+
+                                //if(!Helper.EmailHelper.SendDefaultEmail(customer.Email, customer.Name, item.IdOperation, $"UNICANPI EDUCAÇÃO - Pedido #{item.DispId}", message, out string error))
+                                //{
+                                //    var logError = new LogErrorRepository(this._connectionString);
+                                //    logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");
+                                //}
                             }
-                            db.SaveChanges();
                         }
-                            
                     }
+                    db.SaveChanges();
                 }
             }
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                logError.Create("WirecardPaymentRepository.ProcessPayments", ex.Message, "", ex.StackTrace);
+                logError.Create("OrderRepository.ProcessOrder", ex.Message, "", ex.StackTrace);
             }
         }
     }

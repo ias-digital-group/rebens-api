@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace ias.Rebens
 {
@@ -132,9 +134,18 @@ namespace ias.Rebens
                         .Where(p => (p.Status == "CREATED" || p.Status == "WAITING" || p.Status == "IN_ANALYSIS") && p.Modified < dt)
                         .OrderBy(p => p.Modified).Take(10);
                     var wcHelper = new Integration.WirecardHelper();
-                    foreach(var item in list)
+                    var staticText = db.StaticText.Where(t => t.IdOperation == 1 && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
+                    var operation = db.Operation.Single(o => o.Id == 1);
+                    foreach (var item in list)
                     {
                         wcHelper.CheckPaymentStatus(item);
+                        //if(item.Status == "AUTHORIZED")
+                        //{
+                        //    var order = db.Order.Include("OrderItems").Single(o => o.Id == item.IdOrder);
+                        //    var customer = db.Customer.Single(c => c.Id == order.IdCustomer);
+                        //    Helper.EmailHelper.SendCourseVoucher(staticText, operation, customer, order, out _);
+                        //}
+                        //Thread.Sleep(150);
                     }
 
                     db.SaveChanges();

@@ -48,6 +48,7 @@ namespace ias.Rebens.api.Controllers
         private IDrawRepository drawRepo;
         private IFreeCourseRepository freeCourseRepo;
         private IPartnerRepository partnerRepo;
+        private Constant constant;
 
         /// <summary>
         /// 
@@ -116,6 +117,7 @@ namespace ias.Rebens.api.Controllers
             this.drawRepo = drawRepository;
             this.freeCourseRepo = freeCourseRepository;
             this.partnerRepo = partnerRepository;
+            this.constant = new Constant();
         }
 
         /// <summary>
@@ -713,7 +715,7 @@ namespace ias.Rebens.api.Controllers
                 if (benefit == null || benefit.Id == 0)
                     return NoContent();
 
-                return Ok(new JsonDataModel<BenefitModel>() { Data = new BenefitModel(benefit, idCustomer) });
+                return Ok(new JsonDataModel<BenefitModel>() { Data = new BenefitModel(this.constant.URL, benefit, idCustomer) });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -1604,7 +1606,7 @@ namespace ias.Rebens.api.Controllers
                     string body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {customer.Name}.</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Obrigado pelo cadastro!</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Enviamos sua solicitação para o RH validar seus dados e confirmar seu cadastro.</p>";
                     Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, out error);
 
-                    body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá,</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Recebemos a solicitação de cadastro para aprovação, acesse o sistema para avaliar a solicitação.</p><br /><p style=\"text-align:center;\"><a href=\"{Constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ACESSAR SISTEMA</a></p>";
+                    body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá,</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Recebemos a solicitação de cadastro para aprovação, acesse o sistema para avaliar a solicitação.</p><br /><p style=\"text-align:center;\"><a href=\"{constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ACESSAR SISTEMA</a></p>";
                     var listDestinataries = operationPartnerRepo.ListDestinataries(customer.IdOperationPartner, out error);
                     Helper.EmailHelper.SendAdminEmail(listDestinataries, $"{operation.Title} - Novo cadastro de parceiro", body, out error);
 
@@ -1723,7 +1725,7 @@ namespace ias.Rebens.api.Controllers
                     Data = new List<CourseItemModel>()
                 };
                 foreach (var course in list.Page)
-                    ret.Data.Add(new CourseItemModel(course));
+                    ret.Data.Add(new CourseItemModel(this.constant.URL, course));
 
                 return Ok(ret);
             }
@@ -1786,7 +1788,7 @@ namespace ias.Rebens.api.Controllers
                 if(idCustomer > 0)
                     courseViewRepo.SaveView(id, idCustomer, out string viewError);
 
-                var data = new CourseItemModel(course, idCustomer);
+                var data = new CourseItemModel(this.constant.URL, course, idCustomer);
                 var faqs = staticTextRepo.Read(course.IdFaq, out _);
                 if(faqs != null)
                     data.Faqs = faqs.Html;

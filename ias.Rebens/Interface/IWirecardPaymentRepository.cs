@@ -9,5 +9,7 @@ namespace ias.Rebens
         bool Create(WirecardPayment wirecardPayment, out string error);
         bool Update(WirecardPayment wirecardPayment, out string error);
         WirecardPayment Read(string id, out string error);
+        bool HasPaymentToProcess();
+        void ProcessPayments();
     }
 }

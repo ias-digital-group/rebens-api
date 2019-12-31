@@ -19,6 +19,7 @@ namespace ias.Rebens.api.Controllers
         private IContactRepository contactRepo;
         private IBenefitRepository benefitRepo;
         private IStaticTextRepository staticTextRepo;
+        private Constant constant;
 
         /// <summary>
         /// Construtor
@@ -35,6 +36,7 @@ namespace ias.Rebens.api.Controllers
             this.contactRepo = contactRepository;
             this.benefitRepo = benefitRepository;
             this.staticTextRepo = staticTextRepository;
+            this.constant = new Constant();
         }
 
         /// <summary>
@@ -445,7 +447,7 @@ namespace ias.Rebens.api.Controllers
                 ret.TotalPages = list.TotalPages;
                 ret.Data = new List<BenefitModel>();
                 foreach (var benefit in list.Page)
-                    ret.Data.Add(new BenefitModel(benefit));
+                    ret.Data.Add(new BenefitModel(this.constant.URL, benefit));
 
                 return Ok(ret);
             }
