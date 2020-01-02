@@ -42,8 +42,16 @@
             <p>São partes neste instrumento particular de contrato:</p>
             <h2>1. INSTITUICAO DE ENSINO CONCEDENTE IES</h2>
             <p>
-                @Model.College.LegalName, estabelecida na cidade de @Model.College.Address.City,
-                Estado de/do @Model.College.Address.State, na @Model.College.Address.Street, @Model.College.Address.Number, @Model.College.Address.Neighborhood, Cep: @Model.College.Address.Zipcode, CNPJ @Model.College.Doc,
+                @Model.College.LegalName, 
+                @if(Model.College.Address != null)
+                {
+                    <text>
+                    estabelecida na cidade de @Model.College.Address.City,
+                    Estado de/do @Model.College.Address.State, na @Model.College.Address.Street, @Model.College.Address.Number, @Model.College.Address.Neighborhood, Cep: @Model.College.Address.Zipcode, 
+                    </text>
+                }
+                
+                CNPJ @Model.College.Doc,
                 doravante simplesmente denominada <b>IES</b>
             </p>
             <h2>2. ALUNO BENEFICIADO</h2>

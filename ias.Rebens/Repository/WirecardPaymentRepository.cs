@@ -139,13 +139,6 @@ namespace ias.Rebens
                     foreach (var item in list)
                     {
                         wcHelper.CheckPaymentStatus(item);
-                        //if(item.Status == "AUTHORIZED")
-                        //{
-                        //    var order = db.Order.Include("OrderItems").Single(o => o.Id == item.IdOrder);
-                        //    var customer = db.Customer.Single(c => c.Id == order.IdCustomer);
-                        //    Helper.EmailHelper.SendCourseVoucher(staticText, operation, customer, order, out _);
-                        //}
-                        //Thread.Sleep(150);
                     }
 
                     db.SaveChanges();

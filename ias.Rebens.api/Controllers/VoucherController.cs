@@ -128,6 +128,7 @@ namespace ias.Rebens.api.Controllers
                         model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);
                         model.College = courseCollegeRepo.Read(model.Course.IdCollege, out _);
                         return new ViewAsPdf("Course", "voucher.pdf", model);
+                        //return View("Course", model);
                     }
                 }
                 catch { }

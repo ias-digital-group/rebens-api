@@ -284,7 +284,6 @@ namespace ias.Rebens
                         .OrderBy(o => o.Modified).Take(10);
                     var wcHelper = new Integration.WirecardHelper();
                     var staticText = db.StaticText.Where(t => t.IdOperation == 1 && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
-                    var operation = db.Operation.Single(o => o.Id == 1);
                     foreach (var item in list)
                     {
                         if (wcHelper.CheckOrderStatus(item))
@@ -292,7 +291,7 @@ namespace ias.Rebens
                             if(item.Status == "PAID")
                             {
                                 var customer = db.Customer.Single(c => c.Id == item.IdCustomer);
-                                if (Helper.EmailHelper.SendCourseVoucher(staticText, operation, customer, item, out string error))
+                                if (Helper.EmailHelper.SendCourseVoucher(staticText, customer, item, out string error))
                                 {
                                     var logError = new LogErrorRepository(this._connectionString);
                                     logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");

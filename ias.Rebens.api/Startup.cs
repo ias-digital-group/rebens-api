@@ -198,6 +198,7 @@ namespace ias.Rebens.api
             // MVC
             app.UseMvc(routes =>
             {
+                routes.MapRoute("CourseVoucher", "Voucher/Course/{code}", defaults: new { controller = "Voucher", action = "Course" } );
                 routes.MapRoute("Voucher", "Voucher/{code}", defaults: new { controller = "Voucher", action = "Index" } );
                 routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });

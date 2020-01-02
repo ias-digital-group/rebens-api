@@ -77,19 +77,19 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendCourseVoucher(StaticText staticText, Operation operation, Customer customer, Order order, out string error)
+        public static bool SendCourseVoucher(StaticText staticText, Customer customer, Order order, out string error)
         {
             error = null;
             if (staticText != null)
             {
                 var sendingBlue = new Integration.SendinBlueHelper();
-                string domain = (string.IsNullOrEmpty(operation.Domain) ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                 string items = "";
                 foreach (var item in order.OrderItems)
                     items += item.Name;
+                var constant = new Constant();
                 string msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {customer.Name}<br /><br />O pagamento do seu curso {items}</p>";
-                msg += $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão abaixo para imprimir seu voucher</p><br /><br />";
-                msg += $"<p style='text-align:center;'><a href='http://{domain}/Voucher/Course/{order.WirecardId}' target='_blank' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;font-size: 14px;padding: 15px 50px;font-family:verdana, arial, Helvetica; color: #ffffff;background-color:#427147;border-radius:50px;'>IMPRIMIR VOUCHER</a></p>";
+                msg += $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão abaixo para baixar a sua carta de aprovação de bolsa de estudos</p><br /><br />";
+                msg += $"<p style='text-align:center;'><a href='{constant.URL}Voucher/Course/{order.WirecardId}' target='_blank' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;font-size: 14px;padding: 15px 50px;font-family:verdana, arial, Helvetica; color: #ffffff;background-color:#427147;border-radius:50px;'>BAIXAR</a></p>";
                 
                 string body = staticText.Html.Replace("###BODY###", msg);
                 var listDestinataries = new Dictionary<string, string> { { customer.Email, customer.Name } };
