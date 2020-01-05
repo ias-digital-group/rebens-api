@@ -430,5 +430,55 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool Duplicate(int id, out int newId, out string error)
+        {
+            bool ret = false;
+            newId = 0;
+            try
+            {
+                FreeCourse course;
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    course = db.FreeCourse.SingleOrDefault(c => c.Id == id);
+                }
+                if (course != null)
+                {
+                    using (var db = new RebensContext(this._connectionString))
+                    {
+                        course.Id = 0;
+                        course.Name += " - CÓPIA";
+                        course.Active = false;
+                        course.Created = course.Modified = DateTime.UtcNow;
+                        db.FreeCourse.Add(course);
+                        db.SaveChanges();
+
+                        newId = course.Id;
+
+                        var categories = db.FreeCourseCategory.Where(c => c.IdFreeCourse == id);
+                        foreach (var cat in categories)
+                        {
+                            db.FreeCourseCategory.Add(new FreeCourseCategory()
+                            {
+                                IdCategory = cat.IdCategory,
+                                IdFreeCourse = newId
+                            });
+                        }
+
+                        db.SaveChanges();
+                        error = null;
+                        ret = true;
+                    }
+                }
+                else
+                    error = "Curso não encontrado!";
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "FreeCourseRepository.Duplicate", "", ex);
+                error = "Ocorreu um erro ao tentar duplicar o curso. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

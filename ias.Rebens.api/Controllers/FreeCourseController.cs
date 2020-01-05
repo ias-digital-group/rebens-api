@@ -323,5 +323,27 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+
+        /// <summary>
+        /// Duplica um Curso Livre
+        /// </summary>
+        /// <param name="id">id do curso livre</param>
+        /// <returns>JsonModel</returns>
+        /// <response code="200"></response>
+        /// <response code="204"></response>
+        /// <response code="400"></response>
+        [HttpPost("Duplicate/{id}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Duplicate(int id)
+        {
+            if (repo.Duplicate(id, out int newId, out string error))
+            {
+                return Ok(new JsonModel() { Status = "ok", Message = $"{newId}" });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
     }
 }

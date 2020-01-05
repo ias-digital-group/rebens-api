@@ -1023,5 +1023,98 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool Duplicate(int id, out int newId, out string error)
+        {
+            bool ret = false;
+            newId = 0;
+            try
+            {
+                Benefit benefit;
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    benefit = db.Benefit.SingleOrDefault(c => c.Id == id);
+                }
+
+                if (benefit != null)
+                {
+                    using (var db = new RebensContext(this._connectionString))
+                    {
+                        benefit.Id = 0;
+                        benefit.Name += " - CÓPIA";
+                        benefit.Active = false;
+                        benefit.Created = benefit.Modified = DateTime.UtcNow;
+                        db.Benefit.Add(benefit);
+                        db.SaveChanges();
+
+                        newId = benefit.Id;
+
+                        var addrs = db.BenefitAddress.Where(c => c.IdBenefit == id);
+                        foreach (var addr in addrs)
+                        {
+                            db.BenefitAddress.Add(new BenefitAddress()
+                            {
+                                IdAddress = addr.IdAddress,
+                                IdBenefit = newId
+                            });
+                        }
+
+                        var categories = db.BenefitCategory.Where(c => c.IdBenefit == id);
+                        foreach (var category in categories)
+                        {
+                            db.BenefitCategory.Add(new BenefitCategory()
+                            {
+                                IdCategory = category.IdCategory,
+                                IdBenefit = newId
+                            });
+                        }
+
+                        var operations = db.BenefitOperation.Where(c => c.IdBenefit == id);
+                        foreach (var operation in operations)
+                        {
+                            db.BenefitOperation.Add(new BenefitOperation()
+                            {
+                                IdOperation = operation.IdOperation,
+                                IdBenefit = newId,
+                                IdPosition = operation.IdPosition,
+                                Created = DateTime.UtcNow,
+                                Modified = DateTime.UtcNow
+                            });
+                        }
+
+                        var texts = db.StaticText.Where(c => c.IdBenefit == id);
+                        foreach (var text in texts)
+                        {
+                            db.StaticText.Add(new StaticText()
+                            {
+                                IdOperation = text.IdOperation,
+                                IdBenefit = newId,
+                                Title = text.Title,
+                                Url = text.Url,
+                                Html = text.Html,
+                                Style = text.Style,
+                                Order = text.Order,
+                                IdStaticTextType = text.IdStaticTextType,
+                                Active = text.Active,
+                                Created = DateTime.UtcNow,
+                                Modified = DateTime.UtcNow
+                            });
+                        }
+
+                        db.SaveChanges();
+                        error = null;
+                        ret = true;
+                    }
+                }
+                else
+                    error = "Curso não encontrado!";
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.Duplicate", "", ex);
+                error = "Ocorreu um erro ao tentar duplicar o curso. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

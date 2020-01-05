@@ -20,5 +20,7 @@ namespace ias.Rebens
         bool SaveCategories(int idFreeCourse, string categoryIds, out string error);
 
         bool ChangeActive(int idFreeCourse, bool active, out string error);
+
+        bool Duplicate(int id, out int newId, out string error);
     }
 }

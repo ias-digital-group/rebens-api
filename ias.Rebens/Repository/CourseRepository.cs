@@ -616,5 +616,66 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool Duplicate(int id, out int newId, out string error)
+        {
+            bool ret = false;
+            newId = 0;
+            try
+            {
+                Course course;
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    course = db.Course.SingleOrDefault(c => c.Id == id);
+                }
+
+                if (course != null)
+                {
+                    using (var db = new RebensContext(this._connectionString))
+                    {
+                        course.Id = 0;
+                        course.Name += " - CÓPIA";
+                        course.Active = false;
+                        course.Created = course.Modified = DateTime.UtcNow;
+                        db.Course.Add(course);
+                        db.SaveChanges();
+
+                        newId = course.Id;
+
+                        var addrs = db.CourseAddress.Where(c => c.IdCourse == id);
+                        foreach (var addr in addrs)
+                        {
+                            db.CourseAddress.Add(new CourseAddress()
+                            {
+                                IdAddress = addr.IdAddress,
+                                IdCourse = newId
+                            });
+                        }
+
+                        var periods = db.CourseCoursePeriod.Where(c => c.IdCourse == id);
+                        foreach (var period in periods)
+                        {
+                            db.CourseCoursePeriod.Add(new CourseCoursePeriod()
+                            {
+                                IdPeriod = period.IdPeriod,
+                                IdCourse = newId
+                            });
+                        }
+
+                        db.SaveChanges();
+                        error = null;
+                        ret = true;
+                    }
+                }
+                else
+                    error = "Curso não encontrado!";
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.Duplicate", "", ex);
+                error = "Ocorreu um erro ao tentar duplicar o curso. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }
