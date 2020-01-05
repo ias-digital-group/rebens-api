@@ -27,5 +27,7 @@ namespace ias.Rebens
 
         List<Tuple<string, string>> ListStates(int idOperation, out string error);
         List<Tuple<string, string>> ListCities(int idOperation, out string error, string state = null);
+
+        bool ChangeActive(int idCourse, bool active, out string error);
     }
 }

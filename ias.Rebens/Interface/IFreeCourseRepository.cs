@@ -18,5 +18,7 @@ namespace ias.Rebens
         bool DeleteCategory(int idFreeCourse, int idCategory, out string error);
         ResultPage<FreeCourse> ListByCategory(int idCategory, int page, int pageItems, string word, string sort, out string error);
         bool SaveCategories(int idFreeCourse, string categoryIds, out string error);
+
+        bool ChangeActive(int idFreeCourse, bool active, out string error);
     }
 }

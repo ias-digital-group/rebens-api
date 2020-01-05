@@ -990,5 +990,38 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool ChangeActive(int idBenefit, bool active, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Benefit.SingleOrDefault(c => c.Id == idBenefit);
+                    if (update != null)
+                    {
+                        update.Active = active;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        error = "Benefício não encontrado!";
+                        ret = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitRepository.ChangeActive", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o benefício. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
     }
 }

@@ -567,5 +567,28 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+
+        /// <summary>
+        /// Ativa ou inativa o Benefício
+        /// </summary>
+        /// <param name="id">id do benefício</param>
+        /// <param name="active">true para ativar - false para inativar</param>
+        /// <returns>JsonModel</returns>
+        /// <response code="200"></response>
+        /// <response code="204"></response>
+        /// <response code="400"></response>
+        [HttpPost("ChangeActive/{id}/{active}")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ChangeActive(int id, bool active)
+        {
+            if(repo.ChangeActive(id, active, out string error))
+            {
+                return Ok(new JsonModel() { Status = "ok" });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
     }
 }

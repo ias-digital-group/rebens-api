@@ -189,6 +189,14 @@ namespace ias.Rebens.api.Models
         /// Parceiro
         /// </summary>
         public Partner Partner { get; set; }
+        /// <summary>
+        /// Se está ativo ou inativo
+        /// </summary>
+        public bool Active { get; set; }
+        /// <summary>
+        /// Status em string "Ativo" ou "Inativo"
+        /// </summary>
+        public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
 
         /// <summary>
         /// Construtor
@@ -211,6 +219,7 @@ namespace ias.Rebens.api.Models
             this.Summary = course.Summary;
             this.Price = course.Price;
             this.Partner = course.Partner;
+            this.Active = course.Active;
         }
     }
 }

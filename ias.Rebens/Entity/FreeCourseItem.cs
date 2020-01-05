@@ -16,5 +16,6 @@ namespace ias.Rebens
         public string ListImage { get; set; }
         public decimal Price { get; set; }
         public Partner Partner { get; set; }
+        public bool Active { get; set; }
     }
 }

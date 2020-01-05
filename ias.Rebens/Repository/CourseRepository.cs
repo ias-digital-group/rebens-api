@@ -587,5 +587,34 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool ChangeActive(int idCourse, bool active, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Course.SingleOrDefault(c => c.Id == idCourse);
+                    if (update != null)
+                    {
+                        update.Active = active;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.SaveChanges();
+                        error = null;
+                        ret = true;
+                    }
+                    else
+                        error = "Curso não encontrado!";
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.ChangeActive", "", ex);
+                error = "Ocorreu um erro ao tentar atualizar o curso. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

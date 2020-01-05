@@ -204,7 +204,8 @@ namespace ias.Rebens
                         IdPartner = c.IdPartner,
                         Partner = c.Partner,
                         Price = c.Price,
-                        Summary = c.Summary
+                        Summary = c.Summary,
+                        Active = c.Active
                     }).ToList();
 
                     ret = new ResultPage<FreeCourseItem>(list, page, pageItems, total);
@@ -268,7 +269,8 @@ namespace ias.Rebens
                             IdPartner = c.IdPartner,
                             Partner = c.Partner,
                             Price = c.Price,
-                            Summary = c.Summary
+                            Summary = c.Summary,
+                            Active = c.Active
                         }).ToList();
 
                     ret = new ResultPage<FreeCourseItem>(list, page, pageItems, total);
@@ -396,6 +398,35 @@ namespace ias.Rebens
                 int idLog = Helper.LogErrorHelper.Create(this._connectionString, "FreeCourseRepository.Update", "", ex);
                 error = "Ocorreu um erro ao tentar atualizar o curso. (erro:" + idLog + ")";
                 ret = false;
+            }
+            return ret;
+        }
+
+        public bool ChangeActive(int idFreeCourse, bool active, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.FreeCourse.SingleOrDefault(c => c.Id == idFreeCourse);
+                    if (update != null)
+                    {
+                        update.Active = active;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.SaveChanges();
+                        error = null;
+                        ret = true;
+                    }
+                    else
+                        error = "Curso não encontrado!";
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "FreeCourseRepository.ChangeActive", "", ex);
+                error = "Ocorreu um erro ao tentar atualizar o curso. (erro:" + idLog + ")";
             }
             return ret;
         }
