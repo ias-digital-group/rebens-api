@@ -256,7 +256,7 @@ namespace ias.Rebens.api.Controllers
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
                 string body = $"<p>Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
-                body += $"<br /><br /><p><a href='{constant.URL}#/validate?c={code}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>{constant.URL}#/validate?c={code}</a></p>";
+                body += $"<br /><br /><p style='text-align:center;'><a href='{constant.URL}#/validate?c={code}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>Ativar Cadastro</a></p>";
                 var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };
                 Helper.EmailHelper.SendAdminEmail(listDestinataries, "Rebens - Validação de cadastro", body, out error);
 
