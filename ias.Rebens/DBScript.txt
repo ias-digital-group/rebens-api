@@ -1,1 +1,5 @@
-﻿
+﻿ALTER TABLE Operation ADD SendinblueListId INT NULL
+GO
+
+ALTER TABLE Customer ADD SendinblueListId INT NULL
+GO

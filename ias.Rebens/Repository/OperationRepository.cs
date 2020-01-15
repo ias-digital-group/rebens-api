@@ -1040,5 +1040,35 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool SaveSendingblueListId(int id, int listId, out string error)
+        {
+            bool ret = false;
+            var logError = new LogErrorRepository(this._connectionString);
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var op = db.Operation.SingleOrDefault(o => o.Id == id);
+                    if (op != null)
+                    {
+                        op.SendinblueListId = listId;
+                        op.Modified = DateTime.UtcNow;
+                        db.SaveChanges();
+
+                        ret = true;
+                        error = null;
+                    }
+                    else
+                        error = "Operação não foi encontrada";
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = logError.Create("OperationRepository.SaveSendingblueListId", ex.Message, $"id: {id}, listId: {listId}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar salvar o id da lista. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

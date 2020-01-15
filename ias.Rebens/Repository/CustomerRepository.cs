@@ -409,5 +409,29 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool SaveSendingblueId(int id, int blueId, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var user = db.Customer.SingleOrDefault(s => s.Id == id);
+                    user.SendinblueListId = blueId;
+                    user.Modified = DateTime.UtcNow;
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ChangeStatus", ex.Message, $"id:{id}, blueId:{blueId}", ex.StackTrace);
+                error = $"Ocorreu um erro ao tentar alterar o status do cliente. (erro:{idLog})";
+                ret = false;
+            }
+            return ret;
+        }
     }
 }

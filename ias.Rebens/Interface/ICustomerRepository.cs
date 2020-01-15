@@ -33,6 +33,9 @@ namespace ias.Rebens
         List<Customer> ListToGenerateCoupon(int idOperation, int totalItems);
 
         bool HasToGenerateCoupon(int idOperation);
+
         MoipSignature CheckPlanStatus(int id);
+
+        bool SaveSendingblueId(int id, int blueId, out string error);
     }
 }

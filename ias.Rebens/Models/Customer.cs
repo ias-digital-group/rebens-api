@@ -46,6 +46,7 @@ namespace ias.Rebens
         public string WirecardId { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public int? SendinblueListId { get; set; }
 
         public virtual Operation Operation { get; set; }
         public virtual Address Address { get; set; }

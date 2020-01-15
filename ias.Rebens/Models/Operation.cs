@@ -47,8 +47,8 @@ namespace ias.Rebens
         public bool Deleted { get; set; }
         public string TemporarySubdomain { get; set; }
         public bool SubdomainCreated { get; set; }
-
         public int TemporaryPublishStatus { get; set; }
+        public int? SendinblueListId { get; set; }
 
         public virtual LogError LogError { get; set; }
         public virtual ICollection<Benefit> Benefits { get; set; }

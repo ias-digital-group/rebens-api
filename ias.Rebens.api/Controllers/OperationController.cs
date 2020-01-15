@@ -197,10 +197,22 @@ namespace ias.Rebens.api.Controllers
 
             if (!string.IsNullOrEmpty(error))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-
             
             if (repo.Create(op, out error))
             {
+                var sendingblue = new Integration.SendinBlueHelper();
+                if(sendingblue.CreateList(op.Title, out int listId, out string error1))
+                {
+                    if(!repo.SaveSendingblueListId(op.Id, listId, out error1))
+                    {
+                        logError.Create("OperationController.Post", error1, "Save Sending blue list id", $"listId: {listId}");
+                    }
+                }
+                else
+                {
+                    logError.Create("OperationController.Post", error1, "Create Sending blue list id", "");
+                }
+
                 if (idContact > 0)
                 {
                     if (repo.AddContact(op.Id, idContact, out error))

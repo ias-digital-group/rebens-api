@@ -43,6 +43,9 @@ namespace ias.Rebens
         bool SetSubdomainCreated(int id, out string error);
 
         string GetConfigurationOption(int id, string field, out string error);
+        
         int GetId(Guid operationGuid, out string error);
+
+        bool SaveSendingblueListId(int id, int listId, out string error);
     }
 }

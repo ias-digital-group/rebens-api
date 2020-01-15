@@ -84,13 +84,13 @@ namespace ias.Rebens.Integration
             return resultModel;
         }
 
-        public bool CreateList(Operation operation, out int listId, out string error)
+        public bool CreateList(string name, out int listId, out string error)
         {
             var ret = false;
 
             Dictionary<string, Object> data = new Dictionary<string, Object>();
 
-            data.Add("name", operation.Title);
+            data.Add("name", name);
             data.Add("folderId", 40);
 
             string content = JsonConvert.SerializeObject(data);
@@ -100,7 +100,7 @@ namespace ias.Rebens.Integration
             request.Method = "POST";
             request.ContentType = "application/json";
             request.Timeout = 30000;
-            request.Headers.Add("api-key", API_KEY);
+            request.Headers.Add("api-key", API_KEY_V3);
 
             using (Stream s = request.GetRequestStream())
             {
@@ -110,7 +110,7 @@ namespace ias.Rebens.Integration
             try
             {
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                if (response.StatusCode == HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.Created)
                 {
                     var stream = response.GetResponseStream() as Stream;
                     byte[] buffer = new byte[32 * 1024];
@@ -162,7 +162,7 @@ namespace ias.Rebens.Integration
             return ret;
         }
 
-        public bool CreateContact(Customer customer, Operation operation, out string error)
+        public bool CreateContact(Customer customer, Address address, Operation operation, out int listId, out string error)
         {
             var ret = false;
 
@@ -175,25 +175,31 @@ namespace ias.Rebens.Integration
             attributes.Add("GENERO", customer.Gender);
             if(customer.Birthday.HasValue)
                 attributes.Add("DATA_DE_NASCIMENTO", customer.Birthday.Value.ToString("dd/MM/yyyy"));
-            attributes.Add("UF", customer.Address.State);
+            if(address != null)
+            {
+                attributes.Add("UF", address.State);
+                attributes.Add("CIDADE", address.City);
+            }
+            
             attributes.Add("ID_OPERACAO", operation.Id);
-            attributes.Add("CIDADE", customer.Address.City);
-            attributes.Add("SMS", customer.Cellphone);
+            
+            if(!string.IsNullOrEmpty(customer.Cellphone))
+                attributes.Add("SMS", customer.Cellphone.Replace(" ", "").Replace("-", ""));
             data.Add("attributes", attributes);
             data.Add("emailBlacklisted", false);
             data.Add("smsBlacklisted", false);
             data.Add("updateEnabled", true);
-            int[] aIds = { 41 };
+            int[] aIds = { operation.SendinblueListId.Value };
             data.Add("listIds", aIds);
 
             string content = JsonConvert.SerializeObject(data);
             ASCIIEncoding encoding = new ASCIIEncoding();
-            HttpWebRequest request = WebRequest.Create("https://api.sendinblue.com/v3/contacts/lists") as HttpWebRequest;
+            HttpWebRequest request = WebRequest.Create("https://api.sendinblue.com/v3/contacts") as HttpWebRequest;
 
             request.Method = "POST";
             request.ContentType = "application/json";
             request.Timeout = 30000;
-            request.Headers.Add("api-key", API_KEY);
+            request.Headers.Add("api-key", API_KEY_V3);
 
             using (Stream s = request.GetRequestStream())
             {
@@ -203,8 +209,22 @@ namespace ias.Rebens.Integration
             try
             {
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                if (response.StatusCode == HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.Created)
                 {
+                    var stream = response.GetResponseStream() as Stream;
+                    byte[] buffer = new byte[32 * 1024];
+                    int nRead = 0;
+                    MemoryStream successMs = new MemoryStream();
+                    do
+                    {
+                        nRead = stream.Read(buffer, 0, buffer.Length);
+                        successMs.Write(buffer, 0, nRead);
+                    } while (nRead > 0);
+                    // convert read bytes into string
+                    var responseString = encoding.GetString(successMs.ToArray());
+                    var jObj = JObject.Parse(responseString);
+
+                    listId = Convert.ToInt32(jObj["id"]);
                     error = null;
                     ret = true;
                 }
@@ -225,16 +245,20 @@ namespace ias.Rebens.Integration
                         var responseString = encoding.GetString(successMs.ToArray());
                         var jObj = JObject.Parse(responseString);
                         error = jObj["message"].ToString();
+                        listId = 0;
                     }
                     catch
                     {
+                        listId = 0;
                         error = "Ocorreu um erro ao tentar criar a lista no sendingblue";
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                listId = 0;
                 error = "Ocorreu um erro ao tentar criar a lista no sendingblue";
+                Console.WriteLine(ex.Message);
             }
             return ret;
         }

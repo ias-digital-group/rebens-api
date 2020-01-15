@@ -48,6 +48,7 @@ namespace ias.Rebens.api.Controllers
         private IDrawRepository drawRepo;
         private IFreeCourseRepository freeCourseRepo;
         private IPartnerRepository partnerRepo;
+        private ILogErrorRepository logErrorRepo;
         private Constant constant;
 
         /// <summary>
@@ -80,6 +81,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="drawRepository"></param>
         /// <param name="freeCourseRepository"></param>
         /// <param name="partnerRepository"></param>
+        /// <param name="logErrorRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
@@ -88,7 +90,7 @@ namespace ias.Rebens.api.Controllers
             IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository,
             ICourseRepository courseRepository, ICourseCollegeRepository courseCollegeRepository, ICourseGraduationTypeRepository courseGraduationTypeRepository, 
             ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository,
-            IDrawRepository drawRepository, IFreeCourseRepository freeCourseRepository, IPartnerRepository partnerRepository)
+            IDrawRepository drawRepository, IFreeCourseRepository freeCourseRepository, IPartnerRepository partnerRepository, ILogErrorRepository logErrorRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -117,6 +119,7 @@ namespace ias.Rebens.api.Controllers
             this.drawRepo = drawRepository;
             this.freeCourseRepo = freeCourseRepository;
             this.partnerRepo = partnerRepository;
+            this.logErrorRepo = logErrorRepository;
             this.constant = new Constant();
         }
 
@@ -746,11 +749,12 @@ namespace ias.Rebens.api.Controllers
             if (operation != null)
             {
                 var cust = customer.GetEntity();
+                Address addr = null;
                 cust.IdOperation = operation.Id;
 
                 if (customer.Address != null)
                 {
-                    var addr = customer.Address.GetEntity();
+                    addr = customer.Address.GetEntity();
                     if (addrRepo.Create(addr, out error))
                         cust.IdAddress = addr.Id;
                 }
@@ -766,6 +770,16 @@ namespace ias.Rebens.api.Controllers
                     var body = $"<p>Seu cadastro foi realizado com sucesso!</p><p>Segue a sua senha temporária, sugerimos que você troque essa senha imediatamente:<br />Senha:<b>{password}</b></p>";
                     var listDestinataries = new Dictionary<string, string>() { { cust.Email, cust.Name } };
                     var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Cadatro realizado com sucesso", body);
+
+                    if (sendingBlue.CreateContact(cust, addr, operation, out int blueId, out string error1))
+                    {
+                        if (!customerRepo.SaveSendingblueId(cust.Id, blueId, out error1))
+                        {
+                            logErrorRepo.Create("PortalController.CustomerCreate", error1, "Save sendingblue id", "");
+                        }
+                    }
+                    else
+                        logErrorRepo.Create("PortalController.CustomerCreate", error1, "Create sendingblue id", "");
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = cust.Id });
                 }
