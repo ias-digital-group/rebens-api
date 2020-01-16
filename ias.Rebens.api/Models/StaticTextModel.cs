@@ -90,7 +90,7 @@ namespace ias.Rebens.api.Models
                 Id = this.Id,
                 Title = this.Name,
                 Url = this.Page,
-                Html = JsonConvert.SerializeObject(this.Data),
+                Html = this.Data.ToString().StartsWith("{") ? JsonConvert.SerializeObject(this.Data) : this.Data.ToString(),
                 Style = "",
                 Order = 0,
                 IdStaticTextType = this.IdStaticTextType == 0 ? (int)Enums.StaticTextType.Pages : this.IdStaticTextType,
