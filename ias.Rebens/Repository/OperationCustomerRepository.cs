@@ -14,6 +14,11 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public OperationCustomerRepository(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
         public OperationCustomer ReadByCpf(string cpf, int idOperation, out string error)
         {
             OperationCustomer ret;

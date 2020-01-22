@@ -134,6 +134,7 @@ namespace ias.Rebens.api
             services.AddTransient<ICustomerRepository, CustomerRepository>();
             services.AddTransient<IDrawRepository, DrawRepository>();
             services.AddTransient<IFaqRepository, FaqRepository>();
+            services.AddTransient<IFileToProcessRepository, FileToProcessRepository>();
             services.AddTransient<IFormContactRepository, FormContactRepository>();
             services.AddTransient<IFormEstablishmentRepository, FormEstablishmentRepository>();
             services.AddTransient<ILogErrorRepository, LogErrorRepository>();

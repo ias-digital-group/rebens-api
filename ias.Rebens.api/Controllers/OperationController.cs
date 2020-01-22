@@ -34,6 +34,7 @@ namespace ias.Rebens.api.Controllers
         private IStaticTextRepository staticTextRepo;
         private IBannerRepository bannerRepo;
         private IOperationCustomerRepository operationCustomerRepo;
+        private IFileToProcessRepository fileToProcessRepo;
         private IHostingEnvironment _hostingEnvironment;
         private ILogger<OperationController> _logger;
 
@@ -53,7 +54,7 @@ namespace ias.Rebens.api.Controllers
         public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, 
             IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository,
             IOperationCustomerRepository operationCustomerRepository, IHostingEnvironment hostingEnvironment, ILogger<OperationController> logger,
-            ILogErrorRepository logError)
+            ILogErrorRepository logError, IFileToProcessRepository fileToProcessRepository)
         {
             this.repo = operationRepository;
             this.addressRepo = addressRepository;
@@ -65,6 +66,7 @@ namespace ias.Rebens.api.Controllers
             this._hostingEnvironment = hostingEnvironment;
             this._logger = logger;
             this.logError = logError;
+            this.fileToProcessRepo = fileToProcessRepository;
         }
 
         #region Operation
@@ -847,10 +849,25 @@ namespace ias.Rebens.api.Controllers
                     string extension = Path.GetExtension(file.FileName);
                     string fileName = Guid.NewGuid().ToString("n") + extension;
                     string fullPath = Path.Combine(newPath, fileName);
+                    
                     using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
                         file.CopyTo(stream);
                     }
+
+                    var fileToProcess = new FileToProcess()
+                    {
+                        Name = fullPath,
+                        Created = DateTime.UtcNow,
+                        IdOperation = id,
+                        Modified = DateTime.UtcNow,
+                        Total = 0,
+                        Processed = 0,
+                        Status = (int)Enums.FileToProcessStatus.New,
+                        Type = (int)Enums.FileToProcessType.OperationCustomer
+                    };
+
+                    this.fileToProcessRepo.Create(fileToProcess, out _);
 
                     try
                     {
@@ -866,6 +883,9 @@ namespace ias.Rebens.api.Controllers
                                 XSSFWorkbook hssfwb = new XSSFWorkbook(stream.BaseStream); //This will read 2007 Excel format  
                                 sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook   
                             }
+                            int total = sheet.LastRowNum;
+                            this.fileToProcessRepo.UpdateTotal(fileToProcess.Id, total, out _);
+
                             IRow headerRow = sheet.GetRow(0); //Get Header Row
                             int cellCount = headerRow.LastCellNum;
                             bool isValid = true;
@@ -884,47 +904,30 @@ namespace ias.Rebens.api.Controllers
                                 cellEmail1 != null && cellEmail1.ToString().Trim().ToLower() == "email1" &&
                                 cellEmail2 != null && cellEmail2.ToString().Trim().ToLower() == "email2";
 
-                            if (isValid)
+                            if (!isValid)
                             {
-                                for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++) //Read Excel File
-                                {
-                                    IRow row = sheet.GetRow(i);
-                                    if (row == null) continue;
-                                    if (row.Cells.All(d => d.CellType == CellType.Blank)) continue;
-
-                                    if (row.GetCell(0) == null || row.GetCell(1) == null) continue;
-
-                                    list.Add(new OperationCustomer()
-                                    {
-                                        Name = row.GetCell(0) != null ? row.GetCell(0).ToString().Trim() : "",
-                                        CPF = row.GetCell(1) != null ? row.GetCell(1).ToString().Trim() : "",
-                                        Phone = row.GetCell(2) != null ? row.GetCell(2).ToString().Trim() : "",
-                                        Cellphone = row.GetCell(3) != null ? row.GetCell(3).ToString().Trim() : "",
-                                        Email1 = row.GetCell(4) != null ? row.GetCell(4).ToString().Trim() : "",
-                                        Email2 = row.GetCell(5) != null ? row.GetCell(5).ToString().Trim() : "",
-                                        Signed = false,
-                                        Created = DateTime.UtcNow,
-                                        Modified = DateTime.UtcNow,
-                                        IdOperation = id
-                                    });
-                                    
-                                }
+                                this.fileToProcessRepo.UpdateStatus(fileToProcess.Id, (int)Enums.FileToProcessStatus.Error, out _);
+                                return Ok(new JsonModel() { Status = "error", Message = "O arquivo não está no formato correto!" });
+                            }
+                            else
+                            {
+                                this.fileToProcessRepo.UpdateStatus(fileToProcess.Id, (int)Enums.FileToProcessStatus.Ready, out _);
                             }
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
                     }
 
-                    int counter = 0;
-                    foreach(var customer in list)
-                    {
-                        if (operationCustomerRepo.Create(customer, out string error))
-                            counter++;
-                    }
+                    //int counter = 0;
+                    //foreach(var customer in list)
+                    //{
+                    //    if (operationCustomerRepo.Create(customer, out string error))
+                    //        counter++;
+                    //}
 
-                    return Ok(new JsonModel() { Status = "ok", Message = $"Pré-cadastros inclidos com sucesso. (total:{counter})" });
+                    return Ok(new JsonModel() { Status = "ok", Message = $"O arquivo será processado em breve." });
                 }
 
                 return NoContent();
@@ -934,6 +937,43 @@ namespace ias.Rebens.api.Controllers
             {
                 return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Verifica se existe algum arquivo em processamento
+        /// </summary>
+        /// <param name="id">Id da operação</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/HasFileProcessing/"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult HasFileProcessing(int id)
+        {
+            var ret = fileToProcessRepo.ReadByType((int)Enums.FileToProcessType.OperationCustomer, (int)Enums.FileToProcessStatus.Processing, id, out _);
+            if (ret != null)
+            {
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = $"Processando ({ret.Processed}/{ret.Total})" });
+            } 
+            else
+            {
+                ret = fileToProcessRepo.ReadByType((int)Enums.FileToProcessType.OperationCustomer, (int)Enums.FileToProcessStatus.New, id, out _);
+                if (ret != null)
+                {
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = $"O arquivo está na fila para ser processado!" });
+                }
+                else
+                {
+                    ret = fileToProcessRepo.ReadByType((int)Enums.FileToProcessType.OperationCustomer, (int)Enums.FileToProcessStatus.Ready, id, out _);
+                    if (ret != null)
+                    {
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = $"O arquivo está na fila para ser processado!" });
+                    }
+                }
+            }
+
+            return NoContent();
         }
         #endregion Operation Customers
     }

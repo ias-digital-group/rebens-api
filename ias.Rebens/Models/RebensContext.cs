@@ -54,6 +54,7 @@ namespace ias.Rebens
         public virtual DbSet<Draw> Draw { get; set; }
         public virtual DbSet<DrawItem> DrawItem { get; set; }
         public virtual DbSet<Faq> Faq { get; set; }
+        public virtual DbSet<FileToProcess> FileToProcess { get; set; }
         public virtual DbSet<FormContact> FormContact { get; set; }
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
         public virtual DbSet<FreeCourse> FreeCourse { get; set; }
@@ -810,6 +811,23 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdOperation)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Faq_Operation");
+            });
+
+            modelBuilder.Entity<FileToProcess>(entity =>
+            {
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(300);
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.FileToProcesses)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_FileToProcess_Operation");
             });
 
             modelBuilder.Entity<FormContact>(entity => {

@@ -148,6 +148,26 @@ namespace ias.Rebens.Enums
         Granparents = 7
     }
 
+    public enum FileToProcessStatus : int
+    {
+        [Description("Novo")]
+        New = 1,
+        [Description("Pronto para processar")]
+        Ready = 5,
+        [Description("Processando")]
+        Processing = 2,
+        [Description("Erro")]
+        Error = 3,
+        [Description("Finalizado")]
+        Done = 4
+    }
+
+    public enum FileToProcessType : int
+    {
+        [Description("PréCadastro")]
+        OperationCustomer = 1
+    }
+
     public enum IntegrationType : int
     {
         [Description("Rebens")]
