@@ -36,3 +36,94 @@ GO
 ALTER TABLE [dbo].[FileToProcess] CHECK CONSTRAINT [FK_FileToProcess_Operation]
 GO
 
+
+
+/****** Object:  Table [dbo].[Module]    Script Date: 30/01/2020 6:26:37 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Module](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[Information] [nvarchar](max) NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_Module] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+insert into Module VALUES ('Cadastro', '{
+	"fields": [{
+			"name": "type",
+			"label": "Tipo",
+			"type": "select",
+			"data": [
+				{
+					"name": "Aberto",
+					"value": "open"
+				},
+				{
+					"name": "Fechado",
+					"value": "closed"
+				},
+				{
+					"name": "Fechado + Parceiros",
+					"value": "closed-partner"
+				}],
+			"isRequired": true
+		}],
+	"files": []
+	"configuration": {}
+	}', GETUTCDATE(), GETUTCDATE())
+
+insert into Module VALUES ('Indique', '{
+	"fields": [{
+			"name": "max",
+			"label": "Quantidade de indicações por aluno (0 = sem limite)",
+			"type": "int",
+			"data": [],
+			"isRequired": true
+		}],
+	"files": [ "CustomerReferal" ]
+	"configuration": {
+		"routeImports": [ "import Referal from ''./pages/CustomerReferal/Referal.vue'';" ],
+		"routeConfig": "{ path: ''/indique'', component: Main, children: [ { path: ''/'', name: ''indique'', component: Referal, meta: { requiresAuth: true, contentCode: '''' } } ] }"
+	}
+	}', GETUTCDATE(), GETUTCDATE())
+
+insert into Module VALUES ('Cursos', '{
+	"fields": [],
+	"files": [ "Graduation" ]
+	"configuration": {
+		"routeImports": [ "import GraduationList from ''./pages/Graduation/List.vue'';", "import GraduationDetail from ''./pages/Graduation/Detail.vue'';", "import GraduationBasket from ''./pages/Graduation/Basket.vue'';" ],
+		"routeConfig": "{ path: ''/graduacao'', component: Main, children: [ { path: ''/'', name: ''Graduacao'', component: GraduationList, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/view'', props: true, name: ''Graduacao'', component: GraduationDetail, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/basket'', props: true, name: ''Graduacao'', component: GraduationBasket, meta: { requiresAuth: false, contentCode: '''' } } ] }"
+	}
+	}', GETUTCDATE(), GETUTCDATE())
+
+insert into Module VALUES ('Cursos Livres', '{
+	"fields": [],
+	"files": [ "FreeCourse" ]
+	"configuration": {
+		"routeImports": [ "import FreeCourseList from ''./pages/FreeCourse/List.vue'';", "import FreeCourseDetail from ''./pages/FreeCourse/Detail.vue'';", "import FreeCourseBasket from ''./pages/FreeCourse/Basket.vue'';" ],
+		"routeConfig": "{ path: ''/cursos-livres'', component: Main, children: [ { path: ''/'', name: ''Cursos Livres'', component: FreeCourseList, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/view'', props: true, name: ''Cursos Livres'', component: FreeCourseDetail, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/basket'', props: true, name: ''Cursos Livres'', component: FreeCourseBasket, meta: { requiresAuth: false, contentCode: '''' } } ] }"
+	}
+	}', GETUTCDATE(), GETUTCDATE())
+
+insert into Module VALUES ('Raspadinha', '{
+	"fields": [],
+	"files": [ "Coupons" ]
+	"configuration": {
+		"routeImports": [ "import CouponHistory from ''./pages/Coupons/History.vue'';" ],
+		"routeConfig": "{ path: ''/raspadinha'', component: Main, children: [ { path: ''/'', name: ''raspadinha'', component: CouponHistory, meta: { requiresAuth: true, contentCode: '''' } } ] }"
+	}
+	}', GETUTCDATE(), GETUTCDATE())
+
+
+
+
