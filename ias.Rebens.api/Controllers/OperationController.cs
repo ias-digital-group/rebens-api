@@ -36,6 +36,7 @@ namespace ias.Rebens.api.Controllers
         private IOperationCustomerRepository operationCustomerRepo;
         private IFileToProcessRepository fileToProcessRepo;
         private IHostingEnvironment _hostingEnvironment;
+        private IModuleRepository moduleRepo;
         private ILogger<OperationController> _logger;
 
         /// <summary>
@@ -54,7 +55,7 @@ namespace ias.Rebens.api.Controllers
         public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, 
             IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository,
             IOperationCustomerRepository operationCustomerRepository, IHostingEnvironment hostingEnvironment, ILogger<OperationController> logger,
-            ILogErrorRepository logError, IFileToProcessRepository fileToProcessRepository)
+            ILogErrorRepository logError, IFileToProcessRepository fileToProcessRepository, IModuleRepository moduleRepository)
         {
             this.repo = operationRepository;
             this.addressRepo = addressRepository;
@@ -67,6 +68,7 @@ namespace ias.Rebens.api.Controllers
             this._logger = logger;
             this.logError = logError;
             this.fileToProcessRepo = fileToProcessRepository;
+            this.moduleRepo = moduleRepository;
         }
 
         #region Operation
@@ -976,5 +978,37 @@ namespace ias.Rebens.api.Controllers
             return NoContent();
         }
         #endregion Operation Customers
+
+        #region Modules
+        /// <summary>
+        /// Lista os módulos
+        /// </summary>
+        /// <returns>lista dos módulos</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("Modules"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(List<ModuleModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListModules()
+        {
+            var list = moduleRepo.List(out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new List<ModuleModel>();
+                foreach (var m in list)
+                    ret.Add(new ModuleModel(m));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion Modules
     }
 }

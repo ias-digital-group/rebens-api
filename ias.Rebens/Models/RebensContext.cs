@@ -59,6 +59,7 @@ namespace ias.Rebens
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
         public virtual DbSet<FreeCourse> FreeCourse { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }
+        public virtual DbSet<Module> Module { get; set; }
         public virtual DbSet<MoipInvoice> MoipInvoice { get; set; }
         public virtual DbSet<MoipNotification> MoipNotification { get; set; }
         public virtual DbSet<MoipPayment> MoipPayment { get; set; }
@@ -939,6 +940,13 @@ namespace ias.Rebens
                     .HasMaxLength(500);
 
                 entity.Property(e => e.StackTrace).HasColumnType("text");
+            });
+
+            modelBuilder.Entity<Module>(entity =>
+            {
+                entity.Property(e => e.Created).IsRequired().HasColumnType("datetime");
+
+                entity.Property(e => e.Modified).IsRequired().HasColumnType("datetime");
             });
 
             modelBuilder.Entity<MoipInvoice>(entity =>

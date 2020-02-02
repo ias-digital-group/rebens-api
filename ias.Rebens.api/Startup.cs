@@ -139,6 +139,7 @@ namespace ias.Rebens.api
             services.AddTransient<IFormEstablishmentRepository, FormEstablishmentRepository>();
             services.AddTransient<ILogErrorRepository, LogErrorRepository>();
             services.AddTransient<IFreeCourseRepository, FreeCourseRepository>();
+            services.AddTransient<IModuleRepository, ModuleRepository>();
             services.AddTransient<IMoipNotificationRepository, MoipNotificationRepository>();
             services.AddTransient<IMoipRepository, MoipRepository>();
             services.AddTransient<IOperationRepository, OperationRepository>();

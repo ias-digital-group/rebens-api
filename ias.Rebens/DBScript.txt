@@ -83,6 +83,7 @@ insert into Module VALUES ('Cadastro', '{
 	}', GETUTCDATE(), GETUTCDATE())
 
 insert into Module VALUES ('Indique', '{
+	"name": "customerReferal",
 	"fields": [{
 			"name": "max",
 			"label": "Quantidade de indicações por aluno (0 = sem limite)",
@@ -98,6 +99,7 @@ insert into Module VALUES ('Indique', '{
 	}', GETUTCDATE(), GETUTCDATE())
 
 insert into Module VALUES ('Cursos', '{
+	"name": "course",
 	"fields": [],
 	"files": [ "Graduation" ]
 	"configuration": {
@@ -107,6 +109,7 @@ insert into Module VALUES ('Cursos', '{
 	}', GETUTCDATE(), GETUTCDATE())
 
 insert into Module VALUES ('Cursos Livres', '{
+	"name": "freeCourse",
 	"fields": [],
 	"files": [ "FreeCourse" ]
 	"configuration": {
@@ -116,6 +119,7 @@ insert into Module VALUES ('Cursos Livres', '{
 	}', GETUTCDATE(), GETUTCDATE())
 
 insert into Module VALUES ('Raspadinha', '{
+	"name": "coupon",
 	"fields": [],
 	"files": [ "Coupons" ]
 	"configuration": {
