@@ -50,6 +50,8 @@ namespace ias.Rebens
         public bool SubdomainCreated { get; set; }
         public int TemporaryPublishStatus { get; set; }
         public int? SendinblueListId { get; set; }
+        public DateTime? TemporaryPublishedDate { get; set; }
+        public DateTime? PublishedDate { get; set; }
 
         public virtual LogError LogError { get; set; }
         public virtual ICollection<Benefit> Benefits { get; set; }

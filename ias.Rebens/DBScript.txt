@@ -48,6 +48,7 @@ GO
 CREATE TABLE [dbo].[Module](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [nvarchar](200) NOT NULL,
+	[Title] [nvarchar](200) NOT NULL,
 	[Information] [nvarchar](max) NOT NULL,
 	[Created] [datetime] NOT NULL,
 	[Modified] [datetime] NOT NULL,
@@ -58,7 +59,7 @@ CREATE TABLE [dbo].[Module](
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-insert into Module VALUES ('Cadastro', '{
+insert into Module VALUES ('registerType', 'Cadastro', '{
 	"fields": [{
 			"name": "type",
 			"label": "Tipo",
@@ -82,8 +83,7 @@ insert into Module VALUES ('Cadastro', '{
 	"configuration": {}
 	}', GETUTCDATE(), GETUTCDATE())
 
-insert into Module VALUES ('Indique', '{
-	"name": "customerReferal",
+insert into Module VALUES ('customerReferal', 'Indique', '{
 	"fields": [{
 			"name": "max",
 			"label": "Quantidade de indicações por aluno (0 = sem limite)",
@@ -98,8 +98,7 @@ insert into Module VALUES ('Indique', '{
 	}
 	}', GETUTCDATE(), GETUTCDATE())
 
-insert into Module VALUES ('Cursos', '{
-	"name": "course",
+insert into Module VALUES ('course', 'Cursos', '{
 	"fields": [],
 	"files": [ "Graduation" ]
 	"configuration": {
@@ -108,8 +107,7 @@ insert into Module VALUES ('Cursos', '{
 	}
 	}', GETUTCDATE(), GETUTCDATE())
 
-insert into Module VALUES ('Cursos Livres', '{
-	"name": "freeCourse",
+insert into Module VALUES ('freeCourse', 'Cursos Livres', '{
 	"fields": [],
 	"files": [ "FreeCourse" ]
 	"configuration": {
@@ -118,8 +116,7 @@ insert into Module VALUES ('Cursos Livres', '{
 	}
 	}', GETUTCDATE(), GETUTCDATE())
 
-insert into Module VALUES ('Raspadinha', '{
-	"name": "coupon",
+insert into Module VALUES ('coupon', 'Raspadinha', '{
 	"fields": [],
 	"files": [ "Coupons" ]
 	"configuration": {
@@ -128,6 +125,58 @@ insert into Module VALUES ('Raspadinha', '{
 	}
 	}', GETUTCDATE(), GETUTCDATE())
 
+
+alter table Operation ADD TemporaryPublishedDate DATETIME NULL
+GO
+alter table Operation ADD PublishedDate DATETIME NULL
+GO
+
+UPDATE Operation set TemporaryPublishedDate = Modified where TemporaryPublishStatus = 1
+UPDATE Operation set PublishedDate = Modified where PublishStatus = 1
+GO
+
+
+
+update StaticText set Html = '{
+	"fields": [
+		{
+			"name": "color",
+			"label": "Cor",
+			"type": "text",
+			"data": "",
+			"isRequired": true
+		},
+		{
+			"name": "favicon",
+			"label": "Ícone de favorito",
+			"type": "image",
+			"data": "",
+			"isRequired": true
+		},
+		{
+			"name": "g-analytics",
+			"label": "Google Analytics",
+			"type": "text",
+			"data": "",
+			"isRequired": false
+		},
+		{
+			"name": "contact-email",
+			"label": "Email Transacional",
+			"type": "text",
+			"data": "",
+			"isRequired": false
+		},
+		{
+			"name": "form-email",
+			"label": "Email",
+			"type": "text",
+			"data": "",
+			"isRequired": false
+		}
+	],
+	"modules": []
+}' where IdStaticTextType = 11
 
 
 

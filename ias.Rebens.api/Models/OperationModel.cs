@@ -100,6 +100,17 @@ namespace ias.Rebens.api.Models
         /// Se o subdomínio já foi criado
         /// </summary>
         public bool SubdomainCreated { get; set; }
+
+        /// <summary>
+        /// Data da última publicação no domínio temporário
+        /// </summary>
+        public string TemporaryPublishedDate { get; set; }
+
+        /// <summary>
+        /// Data da última publicação 
+        /// </summary>
+        public string PublishedDate { get; set; }
+
         /// <summary>
         /// Construtor
         /// </summary>
@@ -126,6 +137,8 @@ namespace ias.Rebens.api.Models
             this.CanPublishTemporary = (operation.TemporaryPublishStatus == (int)Enums.PublishStatus.publish);
             this.SubdomainCreated = operation.SubdomainCreated;
             this.TemporarySubdomain = operation.TemporarySubdomain;
+            this.TemporaryPublishedDate = operation.TemporaryPublishedDate.HasValue ? operation.TemporaryPublishedDate.Value.ToString("dd/MM/yyyy HH:mm") : "";
+            this.PublishedDate = operation.PublishedDate.HasValue ? operation.PublishedDate.Value.ToString("dd/MM/yyyy HH:mm") : "";
 
             if(operation.OperationContacts != null && operation.OperationContacts.Count >0)
             {

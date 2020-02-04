@@ -15,6 +15,7 @@ using NPOI.XSSF.UserModel;
 using System.Linq;
 using Serilog;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -38,6 +39,7 @@ namespace ias.Rebens.api.Controllers
         private IHostingEnvironment _hostingEnvironment;
         private IModuleRepository moduleRepo;
         private ILogger<OperationController> _logger;
+        private string _builderUrl;
 
         /// <summary>
         /// Construtor
@@ -55,7 +57,7 @@ namespace ias.Rebens.api.Controllers
         public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, 
             IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository,
             IOperationCustomerRepository operationCustomerRepository, IHostingEnvironment hostingEnvironment, ILogger<OperationController> logger,
-            ILogErrorRepository logError, IFileToProcessRepository fileToProcessRepository, IModuleRepository moduleRepository)
+            ILogErrorRepository logError, IFileToProcessRepository fileToProcessRepository, IModuleRepository moduleRepository, IConfiguration configuration)
         {
             this.repo = operationRepository;
             this.addressRepo = addressRepository;
@@ -69,6 +71,7 @@ namespace ias.Rebens.api.Controllers
             this.logError = logError;
             this.fileToProcessRepo = fileToProcessRepository;
             this.moduleRepo = moduleRepository;
+            _builderUrl = configuration.GetSection("App:BuilderUrl").Value;
         }
 
         #region Operation
@@ -233,34 +236,33 @@ namespace ias.Rebens.api.Controllers
         /// Coloca uma operação na fila de publicação
         /// </summary>
         /// <param name="id">id da operação</param>
-        /// <param name="isTemporary">Boolean informando se é para publicar o temporário ou o site definitivo. (default = false)</param>
         /// <returns></returns>
         /// <response code="200">Opreação em fila</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost("{id}/publish"), Authorize("Bearer", Roles = "master")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Publish(int id, [FromQuery]bool isTemporary = false)
+        public IActionResult Publish(int id)
         {
-            if (repo.ValidateOperation(id, out string error, isTemporary))
+            if (repo.ValidateOperation(id, out string error))
             {
-                if(isTemporary)
-                {
-                    var operation = repo.Read(id, out error);
-                    if(!operation.SubdomainCreated)
-                    {
-                        var awsHelper = new Integration.AWSHelper();
-                        awsHelper.AddDomainToRoute53(operation.TemporarySubdomain, id, this.repo);
-                    }
-                }
-
-                var ret = repo.GetPublishData(id, isTemporary, out error);
+                var ret = repo.GetPublishData(id, out string domain, out error);
                 if (ret != null)
                 {
-                    repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out error, isTemporary);
+                    repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out _);
+
+                    if (domain.Contains(".sistemarebens."))
+                    {
+                        var operation = repo.Read(id, out error);
+                        if (!operation.SubdomainCreated)
+                        {
+                            var awsHelper = new Integration.AWSHelper();
+                            awsHelper.AddDomainToRoute53(operation.TemporarySubdomain, id, this.repo);
+                        }
+                    }
 
                     string content = JsonConvert.SerializeObject(ret);
-                    HttpWebRequest request = WebRequest.Create("http://builder.rebens.com.br/api/operations") as HttpWebRequest;
+                    HttpWebRequest request = WebRequest.Create($"{_builderUrl}api/operations") as HttpWebRequest;
 
                     request.Method = "POST";
                     request.ContentType = "application/json";
@@ -275,13 +277,13 @@ namespace ias.Rebens.api.Controllers
                     {
                         HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                         if (response.StatusCode != HttpStatusCode.OK)
-                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error, isTemporary);
+                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
 
                         return StatusCode(200, new JsonModel() { Status = "ok" });
                     }
                     catch
                     {
-                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error, isTemporary);
+                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
                     }
                 }
             }
@@ -365,18 +367,6 @@ namespace ias.Rebens.api.Controllers
             var serializedData = JsonConvert.SerializeObject(data);
             var jObj = JObject.Parse(serializedData);
 
-            if (bool.Parse(jObj["fields"][8]["data"].ToString()))
-            {
-                if(string.IsNullOrEmpty(jObj["fields"][9]["data"].ToString()))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "O campo Token Wirecard é obrigatório quando o módulo de Raspadinha está habilitado!" });
-                if (string.IsNullOrEmpty(jObj["fields"][10]["data"].ToString()))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "O campo Token JS Wirecard é obrigatório quando o módulo de Raspadinha está habilitado!" });
-            }
-
-            if (string.IsNullOrEmpty(jObj["fields"][1]["data"].ToString()))
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "O campo Ícone de favorito é obrigatório!" });
-
-
             var config = new StaticText()
             {
                 Title = "Configuração de Operação - " + id,
@@ -394,7 +384,7 @@ namespace ias.Rebens.api.Controllers
 
             if (staticTextRepo.Update(config, out string error))
             {
-                repo.ValidateOperation(id, out error);
+                repo.ValidateOperation(id, out _);
                 return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!" });
             }
 

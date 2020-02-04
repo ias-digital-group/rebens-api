@@ -10,9 +10,11 @@ namespace ias.Rebens
     public class OperationRepository : IOperationRepository
     {
         private string _connectionString;
+        private string _envoirement;
         public OperationRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+            _envoirement = configuration.GetSection("App:Envoirement").Value;
         }
 
         public bool AddAddress(int idOperation, int idAddress, out string error)
@@ -530,7 +532,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool SavePublishStatus(int id, int idStatus, int? idError, out string error, bool isTemporary = false)
+        public bool SavePublishStatus(int id, int idStatus, int? idError, out string error)
         {
             bool ret = false;
             try
@@ -538,11 +540,35 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var update = db.Operation.SingleOrDefault(o => o.Id == id);
-                    if (isTemporary)
-                        update.TemporaryPublishStatus = idStatus;
-                    else
-                        update.PublishStatus = idStatus;
-                    update.IdLogError = idError;
+                    if (idStatus == (int)Enums.PublishStatus.processing)
+                    {
+                        if (update.PublishStatus == (int)Enums.PublishStatus.publish)
+                            update.PublishStatus = idStatus;
+                        else if (update.TemporaryPublishStatus == (int)Enums.PublishStatus.publish)
+                            update.TemporaryPublishStatus = idStatus;
+                    }
+                    else if (idStatus == (int)Enums.PublishStatus.done)
+                    {
+                        if (update.PublishStatus == (int)Enums.PublishStatus.processing)
+                        {
+                            update.PublishStatus = idStatus;
+                            update.PublishedDate = DateTime.UtcNow;
+                        }
+                        else if (update.TemporaryPublishStatus == (int)Enums.PublishStatus.processing)
+                        {
+                            update.TemporaryPublishStatus = idStatus;
+                            update.TemporaryPublishedDate = DateTime.UtcNow;
+                        }
+                    }
+                    else if(idStatus == (int)Enums.PublishStatus.error)
+                    {
+                        if (update.PublishStatus == (int)Enums.PublishStatus.processing)
+                            update.PublishStatus = idStatus;
+                        else if (update.TemporaryPublishStatus == (int)Enums.PublishStatus.processing)
+                            update.TemporaryPublishStatus = idStatus;
+
+                        update.IdLogError = idError;
+                    }
                     update.Modified = DateTime.UtcNow;
 
                     db.SaveChanges();
@@ -559,7 +585,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool ValidateOperation(int id, out string error, bool isTemporary = false)
+        public bool ValidateOperation(int id, out string error)
         {
             bool ret = false;
             try
@@ -567,8 +593,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var operation = db.Operation.SingleOrDefault(o => o.Id == id);
-                    if (operation.PublishStatus != (int)Enums.PublishStatus.processing && operation.PublishStatus != (int)Enums.PublishStatus.done &&
-                        operation.TemporaryPublishStatus != (int)Enums.PublishStatus.processing && operation.TemporaryPublishStatus != (int)Enums.PublishStatus.done)
+                    if (operation.PublishStatus != (int)Enums.PublishStatus.processing && 
+                        operation.TemporaryPublishStatus != (int)Enums.PublishStatus.processing)
                     {
                         if (operation.Title != "" && !string.IsNullOrEmpty(operation.Image))
                         {
@@ -591,89 +617,108 @@ namespace ias.Rebens
                                         case "favicon":
                                             totalOK += item["data"].ToString() != "" ? 1 : 0;
                                             break;
-                                        case "module-coupon":
-                                            if (bool.Parse(item["data"].ToString()))
-                                            {
-                                                infoTotal += 2;
-                                                coupon = true;
-                                            }
-                                            break;
-                                        case "wirecard-token":
-                                            if (coupon)
-                                                totalOK += item["data"].ToString() != "" ? 1 : 0;
-                                            break;
-                                        case "wirecard-jstoken":
-                                            if (coupon)
-                                                totalOK += item["data"].ToString() != "" ? 1 : 0;
-                                            break;
                                     }
                                 }
+
+                                var listModules = jObj["modules"].Children();
+                                bool wirecard = false;
+                                bool needWirecard = false;
+                                foreach (var item in listModules)
+                                {
+                                    if (item["name"].ToString() == "course" || item["name"].ToString() == "freeCourse" || item["name"].ToString() == "coupon")
+                                    {
+                                        needWirecard = true;
+                                        if (item["wirecardToken"] != null && item["wirecardJSToken"] != null)
+                                            wirecard = true;
+                                    }
+
+                                    if(item["name"].ToString() == "coupon")
+                                    {
+                                        var contract = db.StaticText.SingleOrDefault(c => c.IdOperation == id && c.IdStaticTextType == (int)Enums.StaticTextType.Pages && c.Url == "contract");
+                                        if (coupon)
+                                        {
+                                            if (contract == null)
+                                            {
+                                                contract = db.StaticText.Single(c => c.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && c.Url == "contract");
+                                                db.StaticText.Add(new StaticText()
+                                                {
+                                                    Active = true,
+                                                    Created = DateTime.UtcNow,
+                                                    Html = contract.Html,
+                                                    IdOperation = id,
+                                                    IdStaticTextType = (int)Enums.StaticTextType.Pages,
+                                                    Modified = DateTime.UtcNow,
+                                                    Order = contract.Order,
+                                                    Style = contract.Style,
+                                                    Title = contract.Title,
+                                                    Url = contract.Url
+                                                });
+                                                db.SaveChanges();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (contract != null)
+                                            {
+                                                db.StaticText.Remove(contract);
+                                                db.SaveChanges();
+                                            }
+                                        }
+                                    }
+                                }
+                                infoTotal += needWirecard ? 1 : 0;
+                                totalOK += wirecard ? 1 : 0;
+
                                 if (totalOK == infoTotal)
                                 {
-                                    var contract = db.StaticText.SingleOrDefault(c => c.IdOperation == id && c.IdStaticTextType == (int)Enums.StaticTextType.Pages && c.Url == "contract");
-                                    if(coupon)
+                                    if (operation.TemporaryPublishStatus == (int)Enums.PublishStatus.done && (
+                                            ((operation.PublishStatus == (int)Enums.PublishStatus.done || operation.PublishStatus == (int)Enums.PublishStatus.notvalid) && operation.PublishedDate < operation.TemporaryPublishedDate)
+                                            || 
+                                            !operation.PublishedDate.HasValue
+                                        )
+                                    )
                                     {
-                                        if (contract == null)
+                                        if (operation.Domain != "")
                                         {
-                                            contract = db.StaticText.Single(c => c.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && c.Url == "contract");
-                                            db.StaticText.Add(new StaticText()
+                                            if (!Uri.IsWellFormedUriString(operation.Domain, UriKind.Relative))
                                             {
-                                                Active = true,
-                                                Created = DateTime.UtcNow,
-                                                Html = contract.Html,
-                                                IdOperation = id,
-                                                IdStaticTextType = (int)Enums.StaticTextType.Pages,
-                                                Modified = DateTime.UtcNow,
-                                                Order = contract.Order,
-                                                Style = contract.Style,
-                                                Title = contract.Title,
-                                                Url = contract.Url
-                                            });
-                                            db.SaveChanges();
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (contract != null)
-                                        {
-                                            db.StaticText.Remove(contract);
-                                            db.SaveChanges();
-                                        }
-                                    }
-
-
-                                    if (operation.Domain != "")
-                                    {
-                                        if (!Uri.IsWellFormedUriString(operation.Domain, UriKind.Relative))
-                                        {
-                                            operation.Domain = operation.Domain.Replace("http://", "").Replace("https://", "");
-                                            if (operation.Domain.IndexOf("/") > 0)
-                                                operation.Domain = operation.Domain.Substring(0, operation.Domain.IndexOf("/"));
-                                        }
-                                        operation.PublishStatus = (int)Enums.PublishStatus.publish;
-                                        operation.Modified = DateTime.UtcNow;
-                                        ret = true;
-                                    }
-                                    else
-                                    {
-                                        operation.PublishStatus = (int)Enums.PublishStatus.notvalid;
-                                        operation.Modified = DateTime.UtcNow;
-                                    }
-                                    if (operation.TemporarySubdomain != "")
-                                    {
-                                        char[] arr = operation.TemporarySubdomain.ToCharArray();
-                                        arr = Array.FindAll<char>(arr, (c => (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || c == '-')));
-                                        operation.TemporarySubdomain = new string(arr);
-                                        operation.TemporaryPublishStatus = (int)Enums.PublishStatus.publish;
-                                        operation.Modified = DateTime.UtcNow;
-                                        if (isTemporary)
+                                                operation.Domain = operation.Domain.Replace("http://", "").Replace("https://", "");
+                                                if (operation.Domain.IndexOf("/") > 0)
+                                                    operation.Domain = operation.Domain.Substring(0, operation.Domain.IndexOf("/"));
+                                            }
+                                            operation.PublishStatus = (int)Enums.PublishStatus.publish;
+                                            operation.Modified = DateTime.UtcNow;
                                             ret = true;
+                                        }
+                                        else
+                                        {
+                                            operation.PublishStatus = (int)Enums.PublishStatus.notvalid;
+                                            operation.Modified = DateTime.UtcNow;
+                                        }
+                                        
                                     }
                                     else
                                     {
-                                        operation.TemporaryPublishStatus = (int)Enums.PublishStatus.notvalid;
-                                        operation.Modified = DateTime.UtcNow;
+                                        if (operation.TemporarySubdomain != "")
+                                        {
+                                            char[] arr = operation.TemporarySubdomain.ToCharArray();
+                                            arr = Array.FindAll<char>(arr, (c => (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || c == '-')));
+                                            operation.TemporarySubdomain = new string(arr);
+                                            operation.TemporaryPublishStatus = (int)Enums.PublishStatus.publish;
+                                            operation.Modified = DateTime.UtcNow;
+                                            ret = true;
+                                        }
+                                        else
+                                        {
+                                            operation.TemporaryPublishStatus = (int)Enums.PublishStatus.notvalid;
+                                            operation.Modified = DateTime.UtcNow;
+                                        }
                                     }
+
+
+
+
+
                                     db.SaveChanges();
                                     error = null;
                                 }
@@ -687,7 +732,7 @@ namespace ias.Rebens
                             error = "Os campos título e o logo do clube são obrigatórios para publicação.";
                     }
                     else
-                        error = $"A Operação já está publicada {(isTemporary ? "" : "na url temporária")}.";
+                        error = "A Operação já está publicada.";
                 }
             }
             catch (Exception ex)
@@ -699,9 +744,10 @@ namespace ias.Rebens
             return ret;
         }
 
-        public object GetPublishData(int id, bool isTemporary, out string error)
+        public object GetPublishData(int id, out string domain, out string error)
         {
             object ret = null;
+            domain = "";
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -709,179 +755,209 @@ namespace ias.Rebens
                     var operation = db.Operation.SingleOrDefault(o => o.Id == id);
                     if(operation != null)
                     {
-                        if((isTemporary && operation.TemporaryPublishStatus == (int)Enums.PublishStatus.publish) || (!isTemporary && operation.PublishStatus == (int)Enums.PublishStatus.publish))
+                        bool isTemporary = operation.TemporaryPublishStatus == (int)Enums.PublishStatus.publish;
+
+                        string Color = "", Favicon = "", contactEmail = "", GoogleAnalytics = "", WirecardToken = "", WirecardJSToken = "", RegisterType = "";
+                        var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                        if (configuration != null)
                         {
-                            string color = "", favicon = "", contactEmail = "", gaCode = "";
-                            bool couponEnable = false, customerReferalEnable = false, operationPartnerEnable = false;
-                            var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
-                            if (configuration != null)
+                            var jObj = JObject.Parse(configuration.Html);
+                            var list = jObj["fields"].Children();
+                            foreach (var item in list)
                             {
-                                var jObj = JObject.Parse(configuration.Html);
-                                var list = jObj["fields"].Children();
-                                foreach (var item in list)
+                                switch (item["name"].ToString())
                                 {
-                                    switch (item["name"].ToString())
-                                    {
-                                        case "color":
-                                            color = item["data"].ToString();
-                                            break;
-                                        case "favicon":
-                                            favicon = item["data"].ToString();
-                                            break;
-                                        case "module-coupon":
-                                            couponEnable = bool.Parse(item["data"].ToString());
-                                            break;
-                                        case "contact-mail":
-                                            contactEmail = item["data"].ToString();
-                                            break;
-                                        case "customer-referal":
-                                            customerReferalEnable = bool.Parse(item["data"].ToString());
-                                            break;
-                                        case "module-operation-partner":
-                                            operationPartnerEnable = bool.Parse(item["data"].ToString());
-                                            break;
-                                        case "g-analytics":
-                                            gaCode = item["data"].ToString();
-                                            break;
-                                    }
+                                    case "color":
+                                        Color = item["data"].ToString();
+                                        break;
+                                    case "favicon":
+                                        Favicon = item["data"].ToString();
+                                        break;
+                                    case "contact-mail":
+                                        contactEmail = item["data"].ToString();
+                                        break;
+                                    case "g-analytics":
+                                        GoogleAnalytics = item["data"].ToString();
+                                        break;
                                 }
-                                ret = new
-                                {
-                                    Id = operation.Code,
-                                    Color = color,
-                                    operation.Title,
-                                    Logo = operation.Image,
-                                    Favicon = favicon,
-                                    CouponEnabled = couponEnable,
-                                    OperationPartnerEnable = operationPartnerEnable,
-                                    Domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain),
-                                    CustomerReferalEnable = customerReferalEnable,
-                                    GoogleAnalytics = gaCode
-                                };
-
-                                contactEmail = string.IsNullOrEmpty(contactEmail) ? ("contato@" + (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain)) : contactEmail;
-                                var staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailCustomerValidationDefault);
-                                if (staticText != null)
-                                {
-                                    var html = staticText.Html.Replace("##CONFIG_DOMAIN##", operation.Domain);
-                                    html = html.Replace("##CONFIG_TITLE##", operation.Title);
-                                    html = html.Replace("##CONFIG_LOGO##", operation.Image);
-                                    html = html.Replace("##CONFIG_EMAIL##", contactEmail);
-                                    html = html.Replace("##COLOR##", color);
-
-                                    var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.EmailCustomerValidation);
-                                    if (update != null)
-                                    {
-                                        update.Modified = DateTime.UtcNow;
-                                        update.Html = html;
-                                        update.Style = staticText.Style;
-                                        update.Url = staticText.Url;
-                                        update.Title = staticText.Title;
-                                        update.Order = staticText.Order;
-                                    }
-                                    else
-                                    {
-                                        var email1 = new StaticText()
-                                        {
-                                            Active = true,
-                                            Created = DateTime.UtcNow,
-                                            Html = html,
-                                            IdOperation = operation.Id,
-                                            IdStaticTextType = (int)Enums.StaticTextType.EmailCustomerValidation,
-                                            Modified = DateTime.UtcNow,
-                                            Order = staticText.Order,
-                                            Style = staticText.Style,
-                                            Title = staticText.Title,
-                                            Url = staticText.Url
-                                        };
-                                        db.StaticText.Add(email1);
-                                    }
-                                }
-
-                                staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailPasswordRecoveryDefault);
-                                if (staticText != null)
-                                {
-                                    var html = staticText.Html.Replace("##CONFIG_DOMAIN##", operation.Domain);
-                                    html = html.Replace("##CONFIG_TITLE##", operation.Title);
-                                    html = html.Replace("##CONFIG_LOGO##", operation.Image);
-                                    html = html.Replace("##CONFIG_EMAIL##", contactEmail);
-                                    html = html.Replace("##COLOR##", color);
-
-                                    var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.EmailPasswordRecovery);
-                                    if (update != null)
-                                    {
-                                        update.Modified = DateTime.UtcNow;
-                                        update.Html = html;
-                                        update.Style = staticText.Style;
-                                        update.Url = staticText.Url;
-                                        update.Title = staticText.Title;
-                                        update.Order = staticText.Order;
-                                    }
-                                    else
-                                    {
-                                        var email2 = new StaticText()
-                                        {
-                                            Active = true,
-                                            Created = DateTime.UtcNow,
-                                            Html = html,
-                                            IdOperation = operation.Id,
-                                            IdStaticTextType = (int)Enums.StaticTextType.EmailPasswordRecovery,
-                                            Modified = DateTime.UtcNow,
-                                            Order = staticText.Order,
-                                            Style = staticText.Style,
-                                            Title = staticText.Title,
-                                            Url = staticText.Url
-                                        };
-                                        db.StaticText.Add(email2);
-                                    }
-                                }
-
-                                staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailDefault);
-                                if (staticText != null)
-                                {
-                                    var html = staticText.Html.Replace("##CONFIG_DOMAIN##", operation.Domain);
-                                    html = html.Replace("##CONFIG_TITLE##", operation.Title);
-                                    html = html.Replace("##CONFIG_LOGO##", operation.Image);
-                                    html = html.Replace("##CONFIG_EMAIL##", contactEmail);
-                                    html = html.Replace("##COLOR##", color);
-
-                                    var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.Email);
-                                    if (update != null)
-                                    {
-                                        update.Modified = DateTime.UtcNow;
-                                        update.Html = html;
-                                        update.Style = staticText.Style;
-                                        update.Url = staticText.Url;
-                                        update.Title = staticText.Title;
-                                        update.Order = staticText.Order;
-                                    }
-                                    else
-                                    {
-                                        var email3 = new StaticText()
-                                        {
-                                            Active = true,
-                                            Created = DateTime.UtcNow,
-                                            Html = html,
-                                            IdOperation = operation.Id,
-                                            IdStaticTextType = (int)Enums.StaticTextType.Email,
-                                            Modified = DateTime.UtcNow,
-                                            Order = staticText.Order,
-                                            Style = staticText.Style,
-                                            Title = staticText.Title,
-                                            Url = staticText.Url
-                                        };
-                                        db.StaticText.Add(email3);
-                                    }
-                                }
-                                db.SaveChanges();
-
-                                error = null;
                             }
-                            else
-                                error = "Configuração da operação não encontrada!";
+                            var Modules = new List<object>();
+                            var listModules = jObj["modules"].Children();
+                            foreach(var item in listModules)
+                            {
+                                if (item["name"].ToString() == "registerType")
+                                {
+                                    RegisterType = item["data"].ToString();
+                                }
+                                else
+                                {
+                                    if((item["name"].ToString() == "course" || item["name"].ToString() == "freeCourse" || item["name"].ToString() == "coupon")
+                                        && string.IsNullOrEmpty(WirecardToken) && item["wirecardToken"] != null && item["wirecardJSToken"] != null)
+                                    {
+                                        WirecardToken = item["wirecardToken"].ToString();
+                                        WirecardJSToken = item["wirecardJSToken"].ToString();
+                                    }
+
+                                    var Files = new List<string>();
+                                    foreach (var file in item["files"].Children())
+                                    {
+                                        Files.Add(file.ToString());
+                                    }
+                                    var RouteImports = new List<string>();
+                                    foreach (var imp in item["configuration"]["routeImports"].Children())
+                                    {
+                                        RouteImports.Add(imp.ToString());
+                                    }
+                                    var Configuration = new
+                                    {
+                                        RouteImports,
+                                        RouteConfig = item["configuration"]["routeConfig"].ToString()
+                                    };
+                                    Modules.Add(new
+                                    {
+                                        name = item["name"].ToString(),
+                                        Files,
+                                        configuration
+                                    });
+                                }
+                            }
+                            domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
+                            ret = new
+                            {
+                                Id = operation.Code,
+                                Color,
+                                operation.Title,
+                                Logo = operation.Image,
+                                Favicon,
+                                GoogleAnalytics,
+                                Domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain),
+                                Environment  = _envoirement,
+                                WirecardToken,
+                                WirecardJSToken,
+                                RegisterType = "", 
+                                Modules 
+                            };
+
+                            contactEmail = string.IsNullOrEmpty(contactEmail) ? ("contato@" + (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain)) : contactEmail;
+                            var staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailCustomerValidationDefault);
+                            if (staticText != null)
+                            {
+                                var html = staticText.Html.Replace("##CONFIG_DOMAIN##", operation.Domain);
+                                html = html.Replace("##CONFIG_TITLE##", operation.Title);
+                                html = html.Replace("##CONFIG_LOGO##", operation.Image);
+                                html = html.Replace("##CONFIG_EMAIL##", contactEmail);
+                                html = html.Replace("##COLOR##", Color);
+
+                                var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.EmailCustomerValidation);
+                                if (update != null)
+                                {
+                                    update.Modified = DateTime.UtcNow;
+                                    update.Html = html;
+                                    update.Style = staticText.Style;
+                                    update.Url = staticText.Url;
+                                    update.Title = staticText.Title;
+                                    update.Order = staticText.Order;
+                                }
+                                else
+                                {
+                                    var email1 = new StaticText()
+                                    {
+                                        Active = true,
+                                        Created = DateTime.UtcNow,
+                                        Html = html,
+                                        IdOperation = operation.Id,
+                                        IdStaticTextType = (int)Enums.StaticTextType.EmailCustomerValidation,
+                                        Modified = DateTime.UtcNow,
+                                        Order = staticText.Order,
+                                        Style = staticText.Style,
+                                        Title = staticText.Title,
+                                        Url = staticText.Url
+                                    };
+                                    db.StaticText.Add(email1);
+                                }
+                            }
+
+                            staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailPasswordRecoveryDefault);
+                            if (staticText != null)
+                            {
+                                var html = staticText.Html.Replace("##CONFIG_DOMAIN##", operation.Domain);
+                                html = html.Replace("##CONFIG_TITLE##", operation.Title);
+                                html = html.Replace("##CONFIG_LOGO##", operation.Image);
+                                html = html.Replace("##CONFIG_EMAIL##", contactEmail);
+                                html = html.Replace("##COLOR##", Color);
+
+                                var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.EmailPasswordRecovery);
+                                if (update != null)
+                                {
+                                    update.Modified = DateTime.UtcNow;
+                                    update.Html = html;
+                                    update.Style = staticText.Style;
+                                    update.Url = staticText.Url;
+                                    update.Title = staticText.Title;
+                                    update.Order = staticText.Order;
+                                }
+                                else
+                                {
+                                    var email2 = new StaticText()
+                                    {
+                                        Active = true,
+                                        Created = DateTime.UtcNow,
+                                        Html = html,
+                                        IdOperation = operation.Id,
+                                        IdStaticTextType = (int)Enums.StaticTextType.EmailPasswordRecovery,
+                                        Modified = DateTime.UtcNow,
+                                        Order = staticText.Order,
+                                        Style = staticText.Style,
+                                        Title = staticText.Title,
+                                        Url = staticText.Url
+                                    };
+                                    db.StaticText.Add(email2);
+                                }
+                            }
+
+                            staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailDefault);
+                            if (staticText != null)
+                            {
+                                var html = staticText.Html.Replace("##CONFIG_DOMAIN##", operation.Domain);
+                                html = html.Replace("##CONFIG_TITLE##", operation.Title);
+                                html = html.Replace("##CONFIG_LOGO##", operation.Image);
+                                html = html.Replace("##CONFIG_EMAIL##", contactEmail);
+                                html = html.Replace("##COLOR##", Color);
+
+                                var update = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.Email);
+                                if (update != null)
+                                {
+                                    update.Modified = DateTime.UtcNow;
+                                    update.Html = html;
+                                    update.Style = staticText.Style;
+                                    update.Url = staticText.Url;
+                                    update.Title = staticText.Title;
+                                    update.Order = staticText.Order;
+                                }
+                                else
+                                {
+                                    var email3 = new StaticText()
+                                    {
+                                        Active = true,
+                                        Created = DateTime.UtcNow,
+                                        Html = html,
+                                        IdOperation = operation.Id,
+                                        IdStaticTextType = (int)Enums.StaticTextType.Email,
+                                        Modified = DateTime.UtcNow,
+                                        Order = staticText.Order,
+                                        Style = staticText.Style,
+                                        Title = staticText.Title,
+                                        Url = staticText.Url
+                                    };
+                                    db.StaticText.Add(email3);
+                                }
+                            }
+                            db.SaveChanges();
+
+                            error = null;
                         }
                         else
-                            error = "Operação não válida para publicação!";
+                            error = "Configuração da operação não encontrada!";
                     }
                     else
                         error = "Operação não encontrada!";
