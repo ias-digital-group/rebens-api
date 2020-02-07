@@ -59,30 +59,6 @@ CREATE TABLE [dbo].[Module](
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-insert into Module VALUES ('registerType', 'Cadastro', '{
-	"fields": [{
-			"name": "type",
-			"label": "Tipo",
-			"type": "select",
-			"data": [
-				{
-					"name": "Aberto",
-					"value": "open"
-				},
-				{
-					"name": "Fechado",
-					"value": "closed"
-				},
-				{
-					"name": "Fechado + Parceiros",
-					"value": "closed-partner"
-				}],
-			"isRequired": true
-		}],
-	"files": []
-	"configuration": {}
-	}', GETUTCDATE(), GETUTCDATE())
-
 insert into Module VALUES ('customerReferal', 'Indique', '{
 	"fields": [{
 			"name": "max",
@@ -91,7 +67,7 @@ insert into Module VALUES ('customerReferal', 'Indique', '{
 			"data": [],
 			"isRequired": true
 		}],
-	"files": [ "CustomerReferal" ]
+	"files": [ "CustomerReferal" ],
 	"configuration": {
 		"routeImports": [ "import Referal from ''./pages/CustomerReferal/Referal.vue'';" ],
 		"routeConfig": "{ path: ''/indique'', component: Main, children: [ { path: ''/'', name: ''indique'', component: Referal, meta: { requiresAuth: true, contentCode: '''' } } ] }"
@@ -100,7 +76,7 @@ insert into Module VALUES ('customerReferal', 'Indique', '{
 
 insert into Module VALUES ('course', 'Cursos', '{
 	"fields": [],
-	"files": [ "Graduation" ]
+	"files": [ "Graduation" ],
 	"configuration": {
 		"routeImports": [ "import GraduationList from ''./pages/Graduation/List.vue'';", "import GraduationDetail from ''./pages/Graduation/Detail.vue'';", "import GraduationBasket from ''./pages/Graduation/Basket.vue'';" ],
 		"routeConfig": "{ path: ''/graduacao'', component: Main, children: [ { path: ''/'', name: ''Graduacao'', component: GraduationList, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/view'', props: true, name: ''Graduacao'', component: GraduationDetail, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/basket'', props: true, name: ''Graduacao'', component: GraduationBasket, meta: { requiresAuth: false, contentCode: '''' } } ] }"
@@ -109,7 +85,7 @@ insert into Module VALUES ('course', 'Cursos', '{
 
 insert into Module VALUES ('freeCourse', 'Cursos Livres', '{
 	"fields": [],
-	"files": [ "FreeCourse" ]
+	"files": [ "FreeCourse" ],
 	"configuration": {
 		"routeImports": [ "import FreeCourseList from ''./pages/FreeCourse/List.vue'';", "import FreeCourseDetail from ''./pages/FreeCourse/Detail.vue'';", "import FreeCourseBasket from ''./pages/FreeCourse/Basket.vue'';" ],
 		"routeConfig": "{ path: ''/cursos-livres'', component: Main, children: [ { path: ''/'', name: ''Cursos Livres'', component: FreeCourseList, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/view'', props: true, name: ''Cursos Livres'', component: FreeCourseDetail, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/basket'', props: true, name: ''Cursos Livres'', component: FreeCourseBasket, meta: { requiresAuth: false, contentCode: '''' } } ] }"
@@ -118,7 +94,7 @@ insert into Module VALUES ('freeCourse', 'Cursos Livres', '{
 
 insert into Module VALUES ('coupon', 'Raspadinha', '{
 	"fields": [],
-	"files": [ "Coupons" ]
+	"files": [ "Coupons" ],
 	"configuration": {
 		"routeImports": [ "import CouponHistory from ''./pages/Coupons/History.vue'';" ],
 		"routeConfig": "{ path: ''/raspadinha'', component: Main, children: [ { path: ''/'', name: ''raspadinha'', component: CouponHistory, meta: { requiresAuth: true, contentCode: '''' } } ] }"
@@ -173,10 +149,35 @@ update StaticText set Html = '{
 			"type": "text",
 			"data": "",
 			"isRequired": false
+		},
+		{
+			"name": "register-type",
+			"label": "Tipo de cadastro",
+			"type": "select",
+			"data": "",
+			"isRequired": true,
+			"options": [
+				{
+					"name": "Aberto",
+					"value": "open"
+				},
+				{
+					"name": "Fechado",
+					"value": "closed"
+				},
+				{
+					"name": "Fechado + Parceiros",
+					"value": "closed-partner"
+				}
+			]
 		}
 	],
 	"modules": []
 }' where IdStaticTextType = 11
 
+ALTER TABLE Operation ADD TemporaryBuildVersion NVARCHAR(50) NULL
+GO
 
+ALTER TABLE Operation ADD BuildVersion NVARCHAR(50) NULL
+GO
 

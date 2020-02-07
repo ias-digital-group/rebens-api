@@ -977,22 +977,37 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("Modules"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [HttpGet("Modules/{id}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(List<ModuleModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListModules()
+        public IActionResult ListModules(int id)
         {
             var list = moduleRepo.List(out string error);
+            List<ModuleModel> modules = null;
+            var ret = new List<ModuleModel>();
 
+            if (id > 0)
+            {
+                var configuration = staticTextRepo.ReadOperationConfiguration(id, out _);
+                var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(configuration.Html);
+                modules = config.Modules;
+            }
+            
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new List<ModuleModel>();
                 foreach (var m in list)
-                    ret.Add(new ModuleModel(m));
+                {
+                    var item = new ModuleModel(m);
+                    if(modules != null && modules.Any(md => md.Name == m.Name))
+                    {
+                        item = modules.Single(md => md.Name == m.Name);   
+                    }
+                    ret.Add(item);
+                }   
 
                 return Ok(ret);
             }

@@ -601,38 +601,45 @@ namespace ias.Rebens
                             var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
                             if (configuration != null)
                             {
-                                var jObj = JObject.Parse(configuration.Html);
+                                var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(configuration.Html);
 
                                 int totalOK = 0;
-                                int infoTotal = 2;
+                                int infoTotal = 3;
                                 bool coupon = false;
-                                var list = jObj["fields"].Children();
-                                foreach (var item in list)
+                                foreach (var item in config.Fields)
                                 {
-                                    switch (item["name"].ToString())
+                                    switch (item.Name)
                                     {
                                         case "color":
-                                            totalOK += item["data"].ToString() != "" ? 1 : 0;
+                                            totalOK += item.Data != "" ? 1 : 0;
                                             break;
                                         case "favicon":
-                                            totalOK += item["data"].ToString() != "" ? 1 : 0;
+                                            totalOK += item.Data != "" ? 1 : 0;
+                                            break;
+                                        case "register-type":
+                                            totalOK += item.Data != "" ? 1 : 0;
                                             break;
                                     }
                                 }
 
-                                var listModules = jObj["modules"].Children();
                                 bool wirecard = false;
+                                bool wirecardJS = false;
                                 bool needWirecard = false;
-                                foreach (var item in listModules)
+                                foreach (var item in config.Modules)
                                 {
-                                    if (item["name"].ToString() == "course" || item["name"].ToString() == "freeCourse" || item["name"].ToString() == "coupon")
+                                    if ((item.Name == "course" || item.Name == "freeCourse" || item.Name == "coupon" ) && needWirecard && !wirecard && !wirecardJS && item.Checked)
                                     {
                                         needWirecard = true;
-                                        if (item["wirecardToken"] != null && item["wirecardJSToken"] != null)
-                                            wirecard = true;
+                                        foreach (var field in item.Info.Fields)
+                                        {
+                                            if (field.Name == "wirecardToken" && !string.IsNullOrEmpty(field.Data))
+                                                wirecard = true;
+                                            if (field.Name == "wirecardJSToken" && !string.IsNullOrEmpty(field.Data))
+                                                wirecardJS = true;
+                                        }
                                     }
 
-                                    if(item["name"].ToString() == "coupon")
+                                    if(item.Name == "coupon" && item.Checked)
                                     {
                                         var contract = db.StaticText.SingleOrDefault(c => c.IdOperation == id && c.IdStaticTextType == (int)Enums.StaticTextType.Pages && c.Url == "contract");
                                         if (coupon)
@@ -667,7 +674,7 @@ namespace ias.Rebens
                                     }
                                 }
                                 infoTotal += needWirecard ? 1 : 0;
-                                totalOK += wirecard ? 1 : 0;
+                                totalOK += wirecard && wirecardJS ? 1 : 0;
 
                                 if (totalOK == infoTotal)
                                 {
@@ -715,10 +722,6 @@ namespace ias.Rebens
                                         }
                                     }
 
-
-
-
-
                                     db.SaveChanges();
                                     error = null;
                                 }
@@ -761,66 +764,45 @@ namespace ias.Rebens
                         var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
                         if (configuration != null)
                         {
-                            var jObj = JObject.Parse(configuration.Html);
-                            var list = jObj["fields"].Children();
-                            foreach (var item in list)
+                            var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(configuration.Html);
+
+                            foreach (var item in config.Fields)
                             {
-                                switch (item["name"].ToString())
+                                switch (item.Name)
                                 {
                                     case "color":
-                                        Color = item["data"].ToString();
+                                        Color = item.Data;
                                         break;
                                     case "favicon":
-                                        Favicon = item["data"].ToString();
+                                        Favicon = item.Data;
                                         break;
                                     case "contact-mail":
-                                        contactEmail = item["data"].ToString();
+                                        contactEmail = item.Data;
                                         break;
                                     case "g-analytics":
-                                        GoogleAnalytics = item["data"].ToString();
+                                        GoogleAnalytics = item.Data;
+                                        break;
+                                    case "register-type":
+                                        RegisterType = item.Data;
                                         break;
                                 }
                             }
-                            var Modules = new List<object>();
-                            var listModules = jObj["modules"].Children();
-                            foreach(var item in listModules)
-                            {
-                                if (item["name"].ToString() == "registerType")
-                                {
-                                    RegisterType = item["data"].ToString();
-                                }
-                                else
-                                {
-                                    if((item["name"].ToString() == "course" || item["name"].ToString() == "freeCourse" || item["name"].ToString() == "coupon")
-                                        && string.IsNullOrEmpty(WirecardToken) && item["wirecardToken"] != null && item["wirecardJSToken"] != null)
-                                    {
-                                        WirecardToken = item["wirecardToken"].ToString();
-                                        WirecardJSToken = item["wirecardJSToken"].ToString();
-                                    }
 
-                                    var Files = new List<string>();
-                                    foreach (var file in item["files"].Children())
+                            foreach(var item in config.Modules)
+                            {
+                                if((item.Name == "course" || item.Name == "freeCourse" || item.Name == "coupon")
+                                    && string.IsNullOrEmpty(WirecardToken))
+                                {
+                                    foreach (var field in item.Info.Fields)
                                     {
-                                        Files.Add(file.ToString());
+                                        if (field.Name == "wirecardToken" && !string.IsNullOrEmpty(field.Data))
+                                            WirecardToken = field.Data;
+                                        if (field.Name == "wirecardJSToken" && !string.IsNullOrEmpty(field.Data))
+                                            WirecardToken = field.Data;
                                     }
-                                    var RouteImports = new List<string>();
-                                    foreach (var imp in item["configuration"]["routeImports"].Children())
-                                    {
-                                        RouteImports.Add(imp.ToString());
-                                    }
-                                    var Configuration = new
-                                    {
-                                        RouteImports,
-                                        RouteConfig = item["configuration"]["routeConfig"].ToString()
-                                    };
-                                    Modules.Add(new
-                                    {
-                                        name = item["name"].ToString(),
-                                        Files,
-                                        configuration
-                                    });
                                 }
                             }
+
                             domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                             ret = new
                             {
@@ -831,11 +813,11 @@ namespace ias.Rebens
                                 Favicon,
                                 GoogleAnalytics,
                                 Domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain),
-                                Environment = constant.AppSettings.App.Environment,
+                                constant.AppSettings.App.Environment,
                                 WirecardToken,
                                 WirecardJSToken,
-                                RegisterType = "", 
-                                Modules 
+                                RegisterType, 
+                                config.Modules 
                             };
 
                             var logError = new LogErrorRepository(this._connectionString);

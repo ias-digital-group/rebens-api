@@ -6,29 +6,23 @@ namespace ias.Rebens.Helper.Config
 {
     public class ModuleInformation
     {
-        public List<ModuleFields> fields { get; set; }
-        public List<string> files { get; set; }
-        public ModuleConfiguration configuration { get; set; }
+        public List<ModuleFields> Fields { get; set; }
+        public List<string> Files { get; set; }
+        public ModuleConfiguration Configuration { get; set; }
     }
 
     public class ModuleFields
     {
-        public string name { get; set; }
-        public string label { get; set; }
-        public string type { get; set; }
-        public List<ModuleFieldsData> data { get; set; }
-        public bool isRequired { get; set; }
-    }
-
-    public class ModuleFieldsData
-    {
-        public string name { get; set; }
-        public string value { get; set; }
+        public string Name { get; set; }
+        public string Label { get; set; }
+        public string Type { get; set; }
+        public string Data { get; set; }
+        public bool IsRequired { get; set; }
     }
 
     public class ModuleConfiguration
     {
-        public List<string> routeImports { get; set; }
-        public string routeConfig { get; set; }
+        public List<string> RouteImports { get; set; }
+        public string RouteConfig { get; set; }
     }
 }

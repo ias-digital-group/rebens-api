@@ -52,6 +52,8 @@ namespace ias.Rebens
         public int? SendinblueListId { get; set; }
         public DateTime? TemporaryPublishedDate { get; set; }
         public DateTime? PublishedDate { get; set; }
+        public string TemporaryBuildVersion { get; set; }
+        public string BuildVersion { get; set; }
 
         public virtual LogError LogError { get; set; }
         public virtual ICollection<Benefit> Benefits { get; set; }
