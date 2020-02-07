@@ -10,11 +10,11 @@ namespace ias.Rebens
     public class OperationRepository : IOperationRepository
     {
         private string _connectionString;
-        private string _envoirement;
+        private Constant constant;
         public OperationRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
-            _envoirement = configuration.GetSection("App:Envoirement").Value;
+            constant = new Constant();
         }
 
         public bool AddAddress(int idOperation, int idAddress, out string error)
@@ -831,12 +831,15 @@ namespace ias.Rebens
                                 Favicon,
                                 GoogleAnalytics,
                                 Domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain),
-                                Environment  = _envoirement,
+                                Environment = constant.AppSettings.App.Environment,
                                 WirecardToken,
                                 WirecardJSToken,
                                 RegisterType = "", 
                                 Modules 
                             };
+
+                            var logError = new LogErrorRepository(this._connectionString);
+                            int idLog = logError.Create("OperationRepository.GetPublishData", "Envoirement", constant.AppSettings.App.Environment, "");
 
                             contactEmail = string.IsNullOrEmpty(contactEmail) ? ("contato@" + (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain)) : contactEmail;
                             var staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.EmailCustomerValidationDefault);
@@ -983,10 +986,16 @@ namespace ias.Rebens
                     var op = db.Operation.SingleOrDefault(o => o.Code == code);
                     if (op != null)
                     {
-                        if(op.PublishStatus == (int)Enums.PublishStatus.processing)
+                        if (op.PublishStatus == (int)Enums.PublishStatus.processing)
+                        {
                             op.PublishStatus = (int)Enums.PublishStatus.done;
-                        else if(op.TemporaryPublishStatus == (int)Enums.PublishStatus.processing)
+                            op.PublishedDate = DateTime.UtcNow;
+                        }
+                        else if (op.TemporaryPublishStatus == (int)Enums.PublishStatus.processing)
+                        {
                             op.TemporaryPublishStatus = (int)Enums.PublishStatus.done;
+                            op.TemporaryPublishedDate = DateTime.UtcNow;
+                        }
                         op.Modified = DateTime.UtcNow;
                         db.SaveChanges();
 

@@ -39,7 +39,7 @@ namespace ias.Rebens.api.Controllers
         private IHostingEnvironment _hostingEnvironment;
         private IModuleRepository moduleRepo;
         private ILogger<OperationController> _logger;
-        private string _builderUrl;
+        private Constant constant;
 
         /// <summary>
         /// Construtor
@@ -57,7 +57,7 @@ namespace ias.Rebens.api.Controllers
         public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, 
             IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository,
             IOperationCustomerRepository operationCustomerRepository, IHostingEnvironment hostingEnvironment, ILogger<OperationController> logger,
-            ILogErrorRepository logError, IFileToProcessRepository fileToProcessRepository, IModuleRepository moduleRepository, IConfiguration configuration)
+            ILogErrorRepository logError, IFileToProcessRepository fileToProcessRepository, IModuleRepository moduleRepository)
         {
             this.repo = operationRepository;
             this.addressRepo = addressRepository;
@@ -71,7 +71,7 @@ namespace ias.Rebens.api.Controllers
             this.logError = logError;
             this.fileToProcessRepo = fileToProcessRepository;
             this.moduleRepo = moduleRepository;
-            _builderUrl = configuration.GetSection("App:BuilderUrl").Value;
+            this.constant = new Constant();
         }
 
         #region Operation
@@ -262,7 +262,7 @@ namespace ias.Rebens.api.Controllers
                     }
 
                     string content = JsonConvert.SerializeObject(ret);
-                    HttpWebRequest request = WebRequest.Create($"{_builderUrl}api/operations") as HttpWebRequest;
+                    HttpWebRequest request = WebRequest.Create(new Uri($"{constant.BuilderUrl}api/operations")) as HttpWebRequest;
 
                     request.Method = "POST";
                     request.ContentType = "application/json";
@@ -279,7 +279,7 @@ namespace ias.Rebens.api.Controllers
                         if (response.StatusCode != HttpStatusCode.OK)
                             repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
 
-                        return StatusCode(200, new JsonModel() { Status = "ok" });
+                        return StatusCode(200, new JsonModel() { Status = "ok", Data = ret });
                     }
                     catch
                     {

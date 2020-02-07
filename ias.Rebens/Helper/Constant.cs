@@ -40,5 +40,6 @@ namespace ias.Rebens
         public string ConnectionString { get { return this.AppSettings.ConnectionStrings.DefaultConnection; } }
         public string MoipNotificationAuthorization { get { return this.AppSettings.App.WirecardAuthorization; } }
         public bool DebugOn { get { return this.AppSettings.App.Debug; } }
+        public string BuilderUrl { get { return this.AppSettings.App.BuilderUrl; } }
     }
 }

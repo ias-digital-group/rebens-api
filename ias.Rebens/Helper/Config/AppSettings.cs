@@ -20,7 +20,7 @@ namespace ias.Rebens.Helper.Config
         public string URL { get; set; }
         public string WirecardAuthorization { get; set; }
         public bool Debug { get; set; }
-        public string Envoirement { get; set; }
+        public string Environment { get; set; }
         public string BuilderUrl { get; set; }
 
     }
