@@ -37,7 +37,7 @@ ALTER TABLE [dbo].[FileToProcess] CHECK CONSTRAINT [FK_FileToProcess_Operation]
 GO
 
 
-
+/************************ MODULES ************************/
 /****** Object:  Table [dbo].[Module]    Script Date: 30/01/2020 6:26:37 AM ******/
 SET ANSI_NULLS ON
 GO
@@ -179,5 +179,41 @@ ALTER TABLE Operation ADD TemporaryBuildVersion NVARCHAR(50) NULL
 GO
 
 ALTER TABLE Operation ADD BuildVersion NVARCHAR(50) NULL
+GO
+
+
+/************************ PROMOTERS ************************/
+/****** Object:  Table [dbo].[CustomerPromoter]    Script Date: 08/02/2020 10:12:54 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CustomerPromoter](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdAminUser] [int] NOT NULL,
+	[IdCustomer] [int] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_CustomerPromoter] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CustomerPromoter]  WITH CHECK ADD  CONSTRAINT [FK_CustomerPromoter_AdminUser] FOREIGN KEY([IdAminUser])
+REFERENCES [dbo].[AdminUser] ([Id])
+GO
+
+ALTER TABLE [dbo].[CustomerPromoter] CHECK CONSTRAINT [FK_CustomerPromoter_AdminUser]
+GO
+
+ALTER TABLE [dbo].[CustomerPromoter]  WITH CHECK ADD  CONSTRAINT [FK_CustomerPromoter_Customer] FOREIGN KEY([IdCustomer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[CustomerPromoter] CHECK CONSTRAINT [FK_CustomerPromoter_Customer]
 GO
 
