@@ -35,7 +35,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Sexo
         /// </summary>
-        [Required]
         [MaxLength(1)]
         public string Gender { get; set; }
         /// <summary>
@@ -139,7 +138,7 @@ namespace ias.Rebens.api.Models
                 Name = this.Name,
                 Surname = this.Surname,
                 IdOperation = this.IdOperation,
-                Gender = this.Gender[0],
+                Gender = this.Gender != null ? this.Gender[0] : ' ',
                 Email = this.Email,
                 IdAddress = this.IdAddress,
                 Cpf = this.Cpf,
