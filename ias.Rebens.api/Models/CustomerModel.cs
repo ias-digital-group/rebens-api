@@ -123,7 +123,7 @@ namespace ias.Rebens.api.Models
             this.CustomerType = customer.CustomerType;
             this.Status = customer.Status;
             if(!string.IsNullOrEmpty(customer.Configuration))
-                this.Configurations = Helper.Config.ConfigurationHelper.GetConfigurationValues(customer.Configuration);
+                this.Configurations = Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetObject(customer.Configuration);
             if (customer.IdAddress.HasValue && customer.Address != null)
                 this.Address = new AddressModel(customer.Address);
         }
@@ -149,7 +149,7 @@ namespace ias.Rebens.api.Models
                 CustomerType = this.CustomerType,
                 Status = this.Status,
                 Picture = this.Picture,
-                Configuration = this.Configurations != null && this.Configurations.Count > 0 ? null : Helper.Config.ConfigurationHelper.GetConfigurationValueString(this.Configurations),
+                Configuration = this.Configurations != null && this.Configurations.Count > 0 ? null : Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetString(this.Configurations),
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };
