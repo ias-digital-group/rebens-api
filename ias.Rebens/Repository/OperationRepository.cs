@@ -300,19 +300,14 @@ namespace ias.Rebens
                     ret = db.Operation.SingleOrDefault(o => !o.Deleted && o.Code == code);
                     if(ret != null)
                     {
-                        var config = db.StaticText.SingleOrDefault(s => s.IdOperation == ret.Id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
-                        if(config != null)
+                        var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == ret.Id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                        if(configuration != null)
                         {
-                            var jObj = JObject.Parse(config.Html);
-                            var list = jObj["fields"].Children();
-                            foreach (var item in list)
+                            var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(configuration.Html);
+                            foreach (var item in config.Fields)
                             {
-                                switch (item["name"].ToString())
-                                {
-                                    case "signup-opend":
-                                        openSignUp = bool.Parse(item["data"].ToString());
-                                        break;
-                                }
+                                if(item.Name == "register-type")
+                                    openSignUp = item.Data == "open";
                             }
                         }
                     }

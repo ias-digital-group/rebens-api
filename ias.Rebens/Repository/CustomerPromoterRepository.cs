@@ -27,7 +27,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Customer.Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
-                                    && (!idPromoter.HasValue || (idOperation.HasValue && a.CustomerPromoters.Any(p => p.IdAminUser == idPromoter)))
+                                    && (!idPromoter.HasValue || (idPromoter.HasValue && a.CustomerPromoters.Any(p => p.IdAminUser == idPromoter)))
                                     && a.CustomerPromoters.Any()
                                     && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
                     switch (sort.ToLower())

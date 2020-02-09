@@ -87,6 +87,10 @@ namespace ias.Rebens.api.Models
         [Required]
         public int Status { get; set; }
         /// <summary>
+        /// Status
+        /// </summary>
+        public string StatusName { get { return Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)this.Status); } }
+        /// <summary>
         /// Lista de Configurações 
         /// </summary>
         public List<Helper.Config.ConfigurationValue> Configurations { get; set; }

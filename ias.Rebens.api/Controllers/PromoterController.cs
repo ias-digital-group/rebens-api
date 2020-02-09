@@ -19,18 +19,18 @@ namespace ias.Rebens.api.Controllers
     {
         private ICustomerPromoterRepository repo;
         private IOperationRepository operationRepo;
-        private ICustomerRepository customerRepo;
+        private IStaticTextRepository staticTextRepo;
 
         /// <summary>
         /// Constuctor
         /// </summary>
         /// <param name="customerPromoterRepository"></param>
         public PromoterController(ICustomerPromoterRepository customerPromoterRepository, IOperationRepository operationRepository,
-                                    ICustomerRepository customerRepository)
+                                    IStaticTextRepository staticTextRepository)
         {
             this.repo = customerPromoterRepository;
             this.operationRepo = operationRepository;
-            this.customerRepo = customerRepository;
+            this.staticTextRepo = staticTextRepository;
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace ias.Rebens.api.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Post([FromBody]CustomerModel customer)
+        public IActionResult Post([FromBody]SignUpModel customer)
         {
             int idPromoter = 0, idOperation = 0;
             if (customer == null)
@@ -187,28 +187,24 @@ namespace ias.Rebens.api.Controllers
             var operation = operationRepo.Read(idOperation, out _);
             if (operation != null)
             {
-                var cust = customer.GetEntity();
-                cust.IdOperation = idOperation;
-                cust.Status = (int)Enums.CustomerStatus.Validation;
-                cust.CustomerType = (int)Enums.CustomerType.Customer;
+                var cust = new Customer()
+                {
+                    Email = customer.Email,
+                    Cpf = customer.Cpf,
+                    Name = customer.Name,
+                    Created = DateTime.Now,
+                    Modified = DateTime.Now,
+                    Status = (int)Enums.CustomerStatus.Validation,
+                    CustomerType = (int)Enums.CustomerType.Customer,
+                    Code = Helper.SecurityHelper.HMACSHA1(customer.Email, customer.Email + "|" + customer.Cpf),
+                    IdOperation = operation.Id
+                };
 
-                string password = Helper.SecurityHelper.CreatePassword();
-                cust.SetPassword(password);
                 if (repo.Create(cust, idPromoter, out string error))
                 {
-                    var sendingBlue = new Integration.SendinBlueHelper();
-                    var body = $"<p>Seu cadastro foi realizado com sucesso!</p><p>Segue a sua senha temporária, sugerimos que você troque essa senha imediatamente:<br />Senha:<b>{password}</b></p>";
-                    var listDestinataries = new Dictionary<string, string>() { { cust.Email, cust.Name } };
-                    var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Cadatro realizado com sucesso", body);
+                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, out error);
 
-                    try
-                    {
-                        if (sendingBlue.CreateContact(cust, null, operation, out int blueId, out string error1))
-                            customerRepo.SaveSendingblueId(cust.Id, blueId, out error1);
-                    }
-                    catch { }
-
-                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = customer.Id });
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = cust.Id });
                 }
 
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
