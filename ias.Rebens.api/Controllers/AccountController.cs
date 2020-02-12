@@ -190,7 +190,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         /// <respons code="200"></respons>
         /// <respons code="400"></respons>
-        [HttpPost("ChangePassword"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
+        [HttpPost("ChangePassword"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens,promoter")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
@@ -201,9 +201,9 @@ namespace ias.Rebens.api.Controllers
             {
                 var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
                 if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
                 if (!int.TryParse(customerId.Value, out idAmin))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
             }
 
             var user = repo.Read(idAmin, out string error);

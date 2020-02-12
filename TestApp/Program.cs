@@ -20,7 +20,11 @@ namespace TestApp
             //string connectionString = "Server=IAS-02;Database=Rebens;user id=ias_user;password=k4r0l1n4;";
             //int id = 3;
 
-            
+            string cpf = "29466103814";
+            cpf = cpf.Replace(cpf.Substring(2, 5), "*****");
+
+            Console.WriteLine("29466103814");
+            Console.WriteLine(cpf);
 
 
 

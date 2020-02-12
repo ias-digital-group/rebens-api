@@ -75,7 +75,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     string tmp = db.Customer.Where(c => c.Id == idCustomer).Select(c => c.Configuration).First();
-                    ret = Helper.Config.ConfigurationHelper.GetConfigurationValues(tmp);
+                    ret = Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetObject(tmp);
                     error = null;
                 }
             }
