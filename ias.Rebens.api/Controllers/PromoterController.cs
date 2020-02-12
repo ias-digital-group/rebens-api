@@ -51,7 +51,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int? idOperation = null, [FromQuery]int? idPromoter = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, 
-                                    [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
+                                    [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? status = null)
         {
             var principal = HttpContext.User;
             if (principal.IsInRole("promoter"))
@@ -85,7 +85,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation, idPromoter);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, status, idOperation, idPromoter);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -210,6 +210,60 @@ namespace ias.Rebens.api.Controllers
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
+        /// Cria um Cliente
+        /// </summary>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do cliente criado</returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("Report"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(ResultPageModel<PromoterReportModel>), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Report([FromQuery]int? idOperation = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30,
+                                    [FromQuery]string searchWord = "")
+        {
+            var principal = HttpContext.User;
+            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (!int.TryParse(operationId.Value, out int tmpId))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    else
+                        idOperation = tmpId;
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
+            var list = repo.Report(page, pageItems, searchWord, out string error, idOperation);
+
+            if (string.IsNullOrEmpty(error))
+            {
+
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<PromoterReportModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = list.Page.ToList()
+                };
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }

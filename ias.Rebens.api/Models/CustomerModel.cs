@@ -86,6 +86,7 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public int Status { get; set; }
+        public string Created { get; set; }
         /// <summary>
         /// Status
         /// </summary>
@@ -114,7 +115,7 @@ namespace ias.Rebens.api.Models
             this.Name = customer.Name;
             this.Surname = customer.Surname;
             this.IdOperation = customer.IdOperation;
-            this.Gender = customer.Gender.ToString();
+            this.Gender = customer.Gender != ' ' ? customer.Gender.ToString() : "";
             this.Birthday = customer.Birthday.HasValue ? customer.Birthday.Value.ToString("dd/MM/yyyy") : null;
             this.Email = customer.Email;
             this.IdAddress = customer.IdAddress;
@@ -125,7 +126,9 @@ namespace ias.Rebens.api.Models
             this.Cellphone = customer.Cellphone;
             this.CustomerType = customer.CustomerType;
             this.Status = customer.Status;
-            if(!string.IsNullOrEmpty(customer.Configuration))
+            var culture = new CultureInfo("pt-BR");
+            this.Created = Convert.ToDateTime(customer.Created, culture).ToLocalTime().ToString("dd/MM/yyyy HH:mm", culture);
+            if (!string.IsNullOrEmpty(customer.Configuration))
                 this.Configurations = Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetObject(customer.Configuration);
             if (customer.IdAddress.HasValue && customer.Address != null)
                 this.Address = new AddressModel(customer.Address);
