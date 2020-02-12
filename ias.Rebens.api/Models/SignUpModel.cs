@@ -22,5 +22,11 @@ namespace ias.Rebens.api.Models
         [Required]
         [MaxLength(300)]
         public string Email { get; set; }
+        /// <summary>
+        /// Nome
+        /// </summary>
+        [MaxLength(300)]
+        public string Name { get; set; }
+
     }
 }

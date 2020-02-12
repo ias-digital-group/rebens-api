@@ -35,7 +35,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Sexo
         /// </summary>
-        [Required]
         [MaxLength(1)]
         public string Gender { get; set; }
         /// <summary>
@@ -88,6 +87,10 @@ namespace ias.Rebens.api.Models
         [Required]
         public int Status { get; set; }
         /// <summary>
+        /// Status
+        /// </summary>
+        public string StatusName { get { return Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)this.Status); } }
+        /// <summary>
         /// Lista de Configurações 
         /// </summary>
         public List<Helper.Config.ConfigurationValue> Configurations { get; set; }
@@ -123,7 +126,7 @@ namespace ias.Rebens.api.Models
             this.CustomerType = customer.CustomerType;
             this.Status = customer.Status;
             if(!string.IsNullOrEmpty(customer.Configuration))
-                this.Configurations = Helper.Config.ConfigurationHelper.GetConfigurationValues(customer.Configuration);
+                this.Configurations = Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetObject(customer.Configuration);
             if (customer.IdAddress.HasValue && customer.Address != null)
                 this.Address = new AddressModel(customer.Address);
         }
@@ -139,7 +142,7 @@ namespace ias.Rebens.api.Models
                 Name = this.Name,
                 Surname = this.Surname,
                 IdOperation = this.IdOperation,
-                Gender = this.Gender[0],
+                Gender = this.Gender != null ? this.Gender[0] : ' ',
                 Email = this.Email,
                 IdAddress = this.IdAddress,
                 Cpf = this.Cpf,
@@ -149,7 +152,7 @@ namespace ias.Rebens.api.Models
                 CustomerType = this.CustomerType,
                 Status = this.Status,
                 Picture = this.Picture,
-                Configuration = this.Configurations != null && this.Configurations.Count > 0 ? null : Helper.Config.ConfigurationHelper.GetConfigurationValueString(this.Configurations),
+                Configuration = this.Configurations != null && this.Configurations.Count > 0 ? null : Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetString(this.Configurations),
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };

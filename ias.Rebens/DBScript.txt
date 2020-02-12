@@ -36,3 +36,184 @@ GO
 ALTER TABLE [dbo].[FileToProcess] CHECK CONSTRAINT [FK_FileToProcess_Operation]
 GO
 
+
+/************************ MODULES ************************/
+/****** Object:  Table [dbo].[Module]    Script Date: 30/01/2020 6:26:37 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Module](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[Title] [nvarchar](200) NOT NULL,
+	[Information] [nvarchar](max) NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_Module] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+insert into Module VALUES ('customerReferal', 'Indique', '{
+	"fields": [{
+			"name": "max",
+			"label": "Quantidade de indicações por aluno (0 = sem limite)",
+			"type": "int",
+			"data": [],
+			"isRequired": true
+		}],
+	"files": [ "CustomerReferal" ],
+	"configuration": {
+		"routeImports": [ "import Referal from ''./pages/CustomerReferal/Referal.vue'';" ],
+		"routeConfig": "{ path: ''/indique'', component: Main, children: [ { path: ''/'', name: ''indique'', component: Referal, meta: { requiresAuth: true, contentCode: '''' } } ] }"
+	}
+	}', GETUTCDATE(), GETUTCDATE())
+
+insert into Module VALUES ('course', 'Cursos', '{
+	"fields": [],
+	"files": [ "Graduation" ],
+	"configuration": {
+		"routeImports": [ "import GraduationList from ''./pages/Graduation/List.vue'';", "import GraduationDetail from ''./pages/Graduation/Detail.vue'';", "import GraduationBasket from ''./pages/Graduation/Basket.vue'';" ],
+		"routeConfig": "{ path: ''/graduacao'', component: Main, children: [ { path: ''/'', name: ''Graduacao'', component: GraduationList, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/view'', props: true, name: ''Graduacao'', component: GraduationDetail, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/basket'', props: true, name: ''Graduacao'', component: GraduationBasket, meta: { requiresAuth: false, contentCode: '''' } } ] }"
+	}
+	}', GETUTCDATE(), GETUTCDATE())
+
+insert into Module VALUES ('freeCourse', 'Cursos Livres', '{
+	"fields": [],
+	"files": [ "FreeCourse" ],
+	"configuration": {
+		"routeImports": [ "import FreeCourseList from ''./pages/FreeCourse/List.vue'';", "import FreeCourseDetail from ''./pages/FreeCourse/Detail.vue'';", "import FreeCourseBasket from ''./pages/FreeCourse/Basket.vue'';" ],
+		"routeConfig": "{ path: ''/cursos-livres'', component: Main, children: [ { path: ''/'', name: ''Cursos Livres'', component: FreeCourseList, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/view'', props: true, name: ''Cursos Livres'', component: FreeCourseDetail, meta: { requiresAuth: false, contentCode: '''' } }, { path: '':id/basket'', props: true, name: ''Cursos Livres'', component: FreeCourseBasket, meta: { requiresAuth: false, contentCode: '''' } } ] }"
+	}
+	}', GETUTCDATE(), GETUTCDATE())
+
+insert into Module VALUES ('coupon', 'Raspadinha', '{
+	"fields": [],
+	"files": [ "Coupons" ],
+	"configuration": {
+		"routeImports": [ "import CouponHistory from ''./pages/Coupons/History.vue'';" ],
+		"routeConfig": "{ path: ''/raspadinha'', component: Main, children: [ { path: ''/'', name: ''raspadinha'', component: CouponHistory, meta: { requiresAuth: true, contentCode: '''' } } ] }"
+	}
+	}', GETUTCDATE(), GETUTCDATE())
+
+
+alter table Operation ADD TemporaryPublishedDate DATETIME NULL
+GO
+alter table Operation ADD PublishedDate DATETIME NULL
+GO
+
+UPDATE Operation set TemporaryPublishedDate = Modified where TemporaryPublishStatus = 1
+UPDATE Operation set PublishedDate = Modified where PublishStatus = 1
+GO
+
+
+
+update StaticText set Html = '{
+	"fields": [
+		{
+			"name": "color",
+			"label": "Cor",
+			"type": "text",
+			"data": "",
+			"isRequired": true
+		},
+		{
+			"name": "favicon",
+			"label": "Ícone de favorito",
+			"type": "image",
+			"data": "",
+			"isRequired": true
+		},
+		{
+			"name": "g-analytics",
+			"label": "Google Analytics",
+			"type": "text",
+			"data": "",
+			"isRequired": false
+		},
+		{
+			"name": "contact-email",
+			"label": "Email Transacional",
+			"type": "text",
+			"data": "",
+			"isRequired": false
+		},
+		{
+			"name": "form-email",
+			"label": "Email",
+			"type": "text",
+			"data": "",
+			"isRequired": false
+		},
+		{
+			"name": "register-type",
+			"label": "Tipo de cadastro",
+			"type": "select",
+			"data": "",
+			"isRequired": true,
+			"options": [
+				{
+					"name": "Aberto",
+					"value": "open"
+				},
+				{
+					"name": "Fechado",
+					"value": "closed"
+				},
+				{
+					"name": "Fechado + Parceiros",
+					"value": "closed-partner"
+				}
+			]
+		}
+	],
+	"modules": []
+}' where IdStaticTextType = 11
+
+ALTER TABLE Operation ADD TemporaryBuildVersion NVARCHAR(50) NULL
+GO
+
+ALTER TABLE Operation ADD BuildVersion NVARCHAR(50) NULL
+GO
+
+
+/************************ PROMOTERS ************************/
+/****** Object:  Table [dbo].[CustomerPromoter]    Script Date: 08/02/2020 10:12:54 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[CustomerPromoter](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdAminUser] [int] NOT NULL,
+	[IdCustomer] [int] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_CustomerPromoter] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[CustomerPromoter]  WITH CHECK ADD  CONSTRAINT [FK_CustomerPromoter_AdminUser] FOREIGN KEY([IdAminUser])
+REFERENCES [dbo].[AdminUser] ([Id])
+GO
+
+ALTER TABLE [dbo].[CustomerPromoter] CHECK CONSTRAINT [FK_CustomerPromoter_AdminUser]
+GO
+
+ALTER TABLE [dbo].[CustomerPromoter]  WITH CHECK ADD  CONSTRAINT [FK_CustomerPromoter_Customer] FOREIGN KEY([IdCustomer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[CustomerPromoter] CHECK CONSTRAINT [FK_CustomerPromoter_Customer]
+GO
+
