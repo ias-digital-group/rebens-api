@@ -50,6 +50,7 @@ namespace ias.Rebens
         public virtual DbSet<CourseUse> CourseUse { get; set; }
         public virtual DbSet<CourseView> CourseView { get; set; }
         public virtual DbSet<Customer> Customer { get; set; }
+        public virtual DbSet<CustomerPromoter> CustomerPromoter { get; set; }
         public virtual DbSet<CustomerReferal> CustomerReferal { get; set; }
         public virtual DbSet<Draw> Draw { get; set; }
         public virtual DbSet<DrawItem> DrawItem { get; set; }
@@ -734,6 +735,25 @@ namespace ias.Rebens
                     .HasConstraintName("FK_Customer_Address");
             });
 
+            modelBuilder.Entity<CustomerPromoter>(entity =>
+            {
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(e => e.Customer)
+                    .WithMany(e => e.CustomerPromoters)
+                    .HasForeignKey(e => e.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CustomerPromoter_Customer");
+
+                entity.HasOne(e => e.AdminUser)
+                    .WithMany(e => e.CustomerPromoters)
+                    .HasForeignKey(e => e.IdAminUser)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CustomerPromoter_AdminUser");
+            });
+            
             modelBuilder.Entity<CustomerReferal>(entity =>
             {
                 entity.Property(e => e.Name).HasMaxLength(300);

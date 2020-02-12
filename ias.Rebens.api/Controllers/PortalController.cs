@@ -783,7 +783,6 @@ namespace ias.Rebens.api.Controllers
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = cust.Id });
                 }
-
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });

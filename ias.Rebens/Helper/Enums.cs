@@ -385,7 +385,9 @@ namespace ias.Rebens.Enums
         [Description("Admin Parceiro")]
         partnerAdministrator,
         [Description("Aprovador Parceiro")]
-        partnerApprover
+        partnerApprover,
+        [Description("Promotor")]
+        promoter
     }
 
     public enum GraduationTypeParent : int

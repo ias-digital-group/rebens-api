@@ -22,6 +22,7 @@ namespace ias.Rebens
             CourseCustomerRates = new HashSet<CourseCustomerRate>();
             DrawItems = new HashSet<DrawItem>();
             Orders = new HashSet<Order>();
+            CustomerPromoters = new HashSet<CustomerPromoter>();
         }
 
         public int Id { get; set; }
@@ -64,6 +65,7 @@ namespace ias.Rebens
         public virtual ICollection<CourseCustomerRate> CourseCustomerRates { get; set; }
         public virtual ICollection<DrawItem> DrawItems { get; set; }
         public virtual ICollection<Order> Orders { get; set; }
+        public virtual ICollection<CustomerPromoter> CustomerPromoters { get; set; }
 
         public void SetPassword(string password)
         {
