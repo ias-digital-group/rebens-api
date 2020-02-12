@@ -19,7 +19,7 @@ namespace ias.Rebens
             _connectionString = connectionString;
         }
 
-        public ResultPage<Customer> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, int? idPromoter = null)
+        public ResultPage<Customer> ListPage(int page, int pageItems, string word, string sort, out string error, int? idStatus = null, int? idOperation = null, int? idPromoter = null)
         {
             ResultPage<Customer> ret;
             try
@@ -27,8 +27,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Customer.Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
-                                    && (!idPromoter.HasValue || (idPromoter.HasValue && a.CustomerPromoters.Any(p => p.IdAminUser == idPromoter)))
-                                    && a.CustomerPromoters.Any()
+                                    && ((!idPromoter.HasValue && a.CustomerPromoters.Any()) || (idPromoter.HasValue && a.CustomerPromoters.Any(p => p.IdAminUser == idPromoter)))
+                                    && (!idStatus.HasValue || (idStatus.HasValue && a.Status == idStatus))
                                     && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
                     switch (sort.ToLower())
                     {
@@ -116,14 +116,15 @@ namespace ias.Rebens
 
         public bool Create(Customer customer, int idPromoter, out string error)
         {
-            bool ret = true;
+            bool ret = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if(db.Customer.Any(c => c.IdOperation == customer.IdOperation && c.Cpf == customer.Cpf))
+                    customer.Cpf = customer.Cpf.Replace(".", "").Replace("-", "");
+                    if (db.Customer.Any(c => c.IdOperation == customer.IdOperation && c.Cpf == customer.Cpf))
                         error = "O cpf já está cadastrado em nossa base!";
-                    if (db.Customer.Any(c => c.IdOperation == customer.IdOperation && c.Email == customer.Email))
+                    else if (db.Customer.Any(c => c.IdOperation == customer.IdOperation && c.Email == customer.Email))
                         error = "O e-mail já está cadastrado em nossa base!";
                     else
                     {
@@ -149,6 +150,48 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CustomerPromoterRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o cliente. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public ResultPage<PromoterReportModel> Report(int page, int pageItems, string word, out string error, int? idOperation = null)
+        {
+            ResultPage<PromoterReportModel> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var list = db.AdminUser.Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation)) 
+                                            && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                            && a.Roles == Enums.Roles.promoter.ToString())
+                                        .Select(a => new PromoterReportModel() { 
+                                            Id  = a.Id,
+                                            Name = a.Name,
+                                            Operation = a.Operation.Title
+                                        }).OrderBy(a => a.Name).Skip(page * pageItems).Take(pageItems).ToList();
+
+                    list.ForEach(p =>
+                    {
+                        p.TotalActive = db.CustomerPromoter.Count(cp => cp.IdAminUser == p.Id && cp.Customer.Status == (int)Enums.CustomerStatus.Active);
+                        p.TotalInactive = db.CustomerPromoter.Count(cp => cp.IdAminUser == p.Id && cp.Customer.Status == (int)Enums.CustomerStatus.Inactive);
+                        p.TotalChangePassword = db.CustomerPromoter.Count(cp => cp.IdAminUser == p.Id && cp.Customer.Status == (int)Enums.CustomerStatus.ChangePassword);
+                        p.TotalIncomplete = db.CustomerPromoter.Count(cp => cp.IdAminUser == p.Id && cp.Customer.Status == (int)Enums.CustomerStatus.Incomplete);
+                        p.TotalValidation = db.CustomerPromoter.Count(cp => cp.IdAminUser == p.Id && cp.Customer.Status == (int)Enums.CustomerStatus.Validation);
+                    });
+
+                    var total = db.AdminUser.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
+                                            && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                            && a.Roles == Enums.Roles.promoter.ToString());
+                    ret = new ResultPage<PromoterReportModel>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerPromoterRepository.Report", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os promotores. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }
