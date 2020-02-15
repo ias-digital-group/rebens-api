@@ -64,6 +64,12 @@ namespace ias.Rebens.Enums
         Withdraw = 5
     }
 
+    public enum CategoryType : int
+    {
+        Benefit = 1,
+        FreeCourse = 2
+    }
+
     public enum CourseUseStatus : int
     {
         [Description("Gerado")]
