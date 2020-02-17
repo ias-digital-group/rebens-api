@@ -1,4 +1,4 @@
-﻿insert into Module values ('Promotor', '{ "fields": [ ], "files": [ ], "configuration": { "routeImports": [ ], "routeConfig": "" } }', GETUTCDATE(), GETUTCDATE(), 'Promotor' )
+﻿insert into Module values ('promoter', 'Promotor', '{ "fields": [ ], "files": [ ], "configuration": { "routeImports": [ ], "routeConfig": "" } }', GETUTCDATE(), GETUTCDATE() )
 
 ALTER TABLE Category ADD [Type] INT NULL
 GO

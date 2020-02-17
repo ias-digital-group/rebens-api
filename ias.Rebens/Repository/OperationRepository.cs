@@ -1132,5 +1132,39 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public string LoadModulesNames(int id, out string error)
+        {
+            string ret = "";
+            error = null;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                    if (configuration != null)
+                    {
+                        var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(configuration.Html);
+                        foreach(var mod in config.Modules)
+                        {
+                            if (mod.Checked)
+                                ret += mod.Name + "|";
+                        }
+                        foreach(var field in config.Fields)
+                        {
+                            if (field.Name == "register-type")
+                                ret += field.Data;
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.LoadModulesNames", ex.Message, $"id: {id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar carregar os módulos da operação. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

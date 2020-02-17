@@ -97,7 +97,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<AdminUser> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, string role = null, int? idOperationPartner = null)
+        public ResultPage<AdminUser> ListPage(string userRole, int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, string role = null, int? idOperationPartner = null)
         {
             ResultPage<AdminUser> ret;
             try
@@ -110,6 +110,7 @@ namespace ias.Rebens
                                 && (!status.HasValue || (status.HasValue && a.Status == (status.Value ? 1 : 2)))
                                 && (!idOperationPartner.HasValue || a.IdOperationPartner == idOperationPartner.Value)
                                 && (string.IsNullOrEmpty(role) || a.Roles == role)
+                                && (userRole == "master" || a.Roles != "master")
                                 ); ;
                     switch (sort.ToLower())
                     {
@@ -134,12 +135,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.AdminUser.Count(a => !a.Deleted
-                                && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
-                                && (!idOperation.HasValue || (idOperation.HasValue && a.IdOperation == idOperation.Value))
-                                && (!status.HasValue || (status.HasValue && a.Status == (status.Value ? 1 : 2)))
-                                && (!idOperationPartner.HasValue || a.IdOperationPartner == idOperationPartner.Value)
-                                && (string.IsNullOrEmpty(role) || a.Roles == role));
+                    var total = tmpList.Count();
 
                     ret = new ResultPage<AdminUser>(list, page, pageItems, total);
                     error = null;
