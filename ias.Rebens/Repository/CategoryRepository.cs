@@ -73,7 +73,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null, int? idParent = null)
+        public ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, int type, out string error, bool? status = null, int? idParent = null)
         {
             ResultPage<Category> ret;
             try
@@ -82,7 +82,8 @@ namespace ias.Rebens
                 {
                     var tmpList = db.Category.Where(c => (string.IsNullOrEmpty(word) || c.Name.Contains(word))
                                     && (!status.HasValue || (status.HasValue && c.Active == status.Value))
-                                    && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value)));
+                                    && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value))
+                                    && c.Type == type);
 
                     switch (sort.ToLower())
                     {
@@ -107,9 +108,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Category.Count(c => (string.IsNullOrEmpty(word) || c.Name.Contains(word))
-                                    && (!status.HasValue || (status.HasValue && c.Active == status.Value))
-                                    && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value)));
+                    var total = tmpList.Count();
 
                     ret = new ResultPage<Category>(list, page, pageItems, total);
 

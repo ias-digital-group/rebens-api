@@ -8,7 +8,7 @@ namespace ias.Rebens
     {
         Category Read(int id, out string error);
 
-        ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null, int? idParent = null);
+        ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, int type, out string error, bool? status = null, int? idParent = null);
 
         bool Delete(int id, out string error);
 

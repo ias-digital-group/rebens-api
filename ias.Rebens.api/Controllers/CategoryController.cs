@@ -40,6 +40,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <param name="active">active, não obrigatório (default=null)</param>
         /// <param name="idParent">id do pai, não obrigatório (default=null)</param>
+        /// <param name="type">tipo de categoria, obrigatório (1=beneficios, 2=cursos livres)</param>
         /// <returns>Lista com as categorias encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -48,10 +49,10 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<CategoryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", 
+        public IActionResult List([FromQuery]int type, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", 
             [FromQuery]bool? active = null, [FromQuery]int? idParent = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, active, idParent);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, type, out string error, active, idParent);
 
             if (string.IsNullOrEmpty(error))
             {

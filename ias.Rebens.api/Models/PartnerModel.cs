@@ -36,6 +36,11 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string Description { get; set; }
         /// <summary>
+        /// O tipo do parceiro (1 = beneficios, 2 = Cursos Livres)
+        /// </summary>
+        [Required]
+        public int Type { get; set; }
+        /// <summary>
         /// Status
         /// </summary>
         public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
@@ -64,6 +69,7 @@ namespace ias.Rebens.api.Models
             this.Name = partner.Name;
             this.Active = partner.Active;
             this.Logo = partner.Logo;
+            this.Type = partner.Type;
             if (partner.StaticText != null)
                 this.Description = partner.StaticText.Html;
         }
@@ -79,6 +85,7 @@ namespace ias.Rebens.api.Models
                 Name = this.Name,
                 Active = this.Active,
                 Logo = this.Logo,
+                Type = this.Type,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };

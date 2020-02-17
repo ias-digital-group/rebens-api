@@ -276,6 +276,12 @@ namespace ias.Rebens.Enums
         rent = 4
     }
 
+    public enum PartnerType : int
+    {
+        Benefit = 1,
+        FreeCourse = 2
+    }
+
     public enum PublishStatus : int
     {
         [Description("Incompleto")]
