@@ -219,11 +219,11 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do cliente criado</returns>
         /// <response code="200">Se o objeto for criado com sucesso</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("ResendValidation")]
+        [HttpPost("ResendValidation/{id}")]
         [ProducesResponseType(typeof(JsonDataModel<CustomerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ResendValidation([FromQuery]int id)
+        public IActionResult ResendValidation(int id)
         {
             int idPromoter = 0, idOperation = 0;
             if (id <= 0)
@@ -260,7 +260,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, out error);
 
-                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail reenviado com sucesso.", Id = cust.Id });
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail reenviado com sucesso." });
                 }
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
