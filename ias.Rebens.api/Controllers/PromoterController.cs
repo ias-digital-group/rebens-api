@@ -213,6 +213,61 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Reenvia o email de validação para o cliente
+        /// </summary>
+        /// <param name="id">id do cliente</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do cliente criado</returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("ResendValidation")]
+        [ProducesResponseType(typeof(JsonDataModel<CustomerModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ResendValidation([FromQuery]int id)
+        {
+            int idPromoter = 0, idOperation = 0;
+            if (id <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O id do cliente é obrigatório!" });
+
+            var principal = HttpContext.User;
+            if (principal.IsInRole("promoter"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                    if (userId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+                    if (!int.TryParse(userId.Value, out idPromoter))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não tem permissão para realizar esse processo!" });
+
+            var operation = operationRepo.Read(idOperation, out _);
+            if (operation != null)
+            {
+                var cust = repo.Read(id, out string error);
+                if (string.IsNullOrEmpty(error))
+                {
+                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, out error);
+
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail reenviado com sucesso.", Id = cust.Id });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
         /// Cria um Cliente
         /// </summary>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do cliente criado</returns>

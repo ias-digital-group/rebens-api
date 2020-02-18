@@ -288,14 +288,15 @@ namespace ias.Rebens.api.Controllers
                         {
                             identity.AddClaim(new Claim(ClaimTypes.Role, role));
                         }
-
-                        //foreach (var policy in user.Permissions)
-                        //    identity.AddClaim(new Claim("permissions", "permission1"));
+                        string modules = "";
+                        if (user.IdOperation.HasValue)
+                            modules = operationRepo.LoadModulesNames(user.IdOperation.Value, out _);
 
                         identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
                         identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
                         identity.AddClaim(new Claim("Id", user.Id.ToString()));
                         identity.AddClaim(new Claim("Name", user.Name));
+                        identity.AddClaim(new Claim("modules", modules));
 
                         DateTime dataCriacao = DateTime.UtcNow;
                         DateTime dataExpiracao = dataCriacao.AddDays(2);
