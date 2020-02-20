@@ -191,7 +191,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     Email = customer.Email,
                     Cpf = customer.Cpf,
-                    Name = customer.Name,
+                    Name = customer.Name + " " + customer.Surname,
                     Created = DateTime.Now,
                     Modified = DateTime.Now,
                     Status = (int)Enums.CustomerStatus.Validation,
@@ -206,7 +206,9 @@ namespace ias.Rebens.api.Controllers
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = cust.Id });
                 }
-
+                
+                if(error == "cpf-registered" || error == "email-registered")
+                    return StatusCode(400, new JsonModel() { Status = error });
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
