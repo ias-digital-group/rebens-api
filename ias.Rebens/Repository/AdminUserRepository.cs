@@ -237,11 +237,12 @@ namespace ias.Rebens
                         else
                             update.IdOperationPartner = null;
 
-                        if (adminUser.Roles == "administratorRebens" || adminUser.Roles == "publisherRebens" || adminUser.Roles == "master")
-                            update.IdOperationPartner = update.IdOperationPartner = null;
 
-                        if (adminUser.Roles == "administrator" || adminUser.Roles == "publisher" || adminUser.Roles == "partnerAdministrator" || adminUser.Roles == "partnerApprover")
+                        if (adminUser.Roles != "master" && adminUser.Roles != "administratorRebens" &&
+                            adminUser.Roles != "publisherRebens" && adminUser.Roles != "customer")
                             update.IdOperation = adminUser.IdOperation;
+                        else
+                            update.IdOperation = null;
 
                         db.SaveChanges();
                         error = null;
