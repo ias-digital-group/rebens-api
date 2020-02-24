@@ -29,6 +29,7 @@ namespace ias.Rebens
             Orders = new HashSet<Order>();
             FreeCourses = new HashSet<FreeCourse>();
             FileToProcesses = new HashSet<FileToProcess>();
+            Scratchcards = new HashSet<Scratchcard>();
         }
 
         public int Id { get; set; }
@@ -78,5 +79,6 @@ namespace ias.Rebens
         public virtual ICollection<Order> Orders { get; set; }
         public virtual ICollection<FreeCourse> FreeCourses { get; set; }
         public virtual ICollection<FileToProcess> FileToProcesses { get; set; }
+        public virtual ICollection<Scratchcard> Scratchcards { get; set; }
     }
 }

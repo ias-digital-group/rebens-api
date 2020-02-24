@@ -59,6 +59,7 @@ namespace ias.Rebens
         public virtual DbSet<FormContact> FormContact { get; set; }
         public virtual DbSet<FormEstablishment> FormEstablishment { get; set; }
         public virtual DbSet<FreeCourse> FreeCourse { get; set; }
+        public virtual DbSet<LogAction> LogAction { get; set; }
         public virtual DbSet<LogError> LogError { get; set; }
         public virtual DbSet<Module> Module { get; set; }
         public virtual DbSet<MoipInvoice> MoipInvoice { get; set; }
@@ -78,6 +79,9 @@ namespace ias.Rebens
         public virtual DbSet<PartnerContact> PartnerContact { get; set; }
         public virtual DbSet<Permission> Permission { get; set; }
         public virtual DbSet<Profile> Profile { get; set; }
+        public virtual DbSet<Scratchcard> Scratchcard { get; set; }
+        public virtual DbSet<ScratchcardDraw> ScratchcardDraw { get; set; }
+        public virtual DbSet<ScratchcardPrize> ScratchcardPrize { get; set; }
         public virtual DbSet<StaticText> StaticText { get; set; }
         public virtual DbSet<WirecardPayment> WirecardPayment { get; set; }
         public virtual DbSet<Withdraw> Withdraw { get; set; }
@@ -945,6 +949,19 @@ namespace ias.Rebens
                     .HasConstraintName("FK_FreeCourseCategory_Category");
             });
 
+            modelBuilder.Entity<LogAction>(entity =>
+            {
+                entity.Property(e => e.Extra).HasMaxLength(500);
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(d => d.AdminUser)
+                       .WithMany(p => p.LogActions)
+                       .HasForeignKey(d => d.IdAdminUser)
+                       .OnDelete(DeleteBehavior.ClientSetNull)
+                       .HasConstraintName("FK_LogAction_AdminUser");
+            });
+
             modelBuilder.Entity<LogError>(entity =>
             {
                 entity.Property(e => e.Complement).HasMaxLength(500);
@@ -1343,6 +1360,75 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdPartner)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PartnerContact_Partner");
+            });
+
+            modelBuilder.Entity<Scratchcard>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Start).HasColumnType("datetime");
+                entity.Property(e => e.End).HasColumnType("datetime");
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.NoPrizeImage1).HasMaxLength(500);
+                entity.Property(e => e.NoPrizeImage2).HasMaxLength(500);
+                entity.Property(e => e.NoPrizeImage3).HasMaxLength(500);
+                entity.Property(e => e.NoPrizeImage4).HasMaxLength(500);
+                entity.Property(e => e.NoPrizeImage5).HasMaxLength(500);
+                entity.Property(e => e.NoPrizeImage6).HasMaxLength(500);
+                entity.Property(e => e.NoPrizeImage7).HasMaxLength(500);
+                entity.Property(e => e.NoPrizeImage8).HasMaxLength(500);
+
+                entity.HasOne(d => d.Operation)
+                    .WithMany(p => p.Scratchcards)
+                    .HasForeignKey(d => d.IdOperation)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Scratchcard_Operation");
+            });
+
+            modelBuilder.Entity<ScratchcardPrize>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Image).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
+
+                entity.HasOne(d => d.Scratchcard)
+                    .WithMany(p => p.Prizes)
+                    .HasForeignKey(d => d.IdScratchcard)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ScratchcardPrize_Scratchcard");
+            });
+
+            modelBuilder.Entity<ScratchcardDraw>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.OpenDate).HasColumnType("datetime");
+                entity.Property(e => e.ValidationDate).HasColumnType("datetime");
+                entity.Property(e => e.PlayedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.Prize).HasMaxLength(200);
+                entity.Property(e => e.ValidationDate).HasMaxLength(50);
+                entity.Property(e => e.Image).IsRequired().HasMaxLength(500);
+
+                entity.HasOne(d => d.Scratchcard)
+                    .WithMany(p => p.Draws)
+                    .HasForeignKey(d => d.IdScratchcard)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ScratchcardDraw_Scratchcard");
+
+                entity.HasOne(d => d.ScratchcardPrize)
+                    .WithMany(p => p.Draws)
+                    .HasForeignKey(d => d.IdScratchcardPrize)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ScratchcardDraw_ScratchcardPrize");
             });
 
             modelBuilder.Entity<StaticText>(entity =>
