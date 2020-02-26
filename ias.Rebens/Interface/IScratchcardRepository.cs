@@ -12,5 +12,6 @@ namespace ias.Rebens
         bool Delete(int id, int idAdminUser, out string error);
         ResultPage<Scratchcard> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation);
         Task<bool> GenerateScratchcards(int id, int idAdminUser, string path);
+        Scratchcard Read(int id, out string error);
     }
 }

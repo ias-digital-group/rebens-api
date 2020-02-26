@@ -150,6 +150,9 @@ namespace ias.Rebens.api
             services.AddTransient<IPartnerRepository, PartnerRepository>();
             services.AddTransient<IProfileRepository, ProfileRepository>();
             services.AddTransient<IReportRepository, ReportRepository>();
+            services.AddTransient<IScratchcardRepository, ScratchcardRepository>();
+            services.AddTransient<IScratchcardDrawRepository, ScratchcardDrawRepository>();
+            services.AddTransient<IScratchcardPrizeRepository, ScratchcardPrizeRepository>();
             services.AddTransient<IStaticTextRepository, StaticTextRepository>();
             services.AddTransient<IWirecardPaymentRepository, WirecardPaymentRepository>();
             services.AddTransient<IWithdrawRepository, WithdrawRepository>();

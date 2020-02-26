@@ -106,6 +106,27 @@ namespace ias.Rebens
             return ret;
         }
 
+        public ScratchcardPrize Read(int id, out string error)
+        {
+            ScratchcardPrize ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.ScratchcardPrize.SingleOrDefault(p => p.Id == id);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardPrizeRepository.Read", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os prêmios. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public bool Update(ScratchcardPrize prize, int idAdminUser, out string error)
         {
             bool ret = false;

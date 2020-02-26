@@ -24,6 +24,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     scratchcard.Modified = scratchcard.Created = DateTime.UtcNow;
+                    scratchcard.Status = (int)Enums.ScratchcardStatus.draft;
                     db.Scratchcard.Add(scratchcard);
                     db.SaveChanges();
 
@@ -91,7 +92,7 @@ namespace ias.Rebens
             {
                 using(var db = new RebensContext(this._connectionString))
                 {
-                    var scratchcard = await db.Scratchcard.SingleOrDefaultAsync(s => s.Id == id && s.Status == (int)Enums.ScratchcardStatus.draft);
+                    var scratchcard = db.Scratchcard.SingleOrDefault(s => s.Id == id && s.Status == (int)Enums.ScratchcardStatus.draft);
                     
                     if(scratchcard != null)
                     {
@@ -109,7 +110,24 @@ namespace ias.Rebens
 
                         int count = 0;
                         var prizes = db.ScratchcardPrize.Where(s => s.IdScratchcard == id);
-                        var images = prizes.Select(p => p.Image);
+                        var images = prizes.Select(p => p.Image).ToList();
+                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage1))
+                            images.Add(scratchcard.NoPrizeImage1);
+                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage2))
+                            images.Add(scratchcard.NoPrizeImage2);
+                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage3))
+                            images.Add(scratchcard.NoPrizeImage3);
+                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage4))
+                            images.Add(scratchcard.NoPrizeImage4);
+                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage5))
+                            images.Add(scratchcard.NoPrizeImage5);
+                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage6))
+                            images.Add(scratchcard.NoPrizeImage6);
+                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage7))
+                            images.Add(scratchcard.NoPrizeImage7);
+                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage8))
+                            images.Add(scratchcard.NoPrizeImage8);
+
                         var cloudinary = new Integration.CloudinaryHelper();
                         foreach (var prize in prizes)
                         {
@@ -118,7 +136,7 @@ namespace ias.Rebens
                             {
                                 string fileName = $"prize-{prize.IdScratchcard}-{prize.Id}-{i}.png";
                                 Helper.ScratchcardHelper.GeneratePrize(prize.Image, images.Where(img => img != prize.Image).ToList(), path, fileName);
-                                var cloudinaryModel = cloudinary.UploadFile(Path.Combine(), "Scratchcard");
+                                var cloudinaryModel = cloudinary.UploadFile(Path.Combine(path, fileName), "Scratchcard");
                                 await db.ScratchcardDraw.AddAsync(new ScratchcardDraw()
                                 {
                                     Created = DateTime.UtcNow,
@@ -132,14 +150,14 @@ namespace ias.Rebens
                                 });
                                 File.Delete(Path.Combine(path, fileName));
                             }
-                            await db.SaveChangesAsync();
                         }
+                        await db.SaveChangesAsync();
 
-                        for(var i = 0; i<(scratchcard.Quantity - count); i++)
+                        for (var i = 0; i<(scratchcard.Quantity - count); i++)
                         {
                             string fileName = $"noprize-{scratchcard.Id}-{i}.png";
-                            Helper.ScratchcardHelper.GenerateNoPrize(images.ToList(), path, fileName);
-                            var cloudinaryModel = cloudinary.UploadFile(Path.Combine(), "Scratchcard");
+                            Helper.ScratchcardHelper.GenerateNoPrize(images, path, fileName);
+                            var cloudinaryModel = cloudinary.UploadFile(Path.Combine(path, fileName), "Scratchcard");
                             await db.ScratchcardDraw.AddAsync(new ScratchcardDraw()
                             {
                                 Created = DateTime.UtcNow,
@@ -219,6 +237,27 @@ namespace ias.Rebens
             return ret;
         }
 
+        public Scratchcard Read(int id, out string error)
+        {
+            Scratchcard ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Scratchcard.SingleOrDefault(s => s.Id == id);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler a raspadinha. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public bool Update(Scratchcard scratchcard, int idAdminUser, out string error)
         {
             bool ret = true;
@@ -242,7 +281,8 @@ namespace ias.Rebens
                         update.NoPrizeImage8 = scratchcard.NoPrizeImage8;
                         update.Quantity = scratchcard.Quantity;
                         update.Start = scratchcard.Start;
-                        update.Status = scratchcard.Status;
+                        if(scratchcard.Status != 0)
+                            update.Status = scratchcard.Status;
 
                         db.LogAction.Add(new LogAction()
                         {

@@ -8,7 +8,7 @@ namespace ias.Rebens.Helper
 {
     public static class ScratchcardHelper
     {
-        public static void GenerateNoPrize(List<string> images, string path, string name)
+        public static void GenerateNoPrize(List<string> images, string path, string fileName)
         {
             var tmp = images.OrderBy(x => Guid.NewGuid()).Take(9).ToArray();
             using (Bitmap bmp = new Bitmap(600, 600))
@@ -34,11 +34,11 @@ namespace ias.Rebens.Helper
                     g.DrawImage(img8, 400, 400, 200, 200);
                     g.DrawImage(img9, 0, 400, 200, 200);
                 }
-                bmp.Save(Path.Combine(path, $"{name}.png"));
+                bmp.Save(Path.Combine(path, fileName));
             }
         }
 
-        public static void GeneratePrize(string prize, List<string> images, string path, string name)
+        public static void GeneratePrize(string prize, List<string> images, string path, string fileName)
         {
             var temp = new List<string>() { prize, prize, prize };
             foreach (var s in images.OrderBy(x => Guid.NewGuid()).Take(6))
@@ -68,7 +68,7 @@ namespace ias.Rebens.Helper
                     g.DrawImage(img8, 400, 400, 200, 200);
                     g.DrawImage(img9, 0, 400, 200, 200);
                 }
-                bmp.Save(Path.Combine(path, $"{name}.png"));
+                bmp.Save(Path.Combine(path, fileName));
             }
         }
     }
