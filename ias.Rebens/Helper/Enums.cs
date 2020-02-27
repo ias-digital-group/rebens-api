@@ -395,6 +395,28 @@ namespace ias.Rebens.Enums
         validated = 4
     }
 
+    public enum ScratchcardType : int
+    {
+        [Description("Aberto")]
+        opened = 1,
+        [Description("Fechado")]
+        closed = 2,
+        [Description("Fechado + parceiro")]
+        closedPartner = 3,
+        [Description("Assinatura")]
+        subscription = 4
+    }
+
+    public enum ScratchcardDistribution : int
+    {
+        [Description("Diária")]
+        daily = 1,
+        [Description("Semanal")]
+        weekly = 2,
+        [Description("Mensal")]
+        monthly = 3
+    }
+
     public enum StaticTextType : int
     {
         [Description("Operação Sobre")]

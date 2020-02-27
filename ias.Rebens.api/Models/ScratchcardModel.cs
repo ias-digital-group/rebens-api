@@ -80,6 +80,22 @@ namespace ias.Rebens.api.Models
         /// Status 
         /// </summary>
         public int Status { get; set; }
+        /// <summary>
+        /// Tipo de campanha (Aberto = 1, Fechado = 2, Fechado + parceiro = 3, Assinatura = 4)
+        /// </summary>
+        public int Type { get; set; }
+        /// <summary>
+        /// Tipo de distribuição (diária = 1, semanal = 2, mensal = 3)
+        /// </summary>
+        public int DistributionType { get; set; }
+        /// <summary>
+        /// Quantidade de bilhetes à serem distribuidos (para diário esse campo é ignorado, para semanal no máximo 6 e para mensal no máximo 31)
+        /// </summary>
+        public int? DistributionQuantity { get; set; }
+        /// <summary>
+        /// Se o bilhete expira no dia que ele é emitido, ou seja, o cliente precisa raspara o bilhete no mesmo dia
+        /// </summary>
+        public bool ScratchcardExpire { get; set; }
 
         /// <summary>
         /// Prêmios
@@ -105,6 +121,10 @@ namespace ias.Rebens.api.Models
                 this.NoPrizeImage6 = scratchcard.NoPrizeImage6;
                 this.NoPrizeImage7 = scratchcard.NoPrizeImage7;
                 this.NoPrizeImage8 = scratchcard.NoPrizeImage8;
+                this.Type = scratchcard.Type;
+                this.DistributionQuantity = scratchcard.DistributionQuantity;
+                this.DistributionType = scratchcard.DistributionType;
+                this.ScratchcardExpire = scratchcard.ScratchcardExpire;
                 this.IdOperation = scratchcard.IdOperation;
                 this.Status = scratchcard.Status;
 
@@ -134,6 +154,10 @@ namespace ias.Rebens.api.Models
                 NoPrizeImage6 = this.NoPrizeImage6,
                 NoPrizeImage7 = this.NoPrizeImage7,
                 NoPrizeImage8 = this.NoPrizeImage8,
+                Type = this.Type,
+                DistributionType = this.DistributionType,
+                DistributionQuantity = this.DistributionQuantity,
+                ScratchcardExpire = this.ScratchcardExpire,
                 IdOperation = this.IdOperation,
                 Status = this.Status
             };

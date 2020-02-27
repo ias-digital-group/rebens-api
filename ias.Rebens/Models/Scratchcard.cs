@@ -25,6 +25,10 @@ namespace ias.Rebens
         public string NoPrizeImage6 { get; set; }
         public string NoPrizeImage7 { get; set; }
         public string NoPrizeImage8 { get; set; }
+        public int Type { get; set; }
+        public int DistributionType { get; set; }
+        public int? DistributionQuantity { get; set; }
+        public bool ScratchcardExpire { get; set; }
         public int IdOperation { get; set; }
         public int Status { get; set; }
         public DateTime Created { get; set; }

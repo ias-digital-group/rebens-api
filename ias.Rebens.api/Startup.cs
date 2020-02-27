@@ -209,7 +209,9 @@ namespace ias.Rebens.api
                 routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
 
-            FluentScheduler.JobManager.Initialize(new SchedulerRegistry());
+            IServiceScopeFactory serviceScopeFactory = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>();
+
+            FluentScheduler.JobManager.Initialize(new SchedulerRegistry(serviceScopeFactory));
 
             Rotativa.AspNetCore.RotativaConfiguration.Setup(env);
         }

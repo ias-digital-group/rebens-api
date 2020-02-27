@@ -279,6 +279,10 @@ namespace ias.Rebens
                         update.NoPrizeImage6 = scratchcard.NoPrizeImage6;
                         update.NoPrizeImage7 = scratchcard.NoPrizeImage7;
                         update.NoPrizeImage8 = scratchcard.NoPrizeImage8;
+                        update.Type = scratchcard.Type;
+                        update.DistributionType = scratchcard.DistributionType;
+                        update.DistributionQuantity = scratchcard.DistributionQuantity;
+                        update.ScratchcardExpire = scratchcard.ScratchcardExpire;
                         update.Quantity = scratchcard.Quantity;
                         update.Start = scratchcard.Start;
                         if(scratchcard.Status != 0)
