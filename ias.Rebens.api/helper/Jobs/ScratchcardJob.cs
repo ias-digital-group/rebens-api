@@ -21,9 +21,9 @@ namespace ias.Rebens.api.helper
         {
             using (var serviceScope = serviceScopeFactory.CreateScope())
             {
-                IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
-                var tmp = repo.Read(1, out string error);
-                Console.WriteLine("teste " + tmp.Id);
+                //IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
+                //var tmp = repo.Read(1, out string error);
+                //Console.WriteLine("teste " + tmp.Id);
             }
         }
     }

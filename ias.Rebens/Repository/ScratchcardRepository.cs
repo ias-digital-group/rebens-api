@@ -111,22 +111,23 @@ namespace ias.Rebens
                         int count = 0;
                         var prizes = db.ScratchcardPrize.Where(s => s.IdScratchcard == id);
                         var images = prizes.Select(p => p.Image).ToList();
+                        var noPrizeImages = new List<string>();
                         if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage1))
-                            images.Add(scratchcard.NoPrizeImage1);
+                            noPrizeImages.Add(scratchcard.NoPrizeImage1);
                         if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage2))
-                            images.Add(scratchcard.NoPrizeImage2);
+                            noPrizeImages.Add(scratchcard.NoPrizeImage2);
                         if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage3))
-                            images.Add(scratchcard.NoPrizeImage3);
+                            noPrizeImages.Add(scratchcard.NoPrizeImage3);
                         if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage4))
-                            images.Add(scratchcard.NoPrizeImage4);
+                            noPrizeImages.Add(scratchcard.NoPrizeImage4);
                         if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage5))
-                            images.Add(scratchcard.NoPrizeImage5);
+                            noPrizeImages.Add(scratchcard.NoPrizeImage5);
                         if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage6))
-                            images.Add(scratchcard.NoPrizeImage6);
+                            noPrizeImages.Add(scratchcard.NoPrizeImage6);
                         if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage7))
-                            images.Add(scratchcard.NoPrizeImage7);
+                            noPrizeImages.Add(scratchcard.NoPrizeImage7);
                         if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage8))
-                            images.Add(scratchcard.NoPrizeImage8);
+                            noPrizeImages.Add(scratchcard.NoPrizeImage8);
 
                         var cloudinary = new Integration.CloudinaryHelper();
                         foreach (var prize in prizes)
@@ -135,7 +136,7 @@ namespace ias.Rebens
                             for(int i = 0; i<prize.Quantity; i ++)
                             {
                                 string fileName = $"prize-{prize.IdScratchcard}-{prize.Id}-{i}.png";
-                                Helper.ScratchcardHelper.GeneratePrize(prize.Image, images.Where(img => img != prize.Image).ToList(), path, fileName);
+                                Helper.ScratchcardHelper.GeneratePrize(prize.Image, images.Where(img => img != prize.Image).ToList(), noPrizeImages, path, fileName);
                                 var cloudinaryModel = cloudinary.UploadFile(Path.Combine(path, fileName), "Scratchcard");
                                 await db.ScratchcardDraw.AddAsync(new ScratchcardDraw()
                                 {
@@ -153,6 +154,12 @@ namespace ias.Rebens
                         }
                         await db.SaveChangesAsync();
 
+                        images.AddRange(noPrizeImages);
+                        if (images.Count < 9)
+                        {
+                            for (int j = images.Count; j < 10; j++)
+                                images.Add(noPrizeImages.First());
+                        }
                         for (var i = 0; i<(scratchcard.Quantity - count); i++)
                         {
                             string fileName = $"noprize-{scratchcard.Id}-{i}.png";
@@ -168,7 +175,15 @@ namespace ias.Rebens
                                 ValidationCode = Helper.SecurityHelper.GenerateCode(20)
                             });
                             File.Delete(Path.Combine(path, fileName));
+
+                            if (i > 0 && i % 10 == 0)
+                                await db.SaveChangesAsync();
                         }
+                        await db.SaveChangesAsync();
+
+
+                        scratchcard.Status = (int)Enums.ScratchcardStatus.generated;
+                        scratchcard.Modified = DateTime.UtcNow;
                         await db.SaveChangesAsync();
                     }
                 }

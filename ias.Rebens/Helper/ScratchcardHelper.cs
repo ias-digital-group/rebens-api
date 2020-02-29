@@ -38,11 +38,19 @@ namespace ias.Rebens.Helper
             }
         }
 
-        public static void GeneratePrize(string prize, List<string> images, string path, string fileName)
+        public static void GeneratePrize(string prize, List<string> otherPrizeImages, List<string> noPrizeImages, string path, string fileName)
         {
             var temp = new List<string>() { prize, prize, prize };
-            foreach (var s in images.OrderBy(x => Guid.NewGuid()).Take(6))
-                temp.Add(s);
+            temp.AddRange(otherPrizeImages.OrderBy(x => Guid.NewGuid()).Take(6));
+            temp.AddRange(noPrizeImages.Take(9 - temp.Count));
+
+            if(temp.Count < 9)
+            {
+                for(int i = temp.Count; i < 9; i++)
+                {
+                    temp.Add(noPrizeImages.First());
+                }
+            }
 
             var tmp = temp.OrderBy(x => Guid.NewGuid()).ToArray();
             using (Bitmap bmp = new Bitmap(600, 600))

@@ -1429,6 +1429,12 @@ namespace ias.Rebens
                     .HasForeignKey(d => d.IdScratchcardPrize)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ScratchcardDraw_ScratchcardPrize");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.Draws)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ScratchcardDraw_Customerb");
             });
 
             modelBuilder.Entity<StaticText>(entity =>
