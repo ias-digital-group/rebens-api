@@ -110,7 +110,7 @@ CREATE TABLE [dbo].[ScratchcardDraw](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[IdScratchcard] [int] NOT NULL,
 	[IdScratchcardPrize] [int] NULL,
-	[Image] [nvarchar](500) NOT NULL,
+	[Image] [nvarchar](500) NULL,
 	[IdCustomer] [int] NULL,
 	[Prize] [nvarchar](200) NULL,
 	[ValidationCode] [nvarchar](50) NULL,
@@ -150,3 +150,56 @@ GO
 
 
 
+CREATE PROCEDURE dbo.GenerateScratchcardDraw(@ScratchcardId INT)
+AS
+BEGIN
+	SET @ScratchcardId = 1
+	DECLARE @total INT
+
+	DECLARE @PrizeId INT
+	DECLARE @PrizeTitle NVARCHAR(200)
+	DECLARE @PrizeQty INT
+
+	SELECT @total = Quantity FROM Scratchcard WHERE id = @ScratchcardId
+
+	DECLARE cursor_scratchcard CURSOR
+	FOR SELECT Id, Title, Quantity FROM ScratchcardPrize where IdScratchcard = @ScratchcardId
+ 
+	OPEN cursor_scratchcard;
+ 
+	FETCH NEXT FROM cursor_scratchcard INTO 
+		@PrizeId, @PrizeTitle, @PrizeQty;
+ 
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+    
+		DECLARE @cnt INT = 0;
+
+		WHILE @cnt < @PrizeQty
+		BEGIN
+		   INSERT INTO ScratchcardDraw 
+		   VALUES (@ScratchcardId, @PrizeId, NULL, NULL, @PrizeTitle, NULL, null, null, null, 1, GETUTCDATE(), GETUTCDATE())
+
+		   SET @cnt = @cnt + 1;
+		END;
+
+		FETCH NEXT FROM cursor_scratchcard INTO 
+			@PrizeId, @PrizeTitle, @PrizeQty;
+	END;
+	CLOSE cursor_scratchcard;
+ 
+	DEALLOCATE cursor_scratchcard;
+
+
+	DECLARE @NoPrizeTotal INT
+	SELECT @NoPrizeTotal = COUNT(1) FROM ScratchcardDraw where IdScratchcard = @ScratchcardId
+
+	SET @cnt = 0;
+	WHILE @cnt < (@total - @NoPrizeTotal)
+	BEGIN
+		INSERT INTO ScratchcardDraw 
+		VALUES(@ScratchcardId, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, GETUTCDATE(), GETUTCDATE())
+
+		SET @cnt = @cnt + 1;
+	END;
+END

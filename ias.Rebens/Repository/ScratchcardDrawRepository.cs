@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -64,14 +65,62 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ScratchcardDraw LoadRandom(int idScratchcard, out string error)
+        public ScratchcardDraw LoadRandom(int idScratchcard, string path, int idCustomer, out string error)
         {
             ScratchcardDraw ret;
             try
             {
+                var cloudinary = new Integration.CloudinaryHelper();
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.ScratchcardDraw.Where(s => s.IdScratchcard == idScratchcard && !s.IdCustomer.HasValue).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+
+                    var scratchcard = db.Scratchcard.Single(s => s.Id == idScratchcard);
+                    var prizes = db.ScratchcardPrize.Where(s => s.IdScratchcard == idScratchcard).ToList();
+                    var images = prizes.Select(p => p.Image).ToList();
+                    var noPrizeImages = new List<string>();
+                    if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage1))
+                        noPrizeImages.Add(scratchcard.NoPrizeImage1);
+                    if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage2))
+                        noPrizeImages.Add(scratchcard.NoPrizeImage2);
+                    if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage3))
+                        noPrizeImages.Add(scratchcard.NoPrizeImage3);
+                    if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage4))
+                        noPrizeImages.Add(scratchcard.NoPrizeImage4);
+                    if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage5))
+                        noPrizeImages.Add(scratchcard.NoPrizeImage5);
+                    if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage6))
+                        noPrizeImages.Add(scratchcard.NoPrizeImage6);
+                    if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage7))
+                        noPrizeImages.Add(scratchcard.NoPrizeImage7);
+                    if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage8))
+                        noPrizeImages.Add(scratchcard.NoPrizeImage8);
+
+                    string fileName = $"scratchcard-{ret.IdScratchcard}-{ret.Id}.png";
+                    if (ret.IdScratchcardPrize.HasValue)
+                    {
+                        var prize = prizes.Single(p => p.Id == ret.IdScratchcardPrize.Value);
+                        Helper.ScratchcardHelper.GeneratePrize(prize.Image, images.Where(img => img != prize.Image).ToList(), noPrizeImages, path, fileName);
+                    } 
+                    else
+                    {
+                        images.AddRange(noPrizeImages);
+                        if (images.Count < 9)
+                        {
+                            for (int j = images.Count; j < 10; j++)
+                                images.Add(noPrizeImages.First());
+                        }
+                        Helper.ScratchcardHelper.GenerateNoPrize(images, path, fileName);
+                    }
+                    var cloudinaryModel = cloudinary.UploadFile(Path.Combine(path, fileName), "Scratchcard");
+                    ret.Modified = DateTime.UtcNow;
+                    ret.IdCustomer = idCustomer;
+                    ret.ValidationCode = Helper.SecurityHelper.GenerateCode(20);
+                    ret.Status = (int)Enums.ScratchcardDraw.drawn;
+                    ret.Image = cloudinaryModel.secure_url;
+
+                    db.SaveChanges();
+
                     error = null;
                 }
             }

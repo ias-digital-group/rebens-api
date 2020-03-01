@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace ias.Rebens
 {
@@ -92,6 +93,7 @@ namespace ias.Rebens
             {
                 using(var db = new RebensContext(this._connectionString))
                 {
+                    var dt = DateTime.UtcNow;
                     var scratchcard = db.Scratchcard.SingleOrDefault(s => s.Id == id && s.Status == (int)Enums.ScratchcardStatus.draft);
                     
                     if(scratchcard != null)
@@ -108,83 +110,19 @@ namespace ias.Rebens
                         });
                         await db.SaveChangesAsync();
 
-                        int count = 0;
-                        var prizes = db.ScratchcardPrize.Where(s => s.IdScratchcard == id);
-                        var images = prizes.Select(p => p.Image).ToList();
-                        var noPrizeImages = new List<string>();
-                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage1))
-                            noPrizeImages.Add(scratchcard.NoPrizeImage1);
-                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage2))
-                            noPrizeImages.Add(scratchcard.NoPrizeImage2);
-                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage3))
-                            noPrizeImages.Add(scratchcard.NoPrizeImage3);
-                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage4))
-                            noPrizeImages.Add(scratchcard.NoPrizeImage4);
-                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage5))
-                            noPrizeImages.Add(scratchcard.NoPrizeImage5);
-                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage6))
-                            noPrizeImages.Add(scratchcard.NoPrizeImage6);
-                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage7))
-                            noPrizeImages.Add(scratchcard.NoPrizeImage7);
-                        if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage8))
-                            noPrizeImages.Add(scratchcard.NoPrizeImage8);
-
-                        var cloudinary = new Integration.CloudinaryHelper();
-                        foreach (var prize in prizes)
-                        {
-                            count += prize.Quantity;
-                            for(int i = 0; i<prize.Quantity; i ++)
-                            {
-                                string fileName = $"prize-{prize.IdScratchcard}-{prize.Id}-{i}.png";
-                                Helper.ScratchcardHelper.GeneratePrize(prize.Image, images.Where(img => img != prize.Image).ToList(), noPrizeImages, path, fileName);
-                                var cloudinaryModel = cloudinary.UploadFile(Path.Combine(path, fileName), "Scratchcard");
-                                await db.ScratchcardDraw.AddAsync(new ScratchcardDraw()
-                                {
-                                    Created = DateTime.UtcNow,
-                                    IdScratchcard = prize.IdScratchcard,
-                                    IdScratchcardPrize = prize.Id,
-                                    Image = cloudinaryModel.secure_url,
-                                    Modified = DateTime.UtcNow,
-                                    Prize = prize.Title,
-                                    Status = (int)Enums.ScratchcardDraw.active,
-                                    ValidationCode = Helper.SecurityHelper.GenerateCode(20)
-                                });
-                                File.Delete(Path.Combine(path, fileName));
-                            }
-                        }
-                        await db.SaveChangesAsync();
-
-                        images.AddRange(noPrizeImages);
-                        if (images.Count < 9)
-                        {
-                            for (int j = images.Count; j < 10; j++)
-                                images.Add(noPrizeImages.First());
-                        }
-                        for (var i = 0; i<(scratchcard.Quantity - count); i++)
-                        {
-                            string fileName = $"noprize-{scratchcard.Id}-{i}.png";
-                            Helper.ScratchcardHelper.GenerateNoPrize(images, path, fileName);
-                            var cloudinaryModel = cloudinary.UploadFile(Path.Combine(path, fileName), "Scratchcard");
-                            await db.ScratchcardDraw.AddAsync(new ScratchcardDraw()
-                            {
-                                Created = DateTime.UtcNow,
-                                IdScratchcard = id,
-                                Image = cloudinaryModel.secure_url,
-                                Modified = DateTime.UtcNow,
-                                Status = (int)Enums.ScratchcardDraw.active,
-                                ValidationCode = Helper.SecurityHelper.GenerateCode(20)
-                            });
-                            File.Delete(Path.Combine(path, fileName));
-
-                            if (i > 0 && i % 10 == 0)
-                                await db.SaveChangesAsync();
-                        }
-                        await db.SaveChangesAsync();
+                        var timeout = db.Database.GetCommandTimeout();
+                        db.Database.SetCommandTimeout(600);
+                        await db.Database.ExecuteSqlCommandAsync($"dbo.GenerateScratchcardDraw {id}");
+                        db.Database.SetCommandTimeout(timeout);
 
 
                         scratchcard.Status = (int)Enums.ScratchcardStatus.generated;
                         scratchcard.Modified = DateTime.UtcNow;
                         await db.SaveChangesAsync();
+
+                        var admin = db.AdminUser.Single(a => a.Id == idAdminUser);
+                        var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };
+                        Helper.EmailHelper.SendAdminEmail(listDestinataries, "[REBENS] - Geração das raspadinhas concluído.", $"O processo de geração das raspadinhas {scratchcard.Name}, foi concluído com sucesso.", out _);
                     }
                 }
             }

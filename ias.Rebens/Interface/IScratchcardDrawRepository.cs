@@ -9,6 +9,6 @@ namespace ias.Rebens
         ResultPage<ScratchcardDraw> ListByCustomer(int idCustomer, int page, int pageItems, out string error);
         ResultPage<ScratchcardDraw> ListByScratchcard(int idScratchcard, int page, int pageItems, out string error);
         ScratchcardDraw Read(int id, out string error);
-        ScratchcardDraw LoadRandom(int idScratchcard, out string error);
+        ScratchcardDraw LoadRandom(int idScratchcard, string path, int idCustomer, out string error);
     }
 }
