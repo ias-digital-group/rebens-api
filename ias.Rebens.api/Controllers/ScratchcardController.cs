@@ -284,7 +284,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         file.CopyTo(stream);
                     }
-                    return Ok(new FileUploadResultModel() { FileName = fileName, Url = $"/files/scratchcard/{fileName}" });
+                    return Ok(new FileUploadResultModel() { FileName = fileName, Url = $"{Request.Scheme}://{Request.Host}/files/scratchcard/{fileName}" });
                 }
 
                 return NoContent();

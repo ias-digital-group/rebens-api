@@ -265,6 +265,8 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("ScratchcardRepository.Update", ex.Message, "", ex.StackTrace);
+                if(ex.InnerException != null)
+                    logError.Create("ScratchcardRepository.Update - INNER", ex.InnerException.Message, "", ex.InnerException.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar a raspadinha. (erro:" + idLog + ")";
                 ret = false;
             }
