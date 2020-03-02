@@ -83,10 +83,12 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Tipo de campanha (Aberto = 1, Fechado = 2, Fechado + parceiro = 3, Assinatura = 4)
         /// </summary>
+        [Required]
         public int Type { get; set; }
         /// <summary>
         /// Tipo de distribuição (diária = 1, semanal = 2, mensal = 3)
         /// </summary>
+        [Required]
         public int DistributionType { get; set; }
         /// <summary>
         /// Quantidade de bilhetes à serem distribuidos (para diário esse campo é ignorado, para semanal no máximo 6 e para mensal no máximo 31)
@@ -95,7 +97,11 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Se o bilhete expira no dia que ele é emitido, ou seja, o cliente precisa raspara o bilhete no mesmo dia
         /// </summary>
+        [Required]
         public bool ScratchcardExpire { get; set; }
+
+        public string StatusName { get; set; }
+        public string Operation { get; set; }
 
         /// <summary>
         /// Prêmios
@@ -104,7 +110,7 @@ namespace ias.Rebens.api.Models
 
         public ScratchcardModel() { }
         
-        public ScratchcardModel(Scratchcard scratchcard) 
+        public ScratchcardModel(Scratchcard scratchcard, string operationName = null) 
         {
             if (scratchcard != null)
             {
@@ -127,8 +133,10 @@ namespace ias.Rebens.api.Models
                 this.ScratchcardExpire = scratchcard.ScratchcardExpire;
                 this.IdOperation = scratchcard.IdOperation;
                 this.Status = scratchcard.Status;
+                this.Operation = operationName;
+                this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.ScratchcardStatus)scratchcard.Status);
 
-                if(scratchcard.Prizes != null)
+                if (scratchcard.Prizes != null)
                 {
                     this.Prizes = new List<ScratchcardPrizeModel>();
                     foreach (var prize in scratchcard.Prizes)

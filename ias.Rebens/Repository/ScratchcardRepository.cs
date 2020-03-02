@@ -54,26 +54,32 @@ namespace ias.Rebens
 
         public bool Delete(int id, int idAdminUser, out string error)
         {
-            bool ret = true;
+            bool ret = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    db.LogAction.Add(new LogAction()
-                    {
-                        Action = (int)Enums.LogAction.delete,
-                        Created = DateTime.UtcNow,
-                        IdAdminUser = idAdminUser,
-                        IdItem = id,
-                        Item = (int)Enums.LogItem.Scratchcard
-                    });
-
                     var update = db.Scratchcard.SingleOrDefault(s => s.Id == id);
-                    update.Modified = DateTime.UtcNow;
-                    update.Status = (int)Enums.ScratchcardStatus.deleted;
-                    db.SaveChanges();
+                    if (update.Status == (int)Enums.ScratchcardStatus.draft || !db.ScratchcardDraw.Any(s => s.IdCustomer.HasValue))
+                    {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.delete,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = id,
+                            Item = (int)Enums.LogItem.Scratchcard
+                        });
 
-                    error = null;
+                        update.Modified = DateTime.UtcNow;
+                        update.Status = (int)Enums.ScratchcardStatus.deleted;
+                        db.SaveChanges();
+
+                        ret = true;
+                        error = null;
+                    }
+                    else
+                        error = "A campanha não pode ser apagada pois possui raspadinhas distribuidas";
                 }
             }
             catch (Exception ex)

@@ -17,7 +17,27 @@ namespace ias.Rebens
             constant = new Constant();
         }
 
-        public bool AddAddress(int idOperation, int idAddress, out string error)
+        public string GetName(int id, out string error)
+        {
+            string name = "";
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    name = db.Operation.Single(o => o.Id == id).Title;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.GetName", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o nome da operação. (erro:" + idLog + ")";
+            }
+            return name;
+        }
+
+        public bool AddAddress(int idOperation, int idAddress, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -26,6 +46,15 @@ namespace ias.Rebens
                 {
                     if(!db.OperationAddress.Any(o => o.IdOperation == idOperation && o.IdAddress == idAddress))
                     {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.create,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idAddress,
+                            Item = (int)Enums.LogItem.OperationAddress
+                        });
+
                         db.OperationAddress.Add(new OperationAddress() { IdAddress = idAddress, IdOperation = idOperation });
                         db.SaveChanges();
                     }
@@ -42,7 +71,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool AddContact(int idOperation, int idContact, out string error)
+        public bool AddContact(int idOperation, int idContact, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -51,6 +80,15 @@ namespace ias.Rebens
                 {
                     if (!db.OperationContact.Any(o => o.IdOperation == idOperation && o.IdContact == idContact))
                     {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.create,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idContact,
+                            Item = (int)Enums.LogItem.OperationContact
+                        });
+
                         db.OperationContact.Add(new OperationContact() { IdContact = idContact, IdOperation = idOperation });
                         db.SaveChanges();
                     }
@@ -67,7 +105,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Create(Operation operation, out string error)
+        public bool Create(Operation operation, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -121,6 +159,15 @@ namespace ias.Rebens
                         });
                     }
                     db.StaticText.AddRange(listPages);
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.create,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = operation.Id,
+                        Item = (int)Enums.LogItem.Operation
+                    });
                     db.SaveChanges();
 
                     error = null;
@@ -136,13 +183,22 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool DeleteAddress(int idOperation, int idAddress, out string error)
+        public bool DeleteAddress(int idOperation, int idAddress, int idAdminUser, out string error)
         {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = idAddress,
+                        Item = (int)Enums.LogItem.OperationAddress
+                    });
+
                     var tmp = db.OperationAddress.SingleOrDefault(o => o.IdOperation == idOperation && o.IdAddress == idAddress);
                     db.OperationAddress.Remove(tmp);
                     db.SaveChanges();
@@ -159,13 +215,22 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool DeleteContact(int idOperation, int idContact, out string error)
+        public bool DeleteContact(int idOperation, int idContact, int idAdminUser, out string error)
         {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = idContact,
+                        Item = (int)Enums.LogItem.OperationContact
+                    });
+
                     var tmp = db.OperationContact.SingleOrDefault(o => o.IdOperation == idOperation && o.IdContact == idContact);
                     db.OperationContact.Remove(tmp);
                     db.SaveChanges();
@@ -325,7 +390,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(Operation operation, out string error)
+        public bool Update(Operation operation, int idAdminUser, out string error)
         {
             bool ret = true;
             bool enablePublish = false;
@@ -336,6 +401,14 @@ namespace ias.Rebens
                     var update = db.Operation.SingleOrDefault(c => c.Id == operation.Id);
                     if (update != null)
                     {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = operation.Id,
+                            Item = (int)Enums.LogItem.Operation
+                        });
 
                         bool changePolicy = operation.Active != update.Active;
                         update.Active = operation.Active;
@@ -527,13 +600,22 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool SavePublishStatus(int id, int idStatus, int? idError, out string error)
+        public bool SavePublishStatus(int id, int idStatus, int idAdminUser, int? idError, out string error)
         {
             bool ret = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.publish,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = id,
+                        Item = (int)Enums.LogItem.Operation
+                    });
+
                     var update = db.Operation.SingleOrDefault(o => o.Id == id);
                     if (idStatus == (int)Enums.PublishStatus.processing)
                     {
@@ -976,6 +1058,11 @@ namespace ias.Rebens
                         op.Modified = DateTime.UtcNow;
                         db.SaveChanges();
 
+                        var action = db.LogAction.Where(a => a.IdItem == op.Id && a.Item == (int)Enums.LogItem.Operation && a.Action == (int)Enums.LogAction.publish).OrderByDescending(a => a.Created).First();
+                        var admin = db.AdminUser.Single(a => a.Id == action.IdAdminUser);
+                        var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };
+                        Helper.EmailHelper.SendAdminEmail(listDestinataries, "[REBENS] - Puiblicação da operação concluída.", $"O processo de publicação da operação {op.Title}, foi concluído com sucesso.", out _);
+
                         ret = true;
                         error = null;
                     }
@@ -991,13 +1078,22 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = id,
+                        Item = (int)Enums.LogItem.Operation
+                    });
+
                     var update = db.Operation.SingleOrDefault(o => o.Id == id);
                     update.Deleted = true;
                     update.Modified = DateTime.UtcNow;

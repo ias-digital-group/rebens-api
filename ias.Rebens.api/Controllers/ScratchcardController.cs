@@ -19,6 +19,7 @@ namespace ias.Rebens.api.Controllers
         private IScratchcardDrawRepository drawRepo;
         private IScratchcardPrizeRepository prizeRepo;
         private IScratchcardRepository repo;
+        private IOperationRepository operationRepo;
         private IHostingEnvironment _hostingEnvironment;
 
         /// <summary>
@@ -29,11 +30,13 @@ namespace ias.Rebens.api.Controllers
         /// <param name="scratchcardDrawRepository"></param>
         /// <param name="hostingEnvironment"></param>
         public ScratchcardController(IScratchcardRepository scratchcardRepository, IScratchcardPrizeRepository scratchcardPrizeRepository,
-                                        IScratchcardDrawRepository scratchcardDrawRepository, IHostingEnvironment hostingEnvironment)
+                                        IScratchcardDrawRepository scratchcardDrawRepository, IHostingEnvironment hostingEnvironment,
+                                        IOperationRepository operationRepository)
         {
             this.repo = scratchcardRepository;
             this.prizeRepo = scratchcardPrizeRepository;
             this.drawRepo = scratchcardDrawRepository;
+            this.operationRepo = operationRepository;
             this._hostingEnvironment = hostingEnvironment;
         }
 
@@ -90,7 +93,10 @@ namespace ias.Rebens.api.Controllers
                     Data = new List<ScratchcardModel>()
                 };
                 foreach (var scratchcard in list.Page)
-                    ret.Data.Add(new ScratchcardModel(scratchcard));
+                {
+                    var operationName = operationRepo.GetName(scratchcard.IdOperation, out _);
+                    ret.Data.Add(new ScratchcardModel(scratchcard, operationName));
+                }
 
                 return Ok(ret);
             }
@@ -256,7 +262,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a url da imagem, ou algum erro caso interno</response>
         /// <response code="204">Se ocorrer algum erro</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("UploadFile"), DisableRequestSizeLimit]
+        [HttpPost("UploadImage"), DisableRequestSizeLimit]
         [ProducesResponseType(typeof(FileUploadResultModel), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]

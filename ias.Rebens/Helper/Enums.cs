@@ -194,6 +194,8 @@ namespace ias.Rebens.Enums
         delete = 3,
         [Description("Gerar")]
         generate = 4,
+        [Description("Publicar")]
+        publish = 5,
     }
 
     public enum LogItem : int
@@ -252,6 +254,10 @@ namespace ias.Rebens.Enums
         Scratchcard = 26,
         [Description("Prêmio da Raspadinha")]
         ScratchcardPrize = 27,
+        [Description("Contato Operação")]
+        OperationContact = 28,
+        [Description("Endereço Operação")]
+        OperationAddress = 29,
 
     }
 
