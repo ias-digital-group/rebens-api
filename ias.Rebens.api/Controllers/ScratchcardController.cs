@@ -118,13 +118,18 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Get(int id)
         {
-            var scratchcard = repo.Read(id, out string error);
+            var scratchcard = repo.Read(id, out bool canPublish, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (scratchcard == null || scratchcard.Id == 0)
                     return NoContent();
-                return Ok(new JsonDataModel<ScratchcardModel>() { Data = new ScratchcardModel(scratchcard) });
+
+                return Ok(new JsonDataModel<ScratchcardModel>() { Data = new ScratchcardModel(scratchcard)
+                {
+                    CanPublish = canPublish
+                }
+                });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -326,7 +331,7 @@ namespace ias.Rebens.api.Controllers
             string newPath = Path.Combine(_hostingEnvironment.WebRootPath, "files", "scratchcard");
             repo.GenerateScratchcards(id, idAdminUser, newPath).ConfigureAwait(false);
 
-            return Ok(new JsonModel() { Status = "ok", Message = "Os bilhetes da raspadinha estão sendo gerado!" });
+            return Ok(new JsonModel() { Status = "ok", Message = "Os bilhetes da raspadinha estão sendo gerado!", Data = Enums.EnumHelper.GetEnumDescription(Enums.ScratchcardStatus.generating) });
         }
     }
 }

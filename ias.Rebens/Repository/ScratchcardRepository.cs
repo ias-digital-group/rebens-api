@@ -272,5 +272,40 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public Scratchcard Read(int id, out bool canPublish, out string error)
+        {
+            Scratchcard ret;
+            canPublish = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Scratchcard.SingleOrDefault(s => s.Id == id);
+
+                    if (ret != null)
+                    {
+                        canPublish = ret.Status == (int)Enums.ScratchcardStatus.draft;
+                        if (string.IsNullOrEmpty(ret.NoPrizeImage1))
+                            canPublish = false;
+                        if (!db.ScratchcardPrize.Any(p => p.IdScratchcard == id))
+                            canPublish = false;
+                        if (ret.Quantity <= 0)
+                            canPublish = false;
+                        if (ret.DistributionType != (int)Enums.ScratchcardDistribution.daily && ret.DistributionQuantity <= 0)
+                            canPublish = false;
+                    }
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler a raspadinha. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

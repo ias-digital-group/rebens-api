@@ -102,6 +102,8 @@ namespace ias.Rebens.api.Models
 
         public string StatusName { get; set; }
         public string Operation { get; set; }
+        public bool CanEdit { get; set; }
+        public bool CanPublish { get; set; }
 
         /// <summary>
         /// Prêmios
@@ -135,6 +137,7 @@ namespace ias.Rebens.api.Models
                 this.Status = scratchcard.Status;
                 this.Operation = operationName;
                 this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.ScratchcardStatus)scratchcard.Status);
+                this.CanEdit = scratchcard.Status == (int)Enums.ScratchcardStatus.draft;
 
                 if (scratchcard.Prizes != null)
                 {
