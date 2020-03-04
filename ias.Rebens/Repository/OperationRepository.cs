@@ -1262,5 +1262,46 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public List<Operation> ListWithModule(string module, out string error)
+        {
+            List<Operation> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var list = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration).ToList();
+                    var operationIds = new List<int>();
+
+                    foreach(var op in list)
+                    {
+                        if (op.Html != null && !string.IsNullOrEmpty(op.Html))
+                        {
+                            var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(op.Html);
+                            foreach (var item in config.Modules)
+                            {
+                                if (item.Name == module && item.Checked)
+                                {
+                                    operationIds.Add(op.IdOperation.Value);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    ret = db.Operation.Where(o => o.Active && operationIds.Any(id => o.Id == id)).OrderBy(o => o.Title).ToList();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ListWithModule", ex.Message, $"module: {module}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as operações que possuem o módulo requisitado. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

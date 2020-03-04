@@ -50,5 +50,6 @@ namespace ias.Rebens
         bool SaveSendingblueListId(int id, int listId, out string error);
 
         string LoadModulesNames(int id, out string error);
+        List<Operation> ListWithModule(string module, out string error);
     }
 }

@@ -12,6 +12,8 @@ namespace ias.Rebens
         public string Image { get; set; }
         public int? IdCustomer { get; set; }
         public string Prize { get; set; }
+        public DateTime? Date { get; set; }
+        public DateTime? ExpireDate { get; set; }
         public string ValidationCode { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? PlayedDate { get; set; }

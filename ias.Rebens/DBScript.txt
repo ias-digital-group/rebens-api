@@ -114,6 +114,8 @@ CREATE TABLE [dbo].[ScratchcardDraw](
 	[Image] [nvarchar](500) NULL,
 	[IdCustomer] [int] NULL,
 	[Prize] [nvarchar](200) NULL,
+	[Date] [date] NULL,
+	[ExpireDate] [date] NULL,
 	[ValidationCode] [nvarchar](50) NULL,
 	[OpenDate] [datetime] NULL,
 	[PlayedDate] [datetime] NULL,

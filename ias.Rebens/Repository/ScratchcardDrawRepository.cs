@@ -65,7 +65,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ScratchcardDraw LoadRandom(int idScratchcard, string path, int idCustomer, out string error)
+        public ScratchcardDraw LoadRandom(int idScratchcard, string path, int idCustomer, DateTime date, DateTime? expireDate, out string error)
         {
             ScratchcardDraw ret;
             try
@@ -115,6 +115,8 @@ namespace ias.Rebens
                     var cloudinaryModel = cloudinary.UploadFile(Path.Combine(path, fileName), "Scratchcard");
                     ret.Modified = DateTime.UtcNow;
                     ret.IdCustomer = idCustomer;
+                    ret.Date = date;
+                    ret.ExpireDate = expireDate;
                     ret.ValidationCode = Helper.SecurityHelper.GenerateCode(20);
                     ret.Status = (int)Enums.ScratchcardDraw.drawn;
                     ret.Image = cloudinaryModel.secure_url;

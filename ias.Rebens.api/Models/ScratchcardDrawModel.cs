@@ -33,6 +33,14 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public int? IdCustomer { get; set; }
         /// <summary>
+        /// Data da raspadinha
+        /// </summary>
+        public DateTime? Date { get; set; }
+        /// <summary>
+        /// Data de vencimento da raspadinha
+        /// </summary>
+        public DateTime? ExpireDate { get; set; }
+        /// <summary>
         /// Descrição do prêmio se for um bilhete premiado
         /// </summary>
         public string Prize { get; set; }
@@ -79,6 +87,8 @@ namespace ias.Rebens.api.Models
                 this.PlayedDate = scratchcardDraw.PlayedDate;
                 this.ValidationDate = scratchcardDraw.ValidationDate;
                 this.Status = scratchcardDraw.Status;
+                this.Date = scratchcardDraw.Date;
+                this.ExpireDate = scratchcardDraw.ExpireDate;
 
                 if (scratchcardDraw.ScratchcardPrize != null)
                     this.ScratchcardPrize = new ScratchcardPrizeModel(scratchcardDraw.ScratchcardPrize);
@@ -99,7 +109,9 @@ namespace ias.Rebens.api.Models
                 OpenDate = this.OpenDate,
                 PlayedDate = this.PlayedDate,
                 ValidationDate = this.ValidationDate,
-                Status = this.Status
+                Status = this.Status,
+                Date = this.Date,
+                ExpireDate = this.ExpireDate
             };
         }
     }

@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publiser,administratorRebens,publisherRebens")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
     [ApiController]
     public class ScratchcardController : ControllerBase
     {
@@ -332,6 +332,39 @@ namespace ias.Rebens.api.Controllers
             repo.GenerateScratchcards(id, idAdminUser, newPath).ConfigureAwait(false);
 
             return Ok(new JsonModel() { Status = "ok", Message = "Os bilhetes da raspadinha estão sendo gerado!", Data = Enums.EnumHelper.GetEnumDescription(Enums.ScratchcardStatus.generating) });
+        }
+
+        /// <summary>
+        /// Lista as operações que possuem o módulo de raspadinha habilitado
+        /// </summary>
+        /// <returns>Lista com as raspadinahs encontradas</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("Operations")]
+        [ProducesResponseType(typeof(JsonDataModel<List<OperationModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Operations()
+        {
+            var list = operationRepo.ListWithModule("coupon", out string error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<OperationModel>>()
+                {
+                    Data = new List<OperationModel>()
+                };
+
+                foreach (var item in list)
+                    ret.Data.Add(new OperationModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }
