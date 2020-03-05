@@ -156,7 +156,6 @@ GO
 CREATE PROCEDURE dbo.GenerateScratchcardDraw(@ScratchcardId INT)
 AS
 BEGIN
-	SET @ScratchcardId = 1
 	DECLARE @total INT
 
 	DECLARE @PrizeId INT
