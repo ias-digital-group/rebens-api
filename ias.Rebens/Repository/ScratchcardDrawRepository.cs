@@ -47,9 +47,11 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.ScratchcardDraw.Where(s => s.IdScratchcard == idScratchcard).OrderBy(s => s.Created);
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = tmpList.Count();
+                    var list = db.ScratchcardDraw.Where(s => s.IdScratchcard == idScratchcard)
+                                    .OrderBy(s => s.Created).Skip(page * pageItems)
+                                    .Take(pageItems).ToList();
+
+                    var total = db.ScratchcardDraw.Count(s => s.IdScratchcard == idScratchcard);
 
                     ret = new ResultPage<ScratchcardDraw>(list, page, pageItems, total);
                     error = null;

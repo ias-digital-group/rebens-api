@@ -41,7 +41,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Retorna uma lista de Raspadinhas
+        /// Retorna uma lista de Campanhas de Raspadinhas
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
@@ -58,23 +58,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
-
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
@@ -105,7 +88,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Retorna uma raspadinha
+        /// Retorna uma Campanha de raspadinha
         /// </summary>
         /// <param name="id">Id da raspadinha desejada</param>
         /// <returns>FAQ</returns>
@@ -136,7 +119,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Atualiza uma raspadinha
+        /// Atualiza uma Campanha de raspadinha
         /// </summary>
         /// <param name="scratchcard">Raspadinha</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
@@ -173,7 +156,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Cria uma raspadinha
+        /// Cria uma Campanha de raspadinha
         /// </summary>
         /// <param name="faq">Raspadinha</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da raspadinha criada</returns>
@@ -302,7 +285,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Gera os bilhetes de uma raspadinha
+        /// Gera os bilhetes de uma campanha de raspadinha
         /// </summary>
         /// <param name="id">Id da raspadinha</param>
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
@@ -360,6 +343,48 @@ namespace ias.Rebens.api.Controllers
 
                 foreach (var item in list)
                     ret.Data.Add(new OperationModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna uma lista de Raspadinhas de uma campanha
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="idScratchcard">Id da campanha de raspadinha, obrigatório</param>
+        /// <returns>Lista com as raspadinahs encontradas</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/Billets")]
+        [ProducesResponseType(typeof(ResultPageModel<ScratchcardDrawModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Billets(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        {
+            var list = drawRepo.ListByScratchcard(id, page, pageItems, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<ScratchcardDrawModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<ScratchcardDrawModel>()
+                };
+                foreach (var scratchcard in list.Page)
+                    ret.Data.Add(new ScratchcardDrawModel(scratchcard));
 
                 return Ok(ret);
             }

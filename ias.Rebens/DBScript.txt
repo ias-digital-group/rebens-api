@@ -180,8 +180,8 @@ BEGIN
 
 		WHILE @cnt < @PrizeQty
 		BEGIN
-		   INSERT INTO ScratchcardDraw 
-		   VALUES (@ScratchcardId, @PrizeId, NULL, NULL, @PrizeTitle, NULL, null, null, null, 1, GETUTCDATE(), GETUTCDATE())
+		   INSERT INTO ScratchcardDraw (IdScratchcard, IdScratchcardPrize, Prize, [Status], Created, Modified)
+		   VALUES (@ScratchcardId, @PrizeId, @PrizeTitle, 1, GETUTCDATE(), GETUTCDATE())
 
 		   SET @cnt = @cnt + 1;
 		END;
@@ -200,12 +200,15 @@ BEGIN
 	SET @cnt = 0;
 	WHILE @cnt < (@total - @NoPrizeTotal)
 	BEGIN
-		INSERT INTO ScratchcardDraw 
-		VALUES(@ScratchcardId, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, GETUTCDATE(), GETUTCDATE())
+		INSERT INTO ScratchcardDraw (IdScratchcard, [Status], Created, Modified)
+		VALUES(@ScratchcardId, 1, GETUTCDATE(), GETUTCDATE())
 
 		SET @cnt = @cnt + 1;
 	END;
 END
+
+
+
 
 
 

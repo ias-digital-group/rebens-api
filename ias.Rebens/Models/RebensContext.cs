@@ -1413,10 +1413,12 @@ namespace ias.Rebens
                 entity.Property(e => e.OpenDate).HasColumnType("datetime");
                 entity.Property(e => e.ValidationDate).HasColumnType("datetime");
                 entity.Property(e => e.PlayedDate).HasColumnType("datetime");
+                entity.Property(e => e.Date).HasColumnType("datetime");
+                entity.Property(e => e.ExpireDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Prize).HasMaxLength(200);
                 entity.Property(e => e.ValidationDate).HasMaxLength(50);
-                entity.Property(e => e.Image).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Image).HasMaxLength(500);
 
                 entity.HasOne(d => d.Scratchcard)
                     .WithMany(p => p.Draws)
