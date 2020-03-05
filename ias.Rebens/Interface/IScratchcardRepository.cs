@@ -14,5 +14,8 @@ namespace ias.Rebens
         Task<bool> GenerateScratchcards(int id, int idAdminUser, string path);
         Scratchcard Read(int id, out string error);
         Scratchcard Read(int id, out bool canPublish, out string error);
+
+        List<Scratchcard> ListByDistributionType(Enums.ScratchcardDistribution type);
+        List<int> ListCustomers(int idOperation, int type);
     }
 }

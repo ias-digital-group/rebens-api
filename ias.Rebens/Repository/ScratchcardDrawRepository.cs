@@ -67,15 +67,15 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ScratchcardDraw LoadRandom(int idScratchcard, string path, int idCustomer, DateTime date, DateTime? expireDate, out string error)
+        public bool SaveRandom(int idScratchcard, string path, int idCustomer, DateTime date, DateTime? expireDate, out string error)
         {
-            ScratchcardDraw ret;
+            bool ret = false;
             try
             {
                 var cloudinary = new Integration.CloudinaryHelper();
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.ScratchcardDraw.Where(s => s.IdScratchcard == idScratchcard && !s.IdCustomer.HasValue).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+                    var item = db.ScratchcardDraw.Where(s => s.IdScratchcard == idScratchcard && !s.IdCustomer.HasValue).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
 
                     var scratchcard = db.Scratchcard.Single(s => s.Id == idScratchcard);
                     var prizes = db.ScratchcardPrize.Where(s => s.IdScratchcard == idScratchcard).ToList();
@@ -98,10 +98,10 @@ namespace ias.Rebens
                     if (!string.IsNullOrEmpty(scratchcard.NoPrizeImage8))
                         noPrizeImages.Add(scratchcard.NoPrizeImage8);
 
-                    string fileName = $"scratchcard-{ret.IdScratchcard}-{ret.Id}.png";
-                    if (ret.IdScratchcardPrize.HasValue)
+                    string fileName = $"scratchcard-{item.IdScratchcard}-{item.Id}.png";
+                    if (item.IdScratchcardPrize.HasValue)
                     {
-                        var prize = prizes.Single(p => p.Id == ret.IdScratchcardPrize.Value);
+                        var prize = prizes.Single(p => p.Id == item.IdScratchcardPrize.Value);
                         Helper.ScratchcardHelper.GeneratePrize(prize.Image, images.Where(img => img != prize.Image).ToList(), noPrizeImages, path, fileName);
                     } 
                     else
@@ -115,16 +115,17 @@ namespace ias.Rebens
                         Helper.ScratchcardHelper.GenerateNoPrize(images, path, fileName);
                     }
                     var cloudinaryModel = cloudinary.UploadFile(Path.Combine(path, fileName), "Scratchcard");
-                    ret.Modified = DateTime.UtcNow;
-                    ret.IdCustomer = idCustomer;
-                    ret.Date = date;
-                    ret.ExpireDate = expireDate;
-                    ret.ValidationCode = Helper.SecurityHelper.GenerateCode(20);
-                    ret.Status = (int)Enums.ScratchcardDraw.drawn;
-                    ret.Image = cloudinaryModel.secure_url;
+                    item.Modified = DateTime.UtcNow;
+                    item.IdCustomer = idCustomer;
+                    item.Date = date;
+                    item.ExpireDate = expireDate;
+                    item.ValidationCode = Helper.SecurityHelper.GenerateCode(20);
+                    item.Status = (int)Enums.ScratchcardDraw.drawn;
+                    item.Image = cloudinaryModel.secure_url;
 
                     db.SaveChanges();
 
+                    ret = true;
                     error = null;
                 }
             }
@@ -133,7 +134,6 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("ScratchcardDrawRepository.LoadRandom", ex.Message, $"idScratchcard: {idScratchcard}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler a raspadinha. (erro:" + idLog + ")";
-                ret = null;
             }
             return ret;
         }

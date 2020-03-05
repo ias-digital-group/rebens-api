@@ -6,6 +6,7 @@ using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
+using ias.Rebens.Enums;
 
 namespace ias.Rebens
 {
@@ -303,6 +304,69 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("ScratchcardRepository.Read", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler a raspadinha. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<Scratchcard> ListByDistributionType(ScratchcardDistribution type)
+        {
+            List<Scratchcard> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Scratchcard.Where(s => s.DistributionType == (int)type &&
+                                            (s.Status == (int)ScratchcardStatus.active || s.Status == (int)ScratchcardStatus.generated))
+                                        .ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("ScratchcardRepository.ListPage", ex.Message, $"type: {type.ToString()}", ex.StackTrace);
+                ret = null;
+            }
+            return ret;
+        }
+
+        public List<int> ListCustomers(int idOperation, int type)
+        {
+            List<int> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    switch((ScratchcardType)type)
+                    {
+                        case ScratchcardType.opened:
+                        case ScratchcardType.closedPartner:
+                            ret = db.Customer.Where(c => c.IdOperation == idOperation && c.Status != (int)CustomerStatus.Inactive
+                                                    && c.Status != (int)CustomerStatus.Validation)
+                                                .Select(c => c.Id).ToList();
+                            break;
+                        case ScratchcardType.closed:
+                            ret = db.Customer.Where(c => c.IdOperation == idOperation && c.Status != (int)CustomerStatus.Inactive
+                                                    && c.Status != (int)CustomerStatus.Validation
+                                                    && !db.OperationPartnerCustomer.Any(p => p.IdCustomer == c.Id))
+                                                .Select(c => c.Id).ToList();
+                            break;
+                        case ScratchcardType.subscription:
+                            //ret = db.Customer.Where(c => c.IdOperation == idOperation && c.Status != (int)CustomerStatus.Inactive
+                            //                        && c.Status != (int)CustomerStatus.Validation)
+                            //                    .Select(c => c.Id).ToList();
+                            ret = null;
+                            break;
+                        default:
+                            ret = null;
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("ScratchcardRepository.ListCustomers", ex.Message, $"type: {type.ToString()}", ex.StackTrace);
                 ret = null;
             }
             return ret;
