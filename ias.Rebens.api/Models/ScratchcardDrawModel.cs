@@ -39,11 +39,11 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Data da raspadinha
         /// </summary>
-        public DateTime? Date { get; set; }
+        public string Date { get; set; }
         /// <summary>
         /// Data de vencimento da raspadinha
         /// </summary>
-        public DateTime? ExpireDate { get; set; }
+        public string ExpireDate { get; set; }
         /// <summary>
         /// Descrição do prêmio se for um bilhete premiado
         /// </summary>
@@ -55,15 +55,15 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Data que o cliente abriu o bilhete
         /// </summary>
-        public DateTime? OpenDate { get; set; }
+        public string OpenDate { get; set; }
         /// <summary>
         /// Data que o cliente raspou o bilhete
         /// </summary>
-        public DateTime? PlayedDate { get; set; }
+        public string PlayedDate { get; set; }
         /// <summary>
         /// Data que o cliente validou o bilhete
         /// </summary>
-        public DateTime? ValidationDate { get; set; }
+        public string ValidationDate { get; set; }
         /// <summary>
         /// Status do bilhete
         /// </summary>
@@ -87,38 +87,18 @@ namespace ias.Rebens.api.Models
                 this.IdCustomer = scratchcardDraw.IdCustomer;
                 this.Prize = scratchcardDraw.PlayedDate.HasValue ? scratchcardDraw.Prize : "";
                 this.ValidationCode = scratchcardDraw.ValidationCode;
-                this.OpenDate = scratchcardDraw.OpenDate;
-                this.PlayedDate = scratchcardDraw.PlayedDate;
-                this.ValidationDate = scratchcardDraw.ValidationDate;
+                this.OpenDate = scratchcardDraw.OpenDate.HasValue ? scratchcardDraw.OpenDate.Value.ToString("dd/MM/yyyy") : "";
+                this.PlayedDate = scratchcardDraw.PlayedDate.HasValue ? scratchcardDraw.PlayedDate.Value.ToString("dd/MM/yyyy") : "";
+                this.ValidationDate = scratchcardDraw.ValidationDate.HasValue ? scratchcardDraw.ValidationDate.Value.ToString("dd/MM/yyyy") : "";
                 this.Status = scratchcardDraw.Status;
-                this.Date = scratchcardDraw.Date;
-                this.ExpireDate = scratchcardDraw.ExpireDate;
+                this.Date = scratchcardDraw.Date.HasValue ? scratchcardDraw.Date.Value.ToString("dd/MM/yyyy") : "";
+                this.ExpireDate = scratchcardDraw.ExpireDate.HasValue ? scratchcardDraw.ExpireDate.Value.ToString("dd/MM/yyyy") : "";
 
                 if (scratchcardDraw.ScratchcardPrize != null)
                     this.ScratchcardPrize = new ScratchcardPrizeModel(scratchcardDraw.ScratchcardPrize);
                 if (scratchcardDraw.Scratchcard != null)
                     this.Scratchcard = scratchcardDraw.Scratchcard.Name;
             }
-        }
-
-        public ScratchcardDraw GetEntity()
-        {
-            return new ScratchcardDraw()
-            {
-                Id = this.Id,
-                IdScratchcard = this.IdScratchcard,
-                IdScratchcardPrize = this.IdScratchcardPrize,
-                Image = this.Image,
-                IdCustomer = this.IdCustomer,
-                Prize = this.Prize,
-                ValidationCode = this.ValidationCode,
-                OpenDate = this.OpenDate,
-                PlayedDate = this.PlayedDate,
-                ValidationDate = this.ValidationDate,
-                Status = this.Status,
-                Date = this.Date,
-                ExpireDate = this.ExpireDate
-            };
         }
     }
 }

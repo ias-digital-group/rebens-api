@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentScheduler;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,17 +26,20 @@ namespace ias.Rebens.api.helper
             {
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
-                IHostingEnvironment hostingEnvironment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
+                IHostingEnvironment environment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
+                string path = Path.Combine(environment.WebRootPath, "files", "scratchcard");
 
-                string newPath = Path.Combine(hostingEnvironment.WebRootPath, "files", "scratchcard");
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.daily);
                 foreach (var item in list)
                 {
                     var users = repo.ListCustomers(item.IdOperation, item.Type);
                     foreach(var user in users)
                     {
-                        drawRepo.SaveRandom(item.Id, newPath, user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
+                        drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
+                        Thread.Sleep(100);
                     }
+
+                    Thread.Sleep(1000);
                 }
             }
         }
@@ -54,16 +61,68 @@ namespace ias.Rebens.api.helper
             {
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
-                IHostingEnvironment hostingEnvironment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
+                IHostingEnvironment environment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
+                string path = Path.Combine(environment.WebRootPath, "files", "scratchcard");
 
-                string newPath = Path.Combine(hostingEnvironment.WebRootPath, "files", "scratchcard");
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.weekly);
                 foreach (var item in list)
                 {
                     var users = repo.ListCustomers(item.IdOperation, item.Type);
                     foreach (var user in users)
                     {
-                        drawRepo.SaveRandom(item.Id, newPath, user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
+                        switch (item.Quantity)
+                        {
+                            case 1:
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Wednesday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                break;
+                            case 2:
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Tuesday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Thursday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                break;
+                            case 3:
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Monday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Wednesday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Friday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                break;
+                            case 4:
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Monday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Tuesday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Thursday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Friday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                break;
+                            case 5:
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Monday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Tuesday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Wednesday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _); 
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Thursday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Friday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                
+                                break;
+                            case 6:
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Monday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Tuesday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Wednesday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Thursday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Friday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                Thread.Sleep(100);
+                                drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.AddDays((int)DayOfWeek.Saturday).Date : null), out _);
+                                break;
+                        }
+                        Thread.Sleep(100);
                     }
                 }
             }
@@ -86,16 +145,24 @@ namespace ias.Rebens.api.helper
             {
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
-                IHostingEnvironment hostingEnvironment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
+                IHostingEnvironment environment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
+                string path = Path.Combine(environment.WebRootPath, "files", "scratchcard");
 
-                string newPath = Path.Combine(hostingEnvironment.WebRootPath, "files", "scratchcard");
+                var lastDayOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddDays(-1).Date;
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.monthly);
                 foreach(var item in list)
                 {
+                    var daysInBetween = Convert.ToInt32(lastDayOfMonth.Day / item.Quantity);
                     var users = repo.ListCustomers(item.IdOperation, item.Type);
+
                     foreach (var user in users)
                     {
-                        drawRepo.SaveRandom(item.Id, newPath, user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
+                        for(int i = 0; i< item.Quantity; i++)
+                        {
+                            drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.Date.AddDays(daysInBetween*i), (item.ScratchcardExpire ? (DateTime?)lastDayOfMonth : null), out _);
+                            Thread.Sleep(100);
+                        }
+                        Thread.Sleep(1000);
                     }
                 }
             }
