@@ -14,10 +14,14 @@ namespace ias.Rebens.api.Models
         [Required]
         public int Id { get; set; }
         /// <summary>
-        /// Id da Raspadinha
+        /// Id da campanha da Raspadinha
         /// </summary>
         [Required]
         public int IdScratchcard { get; set; }
+        /// <summary>
+        /// Nome da campanha da raspadinha
+        /// </summary>
+        public string Scratchcard { get; set; }
         /// <summary>
         /// Id do prêmio se for um bilhete premiado
         /// </summary>
@@ -81,7 +85,7 @@ namespace ias.Rebens.api.Models
                 this.IdScratchcardPrize = scratchcardDraw.IdScratchcardPrize;
                 this.Image = scratchcardDraw.Image;
                 this.IdCustomer = scratchcardDraw.IdCustomer;
-                this.Prize = scratchcardDraw.Prize;
+                this.Prize = scratchcardDraw.PlayedDate.HasValue ? scratchcardDraw.Prize : "";
                 this.ValidationCode = scratchcardDraw.ValidationCode;
                 this.OpenDate = scratchcardDraw.OpenDate;
                 this.PlayedDate = scratchcardDraw.PlayedDate;
@@ -92,6 +96,8 @@ namespace ias.Rebens.api.Models
 
                 if (scratchcardDraw.ScratchcardPrize != null)
                     this.ScratchcardPrize = new ScratchcardPrizeModel(scratchcardDraw.ScratchcardPrize);
+                if (scratchcardDraw.Scratchcard != null)
+                    this.Scratchcard = scratchcardDraw.Scratchcard.Name;
             }
         }
 

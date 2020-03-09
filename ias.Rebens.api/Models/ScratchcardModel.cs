@@ -104,6 +104,7 @@ namespace ias.Rebens.api.Models
         public string Operation { get; set; }
         public bool CanEdit { get; set; }
         public bool CanPublish { get; set; }
+        public string ImagesPath { get; set; }
 
         /// <summary>
         /// Prêmios

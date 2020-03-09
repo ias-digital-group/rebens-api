@@ -102,7 +102,9 @@ namespace ias.Rebens.api.Controllers
             {
                 if (prize == null || prize.Id == 0)
                     return NoContent();
-                return Ok(new JsonDataModel<ScratchcardPrizeModel>() { Data = new ScratchcardPrizeModel(prize) });
+                return Ok(new JsonDataModel<ScratchcardPrizeModel>() { Data = new ScratchcardPrizeModel(prize) {
+                    ImagePath = $"{Request.Scheme}://{Request.Host}/files/scratchcard/"
+                } });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

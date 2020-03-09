@@ -47,6 +47,9 @@ namespace ias.Rebens.api.Models
         [Required]
         [MaxLength(2000)]
         public string Description { get; set; }
+
+        public string ImagePath { get; set; }
+
         /// <summary>
         /// Chances
         /// </summary>

@@ -398,7 +398,9 @@ namespace ias.Rebens.Enums
         [Description("Raspado")]
         scratched = 3,
         [Description("Validado")]
-        validated = 4
+        validated = 4,
+        [Description("Aberta")]
+        opened = 5
     }
 
     public enum ScratchcardType : int

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,9 +23,10 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.ScratchcardDraw.Where(s => s.IdCustomer == idCustomer).OrderByDescending(s => s.Created);
+                    var tmpList = db.ScratchcardDraw.Include("Scratchcard").Include("ScratchcardPrize")
+                                        .Where(s => s.IdCustomer == idCustomer).OrderByDescending(s => s.Created);
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = tmpList.Count();
+                    var total = tmpList.Count(s => s.IdCustomer == idCustomer);
 
                     ret = new ResultPage<ScratchcardDraw>(list, page, pageItems, total);
                     error = null;
@@ -155,6 +157,87 @@ namespace ias.Rebens
                 int idLog = logError.Create("ScratchcardDrawRepository.Read", ex.Message, $"id: {id}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler a raspadinha. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public bool SetOpened(int id, int idCustomer)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.ScratchcardDraw.SingleOrDefault(s => s.Id == id);
+                    if(update != null && update.IdCustomer == idCustomer)
+                    {
+                        update.OpenDate = DateTime.UtcNow;
+                        update.Status = (int)Enums.ScratchcardDraw.opened;
+                        update.Modified = DateTime.UtcNow;
+                        db.SaveChanges();
+
+                        ret = true;
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("ScratchcardDrawRepository.SetOpened", ex.Message, $"id: {id}, idCustomer: {idCustomer}", ex.StackTrace);
+            }
+            return ret;
+        }
+
+        public bool SetPlayed(int id, int idCustomer)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.ScratchcardDraw.SingleOrDefault(s => s.Id == id);
+                    if (update != null && update.IdCustomer == idCustomer)
+                    {
+                        update.PlayedDate = DateTime.UtcNow;
+                        update.Status = (int)Enums.ScratchcardDraw.scratched;
+                        update.Modified = DateTime.UtcNow;
+                        db.SaveChanges();
+
+                        ret = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("ScratchcardDrawRepository.SetPlayed", ex.Message, $"id: {id}, idCustomer: {idCustomer}", ex.StackTrace);
+            }
+            return ret;
+        }
+
+        public bool Validate(int id, int idCustomer)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.ScratchcardDraw.SingleOrDefault(s => s.Id == id);
+                    if (update != null && update.IdCustomer == idCustomer)
+                    {
+                        update.ValidationDate = DateTime.UtcNow;
+                        update.Status = (int)Enums.ScratchcardDraw.validated;
+                        update.Modified = DateTime.UtcNow;
+                        db.SaveChanges();
+
+                        ret = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("ScratchcardDrawRepository.Validate", ex.Message, $"id: {id}, idCustomer: {idCustomer}", ex.StackTrace);
             }
             return ret;
         }

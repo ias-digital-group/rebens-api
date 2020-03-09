@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
 using FluentScheduler;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ias.Rebens.api.helper
@@ -23,14 +22,16 @@ namespace ias.Rebens.api.helper
             {
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
+                IHostingEnvironment hostingEnvironment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
 
+                string newPath = Path.Combine(hostingEnvironment.WebRootPath, "files", "scratchcard");
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.daily);
                 foreach (var item in list)
                 {
                     var users = repo.ListCustomers(item.IdOperation, item.Type);
                     foreach(var user in users)
                     {
-                        drawRepo.SaveRandom(item.Id, "", user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
+                        drawRepo.SaveRandom(item.Id, newPath, user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
                     }
                 }
             }
@@ -53,14 +54,16 @@ namespace ias.Rebens.api.helper
             {
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
+                IHostingEnvironment hostingEnvironment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
 
+                string newPath = Path.Combine(hostingEnvironment.WebRootPath, "files", "scratchcard");
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.weekly);
                 foreach (var item in list)
                 {
                     var users = repo.ListCustomers(item.IdOperation, item.Type);
                     foreach (var user in users)
                     {
-                        drawRepo.SaveRandom(item.Id, "", user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
+                        drawRepo.SaveRandom(item.Id, newPath, user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
                     }
                 }
             }
@@ -83,14 +86,16 @@ namespace ias.Rebens.api.helper
             {
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
+                IHostingEnvironment hostingEnvironment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
 
+                string newPath = Path.Combine(hostingEnvironment.WebRootPath, "files", "scratchcard");
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.monthly);
                 foreach(var item in list)
                 {
                     var users = repo.ListCustomers(item.IdOperation, item.Type);
                     foreach (var user in users)
                     {
-                        drawRepo.SaveRandom(item.Id, "", user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
+                        drawRepo.SaveRandom(item.Id, newPath, user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
                     }
                 }
             }
