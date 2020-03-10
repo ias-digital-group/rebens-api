@@ -33,6 +33,9 @@ namespace ias.Rebens
         public int Status { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public string Instructions { get; set; }
+        public bool GetNotifications { get; set; }
+        public int IdAdminUser { get; set; }
 
         public virtual Operation Operation { get; set; }
         public virtual ICollection<ScratchcardDraw> Draws { get; set; }

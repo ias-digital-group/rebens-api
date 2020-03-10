@@ -99,6 +99,19 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public bool ScratchcardExpire { get; set; }
+        /// <summary>
+        /// Informações sobre como resgatar os prêmios, vai aparecer no modal da raspadinha
+        /// </summary>
+        public string Instructions { get; set; }
+        /// <summary>
+        /// Se o usuário quer receber notificações das raspadinhas com prêmio
+        /// </summary>
+        [Required]
+        public bool GetNotifications { get; set; }
+        /// <summary>
+        /// Id do usuário que criou a campanha
+        /// </summary>
+        public int IdAdminUser { get; set; }
 
         public string StatusName { get; set; }
         public string Operation { get; set; }
@@ -139,6 +152,9 @@ namespace ias.Rebens.api.Models
                 this.Operation = operationName;
                 this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.ScratchcardStatus)scratchcard.Status);
                 this.CanEdit = scratchcard.Status == (int)Enums.ScratchcardStatus.draft;
+                this.IdAdminUser = scratchcard.IdAdminUser;
+                this.Instructions = scratchcard.Instructions;
+                this.GetNotifications = scratchcard.GetNotifications;
 
                 if (scratchcard.Prizes != null)
                 {
@@ -171,7 +187,9 @@ namespace ias.Rebens.api.Models
                 DistributionQuantity = this.DistributionQuantity,
                 ScratchcardExpire = this.ScratchcardExpire,
                 IdOperation = this.IdOperation,
-                Status = this.Status
+                Status = this.Status,
+                Instructions = this.Instructions,
+                GetNotifications = this.GetNotifications
             };
         }
     }

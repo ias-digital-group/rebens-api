@@ -3,9 +3,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using System.Threading.Tasks;
-using System.Threading;
 using ias.Rebens.Enums;
 
 namespace ias.Rebens
@@ -26,7 +24,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     scratchcard.Modified = scratchcard.Created = DateTime.UtcNow;
-                    scratchcard.Status = (int)Enums.ScratchcardStatus.draft;
+                    scratchcard.Status = (int)ScratchcardStatus.draft;
                     db.Scratchcard.Add(scratchcard);
                     db.SaveChanges();
 
@@ -245,6 +243,8 @@ namespace ias.Rebens
                         update.ScratchcardExpire = scratchcard.ScratchcardExpire;
                         update.Quantity = scratchcard.Quantity;
                         update.Start = scratchcard.Start;
+                        update.GetNotifications = scratchcard.GetNotifications;
+                        update.Instructions = scratchcard.Instructions;
                         if(scratchcard.Status != 0)
                             update.Status = scratchcard.Status;
 

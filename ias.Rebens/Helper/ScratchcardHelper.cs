@@ -11,28 +11,35 @@ namespace ias.Rebens.Helper
         public static void GenerateNoPrize(List<string> images, string path, string fileName)
         {
             var tmp = images.OrderBy(x => Guid.NewGuid()).Take(9).ToArray();
+            GenerateImage(tmp, path, fileName);
+        }
+
+        private static void GenerateImage(string[] imgList, string path, string fileName)
+        {
+            int spaceSize = 6;
+            int imgSize = 192;
             using (Bitmap bmp = new Bitmap(600, 600))
             {
-                var img1 = Image.FromFile(Path.Combine(path, tmp[0]));
-                var img2 = Image.FromFile(Path.Combine(path, tmp[1]));
-                var img3 = Image.FromFile(Path.Combine(path, tmp[2]));
-                var img4 = Image.FromFile(Path.Combine(path, tmp[3]));
-                var img5 = Image.FromFile(Path.Combine(path, tmp[4]));
-                var img6 = Image.FromFile(Path.Combine(path, tmp[5]));
-                var img7 = Image.FromFile(Path.Combine(path, tmp[6]));
-                var img8 = Image.FromFile(Path.Combine(path, tmp[7]));
-                var img9 = Image.FromFile(Path.Combine(path, tmp[8]));
+                var img1 = Image.FromFile(Path.Combine(path, imgList[0]));
+                var img2 = Image.FromFile(Path.Combine(path, imgList[1]));
+                var img3 = Image.FromFile(Path.Combine(path, imgList[2]));
+                var img4 = Image.FromFile(Path.Combine(path, imgList[3]));
+                var img5 = Image.FromFile(Path.Combine(path, imgList[4]));
+                var img6 = Image.FromFile(Path.Combine(path, imgList[5]));
+                var img7 = Image.FromFile(Path.Combine(path, imgList[6]));
+                var img8 = Image.FromFile(Path.Combine(path, imgList[7]));
+                var img9 = Image.FromFile(Path.Combine(path, imgList[8]));
                 using (Graphics g = Graphics.FromImage(bmp))
                 {
-                    g.DrawImage(img1, 0, 0, 200, 200);
-                    g.DrawImage(img2, 0, 200, 200, 200);
-                    g.DrawImage(img3, 200, 0, 200, 200);
-                    g.DrawImage(img4, 200, 200, 200, 200);
-                    g.DrawImage(img5, 200, 400, 200, 200);
-                    g.DrawImage(img6, 400, 0, 200, 200);
-                    g.DrawImage(img7, 400, 200, 200, 200);
-                    g.DrawImage(img8, 400, 400, 200, 200);
-                    g.DrawImage(img9, 0, 400, 200, 200);
+                    g.DrawImage(img1, spaceSize, spaceSize, imgSize, imgSize);
+                    g.DrawImage(img2, spaceSize, (2 * spaceSize + imgSize), imgSize, imgSize);
+                    g.DrawImage(img3, (2 * spaceSize + imgSize), spaceSize, imgSize, imgSize);
+                    g.DrawImage(img4, (2 * spaceSize + imgSize), (2 * spaceSize + imgSize), imgSize, imgSize);
+                    g.DrawImage(img5, (2 * spaceSize + imgSize), (3 * spaceSize + 2 * imgSize), imgSize, imgSize);
+                    g.DrawImage(img6, (3 * spaceSize + 2 * imgSize), spaceSize, imgSize, imgSize);
+                    g.DrawImage(img7, (3 * spaceSize + 2 * imgSize), (2 * spaceSize + imgSize), imgSize, imgSize);
+                    g.DrawImage(img8, (3 * spaceSize + 2 * imgSize), (3 * spaceSize + 2 * imgSize), imgSize, imgSize);
+                    g.DrawImage(img9, spaceSize, (3 * spaceSize + 2 * imgSize), imgSize, imgSize);
                 }
                 bmp.Save(Path.Combine(path, fileName));
             }
@@ -53,31 +60,7 @@ namespace ias.Rebens.Helper
             }
 
             var tmp = temp.OrderBy(x => Guid.NewGuid()).ToArray();
-            using (Bitmap bmp = new Bitmap(600, 600))
-            {
-                var img1 = Image.FromFile(Path.Combine(path, tmp[0]));
-                var img2 = Image.FromFile(Path.Combine(path, tmp[1]));
-                var img3 = Image.FromFile(Path.Combine(path, tmp[2]));
-                var img4 = Image.FromFile(Path.Combine(path, tmp[3]));
-                var img5 = Image.FromFile(Path.Combine(path, tmp[4]));
-                var img6 = Image.FromFile(Path.Combine(path, tmp[5]));
-                var img7 = Image.FromFile(Path.Combine(path, tmp[6]));
-                var img8 = Image.FromFile(Path.Combine(path, tmp[7]));
-                var img9 = Image.FromFile(Path.Combine(path, tmp[8]));
-                using (Graphics g = Graphics.FromImage(bmp))
-                {
-                    g.DrawImage(img1, 0, 0, 200, 200);
-                    g.DrawImage(img2, 0, 200, 200, 200);
-                    g.DrawImage(img3, 200, 0, 200, 200);
-                    g.DrawImage(img4, 200, 200, 200, 200);
-                    g.DrawImage(img5, 200, 400, 200, 200);
-                    g.DrawImage(img6, 400, 0, 200, 200);
-                    g.DrawImage(img7, 400, 200, 200, 200);
-                    g.DrawImage(img8, 400, 400, 200, 200);
-                    g.DrawImage(img9, 0, 400, 200, 200);
-                }
-                bmp.Save(Path.Combine(path, fileName));
-            }
+            GenerateImage(tmp, path, fileName);
         }
     }
 }

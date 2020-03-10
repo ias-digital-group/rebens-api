@@ -461,6 +461,8 @@ namespace ias.Rebens.Enums
         CourseFAQ = 17,
         [Description("Cursos - Regulamentos")]
         CourseRegulation = 18,
+        [Description("Raspadinha - Regulamento")]
+        ScratchcardRegulation = 19,
     }
 
     public enum WithdrawStatus : int

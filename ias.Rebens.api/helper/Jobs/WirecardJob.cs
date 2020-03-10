@@ -1,4 +1,5 @@
 ﻿using FluentScheduler;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ias.Rebens.api.helper
 {
@@ -7,39 +8,42 @@ namespace ias.Rebens.api.helper
     /// </summary>
     public class WirecardJob : IJob
     {
-        private Constant constant;
-        public WirecardJob()
+        private IServiceScopeFactory serviceScopeFactory;
+
+        public WirecardJob(IServiceScopeFactory serviceScopeFactory)
         {
-            this.constant = new Constant();
+            this.serviceScopeFactory = serviceScopeFactory;
         }
         /// <summary>
         /// 
         /// </summary>
         public void Execute()
         {
-            var log = new LogErrorRepository(constant.AppSettings.ConnectionStrings.DefaultConnection);
-            var wireRepo = new WirecardPaymentRepository(constant.AppSettings.ConnectionStrings.DefaultConnection);
-            var orderRepo = new OrderRepository(constant.AppSettings.ConnectionStrings.DefaultConnection);
-            log.Create("WirecardJob", "START", "", "");
-
-            if (wireRepo.HasPaymentToProcess())
+            using (var serviceScope = serviceScopeFactory.CreateScope())
             {
-                log.Create("WirecardJob.Payments", "START", "", "");
-                wireRepo.ProcessPayments();
-                log.Create("WirecardJob.Payments", "FINISH", "", "");
-            }
-            else
-                log.Create("WirecardJob.Payments", "NO-PAYMENTS", "", "");
+                ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();
+                IWirecardPaymentRepository wireRepo = serviceScope.ServiceProvider.GetService<IWirecardPaymentRepository>();
+                IOrderRepository orderRepo = serviceScope.ServiceProvider.GetService<IOrderRepository>();
+                
+                log.Create("WirecardJob", "START", "", "");
+                if (wireRepo.HasPaymentToProcess())
+                {
+                    log.Create("WirecardJob.Payments", "START", "", "");
+                    wireRepo.ProcessPayments();
+                    log.Create("WirecardJob.Payments", "FINISH", "", "");
+                }
+                else
+                    log.Create("WirecardJob.Payments", "NO-PAYMENTS", "", "");
 
-
-            if (orderRepo.HasOrderToProcess())
-            {
-                log.Create("WirecardJob.Orders", "START", "", "");
-                orderRepo.ProcessOrder();
-                log.Create("WirecardJob.Orders", "FINISH", "", "");
+                if (orderRepo.HasOrderToProcess())
+                {
+                    log.Create("WirecardJob.Orders", "START", "", "");
+                    orderRepo.ProcessOrder();
+                    log.Create("WirecardJob.Orders", "FINISH", "", "");
+                }
+                else
+                    log.Create("WirecardJob.Orders", "NO-ORDERS", "", "");
             }
-            else
-                log.Create("WirecardJob.Orders", "NO-ORDERS", "", "");
         }
     }
 }

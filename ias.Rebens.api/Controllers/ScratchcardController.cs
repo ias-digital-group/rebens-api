@@ -201,6 +201,7 @@ namespace ias.Rebens.api.Controllers
             if (scratchcard != null)
             {
                 var s = scratchcard.GetEntity();
+                s.IdAdminUser = idAdminUser;
                 if (idOperation.HasValue)
                     s.IdOperation = idOperation.Value;
                 if (repo.Create(s, idAdminUser, out string error))

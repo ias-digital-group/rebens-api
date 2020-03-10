@@ -241,3 +241,21 @@ GO
 ALTER TABLE [dbo].[LogAction] CHECK CONSTRAINT [FK_LogAction_AdminUser]
 GO
 
+
+ALTER TABLE Scratchcard ADD IdAdminUser INT NULL
+GO
+
+ALTER TABLE Scratchcard ADD Instructions NVARCHAR(500) NULL
+GO
+
+ALTER TABLE Scratchcard ADD GetNotifications bit NULL
+GO
+
+update Scratchcard SET GetNotifications = 0, IdAdminUser = 1
+GO
+
+ALTER TABLE Scratchcard ALTER COLUMN IdAdminUser INT NOT NULL
+GO
+
+ALTER TABLE Scratchcard ALTER COLUMN GetNotifications bit NOT NULL
+GO

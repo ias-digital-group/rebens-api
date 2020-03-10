@@ -22,11 +22,15 @@ namespace ias.Rebens.api.helper
 
         public void Execute()
         {
+            
             using (var serviceScope = serviceScopeFactory.CreateScope())
             {
+                ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
                 IHostingEnvironment environment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
+
+                log.Create("ScratchcardDailyJob", "START", "", "");
                 string path = Path.Combine(environment.WebRootPath, "files", "scratchcard");
 
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.daily);
@@ -41,6 +45,7 @@ namespace ias.Rebens.api.helper
 
                     Thread.Sleep(1000);
                 }
+                log.Create("ScratchcardDailyJob", "END", "", "");
             }
         }
     }
@@ -59,11 +64,13 @@ namespace ias.Rebens.api.helper
         {
             using (var serviceScope = serviceScopeFactory.CreateScope())
             {
+                ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
                 IHostingEnvironment environment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
                 string path = Path.Combine(environment.WebRootPath, "files", "scratchcard");
 
+                log.Create("ScratchcardWeeklyJob", "START", "", "");
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.weekly);
                 foreach (var item in list)
                 {
@@ -125,6 +132,7 @@ namespace ias.Rebens.api.helper
                         Thread.Sleep(100);
                     }
                 }
+                log.Create("ScratchcardWeeklyJob", "END", "", "");
             }
         }
     }
@@ -143,11 +151,13 @@ namespace ias.Rebens.api.helper
         {
             using (var serviceScope = serviceScopeFactory.CreateScope())
             {
+                ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();
                 IScratchcardRepository repo = serviceScope.ServiceProvider.GetService<IScratchcardRepository>();
                 IScratchcardDrawRepository drawRepo = serviceScope.ServiceProvider.GetService<IScratchcardDrawRepository>();
                 IHostingEnvironment environment = serviceScope.ServiceProvider.GetService<IHostingEnvironment>();
                 string path = Path.Combine(environment.WebRootPath, "files", "scratchcard");
 
+                log.Create("ScratchcardMonthlyJob", "START", "", "");
                 var lastDayOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddDays(-1).Date;
                 var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.monthly);
                 foreach(var item in list)
@@ -165,6 +175,7 @@ namespace ias.Rebens.api.helper
                         Thread.Sleep(1000);
                     }
                 }
+                log.Create("ScratchcardMonthlyJob", "END", "", "");
             }
         }
     }
