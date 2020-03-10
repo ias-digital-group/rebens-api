@@ -391,16 +391,14 @@ namespace ias.Rebens.Enums
 
     public enum ScratchcardDraw : int
     {
-        [Description("Ativo")]
+        [Description("Ativa")]
         active = 1,
-        [Description("Distribuido")]
+        [Description("Raspar")]
         drawn = 2,
-        [Description("Raspado")]
+        [Description("Raspada")]
         scratched = 3,
-        [Description("Validado")]
-        validated = 4,
-        [Description("Aberta")]
-        opened = 5
+        [Description("Validada")]
+        validated = 4
     }
 
     public enum ScratchcardType : int

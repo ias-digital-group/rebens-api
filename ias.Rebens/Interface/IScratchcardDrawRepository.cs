@@ -12,7 +12,7 @@ namespace ias.Rebens
         bool SaveRandom(int idScratchcard, string path, int idCustomer, DateTime date, DateTime? expireDate, out string error);
 
         bool SetOpened(int id, int idCustomer);
-        bool SetPlayed(int id, int idCustomer);
+        bool SetPlayed(int id, int idCustomer, out string prize);
         bool Validate(int id, int idCustomer);
     }
 }

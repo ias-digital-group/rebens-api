@@ -2,7 +2,7 @@
 using System.IO;
 using Newtonsoft.Json;
 using ias.Rebens.Helper.Config;
-
+using System.Globalization;
 
 namespace ias.Rebens
 {
@@ -41,5 +41,7 @@ namespace ias.Rebens
         public string MoipNotificationAuthorization { get { return this.AppSettings.App.WirecardAuthorization; } }
         public bool DebugOn { get { return this.AppSettings.App.Debug; } }
         public string BuilderUrl { get { return this.AppSettings.App.BuilderUrl; } }
+        public static TimeZoneInfo TimeZone { get { return TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"); } }
+        public static IFormatProvider FormatProvider { get { return new CultureInfo("pt-BR"); } }
     }
 }

@@ -24,7 +24,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.ScratchcardDraw.Include("Scratchcard").Include("ScratchcardPrize")
-                                        .Where(s => s.IdCustomer == idCustomer).OrderByDescending(s => s.Created);
+                                        .Where(s => s.IdCustomer == idCustomer).OrderByDescending(s => s.Date);
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = tmpList.Count(s => s.IdCustomer == idCustomer);
 
@@ -171,11 +171,12 @@ namespace ias.Rebens
                     var update = db.ScratchcardDraw.SingleOrDefault(s => s.Id == id);
                     if(update != null && update.IdCustomer == idCustomer)
                     {
-                        update.OpenDate = DateTime.UtcNow;
-                        update.Status = (int)Enums.ScratchcardDraw.opened;
-                        update.Modified = DateTime.UtcNow;
-                        db.SaveChanges();
-
+                        if (!update.OpenDate.HasValue)
+                        {
+                            update.OpenDate = DateTime.UtcNow;
+                            update.Modified = DateTime.UtcNow;
+                            db.SaveChanges();
+                        }
                         ret = true;
                     }
                 }
@@ -188,9 +189,10 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool SetPlayed(int id, int idCustomer)
+        public bool SetPlayed(int id, int idCustomer, out string prize)
         {
             bool ret = false;
+            prize = "";
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -203,6 +205,8 @@ namespace ias.Rebens
                         update.Modified = DateTime.UtcNow;
                         db.SaveChanges();
 
+                        if (update.IdScratchcardPrize.HasValue)
+                            prize = update.Prize;
                         ret = true;
                     }
                 }

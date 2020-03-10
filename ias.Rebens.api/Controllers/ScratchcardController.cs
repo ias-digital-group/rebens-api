@@ -503,8 +503,13 @@ namespace ias.Rebens.api.Controllers
             else
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
 
-            if(drawRepo.SetPlayed(id, idCustomer))
-                return Ok(new JsonModel() { Status = "ok" });
+            if(drawRepo.SetPlayed(id, idCustomer, out string prize))
+                return Ok(new JsonModel() { Status = "ok", Data = new { 
+                    idStatus = (int)Enums.ScratchcardDraw.scratched,
+                    status = Enums.EnumHelper.GetEnumDescription(Enums.ScratchcardDraw.scratched),
+                    playedDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Constant.TimeZone).ToString("dd/MM/yyyy", Constant.FormatProvider),
+                    prize
+                } });
 
             return Ok(new JsonModel() { Status = "error", Message = "Cliente não reconhecido" });
         }
