@@ -16,19 +16,28 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public ResultPage<ScratchcardDraw> ListByCustomer(int idCustomer, int page, int pageItems, out string error)
+        public ResultPage<ScratchcardDrawItem> ListByCustomer(int idCustomer, int page, int pageItems, out string error)
         {
-            ResultPage<ScratchcardDraw> ret;
+            ResultPage<ScratchcardDrawItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.ScratchcardDraw.Include("Scratchcard").Include("ScratchcardPrize")
                                         .Where(s => s.IdCustomer == idCustomer).OrderByDescending(s => s.Date);
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems);
                     var total = tmpList.Count(s => s.IdCustomer == idCustomer);
 
-                    ret = new ResultPage<ScratchcardDraw>(list, page, pageItems, total);
+                    var retList = new List<ScratchcardDrawItem>();
+                    foreach(var item in list)
+                    {
+                        var tmpItem = new ScratchcardDrawItem(item);
+                        if(item.IdScratchcardPrize.HasValue)
+                            tmpItem.Instructions = db.Scratchcard.Single(s => s.Id == item.IdScratchcard).Instructions;
+                        retList.Add(tmpItem);
+                    }
+
+                    ret = new ResultPage<ScratchcardDrawItem>(retList, page, pageItems, total);
                     error = null;
                 }
             }
@@ -189,10 +198,9 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool SetPlayed(int id, int idCustomer, out string prize)
+        public bool SetPlayed(int id, int idCustomer, int idOperation)
         {
             bool ret = false;
-            prize = "";
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -206,7 +214,31 @@ namespace ias.Rebens
                         db.SaveChanges();
 
                         if (update.IdScratchcardPrize.HasValue)
-                            prize = update.Prize;
+                        {
+                            var staticText = db.StaticText.Where(t => t.IdOperation == idOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
+                            if (staticText != null)
+                            {
+                                var customer = db.Customer.Single(c => c.Id == idCustomer);
+                                var scratchcard = db.Scratchcard.Single(s => s.Id == update.IdScratchcard);
+
+                                string message = $"<p>Olá {customer.Name},</p><p>Você acabou de ganhar {update.Prize} na raspadinha premiada ({update.ValidationCode}).</p>";
+                                message += $"<img src=\"{update.Image}\" alt=\"{update.ValidationCode}\" /><br /><br />";
+                                if(!string.IsNullOrEmpty(scratchcard.Instructions))
+                                    message += $"<p><b>Instruções para o resgate:</b><br />{scratchcard.Instructions}</p>";
+                                string body = staticText.Html.Replace("###BODY###", message);
+                                Helper.EmailHelper.SendDefaultEmail(customer.Email, customer.Name, "contato@rebens.com.br", "Rebens", "Raspadinha Premiada", body, out _);
+
+                                if (scratchcard.GetNotifications) 
+                                {
+                                    var admin = db.AdminUser.Single(a => a.Id == scratchcard.IdAdminUser);
+                                    message = $"<p>Tivemos uma raspadinha premiada hoje: <b>{scratchcard.Instructions}</b></p><img src=\"{update.Image}\" alt=\"{update.ValidationCode}\" />";
+                                    body = staticText.Html.Replace("###BODY###", message);
+                                    Helper.EmailHelper.SendDefaultEmail(admin.Email, admin.Name, "contato@rebens.com.br", "Rebens", "Raspadinha Premiada", body, out _);
+                                }
+                            }
+                            return false;
+                        }
+
                         ret = true;
                     }
                 }
@@ -242,6 +274,37 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 logError.Create("ScratchcardDrawRepository.Validate", ex.Message, $"id: {id}, idCustomer: {idCustomer}", ex.StackTrace);
+            }
+            return ret;
+        }
+
+        public ResultPage<ScratchcardDraw> ListScratchedWithPrize(int idScratchcard, int page, int pageItems, out string error)
+        {
+            ResultPage<ScratchcardDraw> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var list = db.ScratchcardDraw.Include("Customer").Where(s => s.IdScratchcard == idScratchcard 
+                                        && s.IdScratchcardPrize.HasValue
+                                        && s.PlayedDate.HasValue)
+                                    .OrderBy(s => s.Created).Skip(page * pageItems)
+                                    .Take(pageItems).ToList();
+
+                    var total = db.ScratchcardDraw.Count(s => s.IdScratchcard == idScratchcard
+                                        && s.IdScratchcardPrize.HasValue
+                                        && s.PlayedDate.HasValue);
+
+                    ret = new ResultPage<ScratchcardDraw>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardDrawRepository.ListScratchedWithPrize", ex.Message, $"idScratchcard: {idScratchcard}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as raspadinhas. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

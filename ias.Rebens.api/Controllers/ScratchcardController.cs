@@ -395,6 +395,48 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Retorna uma lista de Raspadinhas de uma campanha
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="idScratchcard">Id da campanha de raspadinha, obrigatório</param>
+        /// <returns>Lista com as raspadinahs encontradas</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("{id}/PrizeBillets"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(ResultPageModel<ScratchcardDrawModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult PrizeBillets(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        {
+            var list = drawRepo.ListScratchedWithPrize(id, page, pageItems, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<ScratchcardDrawModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<ScratchcardDrawModel>()
+                };
+                foreach (var scratchcard in list.Page)
+                    ret.Data.Add(new ScratchcardDrawModel(scratchcard));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
         /// Retorna uma lista de Raspadinhas de um cliente
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
@@ -491,25 +533,30 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SetPlayed(int id)
         {
-            int idCustomer;
+            int idCustomer, idOperation;
             var principal = HttpContext.User;
             if (principal?.Claims != null)
             {
                 var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
                 if (customerId == null)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
                 if (!int.TryParse(customerId.Value, out idCustomer))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
+
+                if(operationId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                if (!int.TryParse(operationId.Value, out idOperation))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
             }
             else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            if(drawRepo.SetPlayed(id, idCustomer, out string prize))
+            if(drawRepo.SetPlayed(id, idCustomer, idOperation))
                 return Ok(new JsonModel() { Status = "ok", Data = new { 
                     idStatus = (int)Enums.ScratchcardDraw.scratched,
                     status = Enums.EnumHelper.GetEnumDescription(Enums.ScratchcardDraw.scratched),
-                    playedDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Constant.TimeZone).ToString("dd/MM/yyyy", Constant.FormatProvider),
-                    prize
+                    playedDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Constant.TimeZone).ToString("dd/MM/yyyy", Constant.FormatProvider)
                 } });
 
             return Ok(new JsonModel() { Status = "error", Message = "Cliente não reconhecido" });
