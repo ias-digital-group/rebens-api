@@ -21,15 +21,18 @@ namespace ias.Rebens.api.Controllers
     public class AccountController : ControllerBase
     {
         private IAdminUserRepository repo;
+        private IOperationRepository operationRepo;
         private Constant constant;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="adminUserRepository"></param>
-        public AccountController(IAdminUserRepository adminUserRepository)
+        /// <param name="operationRepository"></param>
+        public AccountController(IAdminUserRepository adminUserRepository, IOperationRepository operationRepository)
         {
             this.repo = adminUserRepository;
+            this.operationRepo = operationRepository;
             this.constant = new Constant();
         }
 
@@ -66,14 +69,15 @@ namespace ias.Rebens.api.Controllers
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, role));
                     }
-
-                    //foreach (var policy in user.Permissions)
-                    //    identity.AddClaim(new Claim("permissions", "permission1"));
+                    string modules = "";
+                    if (user.IdOperation.HasValue)
+                        modules = operationRepo.LoadModulesNames(user.IdOperation.Value, out error);
 
                     identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
                     identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
                     identity.AddClaim(new Claim("Id", user.Id.ToString()));
                     identity.AddClaim(new Claim("Name", user.Name));
+                    identity.AddClaim(new Claim("modules", modules));
 
                     DateTime dataCriacao = DateTime.UtcNow;
                     DateTime dataExpiracao = dataCriacao.AddDays(2);
@@ -105,18 +109,6 @@ namespace ias.Rebens.api.Controllers
             }
 
             return NotFound(new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
-
-            // TO READ CLAIMS
-            /*
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                foreach (var claim in principal.Claims)
-                {
-                    Console.WriteLine($"CLAIM TYPE: {claim.Type}; CLAIM VALUE: {claim.Value}");
-                }
-            }
-            */
         }
         
         /// <summary>
@@ -296,14 +288,15 @@ namespace ias.Rebens.api.Controllers
                         {
                             identity.AddClaim(new Claim(ClaimTypes.Role, role));
                         }
-
-                        //foreach (var policy in user.Permissions)
-                        //    identity.AddClaim(new Claim("permissions", "permission1"));
+                        string modules = "";
+                        if (user.IdOperation.HasValue)
+                            modules = operationRepo.LoadModulesNames(user.IdOperation.Value, out _);
 
                         identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
                         identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
                         identity.AddClaim(new Claim("Id", user.Id.ToString()));
                         identity.AddClaim(new Claim("Name", user.Name));
+                        identity.AddClaim(new Claim("modules", modules));
 
                         DateTime dataCriacao = DateTime.UtcNow;
                         DateTime dataExpiracao = dataCriacao.AddDays(2);

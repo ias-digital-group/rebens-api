@@ -1094,7 +1094,7 @@ namespace ias.Rebens.api.Controllers
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
                 }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O e-mail informado não está cadastrado no clube!" });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
         }

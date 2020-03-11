@@ -9,11 +9,12 @@
             Account Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.AccountController.#ctor(ias.Rebens.IAdminUserRepository)">
+        <member name="M:ias.Rebens.api.Controllers.AccountController.#ctor(ias.Rebens.IAdminUserRepository,ias.Rebens.IOperationRepository)">
             <summary>
             Constructor
             </summary>
             <param name="adminUserRepository"></param>
+            <param name="operationRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.AccountController.Login(ias.Rebens.api.Models.LoginModel,ias.Rebens.api.helper.SigningConfigurations,ias.Rebens.api.helper.TokenOptions)">
             <summary>
@@ -546,6 +547,27 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.ChangeActive(System.Int32,System.Boolean)">
+            <summary>
+            Ativa ou inativa o Benefício
+            </summary>
+            <param name="id">id do benefício</param>
+            <param name="active">true para ativar - false para inativar</param>
+            <returns>JsonModel</returns>
+            <response code="200"></response>
+            <response code="204"></response>
+            <response code="400"></response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.BenefitController.Duplicate(System.Int32)">
+            <summary>
+            Duplica um Benefício
+            </summary>
+            <param name="id">id do Benefício</param>
+            <returns>JsonModel</returns>
+            <response code="200"></response>
+            <response code="204"></response>
+            <response code="400"></response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.CategoryController">
             <summary>
             Category Controller
@@ -559,7 +581,7 @@
             <param name="logErrorRepository"></param>
             <param name="operationRepository"></param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.CategoryController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Int32})">
+        <member name="M:ias.Rebens.api.Controllers.CategoryController.List(System.Int32,System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Int32})">
             <summary>
             Retorna uma lista de categorias conforme os parametros
             </summary>
@@ -569,6 +591,7 @@
             <param name="searchWord">Palavra à ser buscada</param>
             <param name="active">active, não obrigatório (default=null)</param>
             <param name="idParent">id do pai, não obrigatório (default=null)</param>
+            <param name="type">tipo de categoria, obrigatório (1=beneficios, 2=cursos livres)</param>
             <returns>Lista com as categorias encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -611,17 +634,18 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.CategoryController.ListTree(System.String)">
+        <member name="M:ias.Rebens.api.Controllers.CategoryController.ListTree(System.String,System.Int32)">
             <summary>
             Retorna a arvore de categorias 
             </summary>
             <param name="operationCode">código da operação, obrigatório</param>
+            <param name="type">tipo de categoria (1 = benefícios, 2 = Cursos Lirves), obrigatório</param>
             <returns>Lista com as categorias encontradas</returns>
             <response code="200">Retorna a list, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.CategoryController.ListTreeAdm">
+        <member name="M:ias.Rebens.api.Controllers.CategoryController.ListTreeAdm(System.Int32)">
             <summary>
             Retorna a arvore de categorias 
             </summary>
@@ -790,7 +814,7 @@
         </member>
         <member name="T:ias.Rebens.api.Controllers.CourseController">
             <summary>
-            Benefit Controller
+            Course Controller
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Controllers.CourseController.#ctor(ias.Rebens.ICourseRepository,ias.Rebens.IAddressRepository,ias.Rebens.IStaticTextRepository)">
@@ -916,6 +940,36 @@
             <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
             <response code="200">Remove o vínculo de benefício com uma categoria</response>
             <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.ListItems(System.Int32)">
+            <summary>
+            lista os itens procurados
+            </summary>
+            <returns>lista com os itens buscados</returns>
+            <response code="200">retorna a list, ou algum erro caso interno</response>
+            <response code="204">se não encontrar nada</response>
+            <response code="400">se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.ChangeActive(System.Int32,System.Boolean)">
+            <summary>
+            Ativa ou inativa o Curso
+            </summary>
+            <param name="id">id do curso</param>
+            <param name="active">true para ativar - false para inativar</param>
+            <returns>JsonModel</returns>
+            <response code="200"></response>
+            <response code="204"></response>
+            <response code="400"></response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.CourseController.Duplicate(System.Int32)">
+            <summary>
+            Duplica um Curso
+            </summary>
+            <param name="id">id do curso</param>
+            <returns>JsonModel</returns>
+            <response code="200"></response>
+            <response code="204"></response>
+            <response code="400"></response>
         </member>
         <member name="T:ias.Rebens.api.Controllers.CourseGraduationTypeController">
             <summary>
@@ -1360,6 +1414,128 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="T:ias.Rebens.api.Controllers.FreeCourseController">
+            <summary>
+            FreeCourse Controller
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.#ctor(ias.Rebens.IFreeCourseRepository,ias.Rebens.ICategoryRepository)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="freeCourseRepository">Injeção de dependencia do repositório de Curso Livres</param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.Get(System.Int32)">
+            <summary>
+            Retorna o curso conforme o ID
+            </summary>
+            <param name="id">Id do curso</param>
+            <returns>Curso</returns>
+            <response code="200">Retorna o curso, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.Put(ias.Rebens.api.Models.FreeCourseModel)">
+            <summary>
+            Atualiza um curso
+            </summary>
+            <param name="course"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.Post(ias.Rebens.api.Models.FreeCourseModel)">
+            <summary>
+            Cria um curso
+            </summary>
+            <param name="course"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do curso criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.Delete(System.Int32)">
+            <summary>
+            Remove um curso
+            </summary>
+            <param name="id">id do curso</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Remove o curso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean})">
+            <summary>
+            Lista todos os cursos com paginação
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">id da operação, não obrigatório (default=null)</param>
+            <param name="active">active, não obrigatório (default=null)</param>
+            <returns>Lista com os cursos encontrados</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.ListCategories(System.Int32)">
+            <summary>
+            Lista os ids das categorias vínculadas ao curso
+            </summary>
+            <param name="id">id do curso livre</param>
+            <returns>Lista com os Ids das categorias</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.AddCategory(ias.Rebens.api.Models.FreeCourseCategoryModel)">
+            <summary>
+            Adiciona uma categoria a um curso livre
+            </summary>
+            <param name="model">{ IdFreeCourse: 0, IdCategory: 0 }</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Víncula um curso livre com uma categoria</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.SaveCategories(ias.Rebens.api.Models.FreeCourseCategoriesModel)">
+            <summary>
+            Adiciona categorias a um curso livre
+            </summary>
+            <param name="model">{ IdFreeCourse: 0, IdCategory: 0 }</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Víncula um curso livre com uma categoria</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.RemoveCategory(System.Int32,System.Int32)">
+            <summary>
+            Remove uma categoria de um curso livre
+            </summary>
+            <param name="id">id do curso livre</param>
+            <param name="idCategory">id da categoria</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
+            <response code="200">Remove o vínculo de benefício com uma categoria</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.ChangeActive(System.Int32,System.Boolean)">
+            <summary>
+            Ativa ou inativa o Curso Livres
+            </summary>
+            <param name="id">id do curso livre</param>
+            <param name="active">true para ativar - false para inativar</param>
+            <returns>JsonModel</returns>
+            <response code="200"></response>
+            <response code="204"></response>
+            <response code="400"></response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.FreeCourseController.Duplicate(System.Int32)">
+            <summary>
+            Duplica um Curso Livre
+            </summary>
+            <param name="id">id do curso livre</param>
+            <returns>JsonModel</returns>
+            <response code="200"></response>
+            <response code="204"></response>
+            <response code="400"></response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.HelperController">
             <summary>
             Helper Controller
@@ -1501,7 +1677,7 @@
             Operation Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.IBannerRepository,ias.Rebens.IOperationCustomerRepository,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILogger{ias.Rebens.api.Controllers.OperationController},ias.Rebens.ILogErrorRepository)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.#ctor(ias.Rebens.IOperationRepository,ias.Rebens.IContactRepository,ias.Rebens.IAddressRepository,ias.Rebens.IFaqRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.IBannerRepository,ias.Rebens.IOperationCustomerRepository,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILogger{ias.Rebens.api.Controllers.OperationController},ias.Rebens.ILogErrorRepository,ias.Rebens.IFileToProcessRepository,ias.Rebens.IModuleRepository)">
             <summary>
             Construtor
             </summary>
@@ -1558,12 +1734,11 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.OperationController.Publish(System.Int32,System.Boolean)">
+        <member name="M:ias.Rebens.api.Controllers.OperationController.Publish(System.Int32)">
             <summary>
             Coloca uma operação na fila de publicação
             </summary>
             <param name="id">id da operação</param>
-            <param name="isTemporary">Boolean informando se é para publicar o temporário ou o site definitivo. (default = false)</param>
             <returns></returns>
             <response code="200">Opreação em fila</response>
             <response code="400">Se ocorrer algum erro</response>
@@ -1759,6 +1934,24 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.HasFileProcessing(System.Int32)">
+            <summary>
+            Verifica se existe algum arquivo em processamento
+            </summary>
+            <param name="id">Id da operação</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OperationController.ListModules(System.Int32)">
+            <summary>
+            Lista os módulos
+            </summary>
+            <returns>lista dos módulos</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.OperationPartnerController">
             <summary>
             
@@ -1858,6 +2051,67 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.OrderController.#ctor(ias.Rebens.IOrderRepository,ias.Rebens.IWirecardPaymentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository)">
+            <summary>
+            Construtor
+            </summary>
+            <param name="orderRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OrderController.Get(System.Int32)">
+            <summary>
+            Retorna um pedido
+            </summary>
+            <param name="id">Id do pedido desejada</param>
+            <returns>Order</returns>
+            <response code="200">Retorna o pedido, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OrderController.Post(ias.Rebens.api.Models.OrderModel)">
+            <summary>
+            Cria um Pedido
+            </summary>
+            <param name="order">Order</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id do pedido criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OrderController.List(System.Int32,System.Int32,System.String,System.String)">
+            <summary>
+            Retorna uma lista com os números da sorte
+            </summary>
+            <returns>Lista com os números</returns>
+            <response code="200">Retorna a lista com os números, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OrderController.SaveWirecardInfo(ias.Rebens.api.Models.OrderWirecardInfo)">
+            <summary>
+            Atualiza um Pedido com as informações do Wirecard
+            </summary>
+            <param name="info">info</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OrderController.CreatePayment(ias.Rebens.api.Models.WirecardPaymentModel)">
+            <summary>
+            Cria um Pagamento
+            </summary>
+            <param name="payment">pagamento</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.OrderController.UpdatePayment(ias.Rebens.api.Models.WirecardPaymentModel)">
+            <summary>
+            Atualiza um Pagamento
+            </summary>
+            <param name="payment">pagamento</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok</returns>
+            <response code="200">Se o objeto for ataulizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.PartnerController">
             <summary>
             Partner Controller
@@ -1873,7 +2127,7 @@
             <param name="benefitRepository">Injeção de dependencia do repositório de benefício</param>
             <param name="staticTextRepository">Injeção de dependencia do repositório de benefício</param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PartnerController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean})">
+        <member name="M:ias.Rebens.api.Controllers.PartnerController.List(System.Int32,System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean})">
             <summary>
             Lista todos os parceiros com paginação
             </summary>
@@ -1882,6 +2136,7 @@
             <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <param name="active">Active não obrigatório (default=null)</param>
+            <param name="type">tipo de categoria, obrigatório (1=beneficios, 2=cursos livres)</param>
             <returns>Lista com os parceiros encontrados</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -2009,7 +2264,7 @@
             Portal Controller
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository,ias.Rebens.IOperationPartnerRepository,ias.Rebens.ICourseRepository,ias.Rebens.ICourseCollegeRepository,ias.Rebens.ICourseGraduationTypeRepository,ias.Rebens.ICourseModalityRepository,ias.Rebens.ICoursePeriodRepository,ias.Rebens.ICourseViewRepository,ias.Rebens.IDrawRepository)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.#ctor(ias.Rebens.IBannerRepository,ias.Rebens.IBenefitRepository,ias.Rebens.IFaqRepository,ias.Rebens.IFormContactRepository,ias.Rebens.IOperationRepository,ias.Rebens.IFormEstablishmentRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IAddressRepository,ias.Rebens.IWithdrawRepository,ias.Rebens.IBenefitUseRepository,ias.Rebens.IStaticTextRepository,ias.Rebens.ICouponRepository,ias.Rebens.IMoipRepository,ias.Rebens.ICustomerReferalRepository,ias.Rebens.IOperationCustomerRepository,ias.Rebens.IBenefitViewRepository,ias.Rebens.IBankAccountRepository,ias.Rebens.IOperationPartnerRepository,ias.Rebens.ICourseRepository,ias.Rebens.ICourseCollegeRepository,ias.Rebens.ICourseGraduationTypeRepository,ias.Rebens.ICourseModalityRepository,ias.Rebens.ICoursePeriodRepository,ias.Rebens.ICourseViewRepository,ias.Rebens.IDrawRepository,ias.Rebens.IFreeCourseRepository,ias.Rebens.IPartnerRepository,ias.Rebens.ILogErrorRepository)">
             <summary>
             
             </summary>
@@ -2038,6 +2293,9 @@
             <param name="coursePeriodRepository"></param>
             <param name="courseViewRepository"></param>
             <param name="drawRepository"></param>
+            <param name="freeCourseRepository"></param>
+            <param name="partnerRepository"></param>
+            <param name="logErrorRepository"></param>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetHomeLocked(System.String)">
             <summary>
@@ -2055,6 +2313,17 @@
             </summary>
             <param name="operationCode">código da operação</param>
             <param name="page">Página requerida</param>
+            <returns>Retorna o objeto StaticText com as informações solicitadas</returns>
+            <response code="200">Retorna o model, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ReadText(System.Int32,System.String)">
+            <summary>
+            Retorna o texto da página requerida
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <param name="id">Id do texto</param>
             <returns>Retorna o objeto StaticText com as informações solicitadas</returns>
             <response code="200">Retorna o model, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -2098,7 +2367,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Int32,System.Int32,System.String,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefits(System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Int32,System.Int32,System.String,System.String,System.String,System.String,System.String)">
             <summary>
             Lista todos os benefícios da operação com paginação
             </summary>
@@ -2112,10 +2381,27 @@
             <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
             <param name="benefitIds">Lista dos benefícios que já foram exibidos</param>
+            <param name="state">estado em que o benefício é válido</param>
+            <param name="city">cidade em que o benefício é válido</param>
             <returns>Lista com os benefícios encontrados</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefitStates(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="operationCode">código da operação, não obrigatório (default=null)</param>
+            <returns></returns>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListBenefitCities(System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="operationCode">código da operação, não obrigatório (default=null)</param>
+            <param name="state">Estado, não obrigatório (default=null)</param>
+            <returns></returns>
         </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.GetBenefit(System.String,System.Int32)">
             <summary>
@@ -2300,7 +2586,7 @@
             <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.PortalController.ListCourses(System.String,System.Nullable{System.Int32},System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListCourses(System.String,System.Nullable{System.Int32},System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.String,System.String,System.String,System.String,System.String)">
             <summary>
             Lista os cursos da operação com paginação
             </summary>
@@ -2314,6 +2600,8 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="state">Palavra à ser buscada</param>
+            <param name="city">Palavra à ser buscada</param>
             <returns>Lista com os cursos encontrados</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
@@ -2350,6 +2638,16 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListCoursesBegin(System.String)">
+            <summary>
+            Lista os Períodos de inicio dos cursos da operação
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <returns>Lista com as modalidades</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.ListPeriods(System.String)">
             <summary>
             Lista os Períodos da operação
@@ -2370,6 +2668,54 @@
             <response code="204">Se não encontrar nada</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListCourseStates(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="operationCode">código da operação, não obrigatório (default=null)</param>
+            <returns></returns>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListCourseCities(System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="operationCode">código da operação, não obrigatório (default=null)</param>
+            <param name="state">estado, não obrigatório (default=null)</param>
+            <returns></returns>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListFreeCourses(System.String,System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Lista os cursos da operação com paginação
+            </summary>
+            <param name="operationCode">código da operação</param>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Title), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idPartner">Id do Parceiro (default=null)</param>
+            <returns>Lista com os cursos livres encontrados</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.GetFreeCourse(System.Int32,System.String)">
+            <summary>
+            Retorna o Curson conforme o ID
+            </summary>
+            <param name="id">Id do curso</param>
+            <param name="operationCode">código da operação</param>
+            <returns>Curso</returns>
+            <response code="200">Retorna o curso</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PortalController.ListFreeCoursePartners(System.String)">
+            <summary>
+            Lista de parceiros que possuem cursos livres
+            </summary>
+            <param name="operationCode"></param>
+            <returns></returns>
+        </member>
         <member name="M:ias.Rebens.api.Controllers.PortalController.ListLuckNumbers">
             <summary>
             Retorna uma lista com os números da sorte
@@ -2377,6 +2723,68 @@
             <returns>Lista com os números</returns>
             <response code="200">Retorna a lista com os números, ou algum erro caso interno</response>
             <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="T:ias.Rebens.api.Controllers.PromoterController">
+            <summary>
+            Promoter Controller
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PromoterController.#ctor(ias.Rebens.ICustomerPromoterRepository,ias.Rebens.IOperationRepository,ias.Rebens.IStaticTextRepository)">
+            <summary>
+            Constuctor
+            </summary>
+            <param name="customerPromoterRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PromoterController.List(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            List
+            </summary>
+            <param name="idOperation">Operation ID</param>
+            <param name="idPromoter">Promoter ID</param>
+            <param name="page">current page</param>
+            <param name="pageItems">items per page</param>
+            <param name="sort">sort (name, email, operation, status, cpf) (' ASC', ' DESC')</param>
+            <param name="searchWord"></param>
+            <returns>List of customers</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PromoterController.Get(System.Int32)">
+            <summary>
+            Retorna o endereço conforme o ID
+            </summary>
+            <param name="id">Id do cliente desejada</param>
+            <returns>Endereço</returns>
+            <response code="200">Retorna a categoria, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PromoterController.Post(ias.Rebens.api.Models.SignUpModel)">
+            <summary>
+            Cria um Cliente
+            </summary>
+            <param name="customer"></param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do cliente criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PromoterController.ResendValidation(System.Int32)">
+            <summary>
+            Reenvia o email de validação para o cliente
+            </summary>
+            <param name="id">id do cliente</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do cliente criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.PromoterController.Report(System.Nullable{System.Int32},System.Int32,System.Int32,System.String)">
+            <summary>
+            Cria um Cliente
+            </summary>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do cliente criado</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
         <member name="M:ias.Rebens.api.Controllers.ReportController.#ctor(ias.Rebens.IReportRepository)">
@@ -2425,6 +2833,205 @@
             <response code="400">Se ocorrer algum erro</response>
             <returns></returns>
         </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.#ctor(ias.Rebens.IScratchcardRepository,ias.Rebens.IScratchcardPrizeRepository,ias.Rebens.IScratchcardDrawRepository,Microsoft.AspNetCore.Hosting.IHostingEnvironment,ias.Rebens.IOperationRepository)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="scratchcardRepository"></param>
+            <param name="scratchcardPrizeRepository"></param>
+            <param name="scratchcardDrawRepository"></param>
+            <param name="hostingEnvironment"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Retorna uma lista de Campanhas de Raspadinhas
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Name, Street, City, State), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da operação, não obrigatório</param>
+            <returns>Lista com as raspadinahs encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.Get(System.Int32)">
+            <summary>
+            Retorna uma Campanha de raspadinha
+            </summary>
+            <param name="id">Id da raspadinha desejada</param>
+            <returns>FAQ</returns>
+            <response code="200">Retorna a raspadinha, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.Put(ias.Rebens.api.Models.ScratchcardModel)">
+            <summary>
+            Atualiza uma Campanha de raspadinha
+            </summary>
+            <param name="scratchcard">Raspadinha</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.Post(ias.Rebens.api.Models.ScratchcardModel)">
+            <summary>
+            Cria uma Campanha de raspadinha
+            </summary>
+            <param name="faq">Raspadinha</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da raspadinha criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.Delete(System.Int32)">
+            <summary>
+            Apaga uma raspadinha
+            </summary>
+            <param name="id">Id da raspadinha a ser apagada</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.UploadImage">
+            <summary>
+            Recebe uma imagem e salva no servidor
+            </summary>
+            <returns></returns>
+            <response code="200">Retorna a url da imagem, ou algum erro caso interno</response>
+            <response code="204">Se ocorrer algum erro</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.Generate(System.Int32)">
+            <summary>
+            Gera os bilhetes de uma campanha de raspadinha
+            </summary>
+            <param name="id">Id da raspadinha</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se a geração iniciar com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.Operations">
+            <summary>
+            Lista as operações que possuem o módulo de raspadinha habilitado
+            </summary>
+            <returns>Lista com as raspadinahs encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.Billets(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Retorna uma lista de Raspadinhas de uma campanha
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="idScratchcard">Id da campanha de raspadinha, obrigatório</param>
+            <returns>Lista com as raspadinahs encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.ListByCustomer(System.Int32,System.Int32)">
+            <summary>
+            Retorna uma lista de Raspadinhas de um cliente
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <returns>Lista com as raspadinahs encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.SetOpened(System.Int32)">
+            <summary>
+            Marca raspadinha como aberta
+            </summary>
+            <param name="id">Id da raspadinha</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se a geração iniciar com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.SetPlayed(System.Int32)">
+            <summary>
+            Marca raspadinha como raspada
+            </summary>
+            <param name="id">Id da raspadinha</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se a geração iniciar com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardController.Validate(System.Int32)">
+            <summary>
+            Valida a raspadinha
+            </summary>
+            <param name="id">Id da raspadinha</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se a geração iniciar com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="T:ias.Rebens.api.Controllers.ScratchcardPrizeController">
+            <summary>
+            Faq Controller
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardPrizeController.#ctor(ias.Rebens.IScratchcardPrizeRepository)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="scratchcardPrizeRepository"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardPrizeController.List(System.Int32)">
+            <summary>
+            Lista os prêmios conforme os parametros
+            </summary>
+            <param name="page">página, não obrigatório (default=0)</param>
+            <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+            <param name="sort">Ordenação campos (Id, Question, Answer, Order), direção (ASC, DESC)</param>
+            <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idOperation">Id da Operação</param>
+            <returns>Lista com as faqs encontradas</returns>
+            <response code="200">Retorna a lista, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardPrizeController.Get(System.Int32)">
+            <summary>
+            Retorna um prêmio
+            </summary>
+            <param name="id">Id do prêmio desejado</param>
+            <returns>Prêmio</returns>
+            <response code="200">Retorna o prêmio, ou algum erro caso interno</response>
+            <response code="204">Se não encontrar nada</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardPrizeController.Put(ias.Rebens.api.Models.ScratchcardPrizeModel)">
+            <summary>
+            Atualiza um prêmio
+            </summary>
+            <param name="prize">Prêmio</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for atualizado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardPrizeController.Post(ias.Rebens.api.Models.ScratchcardPrizeModel)">
+            <summary>
+            Cria um prêmio
+            </summary>
+            <param name="prize">premio</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
+            <response code="200">Se o objeto for criado com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
+        <member name="M:ias.Rebens.api.Controllers.ScratchcardPrizeController.Delete(System.Int32)">
+            <summary>
+            Apaga um prêmio
+            </summary>
+            <param name="id">Id da pergunta a ser apagada</param>
+            <returns>Retorna um objeto com o status (ok, error), e uma mensagem</returns>
+            <response code="200">Se o objeto for excluido com sucesso</response>
+            <response code="400">Se ocorrer algum erro</response>
+        </member>
         <member name="T:ias.Rebens.api.Controllers.StaticTextController">
             <summary>
             StaticText Controller
@@ -2436,7 +3043,7 @@
             </summary>
             <param name="staticTextRepository"></param>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.StaticTextController.List(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32})">
+        <member name="M:ias.Rebens.api.Controllers.StaticTextController.List(System.Int32,System.Int32,System.String,System.String,System.Int32,System.Nullable{System.Int32})">
             <summary>
             Lista os textos conforme os parametros
             </summary>
@@ -2444,6 +3051,7 @@
             <param name="pageItems">itens por página, não obrigatório (default=30)</param>
             <param name="sort">Ordenação campos (Id, Title, Order), direção (ASC, DESC)</param>
             <param name="searchWord">Palavra à ser buscada</param>
+            <param name="idStaticTextType">Id do tipo de texto estático (default=paginas)</param>
             <param name="idOperation">Id da operação (default=null)</param>
             <returns>Lista com os textos encontradas</returns>
             <response code="200">Retorna a lista, ou algum erro caso interno</response>
@@ -2487,7 +3095,7 @@
             <response code="200">Se o objeto for excluido com sucesso</response>
             <response code="400">Se ocorrer algum erro</response>
         </member>
-        <member name="M:ias.Rebens.api.Controllers.VoucherController.#ctor(ias.Rebens.IBenefitUseRepository,ias.Rebens.IBenefitRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IOperationRepository,ias.Rebens.ICourseUseRepository,ias.Rebens.ICourseRepository)">
+        <member name="M:ias.Rebens.api.Controllers.VoucherController.#ctor(ias.Rebens.IBenefitUseRepository,ias.Rebens.IBenefitRepository,ias.Rebens.ICustomerRepository,ias.Rebens.IOperationRepository,ias.Rebens.ICourseUseRepository,ias.Rebens.ICourseRepository,ias.Rebens.IOrderRepository,ias.Rebens.ICourseCollegeRepository)">
             <summary>
             Construtor
             </summary>
@@ -2506,36 +3114,6 @@
             <param name="code">Código enviado para o portal</param>
             <returns></returns>
         </member>
-        <member name="T:ias.Rebens.api.helper.KeepAlive">
-            <summary>
-            Keep Alive
-            </summary>
-        </member>
-        <member name="M:ias.Rebens.api.helper.KeepAlive.Execute">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="T:ias.Rebens.api.helper.ZanoxUpdateJob">
-            <summary>
-            Zanox Update Job
-            </summary>
-        </member>
-        <member name="M:ias.Rebens.api.helper.ZanoxUpdateJob.Execute">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="T:ias.Rebens.api.helper.CouponToolsUpdateJob">
-            <summary>
-            Coupon Tools Update Job
-            </summary>
-        </member>
-        <member name="M:ias.Rebens.api.helper.CouponToolsUpdateJob.Execute">
-            <summary>
-            
-            </summary>
-        </member>
         <member name="T:ias.Rebens.api.helper.CouponToolsGenerateJob">
             <summary>
             Coupon Tools Generate Job
@@ -2546,12 +3124,12 @@
             
             </summary>
         </member>
-        <member name="T:ias.Rebens.api.helper.WirecardJob">
+        <member name="T:ias.Rebens.api.helper.DistributeNumbersJob">
             <summary>
-            Wirecard Job
+            Generate Numbers Job
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.helper.WirecardJob.Execute">
+        <member name="M:ias.Rebens.api.helper.DistributeNumbersJob.Execute">
             <summary>
             
             </summary>
@@ -2566,12 +3144,32 @@
             
             </summary>
         </member>
-        <member name="T:ias.Rebens.api.helper.DistributeNumbersJob">
+        <member name="T:ias.Rebens.api.helper.KeepAlive">
             <summary>
-            Generate Numbers Job
+            Keep Alive
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.helper.DistributeNumbersJob.Execute">
+        <member name="M:ias.Rebens.api.helper.KeepAlive.Execute">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.helper.WirecardJob">
+            <summary>
+            Wirecard Job
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.WirecardJob.Execute">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.helper.ZanoxUpdateJob">
+            <summary>
+            Zanox Update Job
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.helper.ZanoxUpdateJob.Execute">
             <summary>
             
             </summary>
@@ -3196,7 +3794,7 @@
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.BenefitModel.#ctor(ias.Rebens.Benefit,System.Nullable{System.Int32})">
+        <member name="M:ias.Rebens.api.Models.BenefitModel.#ctor(System.String,ias.Rebens.Benefit,System.Nullable{System.Int32})">
             <summary>
             Construtor que recebe um Benefício e já popula os atributos
             </summary>
@@ -3553,6 +4151,11 @@
             Se está ativa ou inativa
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.CategoryModel.Type">
+            <summary>
+            O tipo de category (benefícios = 1, cursos livres = 2)
+            </summary>
+        </member>
         <member name="P:ias.Rebens.api.Models.CategoryModel.Categories">
             <summary>
             Lista de categorias filhas, caso seja uma categoria pai
@@ -3777,6 +4380,16 @@
             Endereço da Faculdade
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.LegalName">
+            <summary>
+            Razão social
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseCollegeModel.Doc">
+            <summary>
+            CNPJ
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.CourseCollegeModel.#ctor">
             <summary>
             Construtor
@@ -3832,6 +4445,16 @@
         <member name="P:ias.Rebens.api.Models.CourseGraduationTypeModel.Active">
             <summary>
             Se o tipo de graduação está ativa ou não
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseGraduationTypeModel.ParentId">
+            <summary>
+            Id do Pai (1=graduação, 2=Pós Graduação)
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseGraduationTypeModel.ParentName">
+            <summary>
+            Nome do Pai
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.CourseGraduationTypeModel.#ctor">
@@ -3906,6 +4529,11 @@
         <member name="P:ias.Rebens.api.Models.CourseModel.Title">
             <summary>
             Título do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Name">
+            <summary>
+            Nome do curso - apenas para admin
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseModel.IdOperation">
@@ -4018,6 +4646,56 @@
             Array com os Id's dos períodos
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.CourseBegin">
+            <summary>
+            Texto que descreve o início das aulas (ex. 2º semestre 2020)
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.IdFaq">
+            <summary>
+            Id das perguntas frequentes
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.IdRegulation">
+            <summary>
+            Id do regulamento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.Disclaimer">
+            <summary>
+            Aviso para tela de detalhe
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.CourseTypeDescription">
+            <summary>
+            Descrição dos tipos de cursos
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.BenefitBoxTitle">
+            <summary>
+            Título do box de benefícios
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.BenefitBoxDescription">
+            <summary>
+            Texto do box de benefícios
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.HelpStudentTitle">
+            <summary>
+            Título ajude um aluno
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.HelpStudentDescription">
+            <summary>
+            Texto ajude um aluno
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseModel.HelpStudentLink">
+            <summary>
+            Link ajude um aluno
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.CourseModel.#ctor">
             <summary>
             Construtor
@@ -4083,62 +4761,72 @@
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.CollegeImage">
             <summary>
-            Id do curso
+            Logo da faculdade
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.CollegeName">
             <summary>
-            Id do curso
+            Nome da faculdade
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Title">
             <summary>
-            Id do curso
+            Título do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Name">
+            <summary>
+            Nome do curso
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Address">
             <summary>
-            Id do curso
+            Endereço do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.AddressShort">
+            <summary>
+            Endereço resumido do curso
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.GraduationType">
             <summary>
-            Id do curso
+            Tipo de graduação
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Modality">
             <summary>
-            Id do curso
+            Modalidade
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Period">
             <summary>
-            Id do curso
+            Período
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Discount">
             <summary>
-            Id do curso
+            Desconto
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.OriginalPrice">
             <summary>
-            Id do curso
+            Preço original
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.FinalPrice">
             <summary>
-            Id do curso
+            Preço final
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Rating">
             <summary>
-            Id do curso
+            Nota
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Evaluations">
             <summary>
-            Id do curso
+            Avaliações
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CourseItemModel.Duration">
@@ -4166,12 +4854,57 @@
             Link do benefício
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.CourseBegin">
+            <summary>
+            Texto informando o período de inicio das aulas
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.IdFaq">
+            <summary>
+            Id das perguntas frequentes
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.IdRegulation">
+            <summary>
+            Id do regulamento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.Disclaimer">
+            <summary>
+            Aviso para tela de detalhe
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.CourseTypeDescription">
+            <summary>
+            Descrição dos tipos de cursos
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.BenefitBoxTitle">
+            <summary>
+            Título do box de benefícios
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.BenefitBoxDescription">
+            <summary>
+            Texto do box de benefícios
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.HelpStudentTitle">
+            <summary>
+            Título ajude um aluno
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CourseItemModel.HelpStudentDescription">
+            <summary>
+            Texto ajude um aluno
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.CourseItemModel.#ctor">
             <summary>
             Construtor
             </summary>
         </member>
-        <member name="M:ias.Rebens.api.Models.CourseItemModel.#ctor(ias.Rebens.CourseItem,System.Nullable{System.Int32})">
+        <member name="M:ias.Rebens.api.Models.CourseItemModel.#ctor(System.String,ias.Rebens.CourseItem,System.Nullable{System.Int32})">
             <summary>
             Construtor
             </summary>
@@ -4296,6 +5029,11 @@
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.CustomerModel.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.CustomerModel.StatusName">
             <summary>
             Status
             </summary>
@@ -4754,6 +5492,214 @@
             </summary>
             <param name="formEstablishment"></param>
         </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseCategoryModel.IdFreeCourse">
+            <summary>
+            Id do curso livre
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseCategoryModel.IdCategory">
+            <summary>
+            Id da categoria
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.FreeCourseCategoriesModel">
+            <summary>
+            Relacionamento Curso Livre com Categoria
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseCategoriesModel.IdFreeCourse">
+            <summary>
+            Id do curso livre
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseCategoriesModel.CategoryIds">
+            <summary>
+            ids das categorias selecionadas separado por ','
+            </summary>
+        </member>
+        <member name="T:ias.Rebens.api.Models.FreeCourseModel">
+            <summary>
+            Model de crusos Livres
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.IdAdminUser">
+            <summary>
+            Id do usário que fez a última modificação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.IdPartner">
+            <summary>
+            Id do parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Name">
+            <summary>
+            Nome para controle 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Title">
+            <summary>
+            Título do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Summary">
+            <summary>
+            Resumo para listagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Description">
+            <summary>
+            Descrição 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.HowToUse">
+            <summary>
+            Como utilizar
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Image">
+            <summary>
+            Imagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.ListImage">
+            <summary>
+            Imagem para listagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Price">
+            <summary>
+            Preço
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Active">
+            <summary>
+            Se está ativo ou inativo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.Modified">
+            <summary>
+            Data da última alteração
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.PartnerName">
+            <summary>
+            Parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.PartnerImage">
+            <summary>
+            Logo Parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseModel.PartnerDescription">
+            <summary>
+            Descrição do Parceiro
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FreeCourseModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FreeCourseModel.#ctor(ias.Rebens.FreeCourse)">
+            <summary>
+            Construtor que recebe um objeto Course e popula os atributos
+            </summary>
+            <param name="course"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FreeCourseModel.GetEntity">
+            <summary>
+            Retorna um objeto Course com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ias.Rebens.api.Models.FreeCourseItemModel">
+            <summary>
+            Model Cursos Livres listagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.IdAdminUser">
+            <summary>
+            Id do usário que fez a última modificação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.IdPartner">
+            <summary>
+            Id do parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.IdOperation">
+            <summary>
+            Id da operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.Name">
+            <summary>
+            Nome para controle 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.Title">
+            <summary>
+            Título do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.Summary">
+            <summary>
+            Resumo para listagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.ListImage">
+            <summary>
+            Imagem para listagem
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.Price">
+            <summary>
+            Preço
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.Partner">
+            <summary>
+            Parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.Active">
+            <summary>
+            Se está ativo ou inativo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.FreeCourseItemModel.StatusName">
+            <summary>
+            Status em string "Ativo" ou "Inativo"
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FreeCourseItemModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.FreeCourseItemModel.#ctor(ias.Rebens.FreeCourseItem)">
+            <summary>
+            Construtor que recebe um objeto Course e popula os atributos
+            </summary>
+            <param name="course"></param>
+        </member>
         <member name="T:ias.Rebens.api.Models.IntegrationTypeModel">
             <summary>
             Tipo de integração
@@ -5122,6 +6068,16 @@
             Se o subdomínio já foi criado
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.TemporaryPublishedDate">
+            <summary>
+            Data da última publicação no domínio temporário
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OperationModel.PublishedDate">
+            <summary>
+            Data da última publicação 
+            </summary>
+        </member>
         <member name="M:ias.Rebens.api.Models.OperationModel.#ctor">
             <summary>
             Construtor
@@ -5273,6 +6229,133 @@
             </summary>
             <param name="type"></param>
         </member>
+        <member name="T:ias.Rebens.api.Models.OrderModel">
+            <summary>
+            Order
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.IdCustomer">
+            <summary>
+            Id do cliente
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.DispId">
+            <summary>
+            Display Id do pedido
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.Subtotal">
+            <summary>
+            Subtotal
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.Discount">
+            <summary>
+            Desconto
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.Total">
+            <summary>
+            Total
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.TotalItems">
+            <summary>
+            Quantidade de itens do pedido
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.IP">
+            <summary>
+            IP de onde foi realizado o pedido
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.WirecardId">
+            <summary>
+            Id do pedido no wirecard
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.Status">
+            <summary>
+            Status do pedido
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.PaymentType">
+            <summary>
+            Forma de Pagamento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderModel.Created">
+            <summary>
+            Data da realização do pedido
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OrderModel.#ctor">
+            <summary>
+            Construtor
+            </summary>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OrderModel.#ctor(ias.Rebens.Order)">
+            <summary>
+            Construtor que recebe um Order e popula os atributos
+            </summary>
+            <param name="order"></param>
+        </member>
+        <member name="M:ias.Rebens.api.Models.OrderModel.GetEntity">
+            <summary>
+            Retorna um objeto Order com as informações
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderItemModel.Id">
+            <summary>
+            Id do item
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderItemModel.IdCourse">
+            <summary>
+            Id do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderItemModel.IdFreeCourse">
+            <summary>
+            Id do curso livre
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderItemModel.Name">
+            <summary>
+            Nome do curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderItemModel.Price">
+            <summary>
+            Valor do Curso
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderItemModel.Voucher">
+            <summary>
+            Voucher
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderWirecardInfo.Id">
+            <summary>
+            Id do pedido
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderWirecardInfo.WirecardId">
+            <summary>
+            Id do pedido no wirecard
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.OrderWirecardInfo.Status">
+            <summary>
+            Status do pedido
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.PartnerAddressModel">
             <summary>
             Relacionamento Parceiro com Endereço
@@ -5331,6 +6414,11 @@
         <member name="P:ias.Rebens.api.Models.PartnerModel.Description">
             <summary>
             Descrição do Parceiro
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.PartnerModel.Type">
+            <summary>
+            O tipo do parceiro (1 = beneficios, 2 = Cursos Livres)
             </summary>
         </member>
         <member name="P:ias.Rebens.api.Models.PartnerModel.StatusName">
@@ -5596,6 +6684,221 @@
             Possui página anterior
             </summary>
         </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.IdScratchcard">
+            <summary>
+            Id da campanha da Raspadinha
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.Scratchcard">
+            <summary>
+            Nome da campanha da raspadinha
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.IdScratchcardPrize">
+            <summary>
+            Id do prêmio se for um bilhete premiado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.Image">
+            <summary>
+            Imagem do bilhete
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.IdCustomer">
+            <summary>
+            Id do cliente que recebeu esse bilhete
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.Date">
+            <summary>
+            Data da raspadinha
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.ExpireDate">
+            <summary>
+            Data de vencimento da raspadinha
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.Prize">
+            <summary>
+            Descrição do prêmio se for um bilhete premiado
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.ValidationCode">
+            <summary>
+            Código de validação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.OpenDate">
+            <summary>
+            Data que o cliente abriu o bilhete
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.PlayedDate">
+            <summary>
+            Data que o cliente raspou o bilhete
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.ValidationDate">
+            <summary>
+            Data que o cliente validou o bilhete
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.IdStatus">
+            <summary>
+            Status do bilhete
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardDrawModel.ScratchcardPrize">
+            <summary>
+            Prêmio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.Start">
+            <summary>
+            Inicio 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.End">
+            <summary>
+            Fim
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.Quantity">
+            <summary>
+            Quantidade
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.NoPrizeImage1">
+            <summary>
+            Imagem sem prêmio 1
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.NoPrizeImage2">
+            <summary>
+            Imagem sem prêmio 2
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.NoPrizeImage3">
+            <summary>
+            Imagem sem prêmio 3
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.NoPrizeImage4">
+            <summary>
+            Imagem sem prêmio 4
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.NoPrizeImage5">
+            <summary>
+            Imagem sem prêmio 5
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.NoPrizeImage6">
+            <summary>
+            Imagem sem prêmio 6
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.NoPrizeImage7">
+            <summary>
+            Imagem sem prêmio 7
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.NoPrizeImage8">
+            <summary>
+            Imagem sem prêmio 8
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.IdOperation">
+            <summary>
+            Id da Operação
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.Status">
+            <summary>
+            Status 
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.Type">
+            <summary>
+            Tipo de campanha (Aberto = 1, Fechado = 2, Fechado + parceiro = 3, Assinatura = 4)
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.DistributionType">
+            <summary>
+            Tipo de distribuição (diária = 1, semanal = 2, mensal = 3)
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.DistributionQuantity">
+            <summary>
+            Quantidade de bilhetes à serem distribuidos (para diário esse campo é ignorado, para semanal no máximo 6 e para mensal no máximo 31)
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.ScratchcardExpire">
+            <summary>
+            Se o bilhete expira no dia que ele é emitido, ou seja, o cliente precisa raspara o bilhete no mesmo dia
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardModel.Prizes">
+            <summary>
+            Prêmios
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardPrizeModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardPrizeModel.IdScratchcard">
+            <summary>
+            Id Raspadinha
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardPrizeModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardPrizeModel.Title">
+            <summary>
+            Título
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardPrizeModel.Image">
+            <summary>
+            Imagem do prêmio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardPrizeModel.Quantity">
+            <summary>
+            Quantidade de bilhetes premiados
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardPrizeModel.Description">
+            <summary>
+            Descrição do prêmio
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.ScratchcardPrizeModel.Odds">
+            <summary>
+            Chances
+            </summary>
+        </member>
         <member name="T:ias.Rebens.api.Models.SignUpModel">
             <summary>
             Model de cadastro
@@ -5609,6 +6912,16 @@
         <member name="P:ias.Rebens.api.Models.SignUpModel.Email">
             <summary>
             E-mail
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.SignUpModel.Name">
+            <summary>
+            Nome
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.SignUpModel.Surname">
+            <summary>
+            Sobrenome
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.StaticTextModel">
@@ -5644,6 +6957,11 @@
         <member name="P:ias.Rebens.api.Models.StaticTextModel.Active">
             <summary>
             Ativo
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.StaticTextModel.IdStaticTextType">
+            <summary>
+            Id do tipo de texto estático
             </summary>
         </member>
         <member name="M:ias.Rebens.api.Models.StaticTextModel.#ctor">
@@ -5762,6 +7080,71 @@
         <member name="P:ias.Rebens.api.Models.ValidateCustomerModel.Password">
             <summary>
             Senha
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.IdOrder">
+            <summary>
+            Id do Pedido
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.Amount">
+            <summary>
+            Valor
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.Method">
+            <summary>
+            Forma de pagamento
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.BilletLineCode">
+            <summary>
+            linha digitável do boleto
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.BilletLink">
+            <summary>
+            Link para o boleto
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.BilletLinkPrint">
+            <summary>
+            Link para impressão do boleto
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.CardBrand">
+            <summary>
+            Bandeira do cartão
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.CardFirstSix">
+            <summary>
+            Primeiros 6 digitos do cartão
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.CardLastFour">
+            <summary>
+            Últimos 4 digitos do cartão
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.CardHolderName">
+            <summary>
+            Nome no cartão
+            </summary>
+        </member>
+        <member name="P:ias.Rebens.api.Models.WirecardPaymentModel.Created">
+            <summary>
+            Data da criação
             </summary>
         </member>
         <member name="T:ias.Rebens.api.Models.WithdrawItemModel">

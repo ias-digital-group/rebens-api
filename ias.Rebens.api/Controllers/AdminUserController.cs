@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using ias.Rebens.api.Models;
@@ -68,6 +69,7 @@ namespace ias.Rebens.api.Controllers
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
+
             int? idOperationPartner = null;
             if (principal.IsInRole("partnerAdministrator"))
             {
@@ -85,7 +87,16 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
             }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation, active, role, idOperationPartner);
+            string userRole = "";
+            var uRole = principal.Claims.SingleOrDefault(c => c.Type == ClaimTypes.Role);
+            if (uRole != null)
+                userRole = uRole.Value;
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não tem acesso a essa funcionalidade!" });
+
+
+
+            var list = repo.ListPage(userRole, page, pageItems, searchWord, sort, out string error, idOperation, active, role, idOperationPartner);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)

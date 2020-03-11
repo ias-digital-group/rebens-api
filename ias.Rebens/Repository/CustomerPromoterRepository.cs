@@ -123,9 +123,9 @@ namespace ias.Rebens
                 {
                     customer.Cpf = customer.Cpf.Replace(".", "").Replace("-", "");
                     if (db.Customer.Any(c => c.IdOperation == customer.IdOperation && c.Cpf == customer.Cpf))
-                        error = "O cpf já está cadastrado em nossa base!";
+                        error = "cpf-registered";
                     else if (db.Customer.Any(c => c.IdOperation == customer.IdOperation && c.Email == customer.Email))
-                        error = "O e-mail já está cadastrado em nossa base!";
+                        error = "email-registered";
                     else
                     {
                         customer.Modified = customer.Created = DateTime.UtcNow;

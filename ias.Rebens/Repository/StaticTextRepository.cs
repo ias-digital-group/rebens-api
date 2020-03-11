@@ -31,6 +31,10 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("StaticTextRepository.Create", ex.Message, "", ex.StackTrace);
+                if(ex.InnerException != null)
+                {
+                    logError.Create("StaticTextRepository.Create - InnerException", ex.InnerException.Message, "", ex.InnerException.StackTrace);
+                }
                 error = "Ocorreu um erro ao tentar criar o texto. (erro:" + idLog + ")";
                 ret = false;
             }

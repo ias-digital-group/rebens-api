@@ -21,7 +21,7 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
         public bool Deleted { get; set; }
-
+        public int Type { get; set; }
         public virtual StaticText StaticText { get; set; }
 
         public virtual ICollection<Benefit> Benefits { get; set; }

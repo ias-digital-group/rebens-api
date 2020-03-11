@@ -40,6 +40,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <param name="active">active, não obrigatório (default=null)</param>
         /// <param name="idParent">id do pai, não obrigatório (default=null)</param>
+        /// <param name="type">tipo de categoria, obrigatório (1=beneficios, 2=cursos livres)</param>
         /// <returns>Lista com as categorias encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -48,10 +49,10 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<CategoryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", 
+        public IActionResult List([FromQuery]int type, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", 
             [FromQuery]bool? active = null, [FromQuery]int? idParent = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, active, idParent);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, type, out string error, active, idParent);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -165,6 +166,7 @@ namespace ias.Rebens.api.Controllers
         /// Retorna a arvore de categorias 
         /// </summary>
         /// <param name="operationCode">código da operação, obrigatório</param>
+        /// <param name="type">tipo de categoria (1 = benefícios, 2 = Cursos Lirves), obrigatório</param>
         /// <returns>Lista com as categorias encontradas</returns>
         /// <response code="200">Retorna a list, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -174,7 +176,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListTree([FromHeader(Name = "x-operation-code")]string operationCode)
+        public IActionResult ListTree([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int type)
         {
             Guid operationGuid = Guid.Empty;
             Guid.TryParse(operationCode, out operationGuid);
@@ -203,7 +205,7 @@ namespace ias.Rebens.api.Controllers
 
             bool isCustomer = (operationGuid != Guid.Empty || principal.IsInRole("customer"));
 
-            var list = repo.ListTree(isCustomer, idOperation, out error);
+            var list = repo.ListTree(type, isCustomer, idOperation, out error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count() == 0)
@@ -230,70 +232,12 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListTreeAdm()
+        public IActionResult ListTreeAdm([FromQuery]int type)
         {
-            var list = repo.ListTree(false, null, out string error);
+            var list = repo.ListTree(type, false, null, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count() == 0)
-                    return NoContent();
-
-                var ret = new JsonDataModel<List<CategoryModel>>();
-                ret.Data = new List<CategoryModel>();
-                list.ForEach(item => { ret.Data.Add(new CategoryModel(item)); });
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Retorna a arvore de categorias 
-        /// </summary>
-        /// <param name="operationCode">código da operação, obrigatório</param>
-        /// <returns>Lista com as categorias encontradas</returns>
-        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpGet("ListFreeCourseTree")]
-        [ProducesResponseType(typeof(JsonDataModel<List<CategoryModel>>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListFreeCourseTree([FromHeader(Name = "x-operation-code")]string operationCode)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-            int idOperation = 0;
-            string error;
-
-            var principal = HttpContext.User;
-            if (operationGuid == Guid.Empty)
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
-            }
-            else
-            {
-                var operation = operationRepo.Read(operationGuid, out error);
-                idOperation = operation.Id;
-            }
-            if (idOperation == 0)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            bool isCustomer = (operationGuid != Guid.Empty || principal.IsInRole("customer"));
-
-            var list = repo.ListFreeCourseTree(isCustomer, out error);
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || !list.Any())
                     return NoContent();
 
                 var ret = new JsonDataModel<List<CategoryModel>>();

@@ -73,7 +73,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null, int? idParent = null)
+        public ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, int type, out string error, bool? status = null, int? idParent = null)
         {
             ResultPage<Category> ret;
             try
@@ -82,7 +82,8 @@ namespace ias.Rebens
                 {
                     var tmpList = db.Category.Where(c => (string.IsNullOrEmpty(word) || c.Name.Contains(word))
                                     && (!status.HasValue || (status.HasValue && c.Active == status.Value))
-                                    && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value)));
+                                    && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value))
+                                    && c.Type == type);
 
                     switch (sort.ToLower())
                     {
@@ -107,9 +108,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Category.Count(c => (string.IsNullOrEmpty(word) || c.Name.Contains(word))
-                                    && (!status.HasValue || (status.HasValue && c.Active == status.Value))
-                                    && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value)));
+                    var total = tmpList.Count();
 
                     ret = new ResultPage<Category>(list, page, pageItems, total);
 
@@ -127,7 +126,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<Category> ListTree(bool isCustomer, int? idOperation, out string error)
+        public List<Category> ListTree(int type, bool isCustomer, int? idOperation, out string error)
         {
             List<Category> ret;
             try
@@ -137,23 +136,44 @@ namespace ias.Rebens
                     if(isCustomer && idOperation.HasValue)
                     {
                         ret = new List<Category>();
-                        var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active 
+                        if(type == (int)Enums.CategoryType.Benefit)
+                        {
+                            var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active && c.Type == (int)Enums.CategoryType.Benefit
                                 && ((
                                     c.BenefitCategories.Count > 0 && c.BenefitCategories.Any(bc => bc.Benefit.Active && bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))
                                     ) || (
                                     c.Categories.Any(cc => cc.Active && cc.BenefitCategories.Count > 0 && cc.BenefitCategories.Any(bc => bc.Benefit.Active && bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))))
                                     ))
                                 .OrderBy(c => c.Name).ToList();
-                        foreach(var parent in listParent)
-                        {
-                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.BenefitCategories.Count > 0 
-                                                        && c.BenefitCategories.Any(bc => bc.Benefit.Active))
-                                                    .OrderBy(c => c.Name).ToList();
-                            ret.Add(parent);
+                            foreach (var parent in listParent)
+                            {
+                                parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.BenefitCategories.Count > 0 
+                                                            && c.BenefitCategories.Any(bc => bc.Benefit.Active) && c.Type == (int)Enums.CategoryType.Benefit)
+                                                        .OrderBy(c => c.Name).ToList();
+                                ret.Add(parent);
+                            }
                         }
+                        else
+                        {
+                            var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active && c.Type == (int)Enums.CategoryType.FreeCourse
+                                && ((
+                                    c.FreeCourseCategories.Count > 0 && c.FreeCourseCategories.Any(bc => bc.FreeCourse.Active && bc.FreeCourse.IdOperation == idOperation.Value)
+                                    ) || (
+                                    c.Categories.Any(cc => cc.Active && cc.FreeCourseCategories.Count > 0 && cc.FreeCourseCategories.Any(bc => bc.FreeCourse.Active && bc.FreeCourse.IdOperation == idOperation.Value))
+                                    )))
+                                .OrderBy(c => c.Name).ToList();
+                            foreach (var parent in listParent)
+                            {
+                                parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.FreeCourseCategories.Count > 0
+                                                            && c.FreeCourseCategories.Any(bc => bc.FreeCourse.Active) && c.Type == (int)Enums.CategoryType.FreeCourse)
+                                                        .OrderBy(c => c.Name).ToList();
+                                ret.Add(parent);
+                            }
+                        }
+                        
                     }
                     else
-                        ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active).OrderBy(c => c.Name).ToList();
+                        ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active && c.Type == (int)Enums.CategoryType.FreeCourse).OrderBy(c => c.Name).ToList();
                     error = null;
                 }
             }
@@ -161,42 +181,6 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CategoryRepository.ListTree", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public List<Category> ListFreeCourseTree(bool isCustomer, out string error)
-        {
-            List<Category> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    if (isCustomer)
-                    {
-                        ret = new List<Category>();
-                        var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active
-                                && ((c.FreeCourseCategories.Any()) 
-                                || (c.Categories.Any(cc => cc.Active && cc.FreeCourseCategories.Any()))
-                                    ))
-                                .OrderBy(c => c.Name).ToList();
-                        foreach (var parent in listParent)
-                        {
-                            parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.FreeCourseCategories.Any()).OrderBy(c => c.Name).ToList();
-                            ret.Add(parent);
-                        }
-                    }
-                    else
-                        ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active).OrderBy(c => c.Name).ToList();
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("CategoryRepository.ListFreeCourseTree", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as categorias. (erro:" + idLog + ")";
                 ret = null;
             }

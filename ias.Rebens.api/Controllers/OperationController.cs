@@ -156,10 +156,23 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]OperationModel operation)
         {
-            var model = new JsonModel();
+            int idAdminUser;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (tmpId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                if (int.TryParse(tmpId.Value, out int usrId))
+                    idAdminUser = usrId;
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
 
             var op = operation.GetEntity();
-            if (repo.Update(op, out string error))
+            if (repo.Update(op, idAdminUser, out string error))
             {
                 repo.ValidateOperation(op.Id, out error);
                 return Ok(new JsonModel() { Status = "ok", Message = "Operação atualizada com sucesso!" });
@@ -182,6 +195,20 @@ namespace ias.Rebens.api.Controllers
         {
             string error = null;
             int idContact = 0;
+            int idAdminUser;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (tmpId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                if (int.TryParse(tmpId.Value, out int usrId))
+                    idAdminUser = usrId;
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
 
             var op = operation.GetEntity();
             if(operation.Contact != null )
@@ -205,7 +232,7 @@ namespace ias.Rebens.api.Controllers
             if (!string.IsNullOrEmpty(error))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             
-            if (repo.Create(op, out error))
+            if (repo.Create(op, idAdminUser, out error))
             {
                 var sendingblue = new Integration.SendinBlueHelper();
                 if(sendingblue.CreateList(op.Title, out int listId, out string error1))
@@ -222,7 +249,7 @@ namespace ias.Rebens.api.Controllers
 
                 if (idContact > 0)
                 {
-                    if (repo.AddContact(op.Id, idContact, out error))
+                    if (repo.AddContact(op.Id, idContact, idAdminUser, out error))
                         return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Operação criada com sucesso!", Id = op.Id, Extra = op.Code.ToString() });
 
                     return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -249,7 +276,22 @@ namespace ias.Rebens.api.Controllers
                 var ret = repo.GetPublishData(id, out string domain, out error);
                 if (ret != null)
                 {
-                    repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, null, out _);
+                    int idAdminUser;
+                    var principal = HttpContext.User;
+                    if (principal?.Claims != null)
+                    {
+                        var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                        if (tmpId == null)
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                        if (int.TryParse(tmpId.Value, out int usrId))
+                            idAdminUser = usrId;
+                        else
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                    }
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+
+                    repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, idAdminUser, null, out _);
 
                     if (domain.Contains(".sistemarebens."))
                     {
@@ -277,13 +319,13 @@ namespace ias.Rebens.api.Controllers
                     {
                         HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                         if (response.StatusCode != HttpStatusCode.OK)
-                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, idAdminUser, null, out error);
 
                         return StatusCode(200, new JsonModel() { Status = "ok", Data = ret });
                     }
                     catch
                     {
-                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, null, out error);
+                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, idAdminUser, null, out error);
                     }
                 }
             }
@@ -447,9 +489,22 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddContact([FromBody]OperationContactModel model)
         {
-            var resultModel = new JsonModel();
+            int idAdminUser;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (tmpId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                if (int.TryParse(tmpId.Value, out int usrId))
+                    idAdminUser = usrId;
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
 
-            if (repo.AddContact(model.IdOperation, model.IdContact, out string error))
+            if (repo.AddContact(model.IdOperation, model.IdContact, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Contato adicionado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -468,9 +523,22 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveContact(int id, int idContact)
         {
-            var resultModel = new JsonModel();
+            int idAdminUser;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (tmpId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                if (int.TryParse(tmpId.Value, out int usrId))
+                    idAdminUser = usrId;
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
 
-            if (repo.DeleteContact(id, idContact, out string error))
+            if (repo.DeleteContact(id, idContact, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Contato removido com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -532,9 +600,22 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddAddress([FromBody]OperationAddressModel model)
         {
-            var resultModel = new JsonModel();
+            int idAdminUser;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (tmpId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                if (int.TryParse(tmpId.Value, out int usrId))
+                    idAdminUser = usrId;
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
 
-            if (repo.AddAddress(model.IdOperation, model.IdAddress, out string error))
+            if (repo.AddAddress(model.IdOperation, model.IdAddress, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Endereço adicionado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -553,9 +634,22 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveAddress(int id, int idAddress)
         {
-            var resultModel = new JsonModel();
+            int idAdminUser;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (tmpId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                if (int.TryParse(tmpId.Value, out int usrId))
+                    idAdminUser = usrId;
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
 
-            if (repo.DeleteAddress(id, idAddress, out string error))
+            if (repo.DeleteAddress(id, idAddress, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Endereço removido com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
