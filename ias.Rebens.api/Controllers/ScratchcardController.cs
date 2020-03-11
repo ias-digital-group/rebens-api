@@ -19,6 +19,7 @@ namespace ias.Rebens.api.Controllers
         private IScratchcardDrawRepository drawRepo;
         private IScratchcardPrizeRepository prizeRepo;
         private IScratchcardRepository repo;
+        private IStaticTextRepository staticTextRepo;
         private IOperationRepository operationRepo;
         private IHostingEnvironment _hostingEnvironment;
 
@@ -31,13 +32,14 @@ namespace ias.Rebens.api.Controllers
         /// <param name="hostingEnvironment"></param>
         public ScratchcardController(IScratchcardRepository scratchcardRepository, IScratchcardPrizeRepository scratchcardPrizeRepository,
                                         IScratchcardDrawRepository scratchcardDrawRepository, IHostingEnvironment hostingEnvironment,
-                                        IOperationRepository operationRepository)
+                                        IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
         {
             this.repo = scratchcardRepository;
             this.prizeRepo = scratchcardPrizeRepository;
             this.drawRepo = scratchcardDrawRepository;
             this.operationRepo = operationRepository;
             this._hostingEnvironment = hostingEnvironment;
+            this.staticTextRepo = staticTextRepository;
         }
 
         /// <summary>
