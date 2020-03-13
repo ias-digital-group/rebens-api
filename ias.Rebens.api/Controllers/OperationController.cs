@@ -407,7 +407,6 @@ namespace ias.Rebens.api.Controllers
         public IActionResult SaveConfiguration(int id, [FromBody]object data)
         {
             var serializedData = JsonConvert.SerializeObject(data);
-            var jObj = JObject.Parse(serializedData);
 
             var config = new StaticText()
             {

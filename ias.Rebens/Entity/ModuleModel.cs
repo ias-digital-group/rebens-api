@@ -13,6 +13,7 @@ namespace ias.Rebens
         public DateTime Modified { get; set; }
         public bool Checked { get; set; }
         public Helper.Config.ModuleInformation Info { get; set; }
+        public string StaticTextUrl { get; set; }
 
         public ModuleModel() { }
         

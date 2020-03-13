@@ -140,7 +140,7 @@ namespace ias.Rebens
                         db.SaveChanges();
                     }
 
-                    var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url != "contract");
+                    var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url != "contract" && s.Active);
                     var listPages = new List<StaticText>();
                     foreach(var page in pages)
                     {
@@ -695,6 +695,25 @@ namespace ias.Rebens
                                             break;
                                         case "register-type":
                                             totalOK += item.Data != "" ? 1 : 0;
+                                            if (item.Data == "signature" 
+                                                && !db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.Pages && s.Url == "join-us" && s.IdOperation == operation.Id))
+                                            {
+                                                var tmpText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == "join-us");
+                                                db.StaticText.Add(new StaticText()
+                                                {
+                                                    Active = true,
+                                                    Created = DateTime.UtcNow,
+                                                    Html = tmpText.Html,
+                                                    IdOperation = operation.Id,
+                                                    IdStaticTextType = (int)Enums.StaticTextType.Pages,
+                                                    Modified = DateTime.UtcNow,
+                                                    Order = tmpText.Order,
+                                                    Style = tmpText.Style,
+                                                    Title = tmpText.Title,
+                                                    Url = tmpText.Url
+                                                });
+                                                db.SaveChanges();
+                                            }
                                             break;
                                     }
                                 }
@@ -704,6 +723,28 @@ namespace ias.Rebens
                                 bool needWirecard = false;
                                 foreach (var item in config.Modules)
                                 {
+                                    if(db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == item.Name))
+                                    {
+                                        if (!db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.Pages && s.Url == item.Name && s.IdOperation == operation.Id))
+                                        {
+                                            var tmpText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == item.Name);
+                                            db.StaticText.Add(new StaticText()
+                                            {
+                                                Active = true,
+                                                Created = DateTime.UtcNow,
+                                                Html = tmpText.Html,
+                                                IdOperation = operation.Id,
+                                                IdStaticTextType = (int)Enums.StaticTextType.Pages,
+                                                Modified = DateTime.UtcNow,
+                                                Order = tmpText.Order,
+                                                Style = tmpText.Style,
+                                                Title = tmpText.Title,
+                                                Url = tmpText.Url
+                                            });
+                                            db.SaveChanges();
+                                        }
+                                    }
+
                                     if ((item.Name == "course" || item.Name == "freeCourse" || item.Name == "coupon" ) && needWirecard && !wirecard && !wirecardJS && item.Checked)
                                     {
                                         needWirecard = true;
