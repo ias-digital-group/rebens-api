@@ -277,17 +277,23 @@ namespace ias.Rebens
                         update = db.StaticText.SingleOrDefault(c => c.IdBenefit == staticText.IdBenefit && c.IdStaticTextType == staticText.IdStaticTextType);
                     if (update == null && staticText.IdOperation.HasValue)
                         update = db.StaticText.SingleOrDefault(c => c.IdOperation == staticText.IdOperation && c.IdStaticTextType == staticText.IdStaticTextType);
+                    if(update == null && staticText.IdStaticTextType == (int)Enums.StaticTextType.ScratchcardRegulation)
+                        update = db.StaticText.SingleOrDefault(c => c.IdOperation == staticText.IdOperation && c.IdStaticTextType == staticText.IdStaticTextType && c.Url == staticText.Url);
 
                     if (update != null)
                     {
-                        update.Active = staticText.Active;
                         update.Html = staticText.Html;
-                        update.IdStaticTextType = staticText.IdStaticTextType;
-                        update.Order = staticText.Order;
-                        update.Style = staticText.Style;
-                        update.Title = staticText.Title;
-                        update.Url = staticText.Url;
                         update.Modified = DateTime.UtcNow;
+
+                        if (staticText.IdStaticTextType != (int)Enums.StaticTextType.ScratchcardRegulation)
+                        {
+                            update.Active = staticText.Active;
+                            update.IdStaticTextType = staticText.IdStaticTextType;
+                            update.Order = staticText.Order;
+                            update.Style = staticText.Style;
+                            update.Title = staticText.Title;
+                            update.Url = staticText.Url;
+                        }
 
                         db.SaveChanges();
                         error = null;

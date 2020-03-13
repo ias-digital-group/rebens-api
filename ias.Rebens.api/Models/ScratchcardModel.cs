@@ -193,5 +193,19 @@ namespace ias.Rebens.api.Models
                 GetNotifications = this.GetNotifications
             };
         }
+
+        public StaticText GetRegulation()
+        {
+            return new StaticText()
+            {
+                Active = true,
+                Created = DateTime.UtcNow,
+                Html = this.Regulation,
+                IdStaticTextType = (int)Enums.StaticTextType.ScratchcardRegulation,
+                Modified = DateTime.UtcNow,
+                Title = $"Regulamento - {this.Name}",
+                IdOperation = this.IdOperation
+            };
+        }
     }
 }

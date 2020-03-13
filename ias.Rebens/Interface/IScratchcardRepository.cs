@@ -13,8 +13,7 @@ namespace ias.Rebens
         ResultPage<Scratchcard> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation);
         Task<bool> GenerateScratchcards(int id, int idAdminUser, string path);
         Scratchcard Read(int id, out string error);
-        Scratchcard Read(int id, out bool canPublish, out string error);
-
+        Scratchcard Read(int id, out bool canPublish, out string regulation, out string error);
         List<Scratchcard> ListByDistributionType(Enums.ScratchcardDistribution type);
         List<int> ListCustomers(int idOperation, int type);
     }

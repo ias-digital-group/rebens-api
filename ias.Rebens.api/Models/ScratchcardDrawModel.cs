@@ -103,45 +103,13 @@ namespace ias.Rebens.api.Models
                     this.Status = "Expirado";
                     this.IdStatus = 99;
                 }
-
                 if (scratchcardDraw.ScratchcardPrize != null)
                     this.ScratchcardPrize = new ScratchcardPrizeModel(scratchcardDraw.ScratchcardPrize);
                 if (scratchcardDraw.Scratchcard != null)
-                    this.Scratchcard = scratchcardDraw.Scratchcard.Name;
-                if (scratchcardDraw.Customer != null)
-                    this.Customer = new CustomerModel(scratchcardDraw.Customer);
-            }
-        }
-
-        public ScratchcardDrawModel(ScratchcardDrawItem scratchcardDraw)
-        {
-            if (scratchcardDraw != null)
-            {
-                this.Id = scratchcardDraw.Id;
-                this.IdScratchcard = scratchcardDraw.IdScratchcard;
-                this.IdScratchcardPrize = scratchcardDraw.IdScratchcardPrize;
-                this.Image = scratchcardDraw.Image;
-                this.IdCustomer = scratchcardDraw.IdCustomer;
-                this.Prize = scratchcardDraw.PlayedDate.HasValue ? scratchcardDraw.Prize : "";
-                this.ValidationCode = scratchcardDraw.ValidationCode;
-                this.OpenDate = scratchcardDraw.OpenDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(scratchcardDraw.OpenDate.Value, Constant.TimeZone).ToString("dd/MM/yyyy", Constant.FormatProvider) : "";
-                this.PlayedDate = scratchcardDraw.PlayedDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(scratchcardDraw.PlayedDate.Value, Constant.TimeZone).ToString("dd/MM/yyyy", Constant.FormatProvider) : "";
-                this.ValidationDate = scratchcardDraw.ValidationDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(scratchcardDraw.ValidationDate.Value, Constant.TimeZone).ToString("dd/MM/yyyy", Constant.FormatProvider) : "";
-                this.IdStatus = scratchcardDraw.Status;
-                this.Date = scratchcardDraw.Date.HasValue ? scratchcardDraw.Date.Value.ToString("dd/MM/yyyy", Constant.FormatProvider) : "";
-                this.ExpireDate = scratchcardDraw.ExpireDate.HasValue ? scratchcardDraw.ExpireDate.Value.ToString("dd/MM/yyyy", Constant.FormatProvider) : "";
-                this.Status = Enums.EnumHelper.GetEnumDescription((Enums.ScratchcardDraw)scratchcardDraw.Status);
-                this.Instructions = scratchcardDraw.Instructions;
-                if (scratchcardDraw.ExpireDate.HasValue && scratchcardDraw.ExpireDate.Value < TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Constant.TimeZone).Date && scratchcardDraw.Status == (int)Enums.ScratchcardDraw.drawn)
                 {
-                    this.Status = "Expirado";
-                    this.IdStatus = 99;
-                }
-
-                if (scratchcardDraw.ScratchcardPrize != null)
-                    this.ScratchcardPrize = new ScratchcardPrizeModel(scratchcardDraw.ScratchcardPrize);
-                if (scratchcardDraw.Scratchcard != null)
                     this.Scratchcard = scratchcardDraw.Scratchcard.Name;
+                    this.Instructions = scratchcardDraw.Scratchcard.Instructions;
+                }
                 if (scratchcardDraw.Customer != null)
                     this.Customer = new CustomerModel(scratchcardDraw.Customer);
             }

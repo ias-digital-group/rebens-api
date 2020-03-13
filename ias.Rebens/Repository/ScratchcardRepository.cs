@@ -274,10 +274,11 @@ namespace ias.Rebens
             return ret;
         }
 
-        public Scratchcard Read(int id, out bool canPublish, out string error)
+        public Scratchcard Read(int id, out bool canPublish, out string regulation, out string error)
         {
             Scratchcard ret;
             canPublish = false;
+            regulation = null;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -293,8 +294,11 @@ namespace ias.Rebens
                             canPublish = false;
                         if (ret.Quantity <= 0)
                             canPublish = false;
-                        if (ret.DistributionType != (int)Enums.ScratchcardDistribution.daily && ret.DistributionQuantity <= 0)
+                        if (ret.DistributionType != (int)ScratchcardDistribution.daily && ret.DistributionQuantity <= 0)
                             canPublish = false;
+                        var reg = db.StaticText.SingleOrDefault(s => s.IdOperation == ret.IdOperation && s.Url == ret.Id.ToString() && s.IdStaticTextType == (int)Enums.StaticTextType.ScratchcardRegulation);
+                        if (reg != null)
+                            regulation = reg.Html;
                     }
                     error = null;
                 }

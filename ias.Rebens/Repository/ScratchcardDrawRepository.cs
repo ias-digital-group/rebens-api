@@ -16,28 +16,20 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public ResultPage<ScratchcardDrawItem> ListByCustomer(int idCustomer, int page, int pageItems, out string error)
+        public ResultPage<ScratchcardDraw> ListByCustomer(int idCustomer, int page, int pageItems, out string error)
         {
-            ResultPage<ScratchcardDrawItem> ret;
+            ResultPage<ScratchcardDraw> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.ScratchcardDraw.Include("Scratchcard").Include("ScratchcardPrize")
-                                        .Where(s => s.IdCustomer == idCustomer).OrderByDescending(s => s.Date);
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems);
-                    var total = tmpList.Count(s => s.IdCustomer == idCustomer);
+                    var list = db.ScratchcardDraw.Include("Scratchcard").Include("ScratchcardPrize")
+                                        .Where(s => s.IdCustomer == idCustomer)
+                                        .OrderByDescending(s => s.Date)
+                                        .Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.ScratchcardDraw.Count(s => s.IdCustomer == idCustomer);
 
-                    var retList = new List<ScratchcardDrawItem>();
-                    foreach(var item in list)
-                    {
-                        var tmpItem = new ScratchcardDrawItem(item);
-                        if(item.IdScratchcardPrize.HasValue)
-                            tmpItem.Instructions = db.Scratchcard.Single(s => s.Id == item.IdScratchcard).Instructions;
-                        retList.Add(tmpItem);
-                    }
-
-                    ret = new ResultPage<ScratchcardDrawItem>(retList, page, pageItems, total);
+                    ret = new ResultPage<ScratchcardDraw>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -236,9 +228,7 @@ namespace ias.Rebens
                                     Helper.EmailHelper.SendDefaultEmail(admin.Email, admin.Name, "contato@rebens.com.br", "Rebens", "Raspadinha Premiada", body, out _);
                                 }
                             }
-                            return false;
                         }
-
                         ret = true;
                     }
                 }

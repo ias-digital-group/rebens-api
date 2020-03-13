@@ -17,7 +17,6 @@ namespace ias.Rebens.api.Controllers
     public class ScratchcardController : ControllerBase
     {
         private IScratchcardDrawRepository drawRepo;
-        private IScratchcardPrizeRepository prizeRepo;
         private IScratchcardRepository repo;
         private IStaticTextRepository staticTextRepo;
         private IOperationRepository operationRepo;
@@ -30,12 +29,11 @@ namespace ias.Rebens.api.Controllers
         /// <param name="scratchcardPrizeRepository"></param>
         /// <param name="scratchcardDrawRepository"></param>
         /// <param name="hostingEnvironment"></param>
-        public ScratchcardController(IScratchcardRepository scratchcardRepository, IScratchcardPrizeRepository scratchcardPrizeRepository,
+        public ScratchcardController(IScratchcardRepository scratchcardRepository,
                                         IScratchcardDrawRepository scratchcardDrawRepository, IHostingEnvironment hostingEnvironment,
                                         IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
         {
             this.repo = scratchcardRepository;
-            this.prizeRepo = scratchcardPrizeRepository;
             this.drawRepo = scratchcardDrawRepository;
             this.operationRepo = operationRepository;
             this._hostingEnvironment = hostingEnvironment;
@@ -103,7 +101,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Get(int id)
         {
-            var scratchcard = repo.Read(id, out bool canPublish, out string error);
+            var scratchcard = repo.Read(id, out bool canPublish, out string regulation, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -113,7 +111,8 @@ namespace ias.Rebens.api.Controllers
                 return Ok(new JsonDataModel<ScratchcardModel>() { Data = new ScratchcardModel(scratchcard)
                     {
                         CanPublish = canPublish,
-                        ImagesPath = $"{Request.Scheme}://{Request.Host}/files/scratchcard/"
+                        ImagesPath = $"{Request.Scheme}://{Request.Host}/files/scratchcard/",
+                        Regulation = regulation
                     }
                 });
             }
@@ -151,7 +150,15 @@ namespace ias.Rebens.api.Controllers
             if (scratchcard != null)
             {
                 if (repo.Update(scratchcard.GetEntity(), idAdminUser, out string error))
+                {
+                    if (!string.IsNullOrEmpty(scratchcard.Regulation))
+                    {
+                        var reg = scratchcard.GetRegulation();
+                        reg.Url = scratchcard.Id.ToString();
+                        staticTextRepo.Update(reg, out _);
+                    }
                     return Ok(new JsonModel() { Status = "ok", Message = "Raspadinha atualizado com sucesso!" });
+                }
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
 
@@ -207,7 +214,15 @@ namespace ias.Rebens.api.Controllers
                 if (idOperation.HasValue)
                     s.IdOperation = idOperation.Value;
                 if (repo.Create(s, idAdminUser, out string error))
+                {
+                    if(!string.IsNullOrEmpty(scratchcard.Regulation))
+                    {
+                        var reg = scratchcard.GetRegulation();
+                        reg.Url = s.Id.ToString();
+                        staticTextRepo.Create(reg, out _);
+                    }
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Raspadinha criado com sucesso!", Id = s.Id });
+                }
 
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
