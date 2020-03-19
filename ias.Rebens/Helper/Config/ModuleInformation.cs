@@ -9,6 +9,7 @@ namespace ias.Rebens.Helper.Config
         public List<ModuleFields> Fields { get; set; }
         public List<string> Files { get; set; }
         public ModuleConfiguration Configuration { get; set; }
+        public bool NeedWirecard { get; set; }
     }
 
     public class ModuleFields

@@ -725,25 +725,38 @@ namespace ias.Rebens
                                 {
                                     if(db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == item.Name))
                                     {
-                                        if (!db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.Pages && s.Url == item.Name && s.IdOperation == operation.Id))
+                                        if (item.Checked)
                                         {
-                                            var tmpText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == item.Name);
-                                            db.StaticText.Add(new StaticText()
+                                            if (!db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.Pages && s.Url == item.Name && s.IdOperation == operation.Id))
                                             {
-                                                Active = true,
-                                                Created = DateTime.UtcNow,
-                                                Html = tmpText.Html,
-                                                IdOperation = operation.Id,
-                                                IdStaticTextType = (int)Enums.StaticTextType.Pages,
-                                                Modified = DateTime.UtcNow,
-                                                Order = tmpText.Order,
-                                                Style = tmpText.Style,
-                                                Title = tmpText.Title,
-                                                Url = tmpText.Url
-                                            });
-                                            db.SaveChanges();
+                                                var tmpText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == item.Name);
+                                                db.StaticText.Add(new StaticText()
+                                                {
+                                                    Active = true,
+                                                    Created = DateTime.UtcNow,
+                                                    Html = tmpText.Html,
+                                                    IdOperation = operation.Id,
+                                                    IdStaticTextType = (int)Enums.StaticTextType.Pages,
+                                                    Modified = DateTime.UtcNow,
+                                                    Order = tmpText.Order,
+                                                    Style = tmpText.Style,
+                                                    Title = tmpText.Title,
+                                                    Url = tmpText.Url
+                                                });
+                                                db.SaveChanges();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var tmpText = db.StaticText.SingleOrDefault(s => s.IdStaticTextType == (int)Enums.StaticTextType.Pages && s.Url == item.Name && s.IdOperation == operation.Id);
+                                            if(tmpText != null)
+                                            {
+                                                db.StaticText.Remove(tmpText);
+                                                db.SaveChanges();
+                                            }
                                         }
                                     }
+
 
                                     if ((item.Name == "course" || item.Name == "freeCourse" || item.Name == "coupon" ) && needWirecard && !wirecard && !wirecardJS && item.Checked)
                                     {
@@ -878,7 +891,7 @@ namespace ias.Rebens
                     {
                         bool isTemporary = operation.TemporaryPublishStatus == (int)Enums.PublishStatus.publish;
 
-                        string Color = "", Favicon = "", contactEmail = "", GoogleAnalytics = "", WirecardToken = "", WirecardJSToken = "", RegisterType = "";
+                        string Color = "", Favicon = "", contactEmail = "", GoogleAnalytics = "", RegisterType = "";
                         var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
                         if (configuration != null)
                         {
@@ -906,21 +919,6 @@ namespace ias.Rebens
                                 }
                             }
 
-                            foreach(var item in config.Modules)
-                            {
-                                if((item.Name == "course" || item.Name == "freeCourse" || item.Name == "coupon")
-                                    && string.IsNullOrEmpty(WirecardToken))
-                                {
-                                    foreach (var field in item.Info.Fields)
-                                    {
-                                        if (field.Name == "wirecardToken" && !string.IsNullOrEmpty(field.Data))
-                                            WirecardToken = field.Data;
-                                        if (field.Name == "wirecardJSToken" && !string.IsNullOrEmpty(field.Data))
-                                            WirecardToken = field.Data;
-                                    }
-                                }
-                            }
-
                             domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                             ret = new
                             {
@@ -932,8 +930,8 @@ namespace ias.Rebens
                                 GoogleAnalytics,
                                 Domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain),
                                 constant.AppSettings.App.Environment,
-                                WirecardToken,
-                                WirecardJSToken,
+                                WirecardToken = config.Wirecard.Token,
+                                WirecardJSToken = config.Wirecard.JsToken,
                                 RegisterType, 
                                 config.Modules 
                             };
