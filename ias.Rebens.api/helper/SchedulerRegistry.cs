@@ -24,7 +24,7 @@ namespace ias.Rebens.api.helper
             Schedule(() => new ProcessFileJob(serviceScopeFactory)).ToRunNow().AndEvery(5).Minutes();
 
             Schedule(() => new ScratchcardDailyJob(serviceScopeFactory)).ToRunEvery(1).Days().At(1,0);
-            Schedule( () => new ScratchcardMonthlyJob(serviceScopeFactory)).ToRunEvery(1).Months().On(1).At(3, 0);
+            Schedule(() => new ScratchcardMonthlyJob(serviceScopeFactory)).ToRunEvery(1).Months().On(1).At(3, 0);
             Schedule(() => new ScratchcardWeeklyJob(serviceScopeFactory)).ToRunEvery(1).Weeks().On(System.DayOfWeek.Sunday).At(4, 0);
         }
     }
