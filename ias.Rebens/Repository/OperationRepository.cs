@@ -372,7 +372,7 @@ namespace ias.Rebens
                             foreach (var item in config.Fields)
                             {
                                 if(item.Name == "register-type")
-                                    openSignUp = item.Data == "open";
+                                    openSignUp = item.Data != "closed" && item.Data != "closed-partner";
                             }
                         }
                     }
