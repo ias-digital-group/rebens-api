@@ -173,7 +173,7 @@ namespace ias.Rebens
                         
                     }
                     else
-                        ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active && c.Type == (int)Enums.CategoryType.FreeCourse).OrderBy(c => c.Name).ToList();
+                        ret = db.Category.Include("Categories").Where(c => !c.IdParent.HasValue && c.Active && c.Type == type).OrderBy(c => c.Name).ToList();
                     error = null;
                 }
             }
