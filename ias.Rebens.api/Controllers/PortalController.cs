@@ -311,7 +311,7 @@ namespace ias.Rebens.api.Controllers
             
             if (operation != null)
             {
-                var mailTo = operationRepo.GetConfigurationOption(operation.Id, "form-email", out error);
+                var mailTo = operationRepo.GetConfigurationOption(operation.Id, "form-email", out _);
                 if (string.IsNullOrEmpty(mailTo) || !Helper.EmailHelper.IsValidEmail(mailTo)) mailTo = "cluberebens@gmail.com";
 
                 var f = formContact.GetEntity();
