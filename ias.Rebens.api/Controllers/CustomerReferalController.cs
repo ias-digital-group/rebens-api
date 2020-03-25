@@ -202,7 +202,10 @@ namespace ias.Rebens.api.Controllers
                 referal.Created = referal.Modified = DateTime.Now;
                 if (repo.Create(referal, operation.Id, out error))
                 {
-                    Helper.EmailHelper.SendCustomerReferal(staticTextRepo, operation, customer, referal, out error);
+                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+
+                    Helper.EmailHelper.SendCustomerReferal(staticTextRepo, operation, customer, referal, fromEmail, out error);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Indicação criada com sucesso!", Id = referal.Id });
                 }

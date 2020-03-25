@@ -7,8 +7,9 @@ namespace ias.Rebens
     public interface IOperationRepository
     {
         string GetName(int id, out string error);
-        Operation Read(int id, out string error);
 
+        Operation Read(int id, out string error);
+        
         Operation Read(Guid code, out string error);
 
         Operation ReadForSignUp(Guid code, out bool openSignUp, out string error);

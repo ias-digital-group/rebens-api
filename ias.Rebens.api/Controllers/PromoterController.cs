@@ -202,7 +202,9 @@ namespace ias.Rebens.api.Controllers
 
                 if (repo.Create(cust, idPromoter, out string error))
                 {
-                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, out error);
+                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, fromEmail, out error);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = cust.Id });
                 }
@@ -260,7 +262,9 @@ namespace ias.Rebens.api.Controllers
                 var cust = repo.Read(id, out string error);
                 if (string.IsNullOrEmpty(error))
                 {
-                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, out error);
+                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, fromEmail, out error);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail reenviado com sucesso." });
                 }

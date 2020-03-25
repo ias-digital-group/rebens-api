@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ias.Rebens.Helper
 {
     public static class EmailHelper
     {
-        public static bool SendPasswordRecovery(IStaticTextRepository staticTextRepo, Operation operation, Customer user, out string error)
+        public static bool SendPasswordRecovery(IStaticTextRepository staticTextRepo, Operation operation, string emailFrom, Customer user, out string error)
         {
             var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.EmailPasswordRecovery, out error);
             if (staticText != null)
@@ -23,7 +25,7 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendCustomerValidation(IStaticTextRepository staticTextRepo, Operation operation, Customer customer, out string error)
+        public static bool SendCustomerValidation(IStaticTextRepository staticTextRepo, Operation operation, Customer customer, string emailFrom, out string error)
         {
             var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.EmailCustomerValidation, out error);
             if (staticText != null)
@@ -32,7 +34,7 @@ namespace ias.Rebens.Helper
                 string link = (string.IsNullOrEmpty(operation.Domain) ? (operation.TemporarySubdomain + ".sistemarebens.com.br") : operation.Domain) + "/#/?c=" + customer.Code;
                 var body = staticText.Html.Replace("##LINK##", link);
                 var listDestinataries = new Dictionary<string, string> { { customer.Email, "" } };
-                var result = sendingBlue.Send(listDestinataries, operation.Id == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", operation.Title, "Confirmação de e-mail", body);
+                var result = sendingBlue.Send(listDestinataries, emailFrom, operation.Title, "Confirmação de e-mail", body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -40,7 +42,7 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendCustomerReferal(IStaticTextRepository staticTextRepo, Operation operation, Customer customer, CustomerReferal referal, out string error)
+        public static bool SendCustomerReferal(IStaticTextRepository staticTextRepo, Operation operation, Customer customer, CustomerReferal referal, string emailFrom, out string error)
         {
             var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.Email, out error);
             if (staticText != null)
@@ -69,7 +71,7 @@ namespace ias.Rebens.Helper
                 //}
                 string body = staticText.Html.Replace("###BODY###", msg);
                 var listDestinataries = new Dictionary<string, string> { { referal.Email, referal.Name } };
-                var result = sendingBlue.Send(listDestinataries, operation.Id == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", "Contato", "Indicação - " + operation.Title, body);
+                var result = sendingBlue.Send(listDestinataries, emailFrom, "Contato", "Indicação - " + operation.Title, body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -77,7 +79,7 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendCourseVoucher(StaticText staticText, Customer customer, Order order, out string error)
+        public static bool SendCourseVoucher(StaticText staticText, Customer customer, Order order, Operation operation, string emailFrom, out string error)
         {
             error = null;
             if (staticText != null)
@@ -93,7 +95,7 @@ namespace ias.Rebens.Helper
                 
                 string body = staticText.Html.Replace("###BODY###", msg);
                 var listDestinataries = new Dictionary<string, string> { { customer.Email, customer.Name } };
-                var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Pagamento Confirmado", $"PEDIDO - {order.DispId}", body);
+                var result = sendingBlue.Send(listDestinataries, emailFrom, operation.Title, $"Pagamento Confirmado - PEDIDO #{order.DispId}", body);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -101,7 +103,7 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendDefaultEmail(IStaticTextRepository staticTextRepo, string toEmail, string toName, int idOperation, string subject, string body, out string error)
+        public static bool SendDefaultEmail(IStaticTextRepository staticTextRepo, string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error)
         {
             var staticText = staticTextRepo.ReadByType(idOperation, (int)Enums.StaticTextType.Email, out error);
             if (staticText != null)
@@ -109,7 +111,7 @@ namespace ias.Rebens.Helper
                 var sendingBlue = new Integration.SendinBlueHelper();
                 string message = staticText.Html.Replace("###BODY###", body);
                 var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-                var result = sendingBlue.Send(listDestinataries, idOperation == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", "Contato", subject, message);
+                var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, message);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -117,12 +119,12 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendDefaultEmail(string toEmail, string toName, int idOperation, string subject, string body, out string error)
+        public static bool SendDefaultEmail(string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error)
         {
             error = "";
             var sendingBlue = new Integration.SendinBlueHelper();
             var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-            var result = sendingBlue.Send(listDestinataries, idOperation == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", "Contato", subject, body);
+            var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, body);
             if (result.Status)
                 return true;
             error = result.Message;
@@ -156,6 +158,51 @@ namespace ias.Rebens.Helper
             }
             error = result.Message;
             return false;
+        }
+
+        public static bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                // Normalize the domain
+                email = Regex.Replace(email, @"(@)(.+)$", DomainMapper,
+                                      RegexOptions.None, TimeSpan.FromMilliseconds(200));
+
+                // Examines the domain part of the email and normalizes it.
+                string DomainMapper(Match match)
+                {
+                    // Use IdnMapping class to convert Unicode domain names.
+                    var idn = new IdnMapping();
+
+                    // Pull out and process domain name (throws ArgumentException on invalid)
+                    var domainName = idn.GetAscii(match.Groups[2].Value);
+
+                    return match.Groups[1].Value + domainName;
+                }
+            }
+            catch (RegexMatchTimeoutException e)
+            {
+                return false;
+            }
+            catch (ArgumentException e)
+            {
+                return false;
+            }
+
+            try
+            {
+                return Regex.IsMatch(email,
+                    @"^(?("")("".+?(?<!\\)""@)|(([0-9a-z]((\.(?!\.))|[-!#\$%&'\*\+/=\?\^`\{\}\|~\w])*)(?<=[0-9a-z])@))" +
+                    @"(?(\[)(\[(\d{1,3}\.){3}\d{1,3}\])|(([0-9a-z][-0-9a-z]*[0-9a-z]*\.)+[a-z0-9][\-a-z0-9]{0,22}[a-z0-9]))$",
+                    RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+            }
+            catch (RegexMatchTimeoutException)
+            {
+                return false;
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ namespace ias.Rebens.api.Controllers
     public class OperationPartnerController : ControllerBase
     {
         private IOperationPartnerRepository repo;
+        private IOperationRepository operationRepo;
         private IStaticTextRepository staticTextRepo;
 
         /// <summary>
@@ -24,10 +25,13 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="operationPartnerRepository">Injeção de dependencia do repositório de parceiro</param>
         /// <param name="staticTextRepository">Injeção de dependencia do repositório de textos</param>
-        public OperationPartnerController(IOperationPartnerRepository operationPartnerRepository, IStaticTextRepository staticTextRepository)
+        /// <param name="operationRepository">Injeção de dependencia do repositório de operação</param>
+        public OperationPartnerController(IOperationPartnerRepository operationPartnerRepository, IStaticTextRepository staticTextRepository,
+            IOperationRepository operationRepository)
         {
             this.repo = operationPartnerRepository;
             this.staticTextRepo = staticTextRepository;
+            this.operationRepo = operationRepository;
         }
 
         /// <summary>
@@ -311,12 +315,14 @@ namespace ias.Rebens.api.Controllers
 
             if (repo.UpdateCustomerStatus(idCustomer, status, idAdminUser, out string error, out Operation operation, out Customer customer, out OperationPartnerCustomer partnerCustomer))
             {
+                string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
                 if(status == (int)Enums.OperationPartnerCustomerStatus.approved)
-                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
+                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, fromEmail, out error);
                 else if (status == (int)Enums.OperationPartnerCustomerStatus.reproved)
                 {
                     string body = $"<p>Olá {partnerCustomer.Name},</p><br /><p>Infelizmente o seu cadastro para acesso ao clube não foi aprovado.</p><br /><p>Grato</p>";
-                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, partnerCustomer.Email, partnerCustomer.Name, operation.Id, $"{operation.Title} - Validação de Cadastro", body, out error);
+                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, partnerCustomer.Email, partnerCustomer.Name, operation.Id, $"{operation.Title} - Validação de Cadastro", body, fromEmail, operation.Title, out error);
                 }
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Status do cliente atualizado com sucesso!" });
             }

@@ -17,6 +17,41 @@ namespace ias.Rebens
             constant = new Constant();
         }
 
+        public string GetContactEmail(int id, out string error)
+        {
+            error = null;
+            if (id == 52)
+                return "contato@clubedevantagensmmb.com.br";
+
+            string emailFrom = "contato@rebens.com.br";
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var staticText = db.StaticText.SingleOrDefault(c => c.IdOperation == id && c.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                    var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(staticText.Html);
+                    foreach (var item in config.Fields)
+                    {
+                        if (item.Name == "contact-email")
+                        {
+                            if (!string.IsNullOrEmpty(item.Data) && Helper.EmailHelper.IsValidEmail(item.Data))
+                            {
+                                emailFrom = item.Data.Trim();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.GetEmailFrom", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o nome da operação. (erro:" + idLog + ")";
+            }
+            return emailFrom;
+        }
+
         public string GetName(int id, out string error)
         {
             string name = "";
