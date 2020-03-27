@@ -194,7 +194,7 @@ namespace ias.Rebens.api.Controllers
             var operation = operationRepo.Read(idOperation, out string error);
             var customer = customerRepo.Read(idCustomer, out error);
 
-            if(repo.CheckLimit(operation.Id, customer.Id, out error))
+            if(repo.CheckLimit(operation.Id, customer.Id, out int limit, out error))
             {
                 var referal = customerReferal.GetEntity();
                 referal.IdStatus = (int)Enums.CustomerReferalStatus.pending;
@@ -212,7 +212,7 @@ namespace ias.Rebens.api.Controllers
 
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não possui mais indicações para fazer. (limite = 5)" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = $"Você não possui mais indicações para fazer. (limite = {limit})" });
         }
 
         /// <summary>

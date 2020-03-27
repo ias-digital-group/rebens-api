@@ -17,7 +17,7 @@ namespace ias.Rebens.Helper
                 var link = (string.IsNullOrEmpty(operation.Domain) ? (operation.TemporarySubdomain + ".sistemarebens.com.br") : operation.Domain) + "#/?c=" + user.Code;
                 var body = staticText.Html.Replace("##NAME##", user.Name).Replace("##LINK##", link);
                 var listDestinataries = new Dictionary<string, string> { { user.Email, user.Name } };
-                var result = sendingBlue.Send(listDestinataries, operation.Id == 52 ? "contato@clubedevantagensmmb.com.br" : "contato@rebens.com.br", operation.Title, "Recuperação de senha", body);
+                var result = sendingBlue.Send(listDestinataries, emailFrom, operation.Title, "Recuperação de senha", body);
                 if (result.Status)
                     return true;
                 error = result.Message;
