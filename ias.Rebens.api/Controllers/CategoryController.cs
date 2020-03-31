@@ -135,7 +135,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]CategoryModel category)
         {
-            var model = new JsonModel();
             var cat = category.GetEntity();
             if(repo.Create(cat, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Categoria criada com sucesso!", Id = cat.Id });

@@ -22,6 +22,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    if (category.IdParent == 0)
+                        category.IdParent = null;
                     category.Modified = category.Created = DateTime.UtcNow;
                     db.Category.Add(category);
                     db.SaveChanges();
@@ -32,6 +34,8 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CategoryRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar a categoria. (erro:" + idLog + ")";
+                if(ex.InnerException != null)
+                    logError.Create("CategoryRepository.Create", ex.InnerException.Message, "INNER JOIN", ex.InnerException.StackTrace);
                 ret = false;
             }
             return ret;
@@ -220,7 +224,10 @@ namespace ias.Rebens
                     {
                         update.Active = category.Active;
                         update.Icon = category.Icon;
-                        update.IdParent = category.IdParent;
+                        if (category.IdParent == 0)
+                            update.IdParent = null;
+                        else
+                            update.IdParent = category.IdParent;
                         update.Modified = DateTime.UtcNow;
                         update.Name = category.Name;
                         update.Order = category.Order;
@@ -229,9 +236,7 @@ namespace ias.Rebens
                         error = null;
                     }
                     else
-                    {
                         error = "Categoria não encontrada!";
-                    }
                 }
             }
             catch (Exception ex)

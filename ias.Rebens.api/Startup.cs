@@ -211,7 +211,7 @@ namespace ias.Rebens.api
 
             IServiceScopeFactory serviceScopeFactory = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>();
 
-            FluentScheduler.JobManager.Initialize(new SchedulerRegistry(serviceScopeFactory));
+            //FluentScheduler.JobManager.Initialize(new SchedulerRegistry(serviceScopeFactory));
 
             Rotativa.AspNetCore.RotativaConfiguration.Setup(env);
         }
