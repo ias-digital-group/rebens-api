@@ -417,13 +417,13 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">retorna a list, ou algum erro caso interno</response>
         /// <response code="204">se não encontrar nada</response>
         /// <response code="400">se ocorrer algum erro</response>
-        [HttpGet("items/{idType}")]
+        [HttpGet("items/{idType}/{idOperation}")]
         [ProducesResponseType(typeof(JsonDataModel<List<ListItem>>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListItems(int idType)
+        public IActionResult ListItems(int idType, int idOperation)
         {
-            var list = staticTextRepo.ListByType(idType, out string error);
+            var list = staticTextRepo.ListByType(idType, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {

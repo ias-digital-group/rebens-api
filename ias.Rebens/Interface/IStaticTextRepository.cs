@@ -26,6 +26,6 @@ namespace ias.Rebens
 
         StaticText ReadOperationConfiguration(int idOperation, out string error);
 
-        List<StaticText> ListByType(int idStaticTextType, out string error);
+        List<StaticText> ListByType(int idStaticTextType, out string error, int? idOperation = null);
     }
 }

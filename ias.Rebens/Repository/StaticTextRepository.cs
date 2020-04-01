@@ -353,7 +353,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<StaticText> ListByType(int idStaticTextType, out string error)
+        public List<StaticText> ListByType(int idStaticTextType, out string error, int? idOperation = null)
         {
             List<StaticText> ret;
             try
@@ -362,6 +362,7 @@ namespace ias.Rebens
                 {
                     ret = (from s in db.StaticText
                            where s.IdStaticTextType == idStaticTextType
+                           && (!idOperation.HasValue || s.IdOperation == idOperation.Value)
                            select new StaticText()
                            {
                                Id = s.Id,

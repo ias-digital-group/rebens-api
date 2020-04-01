@@ -122,7 +122,7 @@ namespace ias.Rebens.Enums
         Inactive = 2,
         [Description("Validação")]
         Validation = 3,
-        [Description("Trocar Senha")]
+        [Description("Validação")]
         ChangePassword = 4,
         [Description("Incompleto")]
         Incomplete = 5
