@@ -1100,7 +1100,7 @@ namespace ias.Rebens
                         var action = db.LogAction.Where(a => a.IdItem == op.Id && a.Item == (int)Enums.LogItem.Operation && a.Action == (int)Enums.LogAction.publish).OrderByDescending(a => a.Created).First();
                         var admin = db.AdminUser.Single(a => a.Id == action.IdAdminUser);
                         var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };
-                        Helper.EmailHelper.SendAdminEmail(listDestinataries, "[REBENS] - Puiblicação da operação concluída.", $"O processo de publicação da operação {op.Title}, foi concluído com sucesso.", out _);
+                        Helper.EmailHelper.SendAdminEmail(listDestinataries, "[REBENS] - Publicação da operação concluída.", $"O processo de publicação da operação {op.Title}, foi concluído com sucesso.", out _);
 
                         ret = true;
                         error = null;

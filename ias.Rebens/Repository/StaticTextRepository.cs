@@ -295,6 +295,13 @@ namespace ias.Rebens
                             update.Url = staticText.Url;
                         }
 
+                        if ((staticText.IdStaticTextType == (int)Enums.StaticTextType.CourseRegulation
+                            || staticText.IdStaticTextType == (int)Enums.StaticTextType.CourseFAQ)
+                            && staticText.IdOperation > 0)
+                        {
+                            update.IdOperation = staticText.IdOperation;
+                        }
+
                         db.SaveChanges();
                         error = null;
 
