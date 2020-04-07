@@ -31,7 +31,6 @@ namespace ias.Rebens.api.Models
         /// Resposta
         /// </summary>
         [Required]
-        [MaxLength(1000)]
         public string Answer { get; set; }
 
         /// <summary>

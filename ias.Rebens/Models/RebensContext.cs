@@ -820,8 +820,7 @@ namespace ias.Rebens
             modelBuilder.Entity<Faq>(entity =>
             {
                 entity.Property(e => e.Answer)
-                    .IsRequired()
-                    .HasMaxLength(1000);
+                    .IsRequired();
 
                 entity.Property(e => e.Created).HasColumnType("datetime");
 

@@ -361,6 +361,41 @@ namespace ias.Rebens.api.Controllers
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "GUID parse error" });
         }
+
+        /// <summary>
+        /// Lista todas as operações ativas que possuem o módulo habilitado
+        /// </summary>
+        /// <param name="module">Módulo que deve estar habilitado para operação</param>
+        /// <returns>Lista com as operações encontradas</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListByModule/{module}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(JsonDataModel<List<OperationModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListByModule(string module)
+        {
+            var list = repo.ListWithModule(module, out string error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<OperationModel>>()
+                {
+                    Data = new List<OperationModel>()
+                };
+
+                foreach (var item in list)
+                    ret.Data.Add(new OperationModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
         #endregion Operation
 
         #region Operation Configuration

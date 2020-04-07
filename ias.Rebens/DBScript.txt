@@ -245,7 +245,7 @@ GO
 ALTER TABLE Scratchcard ADD IdAdminUser INT NULL
 GO
 
-ALTER TABLE Scratchcard ADD Instructions NVARCHAR(500) NULL
+ALTER TABLE Scratchcard ADD Instructions NVARCHAR(MAX) NULL
 GO
 
 ALTER TABLE Scratchcard ADD GetNotifications bit NULL

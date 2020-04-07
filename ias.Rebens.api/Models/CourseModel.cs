@@ -504,7 +504,7 @@ namespace ias.Rebens.api.Models
         public string HelpStudentLink { get; set; }
         public string Faqs { get; set; }
         public string Regulation { get; set; }
-
+        public bool Active { get; set; }
 
         /// <summary>
         /// Construtor
@@ -549,6 +549,7 @@ namespace ias.Rebens.api.Models
                 this.HelpStudentTitle = course.HelpStudentTitle;
                 this.HelpStudentDescription = course.HelpStudentDescription;
                 this.HelpStudentLink = course.HelpStudentLink;
+                this.Active = course.Active;
 
                 if (idCustomer.HasValue)
                     this.Link = URL + "Voucher/?tp=c&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
