@@ -448,12 +448,12 @@ namespace ias.Rebens
                         db.SaveChanges();
                         error = null;
 
-                        if (changePolicy)
+                        if (changePolicy && !operation.Active && !string.IsNullOrEmpty(operation.Domain))
                         {
                             try
                             {
                                 var awsHelper = new Integration.AWSHelper();
-                                awsHelper.ChangeBucketPolicy(operation.Domain, operation.Active).Wait();
+                                awsHelper.DisableBucket(operation.Domain);
                             }
                             catch(Exception ex)
                             {

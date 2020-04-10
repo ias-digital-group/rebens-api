@@ -91,15 +91,14 @@ namespace ias.Rebens.api
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "Rebens API", Version = "v1" });
-                c.AddSecurityDefinition("bearer",
-                    new ApiKeyScheme
-                    {
-                        In = "header",
-                        Description = "Autenticação baseada em Json Web Token (JWT)",
-                        Name = "Authorization",
-                        Type = "apiKey"
-                    });
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo() { Title = "Rebens API", Version = "v1" });
+                c.AddSecurityDefinition("bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme()
+                {
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "Autenticação baseada em Json Web Token (JWT)",
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+                });
 
                 string appPath = ApplicationEnvironment.ApplicationBasePath;
                 string appName = "ias.Rebens.api"; // ApplicationEnvironment.ApplicationName;
