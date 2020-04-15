@@ -453,7 +453,7 @@ namespace ias.Rebens
                             try
                             {
                                 var awsHelper = new Integration.AWSHelper();
-                                awsHelper.DisableBucket(operation.Domain);
+                                awsHelper.DisableBucketAsync(operation.Domain);
                             }
                             catch(Exception ex)
                             {

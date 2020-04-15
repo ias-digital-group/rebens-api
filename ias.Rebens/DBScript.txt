@@ -259,3 +259,10 @@ GO
 
 ALTER TABLE Scratchcard ALTER COLUMN GetNotifications bit NOT NULL
 GO
+
+
+update StaticText set html = REPLACE(CAST(html as nvarchar(max)), '<div>', '<p>') where html like '%<div>%'
+GO
+
+update StaticText set html = REPLACE(CAST(html as nvarchar(max)), '</div>', '</p>') where html like '%</div>%'
+GO

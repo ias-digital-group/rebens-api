@@ -7,9 +7,7 @@ using Amazon;
 using Amazon.Route53;
 using Amazon.Route53.Model;
 using Amazon.S3;
-using Amazon.S3.Model;
 using Amazon.S3.Transfer;
-using Amazon.S3.IO;
 using System.IO;
 
 namespace ias.Rebens.Integration
@@ -72,25 +70,26 @@ namespace ias.Rebens.Integration
             }
         }
 
-        public void DisableBucket(string bucketName)
+        public async Task<bool> DisableBucketAsync(string bucketName)
         {
-            IAmazonS3 s3Client = new AmazonS3Client(API_KEY, API_TOKEN, RegionEndpoint.SAEast1);
-
-            S3DirectoryInfo source = new S3DirectoryInfo(s3Client, bucketName);
-            var directories = source.GetDirectories();
-            foreach (var dir in directories)
+            bool ret = false;
+            try
             {
-                dir.Delete(true);
-            }
-            var files = source.GetFiles();
-            foreach (var file in files)
-            {
-                file.Delete();
-            }
+                IAmazonS3 s3Client = new AmazonS3Client(API_KEY, API_TOKEN, RegionEndpoint.SAEast1);
 
-            var constant = new Constant();
-            var transferUtility = new TransferUtility(s3Client);
-            transferUtility.Upload(Path.Combine(constant.AppSettings.App.MediaServerPath, "EmptyBucket", "index.html"), bucketName);
+                var objects = await s3Client.ListObjectsAsync(bucketName);
+                if(objects.S3Objects.Count > 0)
+                    await s3Client.DeletesAsync(bucketName, objects.S3Objects.Select(s => s.Key), null);
+
+                var constant = new Constant();
+                var transferUtility = new TransferUtility(s3Client);
+                transferUtility.Upload(Path.Combine(constant.AppSettings.App.MediaServerPath, "EmptyBucket", "index.html"), bucketName);
+
+                ret = true;
+            }
+            catch { }
+
+            return ret;
         }
     }
 }

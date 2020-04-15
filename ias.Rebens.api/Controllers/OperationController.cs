@@ -293,39 +293,50 @@ namespace ias.Rebens.api.Controllers
 
                     repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, idAdminUser, null, out _);
 
-                    if (domain.Contains(".sistemarebens."))
-                    {
-                        var operation = repo.Read(id, out error);
-                        if (!operation.SubdomainCreated)
-                        {
-                            var awsHelper = new Integration.AWSHelper();
-                            awsHelper.AddDomainToRoute53(operation.TemporarySubdomain, id, this.repo);
-                        }
-                    }
-
-                    string content = JsonConvert.SerializeObject(ret);
-                    HttpWebRequest request = WebRequest.Create(new Uri($"{constant.BuilderUrl}api/operations")) as HttpWebRequest;
-
-                    request.Method = "POST";
-                    request.ContentType = "application/json";
-                    request.Timeout = 30000;
-
-                    using (Stream s = request.GetRequestStream())
-                    {
-                        using (StreamWriter sw = new StreamWriter(s))
-                            sw.Write(content);
-                    }
                     try
                     {
-                        HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                        if (response.StatusCode != HttpStatusCode.OK)
-                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, idAdminUser, null, out error);
+                        if (domain.Contains(".sistemarebens."))
+                        {
+                            var operation = repo.Read(id, out error);
+                            if (!operation.SubdomainCreated)
+                            {
+                                var awsHelper = new Integration.AWSHelper();
+                                awsHelper.AddDomainToRoute53(operation.TemporarySubdomain, id, this.repo);
+                            }
+                        }
 
-                        return StatusCode(200, new JsonModel() { Status = "ok", Data = ret });
+
+                        string content = JsonConvert.SerializeObject(ret);
+
+                        HttpWebRequest request = WebRequest.Create(new Uri($"{constant.BuilderUrl}api/operations")) as HttpWebRequest;
+
+                        request.Method = "POST";
+                        request.ContentType = "application/json";
+                        request.Timeout = 30000;
+
+                        using (Stream s = request.GetRequestStream())
+                        {
+                            using (StreamWriter sw = new StreamWriter(s))
+                                sw.Write(content);
+                        }
+                        try
+                        {
+                            HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                            if (response.StatusCode != HttpStatusCode.OK)
+                                repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, idAdminUser, null, out error);
+
+                            return StatusCode(200, new JsonModel() { Status = "ok", Data = ret });
+                        }
+                        catch(Exception ex)
+                        {
+                            repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, idAdminUser, null, out error);
+                            logError.Create("OperationController.Publish - builder", ex.Message, "", ex.StackTrace);
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, idAdminUser, null, out error);
+                        int idError = logError.Create("OperationController.Publish", ex.Message, "", ex.StackTrace);
+                        repo.SavePublishStatus(id, (int)Enums.PublishStatus.error, idAdminUser, idError, out error);
                     }
                 }
             }

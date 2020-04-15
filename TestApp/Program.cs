@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TestApp
 {
@@ -17,17 +18,20 @@ namespace TestApp
             var sw = new Stopwatch();
             sw.Start();
 
+            var ret = TestAWS();
 
-            
+            Task.WaitAll(ret);
 
-            Console.WriteLine(TimeZoneInfo.Local.DisplayName);
-
-            
-
-
+            Console.WriteLine($"result: {ret}");
 
             sw.Stop();
             Console.WriteLine("Elapsed Time : " + sw.ElapsedMilliseconds + "ms");
+        }
+
+        public async static Task<bool> TestAWS()
+        {
+            var aws = new ias.Rebens.Integration.AWSHelper();
+            return await aws.DisableBucketAsync("ias.sistemarebens.com.br");
         }
     }
 }
