@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -229,8 +230,25 @@ namespace ias.Rebens
                         var staticText = db.StaticText.Where(t => t.IdOperation == order.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
                                             .OrderByDescending(t => t.Modified).FirstOrDefault();
                         string message = staticText.Html.Replace("###BODY###", body);
+                        var operation = db.Operation.Single(o => o.Id == order.IdOperation);
+                        var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                        string fromEmail = "";
+                        if (configuration != null)
+                        {
+                            var jObj = JObject.Parse(configuration.Html);
+                            var list = jObj["fields"].Children();
+                            foreach (var item in list)
+                            {
+                                if (item["name"].ToString() == "contact-email")
+                                {
+                                    fromEmail = item["data"].ToString();
+                                    break;
+                                }
+                            }
+                        }
 
-                        if(Helper.EmailHelper.SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"UNICAMPI EDUCAÇÃO - Pedido #{order.DispId}", message, out error))
+                        if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                        if (Helper.EmailHelper.SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"UNICAMPI EDUCAÇÃO - Pedido #{order.DispId}", message, fromEmail, operation.Title, out error))
                         {
                             error = null;
                             ret = true;
@@ -283,32 +301,38 @@ namespace ias.Rebens
                                 && o.Modified < dt)
                         .OrderBy(o => o.Modified).Take(10);
                     var wcHelper = new Integration.WirecardHelper();
-                    var staticText = db.StaticText.Where(t => t.IdOperation == 1 && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
+                    
                     foreach (var item in list)
                     {
                         if (wcHelper.CheckOrderStatus(item))
                         {
-                            if(item.Status == "PAID")
+                            if (item.Status == "PAID")
                             {
+                                var staticText = db.StaticText.Where(t => t.IdOperation == item.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
                                 var customer = db.Customer.Single(c => c.Id == item.IdCustomer);
-                                if (Helper.EmailHelper.SendCourseVoucher(staticText, customer, item, out string error))
+                                var operation = db.Operation.Single(o => o.Id == item.IdOperation);
+                                string fromEmail = "";
+                                var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == item.IdOperation && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                                if (configuration != null)
+                                {
+                                    var jObj = JObject.Parse(configuration.Html);
+                                    var fields = jObj["fields"].Children();
+                                    foreach (var field in fields)
+                                    {
+                                        if (field["name"].ToString() == "contact-email")
+                                        {
+                                            fromEmail = field["data"].ToString();
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+
+                                if (Helper.EmailHelper.SendCourseVoucher(staticText, customer, item, operation, fromEmail, out string error))
                                 {
                                     var logError = new LogErrorRepository(this._connectionString);
                                     logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");
                                 }
-                                //string body = $"<p>Olá {customer.Name}, </p><br />";
-                                //body += $"<h2>O seu pedido #{item.DispId} foi aprovado.</h2><br /><br />";
-                                //body += $"<p><a href='https://admin.rebens.com.br/voucher/course/?code={item.WirecardId}'>Clique aqui</a> para gerar o seu voucher. </p>";
-
-                                //var staticText = db.StaticText.Where(t => t.IdOperation == item.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
-                                //                    .OrderByDescending(t => t.Modified).FirstOrDefault();
-                                //string message = staticText.Html.Replace("###BODY###", body);
-
-                                //if(!Helper.EmailHelper.SendDefaultEmail(customer.Email, customer.Name, item.IdOperation, $"UNICANPI EDUCAÇÃO - Pedido #{item.DispId}", message, out string error))
-                                //{
-                                //    var logError = new LogErrorRepository(this._connectionString);
-                                //    logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");
-                                //}
                             }
                         }
                     }

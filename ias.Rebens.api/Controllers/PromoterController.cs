@@ -191,7 +191,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     Email = customer.Email,
                     Cpf = customer.Cpf,
-                    Name = customer.Name,
+                    Name = customer.Name + " " + customer.Surname,
                     Created = DateTime.Now,
                     Modified = DateTime.Now,
                     Status = (int)Enums.CustomerStatus.Validation,
@@ -202,11 +202,72 @@ namespace ias.Rebens.api.Controllers
 
                 if (repo.Create(cust, idPromoter, out string error))
                 {
-                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, out error);
+                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, fromEmail, out error);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = cust.Id });
                 }
+                
+                if(error == "cpf-registered" || error == "email-registered")
+                    return StatusCode(400, new JsonModel() { Status = error });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
 
+        /// <summary>
+        /// Reenvia o email de validação para o cliente
+        /// </summary>
+        /// <param name="id">id do cliente</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, e o Id do cliente criado</returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("ResendValidation/{id}")]
+        [ProducesResponseType(typeof(JsonDataModel<CustomerModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ResendValidation(int id)
+        {
+            int idPromoter = 0, idOperation = 0;
+            if (id <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O id do cliente é obrigatório!" });
+
+            var principal = HttpContext.User;
+            if (principal.IsInRole("promoter"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                    if (userId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+                    if (!int.TryParse(userId.Value, out idPromoter))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não tem permissão para realizar esse processo!" });
+
+            var operation = operationRepo.Read(idOperation, out _);
+            if (operation != null)
+            {
+                var cust = repo.Read(id, out string error);
+                if (string.IsNullOrEmpty(error))
+                {
+                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                    Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, cust, fromEmail, out error);
+
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail reenviado com sucesso." });
+                }
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });

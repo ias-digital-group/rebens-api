@@ -36,6 +36,7 @@ namespace ias.Rebens
         public string HelpStudentTitle { get; set; }
         public string HelpStudentDescription { get; set; }
         public string HelpStudentLink { get; set; }
+        public bool Active { get; set; }
 
         public CourseItem() { }
         public CourseItem(Course course)
@@ -60,6 +61,7 @@ namespace ias.Rebens
             this.HelpStudentTitle = course.HelpStudentTitle;
             this.HelpStudentDescription = course.HelpStudentDescription;
             this.HelpStudentLink = course.HelpStudentLink;
+            this.Active = course.Active;
         }
     }
 }

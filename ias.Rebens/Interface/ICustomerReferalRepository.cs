@@ -22,6 +22,6 @@ namespace ias.Rebens
 
         bool ChangeStatus(int id, Enums.CustomerReferalStatus status, out string error);
 
-        bool CheckLimit(int idOperation, int idCustomer, out string error);
+        bool CheckLimit(int idOperation, int idCustomer, out int limit, out string error);
     }
 }

@@ -17,5 +17,7 @@ namespace ias.Rebens
         bool UpdateStatus(int id, int status, out string error);
         
         bool UpdateTotal(int id, int total, out string error);
+
+        FileToProcess GetNextFile();
     }
 }

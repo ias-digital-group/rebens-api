@@ -27,6 +27,11 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [MaxLength(300)]
         public string Name { get; set; }
+        /// <summary>
+        /// Sobrenome
+        /// </summary>
+        [MaxLength(150)]
+        public string Surname { get; set; }
 
     }
 }

@@ -43,27 +43,50 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool CheckLimit(int idOperation, int idCustomer, out string error)
+        public bool CheckLimit(int idOperation, int idCustomer, out int limit, out string error)
         {
             bool ret = true;
             error = null;
-            if (idOperation == 2 || idOperation == 52)
+            limit = 0;
+            try
             {
-                try
+                using (var db = new RebensContext(this._connectionString))
                 {
-                    using (var db = new RebensContext(this._connectionString))
+                    var staticText = db.StaticText.SingleOrDefault(c => c.IdOperation == idOperation && c.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                    var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(staticText.Html);
+                    foreach(var module in config.Modules)
+                    {
+                        if(module.Name == "customerReferal")
+                        {
+                            foreach(var field in module.Info.Fields)
+                            {
+                                if(field.Name == "max")
+                                {
+                                    if (int.TryParse(field.Data, out int temp))
+                                        limit = temp;
+
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+
+                    if (limit == 0)
+                        ret = true;
+                    else
                     {
                         var count = db.CustomerReferal.Count(c => c.IdCustomer == idCustomer);
-                        ret = count < 5;
+                        ret = count < limit;
                     }
                 }
-                catch (Exception ex)
-                {
-                    var logError = new LogErrorRepository(this._connectionString);
-                    int idLog = logError.Create("CustomerReferalRepository.CheckLimit", ex.Message, "", ex.StackTrace);
-                    error = "Ocorreu um erro ao tentar verificar o limite. (erro:" + idLog + ")";
-                    ret = false;
-                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerReferalRepository.CheckLimit", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar verificar o limite. (erro:" + idLog + ")";
+                ret = false;
             }
 
             return ret;

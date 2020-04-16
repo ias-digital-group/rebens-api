@@ -106,10 +106,12 @@ namespace ias.Rebens.Helper
         public static string HMACSHA1(string key, string dataToSign)
         {
             byte[] secretBytes = Encoding.UTF8.GetBytes(key);
-            HMACSHA1 hmac = new HMACSHA1(secretBytes);
-
-            byte[] dataBytes = Encoding.UTF8.GetBytes(dataToSign);
-            byte[] calcHash = hmac.ComputeHash(dataBytes);
+            byte[] calcHash;
+            using (HMACSHA1 hmac = new HMACSHA1(secretBytes))
+            {
+                byte[] dataBytes = Encoding.UTF8.GetBytes(dataToSign);
+                calcHash = hmac.ComputeHash(dataBytes);
+            }
 
             return Convert.ToBase64String(calcHash);
         }
@@ -117,21 +119,23 @@ namespace ias.Rebens.Helper
         public static string GenerateNonce(int size)
         {
             string result = "";
-            SHA1 sha1 = SHA1.Create();
-
-            Random rand = new Random();
-
-            while (result.Length < size)
+            using (SHA1 sha1 = SHA1.Create())
             {
-                string[] generatedRandoms = new string[4];
+                Random rand = new Random();
 
-                for (int i = 0; i < 4; i++)
+                while (result.Length < size)
                 {
-                    generatedRandoms[i] = rand.Next().ToString();
-                }
+                    string[] generatedRandoms = new string[4];
+                    for (int i = 0; i < 4; i++)
+                    {
+                        generatedRandoms[i] = rand.Next().ToString();
+                    }
 
-                result += Convert.ToBase64String(sha1.ComputeHash(Encoding.ASCII.GetBytes(string.Join("", generatedRandoms)))).Replace("=", "").Replace("/", "").Replace("+", "");
+                    result += Convert.ToBase64String(sha1.ComputeHash(Encoding.ASCII.GetBytes(string.Join("", generatedRandoms)))).Replace("=", "").Replace("/", "").Replace("+", "");
+                }
             }
+
+                
 
             return result.Substring(0, size);
         }

@@ -91,15 +91,14 @@ namespace ias.Rebens.api
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "Rebens API", Version = "v1" });
-                c.AddSecurityDefinition("bearer",
-                    new ApiKeyScheme
-                    {
-                        In = "header",
-                        Description = "Autenticação baseada em Json Web Token (JWT)",
-                        Name = "Authorization",
-                        Type = "apiKey"
-                    });
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo() { Title = "Rebens API", Version = "v1" });
+                c.AddSecurityDefinition("bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme()
+                {
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "Autenticação baseada em Json Web Token (JWT)",
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+                });
 
                 string appPath = ApplicationEnvironment.ApplicationBasePath;
                 string appName = "ias.Rebens.api"; // ApplicationEnvironment.ApplicationName;
@@ -150,6 +149,9 @@ namespace ias.Rebens.api
             services.AddTransient<IPartnerRepository, PartnerRepository>();
             services.AddTransient<IProfileRepository, ProfileRepository>();
             services.AddTransient<IReportRepository, ReportRepository>();
+            services.AddTransient<IScratchcardRepository, ScratchcardRepository>();
+            services.AddTransient<IScratchcardDrawRepository, ScratchcardDrawRepository>();
+            services.AddTransient<IScratchcardPrizeRepository, ScratchcardPrizeRepository>();
             services.AddTransient<IStaticTextRepository, StaticTextRepository>();
             services.AddTransient<IWirecardPaymentRepository, WirecardPaymentRepository>();
             services.AddTransient<IWithdrawRepository, WithdrawRepository>();
@@ -206,7 +208,9 @@ namespace ias.Rebens.api
                 routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
 
-            FluentScheduler.JobManager.Initialize(new SchedulerRegistry());
+            IServiceScopeFactory serviceScopeFactory = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>();
+
+            //FluentScheduler.JobManager.Initialize(new SchedulerRegistry(serviceScopeFactory));
 
             Rotativa.AspNetCore.RotativaConfiguration.Setup(env);
         }

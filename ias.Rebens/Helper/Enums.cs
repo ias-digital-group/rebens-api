@@ -64,6 +64,12 @@ namespace ias.Rebens.Enums
         Withdraw = 5
     }
 
+    public enum CategoryType : int
+    {
+        Benefit = 1,
+        FreeCourse = 2
+    }
+
     public enum CourseUseStatus : int
     {
         [Description("Gerado")]
@@ -116,7 +122,7 @@ namespace ias.Rebens.Enums
         Inactive = 2,
         [Description("Validação")]
         Validation = 3,
-        [Description("Trocar Senha")]
+        [Description("Validação")]
         ChangePassword = 4,
         [Description("Incompleto")]
         Incomplete = 5
@@ -176,6 +182,83 @@ namespace ias.Rebens.Enums
         Zanox = 2,
         [Description("Própria")]
         Own = 3
+    }
+
+    public enum LogAction : int
+    {
+        [Description("Criar")]
+        create = 1,
+        [Description("Atualizar")]
+        update = 2,
+        [Description("Excluir")]
+        delete = 3,
+        [Description("Gerar")]
+        generate = 4,
+        [Description("Publicar")]
+        publish = 5,
+    }
+
+    public enum LogItem : int
+    {
+        [Description("Endereço")]
+        Address = 1,
+        [Description("Usuário")]
+        AdminUser = 2,
+        [Description("Banner")]
+        Banner = 3,
+        [Description("Benefício")]
+        Benefit = 4,
+        [Description("Categoria")]
+        Category = 5,
+        [Description("Contato")]
+        Contact = 6,
+        [Description("Campanha Cupom")]
+        CouponCampaign = 7,
+        [Description("Cupom")]
+        Coupon = 8,
+        [Description("Faculdadae")]
+        CourseCollege = 9,
+        [Description("Tipo Graduação")]
+        CourseGraduationType = 10,
+        [Description("Modalidade")]
+        CourseModality = 11,
+        [Description("Período")]
+        CoursePeriod = 12,
+        [Description("Curso")]
+        Course = 13,
+        [Description("Cliente do promotor")]
+        CustomerPromoter = 14,
+        [Description("Cliente")]
+        Customer = 15,
+        [Description("Sorteio")]
+        Draw = 16,
+        [Description("Perguntas Frequentes")]
+        Faq = 17,
+        [Description("Arquivos para processar")]
+        FileToProcess = 18,
+        [Description("Cursos livres")]
+        FreeCourse = 19,
+        [Description("Cliente da operação")]
+        OperationCustomer = 20,
+        [Description("Parceiro da operação")]
+        OperationPartner = 21,
+        [Description("Operação")]
+        Operation = 22,
+        [Description("Parceiros")]
+        Partner = 23,
+        [Description("Perfil")]
+        Profile = 24,
+        [Description("Textos estáticos")]
+        StaticText = 25,
+        [Description("Raspadinha")]
+        Scratchcard = 26,
+        [Description("Prêmio da Raspadinha")]
+        ScratchcardPrize = 27,
+        [Description("Contato Operação")]
+        OperationContact = 28,
+        [Description("Endereço Operação")]
+        OperationAddress = 29,
+
     }
 
     public enum MoipNotificationEvent : int
@@ -270,6 +353,12 @@ namespace ias.Rebens.Enums
         rent = 4
     }
 
+    public enum PartnerType : int
+    {
+        Benefit = 1,
+        FreeCourse = 2
+    }
+
     public enum PublishStatus : int
     {
         [Description("Incompleto")]
@@ -282,6 +371,56 @@ namespace ias.Rebens.Enums
         done = 3,
         [Description("Erro")]
         error = 4
+    }
+
+    public enum ScratchcardStatus : int
+    {
+        [Description("Rascunho")]
+        draft = 1,
+        [Description("Gerado")]
+        generated = 2,
+        [Description("Ativo")]
+        active = 3,
+        [Description("Inativo")]
+        inactive = 4,
+        [Description("Processando")]
+        generating = 5,
+        [Description("Apagado")]
+        deleted = 99
+    }
+
+    public enum ScratchcardDraw : int
+    {
+        [Description("Ativa")]
+        active = 1,
+        [Description("Raspar")]
+        drawn = 2,
+        [Description("Raspada")]
+        scratched = 3,
+        [Description("Validada")]
+        validated = 4
+    }
+
+    public enum ScratchcardType : int
+    {
+        [Description("Aberto")]
+        opened = 1,
+        [Description("Fechado")]
+        closed = 2,
+        [Description("Fechado + parceiro")]
+        closedPartner = 3,
+        [Description("Assinatura")]
+        subscription = 4
+    }
+
+    public enum ScratchcardDistribution : int
+    {
+        [Description("Diária")]
+        daily = 1,
+        [Description("Semanal")]
+        weekly = 2,
+        [Description("Mensal")]
+        monthly = 3
     }
 
     public enum StaticTextType : int
@@ -322,6 +461,8 @@ namespace ias.Rebens.Enums
         CourseFAQ = 17,
         [Description("Cursos - Regulamentos")]
         CourseRegulation = 18,
+        [Description("Raspadinha - Regulamento")]
+        ScratchcardRegulation = 19,
     }
 
     public enum WithdrawStatus : int

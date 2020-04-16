@@ -48,6 +48,11 @@ namespace ias.Rebens.api.Models
         public bool Active { get; set; }
     
         /// <summary>
+        /// O tipo de category (benefícios = 1, cursos livres = 2)
+        /// </summary>
+        [Required]
+        public int Type { get; set; }
+        /// <summary>
         /// Lista de categorias filhas, caso seja uma categoria pai
         /// </summary>
         public List<CategoryModel> Categories { get; set; }
@@ -72,6 +77,7 @@ namespace ias.Rebens.api.Models
             this.Order = category.Order;
             this.Icon = category.Icon;
             this.Active = category.Active;
+            this.Type = category.Type;
 
             this.Categories = new List<CategoryModel>();
 
@@ -94,7 +100,8 @@ namespace ias.Rebens.api.Models
                 IdParent = this.IdParent,
                 Id = this.Id,
                 Name = this.Name,
-                Order = this.Order
+                Order = this.Order,
+                Type = this.Type
             };
         }
     }

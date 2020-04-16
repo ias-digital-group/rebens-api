@@ -1,1 +1,268 @@
-﻿
+﻿insert into Module values ('promoter', 'Promotor', '{ "fields": [ ], "files": [ ], "configuration": { "routeImports": [ ], "routeConfig": "" } }', GETUTCDATE(), GETUTCDATE() )
+
+
+ALTER TABLE Category ADD [Type] INT NULL
+GO
+
+UPDATE Category set [Type] = 1
+GO
+
+ALTER TABLE Category ALTER COLUMN [Type] INT NOT NULL
+GO
+
+ALTER TABLE Partner ADD [Type] INT NULL
+GO
+
+UPDATE Partner set [Type] = 1
+GO
+
+ALTER TABLE Partner ALTER COLUMN [Type] INT NOT NULL
+GO
+
+
+
+/****** Object:  Table [dbo].[Scratchcard]    Script Date: 2/28/2020 2:53:22 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Scratchcard](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[Start] [datetime] NULL,
+	[End] [datetime] NULL,
+	[Quantity] [int] NULL,
+	[NoPrizeImage1] [nvarchar](500) NULL,
+	[NoPrizeImage2] [nvarchar](500) NULL,
+	[NoPrizeImage3] [nvarchar](500) NULL,
+	[NoPrizeImage4] [nvarchar](500) NULL,
+	[NoPrizeImage5] [nvarchar](500) NULL,
+	[NoPrizeImage6] [nvarchar](500) NULL,
+	[NoPrizeImage7] [nvarchar](500) NULL,
+	[NoPrizeImage8] [nvarchar](500) NULL,
+	[Type] [int] NOT NULL,
+	[DistributionType] [int] NOT NULL,
+	[DistributionQuantity] [int] NULL,
+	[ScratchcardExpire] [bit] NOT NULL,
+	[IdOperation] [int] NOT NULL,
+	[Status] [int] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_Scratchcard] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Scratchcard]  WITH CHECK ADD  CONSTRAINT [FK_Scratchcard_Operation] FOREIGN KEY([IdOperation])
+REFERENCES [dbo].[Operation] ([Id])
+GO
+
+ALTER TABLE [dbo].[Scratchcard] CHECK CONSTRAINT [FK_Scratchcard_Operation]
+GO
+
+
+/****** Object:  Table [dbo].[ScratchcardPrize]    Script Date: 2/28/2020 2:53:41 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[ScratchcardPrize](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdScratchcard] [int] NOT NULL,
+	[Name] [nvarchar](200) NOT NULL,
+	[Title] [nvarchar](200) NOT NULL,
+	[Image] [nvarchar](500) NOT NULL,
+	[Quantity] [int] NOT NULL,
+	[Description] [nvarchar](2000) NOT NULL,
+	[Odds] [decimal](15, 2) NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_ScratchcardPrize] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[ScratchcardPrize]  WITH CHECK ADD  CONSTRAINT [FK_ScratchcardPrize_Scratchcard] FOREIGN KEY([IdScratchcard])
+REFERENCES [dbo].[Scratchcard] ([Id])
+GO
+
+ALTER TABLE [dbo].[ScratchcardPrize] CHECK CONSTRAINT [FK_ScratchcardPrize_Scratchcard]
+GO
+
+USE [RebensHomolog]
+GO
+
+/****** Object:  Table [dbo].[ScratchcardDraw]    Script Date: 28/02/2020 8:32:54 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[ScratchcardDraw](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdScratchcard] [int] NOT NULL,
+	[IdScratchcardPrize] [int] NULL,
+	[Image] [nvarchar](500) NULL,
+	[IdCustomer] [int] NULL,
+	[Prize] [nvarchar](200) NULL,
+	[Date] [date] NULL,
+	[ExpireDate] [date] NULL,
+	[ValidationCode] [nvarchar](50) NULL,
+	[OpenDate] [datetime] NULL,
+	[PlayedDate] [datetime] NULL,
+	[ValidationDate] [datetime] NULL,
+	[Status] [int] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_ScratchcardDraw] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[ScratchcardDraw]  WITH CHECK ADD  CONSTRAINT [FK_ScratchcardDraw_Customer] FOREIGN KEY([IdCustomer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[ScratchcardDraw] CHECK CONSTRAINT [FK_ScratchcardDraw_Customer]
+GO
+
+ALTER TABLE [dbo].[ScratchcardDraw]  WITH CHECK ADD  CONSTRAINT [FK_ScratchcardDraw_Scratchcard] FOREIGN KEY([IdScratchcard])
+REFERENCES [dbo].[Scratchcard] ([Id])
+GO
+
+ALTER TABLE [dbo].[ScratchcardDraw] CHECK CONSTRAINT [FK_ScratchcardDraw_Scratchcard]
+GO
+
+ALTER TABLE [dbo].[ScratchcardDraw]  WITH CHECK ADD  CONSTRAINT [FK_ScratchcardDraw_ScratchcardPrize] FOREIGN KEY([IdScratchcardPrize])
+REFERENCES [dbo].[ScratchcardPrize] ([Id])
+GO
+
+ALTER TABLE [dbo].[ScratchcardDraw] CHECK CONSTRAINT [FK_ScratchcardDraw_ScratchcardPrize]
+GO
+
+
+
+CREATE PROCEDURE dbo.GenerateScratchcardDraw(@ScratchcardId INT)
+AS
+BEGIN
+	DECLARE @total INT
+
+	DECLARE @PrizeId INT
+	DECLARE @PrizeTitle NVARCHAR(200)
+	DECLARE @PrizeQty INT
+
+	SELECT @total = Quantity FROM Scratchcard WHERE id = @ScratchcardId
+
+	DECLARE cursor_scratchcard CURSOR
+	FOR SELECT Id, Title, Quantity FROM ScratchcardPrize where IdScratchcard = @ScratchcardId
+ 
+	OPEN cursor_scratchcard;
+ 
+	FETCH NEXT FROM cursor_scratchcard INTO 
+		@PrizeId, @PrizeTitle, @PrizeQty;
+ 
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+    
+		DECLARE @cnt INT = 0;
+
+		WHILE @cnt < @PrizeQty
+		BEGIN
+		   INSERT INTO ScratchcardDraw (IdScratchcard, IdScratchcardPrize, Prize, [Status], Created, Modified)
+		   VALUES (@ScratchcardId, @PrizeId, @PrizeTitle, 1, GETUTCDATE(), GETUTCDATE())
+
+		   SET @cnt = @cnt + 1;
+		END;
+
+		FETCH NEXT FROM cursor_scratchcard INTO 
+			@PrizeId, @PrizeTitle, @PrizeQty;
+	END;
+	CLOSE cursor_scratchcard;
+ 
+	DEALLOCATE cursor_scratchcard;
+
+
+	DECLARE @NoPrizeTotal INT
+	SELECT @NoPrizeTotal = COUNT(1) FROM ScratchcardDraw where IdScratchcard = @ScratchcardId
+
+	SET @cnt = 0;
+	WHILE @cnt < (@total - @NoPrizeTotal)
+	BEGIN
+		INSERT INTO ScratchcardDraw (IdScratchcard, [Status], Created, Modified)
+		VALUES(@ScratchcardId, 1, GETUTCDATE(), GETUTCDATE())
+
+		SET @cnt = @cnt + 1;
+	END;
+END
+
+
+
+
+
+
+
+/****** Object:  Table [dbo].[LogAction]    Script Date: 3/2/2020 6:18:37 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[LogAction](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdAdminUser] [int] NOT NULL,
+	[Item] [int] NOT NULL,
+	[IdItem] [int] NOT NULL,
+	[Action] [int] NOT NULL,
+	[Extra] [nvarchar](500) NULL,
+	[Created] [datetime] NOT NULL,
+ CONSTRAINT [PK_LogAction] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[LogAction]  WITH CHECK ADD  CONSTRAINT [FK_LogAction_AdminUser] FOREIGN KEY([IdAdminUser])
+REFERENCES [dbo].[AdminUser] ([Id])
+GO
+
+ALTER TABLE [dbo].[LogAction] CHECK CONSTRAINT [FK_LogAction_AdminUser]
+GO
+
+
+ALTER TABLE Scratchcard ADD IdAdminUser INT NULL
+GO
+
+ALTER TABLE Scratchcard ADD Instructions NVARCHAR(MAX) NULL
+GO
+
+ALTER TABLE Scratchcard ADD GetNotifications bit NULL
+GO
+
+update Scratchcard SET GetNotifications = 0, IdAdminUser = 1
+GO
+
+ALTER TABLE Scratchcard ALTER COLUMN IdAdminUser INT NOT NULL
+GO
+
+ALTER TABLE Scratchcard ALTER COLUMN GetNotifications bit NOT NULL
+GO
+
+
+update StaticText set html = REPLACE(CAST(html as nvarchar(max)), '<div>', '<p>') where html like '%<div>%'
+GO
+
+update StaticText set html = REPLACE(CAST(html as nvarchar(max)), '</div>', '</p>') where html like '%</div>%'
+GO

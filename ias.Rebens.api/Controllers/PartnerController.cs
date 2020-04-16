@@ -47,6 +47,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <param name="active">Active não obrigatório (default=null)</param>
+        /// <param name="type">tipo de categoria, obrigatório (1=beneficios, 2=cursos livres)</param>
         /// <returns>Lista com os parceiros encontrados</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -55,23 +56,25 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<PartnerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]bool? active = null)
+        public IActionResult List([FromQuery]int type, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]bool? active = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, active);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, type, out string error, active);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<PartnerModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<PartnerModel>();
+                var ret = new ResultPageModel<PartnerModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<PartnerModel>()
+                };
                 foreach (var part in list.Page)
                     ret.Data.Add(new PartnerModel(part));
 
@@ -239,8 +242,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            var model = new JsonModel();
-
             if (repo.Delete(id, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Parceiro apagado com sucesso!" });
 

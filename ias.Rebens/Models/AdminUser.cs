@@ -12,6 +12,7 @@ namespace ias.Rebens
             Courses = new HashSet<Course>();
             FreeCourses = new HashSet<FreeCourse>();
             CustomerPromoters = new HashSet<CustomerPromoter>();
+            LogActions = new HashSet<LogAction>();
         }
 
         public int Id { get; set; }
@@ -34,6 +35,7 @@ namespace ias.Rebens
         public virtual ICollection<Course> Courses { get; set; }
         public virtual ICollection<FreeCourse> FreeCourses { get; set; }
         public virtual ICollection<CustomerPromoter> CustomerPromoters { get; set; }
+        public virtual ICollection<LogAction> LogActions { get; set; }
 
         public void SetPassword(string password)
         {

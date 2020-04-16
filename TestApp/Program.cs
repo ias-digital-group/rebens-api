@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TestApp
 {
@@ -17,19 +18,20 @@ namespace TestApp
             var sw = new Stopwatch();
             sw.Start();
 
-            //string connectionString = "Server=IAS-02;Database=Rebens;user id=ias_user;password=k4r0l1n4;";
-            //int id = 3;
+            var ret = TestAWS();
 
-            string cpf = "29466103814";
-            cpf = cpf.Replace(cpf.Substring(2, 5), "*****");
+            Task.WaitAll(ret);
 
-            Console.WriteLine("29466103814");
-            Console.WriteLine(cpf);
-
-
+            Console.WriteLine($"result: {ret}");
 
             sw.Stop();
             Console.WriteLine("Elapsed Time : " + sw.ElapsedMilliseconds + "ms");
+        }
+
+        public async static Task<bool> TestAWS()
+        {
+            var aws = new ias.Rebens.Integration.AWSHelper();
+            return await aws.DisableBucketAsync("ias.sistemarebens.com.br");
         }
     }
 }

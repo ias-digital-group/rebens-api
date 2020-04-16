@@ -194,7 +194,7 @@ namespace ias.Rebens.api.Controllers
             var operation = operationRepo.Read(idOperation, out string error);
             var customer = customerRepo.Read(idCustomer, out error);
 
-            if(repo.CheckLimit(operation.Id, customer.Id, out error))
+            if(repo.CheckLimit(operation.Id, customer.Id, out int limit, out error))
             {
                 var referal = customerReferal.GetEntity();
                 referal.IdStatus = (int)Enums.CustomerReferalStatus.pending;
@@ -202,14 +202,18 @@ namespace ias.Rebens.api.Controllers
                 referal.Created = referal.Modified = DateTime.Now;
                 if (repo.Create(referal, operation.Id, out error))
                 {
-                    Helper.EmailHelper.SendCustomerReferal(staticTextRepo, operation, customer, referal, out error);
+                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                    string color = operationRepo.GetConfigurationOption(operation.Id, "color", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+
+                    Helper.EmailHelper.SendCustomerReferal(staticTextRepo, operation, customer, referal, fromEmail, color, out error);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Indicação criada com sucesso!", Id = referal.Id });
                 }
 
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não possui mais indicações para fazer. (limite = 5)" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = $"Você já realizou as {limit} indicações permitidas para sua conta." });
         }
 
         /// <summary>

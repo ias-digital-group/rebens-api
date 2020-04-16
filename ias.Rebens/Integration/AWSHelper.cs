@@ -7,9 +7,8 @@ using Amazon;
 using Amazon.Route53;
 using Amazon.Route53.Model;
 using Amazon.S3;
-using Amazon.S3.Model;
-using Amazon.S3.Util;
-
+using Amazon.S3.Transfer;
+using System.IO;
 
 namespace ias.Rebens.Integration
 {
@@ -37,7 +36,8 @@ namespace ias.Rebens.Integration
 
             var change = new Change() { Action = ChangeAction.CREATE, ResourceRecordSet = recordSet };
 
-            var zones = await route53Client.ListHostedZonesAsync();
+            var listZoneRequest = new ListHostedZonesRequest() { MaxItems = "1000" };
+            var zones = await route53Client.ListHostedZonesAsync(listZoneRequest);
             var zone = zones.HostedZones.SingleOrDefault(z => z.Name == domainName);
             if (zone != null)
             {
@@ -70,27 +70,26 @@ namespace ias.Rebens.Integration
             }
         }
 
-        public async Task ChangeBucketPolicy(string bucketName, bool enable)
+        public async Task<bool> DisableBucketAsync(string bucketName)
         {
-            IAmazonS3 s3Client = new AmazonS3Client(API_KEY, API_TOKEN, RegionEndpoint.SAEast1);
-            string policy = $@"{{
-    ""Version"": ""2012-10-17"",
-    ""Statement"": [ 
-        {{
-            ""Effect"": ""{(enable ? "Allow" : "Deny")}"",
-            ""Principal"": ""*"",
-            ""Action"": ""s3:GetObject"",
-            ""Resource"": ""arn:aws:s3:::{bucketName}/*""
-        }} 
-    ] 
-}}";
-
-            PutBucketPolicyRequest request = new PutBucketPolicyRequest()
+            bool ret = false;
+            try
             {
-                BucketName = bucketName,
-                Policy = policy
-            };
-            PutBucketPolicyResponse response = await s3Client.PutBucketPolicyAsync(request);
+                IAmazonS3 s3Client = new AmazonS3Client(API_KEY, API_TOKEN, RegionEndpoint.SAEast1);
+
+                var objects = await s3Client.ListObjectsAsync(bucketName);
+                if(objects.S3Objects.Count > 0)
+                    await s3Client.DeletesAsync(bucketName, objects.S3Objects.Select(s => s.Key), null);
+
+                var constant = new Constant();
+                var transferUtility = new TransferUtility(s3Client);
+                transferUtility.Upload(Path.Combine(constant.AppSettings.App.MediaServerPath, "EmptyBucket", "index.html"), bucketName);
+
+                ret = true;
+            }
+            catch { }
+
+            return ret;
         }
     }
 }

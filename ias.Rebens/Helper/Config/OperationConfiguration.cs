@@ -8,6 +8,13 @@ namespace ias.Rebens.Helper.Config
     {
         public List<OperationConfigurationField> Fields { get; set; }
         public List<ModuleModel> Modules { get; set; }
+        public Wirecard Wirecard { get; set; }
+    }
+
+    public class Wirecard
+    {
+        public string Token { get; set; }
+        public string JsToken { get; set; }
     }
 
     public class OperationConfigurationField

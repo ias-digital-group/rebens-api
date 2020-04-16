@@ -171,7 +171,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Partner> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null)
+        public ResultPage<Partner> ListPage(int page, int pageItems, string word, string sort, int type, out string error, bool? status = null)
         {
             ResultPage<Partner> ret;
             try
@@ -179,7 +179,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Partner.Where(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word))
-                                        && (!status.HasValue || (status.HasValue && p.Active == status.Value)));
+                                        && (!status.HasValue || (status.HasValue && p.Active == status.Value))
+                                        && p.Type == type);
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -197,8 +198,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Partner.Count(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word))
-                                        && (!status.HasValue || (status.HasValue && p.Active == status.Value)));
+                    var total = tmpList.Count();
 
                     ret = new ResultPage<Partner>(list, page, pageItems, total);
 
@@ -310,7 +310,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Partner.Where(p => !p.Deleted && p.Active && p.FreeCourses.Any(f => !f.Deleted && f.Active && f.IdOperation == idOperation)).OrderBy(p => p.Name).ToList();
+                    ret = db.Partner.Where(p => !p.Deleted && p.Active && p.Type == (int)Enums.PartnerType.FreeCourse
+                                && p.FreeCourses.Any(f => !f.Deleted && f.Active && f.IdOperation == idOperation)).OrderBy(p => p.Name).ToList();
 
                     error = null;
                 }

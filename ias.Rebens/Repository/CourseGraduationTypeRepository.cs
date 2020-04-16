@@ -89,7 +89,9 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.CourseGraduationType.Where(a => !a.Deleted && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || !idOperation.HasValue || a.IdOperation == idOperation));
+                    var tmpList = db.CourseGraduationType.Where(a => !a.Deleted 
+                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word)) 
+                                    && (!idOperation.HasValue || a.IdOperation == idOperation));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -107,7 +109,7 @@ namespace ias.Rebens
                     }
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.CourseGraduationType.Count(a => !a.Deleted && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || !idOperation.HasValue || a.IdOperation == idOperation));
+                    var total = tmpList.Count();
 
                     ret = new ResultPage<CourseGraduationType>(list, page, pageItems, total);
 

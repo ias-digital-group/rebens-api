@@ -17,7 +17,27 @@ namespace ias.Rebens
             constant = new Constant();
         }
 
-        public bool AddAddress(int idOperation, int idAddress, out string error)
+        public string GetName(int id, out string error)
+        {
+            string name = "";
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    name = db.Operation.Single(o => o.Id == id).Title;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.GetName", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o nome da operação. (erro:" + idLog + ")";
+            }
+            return name;
+        }
+
+        public bool AddAddress(int idOperation, int idAddress, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -26,6 +46,15 @@ namespace ias.Rebens
                 {
                     if(!db.OperationAddress.Any(o => o.IdOperation == idOperation && o.IdAddress == idAddress))
                     {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.create,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idAddress,
+                            Item = (int)Enums.LogItem.OperationAddress
+                        });
+
                         db.OperationAddress.Add(new OperationAddress() { IdAddress = idAddress, IdOperation = idOperation });
                         db.SaveChanges();
                     }
@@ -42,7 +71,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool AddContact(int idOperation, int idContact, out string error)
+        public bool AddContact(int idOperation, int idContact, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -51,6 +80,15 @@ namespace ias.Rebens
                 {
                     if (!db.OperationContact.Any(o => o.IdOperation == idOperation && o.IdContact == idContact))
                     {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.create,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idContact,
+                            Item = (int)Enums.LogItem.OperationContact
+                        });
+
                         db.OperationContact.Add(new OperationContact() { IdContact = idContact, IdOperation = idOperation });
                         db.SaveChanges();
                     }
@@ -67,7 +105,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Create(Operation operation, out string error)
+        public bool Create(Operation operation, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -102,7 +140,7 @@ namespace ias.Rebens
                         db.SaveChanges();
                     }
 
-                    var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url != "contract");
+                    var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url != "contract" && s.Active);
                     var listPages = new List<StaticText>();
                     foreach(var page in pages)
                     {
@@ -121,6 +159,15 @@ namespace ias.Rebens
                         });
                     }
                     db.StaticText.AddRange(listPages);
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.create,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = operation.Id,
+                        Item = (int)Enums.LogItem.Operation
+                    });
                     db.SaveChanges();
 
                     error = null;
@@ -136,13 +183,22 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool DeleteAddress(int idOperation, int idAddress, out string error)
+        public bool DeleteAddress(int idOperation, int idAddress, int idAdminUser, out string error)
         {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = idAddress,
+                        Item = (int)Enums.LogItem.OperationAddress
+                    });
+
                     var tmp = db.OperationAddress.SingleOrDefault(o => o.IdOperation == idOperation && o.IdAddress == idAddress);
                     db.OperationAddress.Remove(tmp);
                     db.SaveChanges();
@@ -159,13 +215,22 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool DeleteContact(int idOperation, int idContact, out string error)
+        public bool DeleteContact(int idOperation, int idContact, int idAdminUser, out string error)
         {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = idContact,
+                        Item = (int)Enums.LogItem.OperationContact
+                    });
+
                     var tmp = db.OperationContact.SingleOrDefault(o => o.IdOperation == idOperation && o.IdContact == idContact);
                     db.OperationContact.Remove(tmp);
                     db.SaveChanges();
@@ -307,7 +372,7 @@ namespace ias.Rebens
                             foreach (var item in config.Fields)
                             {
                                 if(item.Name == "register-type")
-                                    openSignUp = item.Data == "open";
+                                    openSignUp = item.Data != "closed" && item.Data != "closed-partner";
                             }
                         }
                     }
@@ -325,7 +390,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(Operation operation, out string error)
+        public bool Update(Operation operation, int idAdminUser, out string error)
         {
             bool ret = true;
             bool enablePublish = false;
@@ -336,6 +401,14 @@ namespace ias.Rebens
                     var update = db.Operation.SingleOrDefault(c => c.Id == operation.Id);
                     if (update != null)
                     {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = operation.Id,
+                            Item = (int)Enums.LogItem.Operation
+                        });
 
                         bool changePolicy = operation.Active != update.Active;
                         update.Active = operation.Active;
@@ -375,12 +448,12 @@ namespace ias.Rebens
                         db.SaveChanges();
                         error = null;
 
-                        if (changePolicy)
+                        if (changePolicy && !operation.Active && !string.IsNullOrEmpty(operation.Domain))
                         {
                             try
                             {
                                 var awsHelper = new Integration.AWSHelper();
-                                awsHelper.ChangeBucketPolicy(operation.Domain, operation.Active).Wait();
+                                awsHelper.DisableBucketAsync(operation.Domain);
                             }
                             catch(Exception ex)
                             {
@@ -527,13 +600,22 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool SavePublishStatus(int id, int idStatus, int? idError, out string error)
+        public bool SavePublishStatus(int id, int idStatus, int idAdminUser, int? idError, out string error)
         {
             bool ret = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.publish,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = id,
+                        Item = (int)Enums.LogItem.Operation
+                    });
+
                     var update = db.Operation.SingleOrDefault(o => o.Id == id);
                     if (idStatus == (int)Enums.PublishStatus.processing)
                     {
@@ -613,6 +695,25 @@ namespace ias.Rebens
                                             break;
                                         case "register-type":
                                             totalOK += item.Data != "" ? 1 : 0;
+                                            if (item.Data == "signature" 
+                                                && !db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.Pages && s.Url == "join-us" && s.IdOperation == operation.Id))
+                                            {
+                                                var tmpText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == "join-us");
+                                                db.StaticText.Add(new StaticText()
+                                                {
+                                                    Active = true,
+                                                    Created = DateTime.UtcNow,
+                                                    Html = tmpText.Html,
+                                                    IdOperation = operation.Id,
+                                                    IdStaticTextType = (int)Enums.StaticTextType.Pages,
+                                                    Modified = DateTime.UtcNow,
+                                                    Order = tmpText.Order,
+                                                    Style = tmpText.Style,
+                                                    Title = tmpText.Title,
+                                                    Url = tmpText.Url
+                                                });
+                                                db.SaveChanges();
+                                            }
                                             break;
                                     }
                                 }
@@ -622,6 +723,41 @@ namespace ias.Rebens
                                 bool needWirecard = false;
                                 foreach (var item in config.Modules)
                                 {
+                                    if(db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == item.Name))
+                                    {
+                                        if (item.Checked)
+                                        {
+                                            if (!db.StaticText.Any(s => s.IdStaticTextType == (int)Enums.StaticTextType.Pages && s.Url == item.Name && s.IdOperation == operation.Id))
+                                            {
+                                                var tmpText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url == item.Name);
+                                                db.StaticText.Add(new StaticText()
+                                                {
+                                                    Active = true,
+                                                    Created = DateTime.UtcNow,
+                                                    Html = tmpText.Html,
+                                                    IdOperation = operation.Id,
+                                                    IdStaticTextType = (int)Enums.StaticTextType.Pages,
+                                                    Modified = DateTime.UtcNow,
+                                                    Order = tmpText.Order,
+                                                    Style = tmpText.Style,
+                                                    Title = tmpText.Title,
+                                                    Url = tmpText.Url
+                                                });
+                                                db.SaveChanges();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var tmpText = db.StaticText.SingleOrDefault(s => s.IdStaticTextType == (int)Enums.StaticTextType.Pages && s.Url == item.Name && s.IdOperation == operation.Id);
+                                            if(tmpText != null)
+                                            {
+                                                db.StaticText.Remove(tmpText);
+                                                db.SaveChanges();
+                                            }
+                                        }
+                                    }
+
+
                                     if ((item.Name == "course" || item.Name == "freeCourse" || item.Name == "coupon" ) && needWirecard && !wirecard && !wirecardJS && item.Checked)
                                     {
                                         needWirecard = true;
@@ -755,7 +891,7 @@ namespace ias.Rebens
                     {
                         bool isTemporary = operation.TemporaryPublishStatus == (int)Enums.PublishStatus.publish;
 
-                        string Color = "", Favicon = "", contactEmail = "", GoogleAnalytics = "", WirecardToken = "", WirecardJSToken = "", RegisterType = "";
+                        string Color = "", Favicon = "", contactEmail = "", GoogleAnalytics = "", RegisterType = "";
                         var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
                         if (configuration != null)
                         {
@@ -783,21 +919,6 @@ namespace ias.Rebens
                                 }
                             }
 
-                            foreach(var item in config.Modules)
-                            {
-                                if((item.Name == "course" || item.Name == "freeCourse" || item.Name == "coupon")
-                                    && string.IsNullOrEmpty(WirecardToken))
-                                {
-                                    foreach (var field in item.Info.Fields)
-                                    {
-                                        if (field.Name == "wirecardToken" && !string.IsNullOrEmpty(field.Data))
-                                            WirecardToken = field.Data;
-                                        if (field.Name == "wirecardJSToken" && !string.IsNullOrEmpty(field.Data))
-                                            WirecardToken = field.Data;
-                                    }
-                                }
-                            }
-
                             domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                             ret = new
                             {
@@ -809,8 +930,8 @@ namespace ias.Rebens
                                 GoogleAnalytics,
                                 Domain = (isTemporary ? operation.TemporarySubdomain + ".sistemarebens.com.br" :  operation.Domain),
                                 constant.AppSettings.App.Environment,
-                                WirecardToken,
-                                WirecardJSToken,
+                                WirecardToken = config.Wirecard.Token,
+                                WirecardJSToken = config.Wirecard.JsToken,
                                 RegisterType, 
                                 config.Modules 
                             };
@@ -976,6 +1097,11 @@ namespace ias.Rebens
                         op.Modified = DateTime.UtcNow;
                         db.SaveChanges();
 
+                        var action = db.LogAction.Where(a => a.IdItem == op.Id && a.Item == (int)Enums.LogItem.Operation && a.Action == (int)Enums.LogAction.publish).OrderByDescending(a => a.Created).First();
+                        var admin = db.AdminUser.Single(a => a.Id == action.IdAdminUser);
+                        var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };
+                        Helper.EmailHelper.SendAdminEmail(listDestinataries, "[REBENS] - Publicação da operação concluída.", $"O processo de publicação da operação {op.Title}, foi concluído com sucesso.", out _);
+
                         ret = true;
                         error = null;
                     }
@@ -991,13 +1117,22 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = false;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = id,
+                        Item = (int)Enums.LogItem.Operation
+                    });
+
                     var update = db.Operation.SingleOrDefault(o => o.Id == id);
                     update.Deleted = true;
                     update.Modified = DateTime.UtcNow;
@@ -1129,6 +1264,81 @@ namespace ias.Rebens
             {
                 int idLog = logError.Create("OperationRepository.SaveSendingblueListId", ex.Message, $"id: {id}, listId: {listId}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar salvar o id da lista. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public string LoadModulesNames(int id, out string error)
+        {
+            string ret = "";
+            error = null;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                    if (configuration != null)
+                    {
+                        var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(configuration.Html);
+                        foreach(var mod in config.Modules)
+                        {
+                            if (mod.Checked)
+                                ret += mod.Name + "|";
+                        }
+                        foreach(var field in config.Fields)
+                        {
+                            if (field.Name == "register-type")
+                                ret += field.Data;
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.LoadModulesNames", ex.Message, $"id: {id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar carregar os módulos da operação. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public List<Operation> ListWithModule(string module, out string error)
+        {
+            List<Operation> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var list = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration).ToList();
+                    var operationIds = new List<int>();
+
+                    foreach(var op in list)
+                    {
+                        if (op.Html != null && !string.IsNullOrEmpty(op.Html))
+                        {
+                            var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(op.Html);
+                            foreach (var item in config.Modules)
+                            {
+                                if (item.Name == module && item.Checked)
+                                {
+                                    operationIds.Add(op.IdOperation.Value);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    ret = db.Operation.Where(o => o.Active && operationIds.Any(id => o.Id == id)).OrderBy(o => o.Title).ToList();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ListWithModule", ex.Message, $"module: {module}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as operações que possuem o módulo requisitado. (erro:" + idLog + ")";
+                ret = null;
             }
             return ret;
         }

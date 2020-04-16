@@ -311,9 +311,8 @@ namespace ias.Rebens.api.Controllers
             
             if (operation != null)
             {
-                var mailTo = operationRepo.GetConfigurationOption(operation.Id, "form-email", out error);
-
-                if (string.IsNullOrEmpty(mailTo)) mailTo = "cluberebens@gmail.com";
+                var mailTo = operationRepo.GetConfigurationOption(operation.Id, "form-email", out _);
+                if (string.IsNullOrEmpty(mailTo) || !Helper.EmailHelper.IsValidEmail(mailTo)) mailTo = "cluberebens@gmail.com";
 
                 var f = formContact.GetEntity();
                 f.IdOperation = operation.Id;
@@ -876,7 +875,9 @@ namespace ias.Rebens.api.Controllers
                     {
                         if (customerRepo.Create(customer, out error))
                         {
-                            Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, out error);
+                            string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                            if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                            Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, fromEmail, out error);
 
                             if (oc != null)
                                 operationCustomerRepo.SetSigned(oc.Id, out error);
@@ -1088,13 +1089,15 @@ namespace ias.Rebens.api.Controllers
                 {
                     if(customerRepo.ChangeStatus(user.Id, Enums.CustomerStatus.ChangePassword, out error))
                     {
-                        if(Helper.EmailHelper.SendPasswordRecovery(staticTextRepo, operation, user, out error))
+                        string emailFrom = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                        if (string.IsNullOrEmpty(emailFrom) || !Helper.EmailHelper.IsValidEmail(emailFrom)) emailFrom = "contato@rebens.com.br";
+                        if (Helper.EmailHelper.SendPasswordRecovery(staticTextRepo, operation, emailFrom, user, out error))
                             return Ok(new JsonModel() { Status = "ok", Message = "Enviamos um link com as instruções para definir uma nova senha." });
                         return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
                 }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O e-mail informado não está cadastrado no clube!" });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
         }
@@ -1276,13 +1279,17 @@ namespace ias.Rebens.api.Controllers
                     string body = $"Novo resgate: <b>{customerName}</b><br /><br />Banco: {bankAccount.Bank.Name} - {bankAccount.Bank.Code}<br />";
                     body += $"Tipo de conta:{(bankAccount.Type == "CC" ? "Poupança" : "Conta Corrente")}<br />Agência:{bankAccount.Branch}<br />";
                     body += $"Número:{bankAccount.AccountNumber}<br />Valor:{withdraw.Amount.ToString("N")}";
+
+                    string fromEmail = operationRepo.GetConfigurationOption(idOperation, "contact-email", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+
                     var listDestinataries = new Dictionary<string, string>() { { "cluberebens@gmail.com", "Clube Rebens" } };
-                    sendingBlue.Send(listDestinataries, "contato@rebens.com.br", "Contato", $"[{operation.Title}] - Novo Resgate", body);
+                    sendingBlue.Send(listDestinataries, fromEmail, operation.Title, $"[{operation.Title}] - Novo Resgate", body);
 
                     string bodyCustomer = $"<p>Olá {customerName}, </p><br /><br /><p>Foi realizado um novo resgate conforme as informações abaixo:<br /><br />";
                     bodyCustomer += $"Banco: {bankAccount.Bank.Name} - {bankAccount.Bank.Code}<br />Tipo de conta:{(bankAccount.Type == "CC" ? "Poupança" : "Conta Corrente")}<br />Agência:{bankAccount.Branch}<br />";
                     bodyCustomer += $"Número:{bankAccount.AccountNumber}<br />Valor:{withdraw.Amount.ToString("N")}</p>";
-                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customerEmail, customerName, idOperation, $"[{operation.Title}] - Novo Resgate", bodyCustomer, out error);
+                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customerEmail, customerName, idOperation, $"[{operation.Title}] - Novo Resgate", bodyCustomer, fromEmail, operation.Title, out error);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Resgate registrado com sucesso!", Id = draw.Id });
                 }
@@ -1616,8 +1623,10 @@ namespace ias.Rebens.api.Controllers
                 customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
                 if (operationPartnerRepo.CreateCustomer(customer, out error))
                 {
+                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
                     string body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {customer.Name}.</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Obrigado pelo cadastro!</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Enviamos sua solicitação para o RH validar seus dados e confirmar seu cadastro.</p>";
-                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, out error);
+                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, fromEmail, operation.Title, out error);
 
                     body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá,</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Recebemos a solicitação de cadastro para aprovação, acesse o sistema para avaliar a solicitação.</p><br /><p style=\"text-align:center;\"><a href=\"{constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ACESSAR SISTEMA</a></p>";
                     var listDestinataries = operationPartnerRepo.ListDestinataries(customer.IdOperationPartner, out error);

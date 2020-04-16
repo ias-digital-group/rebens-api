@@ -31,6 +31,10 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("StaticTextRepository.Create", ex.Message, "", ex.StackTrace);
+                if(ex.InnerException != null)
+                {
+                    logError.Create("StaticTextRepository.Create - InnerException", ex.InnerException.Message, "", ex.InnerException.StackTrace);
+                }
                 error = "Ocorreu um erro ao tentar criar o texto. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -273,17 +277,30 @@ namespace ias.Rebens
                         update = db.StaticText.SingleOrDefault(c => c.IdBenefit == staticText.IdBenefit && c.IdStaticTextType == staticText.IdStaticTextType);
                     if (update == null && staticText.IdOperation.HasValue)
                         update = db.StaticText.SingleOrDefault(c => c.IdOperation == staticText.IdOperation && c.IdStaticTextType == staticText.IdStaticTextType);
+                    if(update == null && staticText.IdStaticTextType == (int)Enums.StaticTextType.ScratchcardRegulation)
+                        update = db.StaticText.SingleOrDefault(c => c.IdOperation == staticText.IdOperation && c.IdStaticTextType == staticText.IdStaticTextType && c.Url == staticText.Url);
 
                     if (update != null)
                     {
-                        update.Active = staticText.Active;
                         update.Html = staticText.Html;
-                        update.IdStaticTextType = staticText.IdStaticTextType;
-                        update.Order = staticText.Order;
-                        update.Style = staticText.Style;
-                        update.Title = staticText.Title;
-                        update.Url = staticText.Url;
                         update.Modified = DateTime.UtcNow;
+
+                        if (staticText.IdStaticTextType != (int)Enums.StaticTextType.ScratchcardRegulation)
+                        {
+                            update.Active = staticText.Active;
+                            update.IdStaticTextType = staticText.IdStaticTextType;
+                            update.Order = staticText.Order;
+                            update.Style = staticText.Style;
+                            update.Title = staticText.Title;
+                            update.Url = staticText.Url;
+                        }
+
+                        if ((staticText.IdStaticTextType == (int)Enums.StaticTextType.CourseRegulation
+                            || staticText.IdStaticTextType == (int)Enums.StaticTextType.CourseFAQ)
+                            && staticText.IdOperation > 0)
+                        {
+                            update.IdOperation = staticText.IdOperation;
+                        }
 
                         db.SaveChanges();
                         error = null;
@@ -343,7 +360,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public List<StaticText> ListByType(int idStaticTextType, out string error)
+        public List<StaticText> ListByType(int idStaticTextType, out string error, int? idOperation = null)
         {
             List<StaticText> ret;
             try
@@ -352,6 +369,7 @@ namespace ias.Rebens
                 {
                     ret = (from s in db.StaticText
                            where s.IdStaticTextType == idStaticTextType
+                           && (!idOperation.HasValue || s.IdOperation == idOperation.Value)
                            select new StaticText()
                            {
                                Id = s.Id,
