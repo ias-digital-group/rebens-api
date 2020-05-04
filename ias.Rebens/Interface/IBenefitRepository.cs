@@ -61,5 +61,7 @@ namespace ias.Rebens
         bool ChangeActive(int idBenefit, bool active, out string error);
 
         bool Duplicate(int id, out int newId, out string error);
+
+        List<Benefit> ListToCheckLinks();
     }
 }

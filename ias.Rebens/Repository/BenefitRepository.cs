@@ -14,6 +14,10 @@ namespace ias.Rebens
         {
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
+        public BenefitRepository(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
 
         public bool AddAddress(int idBenefit, int idAddress, out string error)
         {
@@ -233,6 +237,16 @@ namespace ias.Rebens
                 int idLog = logError.Create("BenefitRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os benefícios. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public List<Benefit> ListToCheckLinks()
+        {
+            List<Benefit> ret;
+            using (var db = new RebensContext(this._connectionString))
+            {
+                ret = db.Benefit.Where(b => b.Active && b.Link != "").ToList();
             }
             return ret;
         }
