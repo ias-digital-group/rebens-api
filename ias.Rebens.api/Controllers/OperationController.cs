@@ -994,71 +994,69 @@ namespace ias.Rebens.api.Controllers
                         Modified = DateTime.UtcNow,
                         Total = 0,
                         Processed = 0,
-                        Status = (int)Enums.FileToProcessStatus.New,
+                        Status = extension != ".xls" && extension != ".xlsx" ? (int)Enums.FileToProcessStatus.Error : (int)Enums.FileToProcessStatus.New,
                         Type = (int)Enums.FileToProcessType.OperationCustomer
                     };
 
                     this.fileToProcessRepo.Create(fileToProcess, out _);
 
-                    try
+                    if (fileToProcess.Status == (int)Enums.FileToProcessStatus.New)
                     {
-                        using (var stream = new StreamReader(fullPath))
+                        try
                         {
-                            if (extension == ".xls")
+                            using (var stream = new StreamReader(fullPath))
                             {
-                                HSSFWorkbook hssfwb = new HSSFWorkbook(stream.BaseStream); //This will read the Excel 97-2000 formats  
-                                sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook  
-                            }
-                            else
-                            {
-                                XSSFWorkbook hssfwb = new XSSFWorkbook(stream.BaseStream); //This will read 2007 Excel format  
-                                sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook   
-                            }
-                            int total = sheet.LastRowNum;
-                            this.fileToProcessRepo.UpdateTotal(fileToProcess.Id, total, out _);
+                                if (extension == ".xls")
+                                {
+                                    HSSFWorkbook hssfwb = new HSSFWorkbook(stream.BaseStream); //This will read the Excel 97-2000 formats  
+                                    sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook  
+                                }
+                                else
+                                {
+                                    XSSFWorkbook hssfwb = new XSSFWorkbook(stream.BaseStream); //This will read 2007 Excel format  
+                                    sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook   
+                                }
+                                int total = sheet.LastRowNum;
+                                this.fileToProcessRepo.UpdateTotal(fileToProcess.Id, total, out _);
 
-                            IRow headerRow = sheet.GetRow(0); //Get Header Row
-                            int cellCount = headerRow.LastCellNum;
-                            bool isValid = true;
+                                IRow headerRow = sheet.GetRow(0); //Get Header Row
+                                int cellCount = headerRow.LastCellNum;
+                                bool isValid = true;
 
-                            ICell cellName = headerRow.GetCell(0);
-                            ICell cellCPf = headerRow.GetCell(1);
-                            ICell cellPhone = headerRow.GetCell(2);
-                            ICell cellCellphone = headerRow.GetCell(3);
-                            ICell cellEmail1 = headerRow.GetCell(4);
-                            ICell cellEmail2 = headerRow.GetCell(5);
+                                ICell cellName = headerRow.GetCell(0);
+                                ICell cellCPf = headerRow.GetCell(1);
+                                ICell cellPhone = headerRow.GetCell(2);
+                                ICell cellCellphone = headerRow.GetCell(3);
+                                ICell cellEmail1 = headerRow.GetCell(4);
+                                ICell cellEmail2 = headerRow.GetCell(5);
 
-                            isValid = cellName != null && cellName.ToString().Trim().ToLower() == "nome" &&
-                                cellCPf != null && cellCPf.ToString().Trim().ToLower() == "cpf" &&
-                                cellPhone != null && cellPhone.ToString().Trim().ToLower() == "telefone" &&
-                                cellCellphone != null && cellCellphone.ToString().Trim().ToLower() == "celular" &&
-                                cellEmail1 != null && cellEmail1.ToString().Trim().ToLower() == "email1" &&
-                                cellEmail2 != null && cellEmail2.ToString().Trim().ToLower() == "email2";
+                                isValid = cellName != null && cellName.ToString().Trim().ToLower() == "nome" &&
+                                    cellCPf != null && cellCPf.ToString().Trim().ToLower() == "cpf" &&
+                                    cellPhone != null && cellPhone.ToString().Trim().ToLower() == "telefone" &&
+                                    cellCellphone != null && cellCellphone.ToString().Trim().ToLower() == "celular" &&
+                                    cellEmail1 != null && cellEmail1.ToString().Trim().ToLower() == "email1" &&
+                                    cellEmail2 != null && cellEmail2.ToString().Trim().ToLower() == "email2";
 
-                            if (!isValid)
-                            {
-                                this.fileToProcessRepo.UpdateStatus(fileToProcess.Id, (int)Enums.FileToProcessStatus.Error, out _);
-                                return Ok(new JsonModel() { Status = "error", Message = "O arquivo não está no formato correto!" });
-                            }
-                            else
-                            {
-                                this.fileToProcessRepo.UpdateStatus(fileToProcess.Id, (int)Enums.FileToProcessStatus.Ready, out _);
+                                if (!isValid)
+                                {
+                                    this.fileToProcessRepo.UpdateStatus(fileToProcess.Id, (int)Enums.FileToProcessStatus.Error, out _);
+                                    return Ok(new JsonModel() { Status = "error", Message = "O arquivo não está no formato correto!" });
+                                }
+                                else
+                                {
+                                    this.fileToProcessRepo.UpdateStatus(fileToProcess.Id, (int)Enums.FileToProcessStatus.Ready, out _);
+                                }
                             }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+                        catch (Exception ex)
+                        {
+                            return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+                        }
+
+                        return Ok(new JsonModel() { Status = "ok", Message = $"O arquivo será processado em breve." });
                     }
 
-                    //int counter = 0;
-                    //foreach(var customer in list)
-                    //{
-                    //    if (operationCustomerRepo.Create(customer, out string error))
-                    //        counter++;
-                    //}
-
-                    return Ok(new JsonModel() { Status = "ok", Message = $"O arquivo será processado em breve." });
+                    return Ok(new JsonModel() { Status = "error", Message = $"O arquivo não poderá ser processado, extensão não aceita ({extension})." });
                 }
 
                 return NoContent();
