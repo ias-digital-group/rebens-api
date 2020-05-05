@@ -24,80 +24,84 @@ namespace ias.Rebens.Integration
                 var ret = CallApi("GET", url, null);
 
                 var jObj = JObject.Parse(ret);
-                var objList = jObj["saleItems"]["saleItem"].Children();
-
-                foreach (var item in objList)
+                if (jObj["saleItems"] != null && jObj["saleItems"]["saleItem"] != null)
                 {
-                    var sale = new ZanoxSale();
-                    sale.ZanoxId = item["@id"].ToString();
-                    sale.ReviewState = item["reviewState"].ToString();
-                    if(item["trackingDate"] != null)
-                    {
-                        if (DateTime.TryParse(item["trackingDate"].ToString(), out DateTime dt))
-                            sale.TrackingDate = dt;
-                    }
-                    if (item["modifiedDate"] != null)
-                    {
-                        if (DateTime.TryParse(item["modifiedDate"].ToString(), out DateTime dt))
-                            sale.ModifiedDate = dt;
-                    }
-                    if (item["clickDate"] != null)
-                    {
-                        if (DateTime.TryParse(item["clickDate"].ToString(), out DateTime dt))
-                            sale.ClickDate = dt;
-                    }
-                    sale.ClickId = long.Parse(item["clickId"].ToString());
-                    sale.ClickInId = long.Parse(item["clickInId"].ToString());
-                    sale.Amount = decimal.Parse(item["amount"].ToString());
-                    sale.Commission = decimal.Parse(item["commission"].ToString());
-                    sale.Currency = item["currency"].ToString();
-                    sale.Created = sale.Modified = DateTime.Now;
 
-                    if(item["adspace"] != null)
-                    {
-                        if(item["adspace"]["@id"] != null)
-                        {
-                            if (int.TryParse(item["adspace"]["@id"].ToString(), out int tmpId))
-                                sale.AdspaceId = tmpId;
-                        }
-                        if (item["adspace"]["$"] != null)
-                            sale.AdspaceValue = item["adspace"]["$"].ToString();
-                    }
-                    if (item["admedium"] != null)
-                    {
-                        if (item["admedium"]["@id"] != null)
-                        {
-                            if (int.TryParse(item["admedium"]["@id"].ToString(), out int tmpId))
-                                sale.AdmediumId = tmpId;
-                        }
-                        if (item["admedium"]["$"] != null)
-                            sale.AdmediumValue = item["admedium"]["$"].ToString();
-                    }
-                    if (item["program"] != null)
-                    {
-                        if (item["program"]["@id"] != null)
-                        {
-                            if (int.TryParse(item["program"]["@id"].ToString(), out int tmpId))
-                                sale.ProgramId = tmpId;
-                        }
-                        if (item["program"]["$"] != null)
-                            sale.ProgramValue = item["program"]["$"].ToString();
-                    }
-                    if(item["reviewNote"] != null)
-                        sale.ReviewNote = item["reviewNote"].ToString();
-                    if (item["gpps"] != null)
-                    {
-                        sale.Gpps = item["gpps"].ToString();
-                        if (item["gpps"]["gpp"] != null && item["gpps"]["gpp"] != null && item["gpps"]["gpp"]["@id"] != null)
-                        {
-                            if (item["gpps"]["gpp"]["@id"].ToString() == "zpar0")
-                                sale.Zpar = item["gpps"]["gpp"]["$"].ToString();
-                        }
-                    }
+                    var objList = jObj["saleItems"]["saleItem"].Children();
 
-                    sale.Status = (int)Enums.ZanoxStatus.pendent;
+                    foreach (var item in objList)
+                    {
+                        var sale = new ZanoxSale();
+                        sale.ZanoxId = item["@id"].ToString();
+                        sale.ReviewState = item["reviewState"].ToString();
+                        if (item["trackingDate"] != null)
+                        {
+                            if (DateTime.TryParse(item["trackingDate"].ToString(), out DateTime dt))
+                                sale.TrackingDate = dt;
+                        }
+                        if (item["modifiedDate"] != null)
+                        {
+                            if (DateTime.TryParse(item["modifiedDate"].ToString(), out DateTime dt))
+                                sale.ModifiedDate = dt;
+                        }
+                        if (item["clickDate"] != null)
+                        {
+                            if (DateTime.TryParse(item["clickDate"].ToString(), out DateTime dt))
+                                sale.ClickDate = dt;
+                        }
+                        sale.ClickId = long.Parse(item["clickId"].ToString());
+                        sale.ClickInId = long.Parse(item["clickInId"].ToString());
+                        sale.Amount = decimal.Parse(item["amount"].ToString());
+                        sale.Commission = decimal.Parse(item["commission"].ToString());
+                        sale.Currency = item["currency"].ToString();
+                        sale.Created = sale.Modified = DateTime.Now;
 
-                    list.Add(sale);
+                        if (item["adspace"] != null)
+                        {
+                            if (item["adspace"]["@id"] != null)
+                            {
+                                if (int.TryParse(item["adspace"]["@id"].ToString(), out int tmpId))
+                                    sale.AdspaceId = tmpId;
+                            }
+                            if (item["adspace"]["$"] != null)
+                                sale.AdspaceValue = item["adspace"]["$"].ToString();
+                        }
+                        if (item["admedium"] != null)
+                        {
+                            if (item["admedium"]["@id"] != null)
+                            {
+                                if (int.TryParse(item["admedium"]["@id"].ToString(), out int tmpId))
+                                    sale.AdmediumId = tmpId;
+                            }
+                            if (item["admedium"]["$"] != null)
+                                sale.AdmediumValue = item["admedium"]["$"].ToString();
+                        }
+                        if (item["program"] != null)
+                        {
+                            if (item["program"]["@id"] != null)
+                            {
+                                if (int.TryParse(item["program"]["@id"].ToString(), out int tmpId))
+                                    sale.ProgramId = tmpId;
+                            }
+                            if (item["program"]["$"] != null)
+                                sale.ProgramValue = item["program"]["$"].ToString();
+                        }
+                        if (item["reviewNote"] != null)
+                            sale.ReviewNote = item["reviewNote"].ToString();
+                        if (item["gpps"] != null)
+                        {
+                            sale.Gpps = item["gpps"].ToString();
+                            if (item["gpps"]["gpp"] != null && item["gpps"]["gpp"] != null && item["gpps"]["gpp"]["@id"] != null)
+                            {
+                                if (item["gpps"]["gpp"]["@id"].ToString() == "zpar0")
+                                    sale.Zpar = item["gpps"]["gpp"]["$"].ToString();
+                            }
+                        }
+
+                        sale.Status = (int)Enums.ZanoxStatus.pendent;
+
+                        list.Add(sale);
+                    }
                 }
 
                 error = null;
