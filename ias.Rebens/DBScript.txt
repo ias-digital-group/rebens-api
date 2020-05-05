@@ -1,23 +1,7 @@
 ﻿insert into Module values ('promoter', 'Promotor', '{ "fields": [ ], "files": [ ], "configuration": { "routeImports": [ ], "routeConfig": "" } }', GETUTCDATE(), GETUTCDATE() )
 
 
-ALTER TABLE Category ADD [Type] INT NULL
-GO
 
-UPDATE Category set [Type] = 1
-GO
-
-ALTER TABLE Category ALTER COLUMN [Type] INT NOT NULL
-GO
-
-ALTER TABLE Partner ADD [Type] INT NULL
-GO
-
-UPDATE Partner set [Type] = 1
-GO
-
-ALTER TABLE Partner ALTER COLUMN [Type] INT NOT NULL
-GO
 
 
 
