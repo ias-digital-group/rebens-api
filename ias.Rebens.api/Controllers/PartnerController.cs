@@ -56,7 +56,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<PartnerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int type, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]bool? active = null)
+        public IActionResult List([FromQuery]int type = 1, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]bool? active = null)
         {
             var list = repo.ListPage(page, pageItems, searchWord, sort, type, out string error, active);
 
@@ -200,6 +200,7 @@ namespace ias.Rebens.api.Controllers
             
 
             var part = partner.GetEntity();
+            part.Type = 1;
             if (!string.IsNullOrEmpty(partner.Description))
             {
                 var text = new StaticText()

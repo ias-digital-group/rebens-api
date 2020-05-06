@@ -49,7 +49,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<CategoryModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int type, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", 
+        public IActionResult List([FromQuery]int type = 1, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", 
             [FromQuery]bool? active = null, [FromQuery]int? idParent = null)
         {
             var list = repo.ListPage(page, pageItems, searchWord, sort, type, out string error, active, idParent);
@@ -136,6 +136,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Post([FromBody]CategoryModel category)
         {
             var cat = category.GetEntity();
+            cat.Type = 1;
             if(repo.Create(cat, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Categoria criada com sucesso!", Id = cat.Id });
 
