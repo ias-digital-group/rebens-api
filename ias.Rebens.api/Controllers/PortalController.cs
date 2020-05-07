@@ -1411,7 +1411,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="400">Se ocorrer algum erro</response>
         [AllowAnonymous]
         [HttpGet("UnmissableBanners")]
-        [ProducesResponseType(typeof(ResultPageModel<BannerModel>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<PortalBannerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListUnmissableBanners([FromHeader(Name = "x-operation-code")]string operationCode)
@@ -1447,12 +1447,12 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.Count == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<BannerModel>>()
+                var ret = new JsonDataModel<List<PortalBannerModel>>()
                 {
-                    Data = new List<BannerModel>()
+                    Data = new List<PortalBannerModel>()
                 };
                 foreach (var banner in list)
-                    ret.Data.Add(new BannerModel(banner));
+                    ret.Data.Add(new PortalBannerModel(banner, null, null, null));
 
                 return Ok(ret);
             }
