@@ -66,6 +66,7 @@ namespace ias.Rebens.api.Controllers
                             Models.VoucherModel model = GenerateBenefitVoucher(id, customer, operation, out error);
                             if (model != null)
                                 return new ViewAsPdf("Index", "voucher.pdf", model);
+                            //return View("Index", model);
                         }
                     }
                 }
