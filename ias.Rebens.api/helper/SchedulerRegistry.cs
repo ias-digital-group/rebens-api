@@ -18,16 +18,16 @@ namespace ias.Rebens.api.helper
             //Schedule<KeepAlive>().ToRunNow().AndEvery(15).Minutes();
             //Schedule<ProcessFileJob>().ToRunNow().AndEvery(5).Minutes();
 
-            Schedule(() => new ZanoxUpdateJob(serviceScopeFactory)).ToRunNow().AndEvery(2).Hours();
-            Schedule(() => new WirecardJob(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
-            Schedule(() => new KeepAlive(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
+            Schedule(() => new BenefitLinkCheckerJob(serviceScopeFactory)).ToRunNow().AndEvery(1).Days().At(2, 0);
             Schedule(() => new ProcessFileJob(serviceScopeFactory)).ToRunNow().AndEvery(5).Minutes();
 
             Schedule(() => new ScratchcardDailyJob(serviceScopeFactory)).ToRunEvery(1).Days().At(1,0);
             Schedule(() => new ScratchcardMonthlyJob(serviceScopeFactory)).ToRunEvery(1).Months().On(1).At(3, 0);
             Schedule(() => new ScratchcardWeeklyJob(serviceScopeFactory)).ToRunEvery(1).Weeks().On(System.DayOfWeek.Sunday).At(4, 0);
 
-            Schedule(() => new BenefitLinkCheckerJob(serviceScopeFactory)).ToRunNow().AndEvery(1).Days().At(5, 0);
+            Schedule(() => new ZanoxUpdateJob(serviceScopeFactory)).ToRunNow().AndEvery(2).Hours();
+            Schedule(() => new WirecardJob(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
+            Schedule(() => new KeepAlive(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
         }
     }
 }
