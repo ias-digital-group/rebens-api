@@ -245,8 +245,6 @@ namespace ias.Rebens
 
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
 
-                entity.Property(e => e.VoucherText).HasMaxLength(500);
-
                 entity.HasOne(d => d.Partner)
                     .WithMany(p => p.Benefits)
                     .HasForeignKey(d => d.IdPartner)
