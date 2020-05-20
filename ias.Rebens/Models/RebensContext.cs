@@ -1284,6 +1284,9 @@ namespace ias.Rebens
                     .IsRequired()
                     .HasMaxLength(500);
 
+                entity.Property(e => e.Code)
+                   .HasMaxLength(200);
+
 
                 entity.HasOne(d => d.Order)
                     .WithMany(p => p.OrderItems)

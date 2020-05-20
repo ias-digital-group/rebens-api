@@ -11,6 +11,7 @@ namespace ias.Rebens
         public int? IdCourse { get; set; }
         public int? IdFreeCourse { get; set; }
         public string Name { get; set; }
+        public string Code { get; set; }
         public decimal Price { get; set; }
         public string Voucher { get; set; }
         public DateTime Created { get; set; }

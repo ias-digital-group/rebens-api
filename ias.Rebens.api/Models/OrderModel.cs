@@ -156,11 +156,15 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public int? IdFreeCourse { get; set; }
         /// <summary>
-        /// Nome do curso
+        /// Código do produto
+        /// </summary>
+        public string Code { get; set; }
+        /// <summary>
+        /// Nome do produto
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// Valor do Curso
+        /// Valor do produto
         /// </summary>
         public decimal Price { get; set; }
         /// <summary>
@@ -174,6 +178,7 @@ namespace ias.Rebens.api.Models
             this.Id = orderItem.Id;
             this.IdCourse = orderItem.IdCourse;
             this.IdFreeCourse = orderItem.IdFreeCourse;
+            this.Code = orderItem.Code;
             this.Name = orderItem.Name;
             this.Price = orderItem.Price;
             this.Voucher = orderItem.Voucher;
@@ -186,6 +191,7 @@ namespace ias.Rebens.api.Models
                 Id = this.Id,
                 IdCourse = this.IdCourse,
                 IdFreeCourse = this.IdFreeCourse,
+                Code = this.Code,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow,
                 Name = this.Name,
