@@ -204,9 +204,10 @@ namespace ias.Rebens
                     };
                     var tmpView = (from b in db.BenefitView
                                        where (!idOperation.HasValue || (idOperation.HasValue && b.Customer.IdOperation == idOperation.Value))
+                                        && !b.Benefit.Deleted
                                        group b by b.Benefit.Name into g
                                        orderby g.Count()
-                                       select new { Title = g.Key, Total = g.Count() }).Take(10).ToList();
+                                       select new { Title = g.Key, Total = g.Count() }).OrderByDescending(t => t.Total).Take(10).ToList();
                     foreach (var i in tmpView)
                     {
                         ret.BenefitView.Labels.Add(i.Title);
@@ -224,9 +225,10 @@ namespace ias.Rebens
                     };
                     var tmpUsed = (from b in db.BenefitUse
                                      where (!idOperation.HasValue || (idOperation.HasValue && b.Customer.IdOperation == idOperation.Value))
+                                        && !b.Benefit.Deleted
                                      group b by b.Name into g
                                      orderby g.Count()
-                                     select new { Title = g.Key, Total = g.Count() }).Take(10).ToList();
+                                     select new { Title = g.Key, Total = g.Count() }).OrderByDescending(t => t.Total).Take(10).ToList();
                     foreach (var i in tmpUsed)
                     {
                         string tit = i.Title;
