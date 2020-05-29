@@ -70,8 +70,12 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] OrderModel order)
         {
+            if(order == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto nulo!" });
+
             int idCustomer = 0;
             int idOperation = 0;
+
             var principal = HttpContext.User;
             if (principal?.Claims != null)
             {

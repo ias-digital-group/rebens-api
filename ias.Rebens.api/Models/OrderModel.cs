@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ias.Rebens.Helper;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -82,29 +83,32 @@ namespace ias.Rebens.api.Models
         /// <param name="order"></param>
         public OrderModel(Order order)
         {
-            this.Id = order.Id;
-            this.IdCustomer = order.IdCustomer;
-            this.DispId = order.DispId;
-            this.Subtotal = order.Subtotal;
-            this.Discount = order.Discount;
-            this.Total = order.Total;
-            this.TotalItems = order.TotalItems;
-            this.IP = order.IP;
-            this.WirecardId = order.WirecardId;
-            this.Status = order.Status;
-            this.PaymentType = order.PaymentType;
-            this.Created = order.Created;
-            this.Items = new List<OrderItemModel>();
-            if(order.OrderItems != null)
+            if (order != null)
             {
-                foreach (var item in order.OrderItems)
-                    this.Items.Add(new OrderItemModel(item));
-            }
-            if(order.WirecardPayments != null)
-            {
-                var payment = order.WirecardPayments.OrderByDescending(p => p.Created).FirstOrDefault();
-                if (payment != null)
-                    this.Payment = new WirecardPaymentModel(payment);
+                this.Id = order.Id;
+                this.IdCustomer = order.IdCustomer;
+                this.DispId = order.DispId;
+                this.Subtotal = order.Subtotal;
+                this.Discount = order.Discount;
+                this.Total = order.Total;
+                this.TotalItems = order.TotalItems;
+                this.IP = order.IP;
+                this.WirecardId = order.WirecardId;
+                this.Status = order.Status;
+                this.PaymentType = order.PaymentType;
+                this.Created = order.Created;
+                this.Items = new List<OrderItemModel>();
+                if (order.OrderItems != null)
+                {
+                    foreach (var item in order.OrderItems)
+                        this.Items.Add(new OrderItemModel(item));
+                }
+                if (order.WirecardPayments != null)
+                {
+                    var payment = order.WirecardPayments.OrderByDescending(p => p.Created).FirstOrDefault();
+                    if (payment != null)
+                        this.Payment = new WirecardPaymentModel(payment);
+                }
             }
         }
 
@@ -175,13 +179,16 @@ namespace ias.Rebens.api.Models
         public OrderItemModel() { }
         public OrderItemModel(OrderItem orderItem) 
         {
-            this.Id = orderItem.Id;
-            this.IdCourse = orderItem.IdCourse;
-            this.IdFreeCourse = orderItem.IdFreeCourse;
-            this.Code = orderItem.Code;
-            this.Name = orderItem.Name;
-            this.Price = orderItem.Price;
-            this.Voucher = orderItem.Voucher;
+            if (orderItem != null)
+            {
+                this.Id = orderItem.Id;
+                this.IdCourse = orderItem.IdCourse;
+                this.IdFreeCourse = orderItem.IdFreeCourse;
+                this.Code = orderItem.Code;
+                this.Name = orderItem.Name;
+                this.Price = orderItem.Price;
+                this.Voucher = orderItem.Voucher;
+            }
         }
 
         public OrderItem GetEntity()
@@ -195,7 +202,8 @@ namespace ias.Rebens.api.Models
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow,
                 Name = this.Name,
-                Price = this.Price
+                Price = this.Price,
+                Voucher = SecurityHelper.GenerateCode(12)
             };
         }
     }
