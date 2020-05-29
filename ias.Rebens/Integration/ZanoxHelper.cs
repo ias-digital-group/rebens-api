@@ -31,9 +31,19 @@ namespace ias.Rebens.Integration
 
                     foreach (var item in objList)
                     {
-                        var sale = new ZanoxSale();
-                        sale.ZanoxId = item["@id"].ToString();
-                        sale.ReviewState = item["reviewState"].ToString();
+                        var sale = new ZanoxSale
+                        {
+                            ZanoxId = item["@id"].ToString(),
+                            ReviewState = item["reviewState"].ToString(),
+                            ClickId = long.Parse(item["clickId"].ToString()),
+                            ClickInId = long.Parse(item["clickInId"].ToString()),
+                            Amount = decimal.Parse(item["amount"].ToString()),
+                            Commission = decimal.Parse(item["commission"].ToString()),
+                            Currency = item["currency"].ToString(),
+                            Modified = DateTime.Now,
+                            Created = DateTime.Now
+                        };
+
                         if (item["trackingDate"] != null)
                         {
                             if (DateTime.TryParse(item["trackingDate"].ToString(), out DateTime dt))
@@ -49,12 +59,6 @@ namespace ias.Rebens.Integration
                             if (DateTime.TryParse(item["clickDate"].ToString(), out DateTime dt))
                                 sale.ClickDate = dt;
                         }
-                        sale.ClickId = long.Parse(item["clickId"].ToString());
-                        sale.ClickInId = long.Parse(item["clickInId"].ToString());
-                        sale.Amount = decimal.Parse(item["amount"].ToString());
-                        sale.Commission = decimal.Parse(item["commission"].ToString());
-                        sale.Currency = item["currency"].ToString();
-                        sale.Created = sale.Modified = DateTime.Now;
 
                         if (item["adspace"] != null)
                         {
@@ -91,10 +95,26 @@ namespace ias.Rebens.Integration
                         if (item["gpps"] != null)
                         {
                             sale.Gpps = item["gpps"].ToString();
-                            if (item["gpps"]["gpp"] != null && item["gpps"]["gpp"] != null && item["gpps"]["gpp"]["@id"] != null)
+                            if (item["gpps"]["gpp"] != null && item["gpps"]["gpp"] != null)
                             {
-                                if (item["gpps"]["gpp"]["@id"].ToString() == "zpar0")
-                                    sale.Zpar = item["gpps"]["gpp"]["$"].ToString();
+                                try
+                                {
+                                    if (item["gpps"]["gpp"]["@id"] != null)
+                                        if (item["gpps"]["gpp"]["@id"].ToString() == "zpar0")
+                                            sale.Zpar = item["gpps"]["gpp"]["$"].ToString();
+                                }
+                                catch { }
+
+                                try
+                                {
+                                    var childrens = item["gpps"]["gpp"].Children();
+                                    foreach (var child in childrens)
+                                    {
+                                        if (child["@id"] != null && child["@id"].ToString() == "zpar0")
+                                            sale.Zpar = child["$"].ToString();
+                                    }
+                                }
+                                catch { }
                             }
                         }
 
