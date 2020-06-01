@@ -74,7 +74,12 @@ namespace ias.Rebens.api.helper
                                 body += $" - {item} <br /><br />";
                             }
                             body += "</p>";
-                            var listDestinataries = new Dictionary<string, string>() { { "botlink@sistemarebens.com.br", "Bot Link" }, { "israel@iasdigitalgroup.com", "Israel Silva" }, { "fernando@fbbcomunicacao.com.br", "Fernando" } };
+                            var listDestinataries = new Dictionary<string, string>() { 
+                                                        { "rlunardelli@mac.com", "Rodrigo" }, 
+                                                        { "tatiana@rebens.com.br", "Tatiana" }, 
+                                                        { "botlink@sistemarebens.com.br", "Bot Link" },
+                                                        { "israel@iasdigitalgroup.com", "Israel Silva" }, 
+                                                        { "fernando@fbbcomunicacao.com.br", "Fernando" } };
                             Helper.EmailHelper.SendAdminEmail(listDestinataries, "[Rebens] - Links com problemas", body, out _);
                         }
                     }
