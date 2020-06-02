@@ -113,7 +113,6 @@ namespace ias.Rebens.api.Controllers
             return model;
         }
 
-
         public IActionResult Course(string code)
         {
 
@@ -130,6 +129,31 @@ namespace ias.Rebens.api.Controllers
                         model.College = courseCollegeRepo.Read(model.Course.IdCollege, out _);
                         return new ViewAsPdf("Course", "voucher.pdf", model);
                         //return View("Course", model);
+                    }
+                }
+                catch { }
+            }
+
+            return View("Error");
+        }
+
+        public IActionResult Order(string code)
+        {
+
+            if (!string.IsNullOrEmpty(code))
+            {
+                try
+                {
+                    var model = new Models.VoucherOrderModel()
+                    {
+                        Order = orderRepo.ReadByWirecardId(code, out string error)
+                    };
+                    if (model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count > 0)
+                    {
+                        model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);
+                        model.Operation = operationRepo.Read(model.Customer.IdOperation, out _);
+                        return new ViewAsPdf("Order", "ingressos.pdf", model);
+                        //return View("Order", model);
                     }
                 }
                 catch { }

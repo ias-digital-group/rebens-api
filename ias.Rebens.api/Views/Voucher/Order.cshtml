@@ -1,0 +1,145 @@
+﻿@model ias.Rebens.api.Models.VoucherOrderModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <style>
+        .box {
+            width: 798px;
+            border: 1px solid #f1f1f1;
+            border-radius: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+            margin-bottom:40px;
+        }
+
+            .box .top {
+                width: 100%;
+                height: 140px;
+                border-bottom: 1px solid #f1f1f1;
+            }
+
+                .box .top .logo {
+                    width: 200px;
+                    height: 140px;
+                    float: left;
+                    text-align: center;
+                    position: relative;
+                }
+
+                    .box .top .logo img {
+                        max-width: 160px;
+                        top: 0;
+                        left: 0;
+                        position: absolute;
+                        right: 0;
+                        bottom: 0;
+                        margin: auto;
+                    }
+
+                .box .top .infoes {
+                    width: 598px;
+                    float: left;
+                }
+
+                    .box .top .infoes h3 {
+                        margin: 30px 0 0 50px;
+                        font-size: 16px;
+                    }
+
+                    .box .top .infoes h4 {
+                        margin: 4px 0 0 50px;
+                        font-size: 16px;
+                        font-weight: 400;
+                    }
+
+                    .box .top .infoes p {
+                        margin: 20px 0 0 50px;
+                        font-size: 14px;
+                    }
+
+            .box .middle {
+                width: 100%;
+                padding: 20px 0;
+            }
+
+                
+
+                
+                .box .middle .description {
+                    width: 395px;
+                    min-height: 100px;
+                    padding: 0 15px;
+                    display: inline-block
+                }
+
+                    .box .middle h1 {
+                        margin: 0;
+                        font-size: 36px;
+                        text-align:center;
+                    }
+
+            .box .bottom {
+                width: 100%;
+                height: 70px;
+                background-color: #f1f1f1;
+                border-radius: 0 0 20px 20px;
+            }
+
+                .box .bottom .store-msg {
+                    width: 620px;
+                    float: left;
+                    margin-top: 20px;
+                }
+
+                    .box .bottom .store-msg p {
+                        margin: 0;
+                        font-size: 13px;
+                        line-height: 19px;
+                        padding-left: 30px;
+                    }
+
+                .box .bottom .expire-date {
+                    width: 178px;
+                    float: left;
+                }
+    </style>
+</head>
+<body>
+    @foreach (var item in Model.Order.OrderItems)
+    {
+    <div class="box">
+        <div class="top">
+            <div class="logo">
+                <img src="@Model.Operation.Image" alt="@Model.Operation.Title" />
+            </div>
+            <div class="infoes">
+                <h3>@Model.Customer.Name</h3>
+                <h4>CPF: @Model.Customer.Cpf | Código: <b>@item.Voucher</b></h4>
+                <p><i>Apresente o seu documento junto com esse voucher.</i></p>
+            </div>
+        </div>
+        <div class="middle">
+            <h1>@item.Name</h1>
+        </div>
+        <div class="bottom">
+            <div class="store-msg">
+                <p>
+                    <i>
+                        Verifique se a indentificação confere com a a presentada no cartão 
+                    </i>
+                </p>
+            </div>
+            <div class="expire-date">
+                <p>Data da compra: <b>@Model.Order.Created.ToString("dd/MM/yyyy")</b></p>
+            </div>
+        </div>
+    </div>
+    }
+</body>
+</html>
