@@ -90,7 +90,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Status
         /// </summary>
-        public string StatusName { get { return Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)this.Status); } }
+        public string StatusName { get { return this.Status > 0 ? Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)this.Status) : ""; } }
         /// <summary>
         /// Lista de Configurações 
         /// </summary>
