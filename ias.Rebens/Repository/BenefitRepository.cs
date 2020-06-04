@@ -514,7 +514,7 @@ namespace ias.Rebens
                                         && (boundingBox == null || benefitIds.Any(bi => bi == b.Id))
                                         && (string.IsNullOrEmpty(state) || b.BenefitAddresses.Any(a => a.Address.State == state))
                                         && (string.IsNullOrEmpty(city) || b.BenefitAddresses.Any(a => a.Address.City == city))
-                                        && !listIds.Any(i => i == b.Id)
+                                        //&& !listIds.Any(i => i == b.Id)
                                     );
 
                     switch (sort.ToLower())
@@ -538,7 +538,7 @@ namespace ias.Rebens
                     if (total < pageItems || total < (page * pageItems))
                         page = 0;
                     
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var list = tmpList.Where(b => !listIds.Any(i => i == b.Id)).Skip((page * pageItems) - listIds.Count).Take(pageItems).ToList();
                    
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
                     error = null;
