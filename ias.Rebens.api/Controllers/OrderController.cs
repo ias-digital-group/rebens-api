@@ -118,7 +118,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet]
-        [ProducesResponseType(typeof(JsonDataModel<List<OrderModel>>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<OrderModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 20, [FromQuery]string word = null, [FromQuery]string sort = "" )
@@ -141,8 +141,14 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<OrderModel>>()
+                var ret = new ResultPageModel<OrderModel>()
                 {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
                     Data = new List<OrderModel>()
                 };
 

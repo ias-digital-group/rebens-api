@@ -16,6 +16,7 @@ namespace ias.Rebens
         public string Voucher { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public DateTime? UsedDate { get; set; }
 
         public virtual Order Order { get; set; }
         public virtual Course Course { get; set; }

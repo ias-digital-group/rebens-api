@@ -60,7 +60,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Order.Where(o => o.IdCustomer == idCustomer &&
+                    var tmpList = db.Order.Include("OrderItems").Where(o => o.IdCustomer == idCustomer &&
                                     (string.IsNullOrEmpty(word) || o.DispId.Contains(word) 
                                     || (!string.IsNullOrEmpty(o.WirecardId) && o.WirecardId.Contains(word)) 
                                     || o.PaymentType.Contains(word) || o.Status.Contains(word)));
@@ -192,7 +192,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public Order ReadByWirecardId(string id, out string error)
+        public Order ReadByDispId(string id, out string error)
         {
             Order ret;
             try
@@ -344,6 +344,30 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 logError.Create("OrderRepository.ProcessOrder", ex.Message, "", ex.StackTrace);
             }
+        }
+
+        public Order ReadByItem(string code, string voucher, out string error)
+        {
+            Order ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Order.SingleOrDefault(o => o.DispId == code);
+                    var item = db.OrderItem.SingleOrDefault(i => i.IdOrder == ret.Id && i.Voucher == voucher);
+                    if (item != null)
+                        ret.OrderItems.Add(item);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.ReadByItem", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar ler o pedido. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
         }
     }
 }

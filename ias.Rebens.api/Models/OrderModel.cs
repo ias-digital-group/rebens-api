@@ -1,4 +1,5 @@
 ﻿using ias.Rebens.Helper;
+using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -175,6 +176,10 @@ namespace ias.Rebens.api.Models
         /// Voucher
         /// </summary>
         public string Voucher { get; set; }
+        /// <summary>
+        /// Data da utilização do Ticket/Produto
+        /// </summary>
+        public DateTime? UsedDate { get; set; }
 
         public OrderItemModel() { }
         public OrderItemModel(OrderItem orderItem) 
@@ -188,6 +193,7 @@ namespace ias.Rebens.api.Models
                 this.Name = orderItem.Name;
                 this.Price = orderItem.Price;
                 this.Voucher = orderItem.Voucher;
+                this.UsedDate = orderItem.UsedDate;
             }
         }
 
@@ -203,6 +209,7 @@ namespace ias.Rebens.api.Models
                 Modified = DateTime.UtcNow,
                 Name = this.Name,
                 Price = this.Price,
+                UsedDate = this.UsedDate,
                 Voucher = SecurityHelper.GenerateCode(12)
             };
         }

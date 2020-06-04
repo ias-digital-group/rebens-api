@@ -1277,6 +1277,8 @@ namespace ias.Rebens
                 entity.Property(e => e.Created).HasColumnType("datetime");
 
                 entity.Property(e => e.Modified).HasColumnType("datetime");
+                
+                entity.Property(e => e.UsedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Price).IsRequired().HasColumnType("money");
 

@@ -11,9 +11,10 @@ namespace ias.Rebens
         Order Read(int id, out string error);
         ResultPage<Order> ListByCustomer(int idCustomer, int page, int pageItems, string word, string sort, out string error);
         List<Order> ListToUpdate(int count, out string error);
-        Order ReadByWirecardId(string id, out string error);
+        Order ReadByItem(string code, string voucher, out string error);
         bool SendOrderConfirmationEmail(int idOrder, out string error);
         bool HasOrderToProcess();
         void ProcessOrder();
+        Order ReadByDispId(string id, out string error);
     }
 }

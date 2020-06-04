@@ -121,7 +121,7 @@ namespace ias.Rebens.api.Controllers
                 try
                 {
                     var model = new Models.VoucherCourseModel();
-                    model.Order = orderRepo.ReadByWirecardId(code, out string error);
+                    model.Order = orderRepo.ReadByDispId(code, out string error);
                     if(model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count == 1)
                     {
                         model.Course = courseRepo.ReadForContract(model.Order.OrderItems.First().IdCourse.Value, out _);
@@ -139,15 +139,40 @@ namespace ias.Rebens.api.Controllers
 
         public IActionResult Order(string code)
         {
-
             if (!string.IsNullOrEmpty(code))
             {
                 try
                 {
                     var model = new Models.VoucherOrderModel()
                     {
-                        Order = orderRepo.ReadByWirecardId(code, out string error)
+                        Order = orderRepo.ReadByDispId(code, out string error)
                     };
+                    
+                    if (model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count > 0)
+                    {
+                        model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);
+                        model.Operation = operationRepo.Read(model.Customer.IdOperation, out _);
+                        return new ViewAsPdf("Order", "ingressos.pdf", model);
+                        //return View("Order", model);
+                    }
+                }
+                catch { }
+            }
+
+            return View("Error");
+        }
+
+        public IActionResult OrderItem(string code, string tkt)
+        {
+            if (!string.IsNullOrEmpty(code))
+            {
+                try
+                {
+                    var model = new Models.VoucherOrderModel()
+                    {
+                        Order = orderRepo.ReadByItem(code, tkt, out string error)
+                    };
+
                     if (model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count > 0)
                     {
                         model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);

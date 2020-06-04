@@ -205,6 +205,7 @@ namespace ias.Rebens.api
             {
                 routes.MapRoute("CourseVoucher", "Voucher/Course/{code}", defaults: new { controller = "Voucher", action = "Course" } );
                 routes.MapRoute("OrderVoucher", "Voucher/Order/{code}", defaults: new { controller = "Voucher", action = "Order" });
+                routes.MapRoute("OrderItemVoucher", "Voucher/OrderItem/{code}/{tkt}", defaults: new { controller = "Voucher", action = "OrderItem" });
                 routes.MapRoute("Voucher", "Voucher/{code}", defaults: new { controller = "Voucher", action = "Index" } );
                 routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
