@@ -39,6 +39,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public int? IdOperationPartner { get; set; }
         /// <summary>
+        /// Id do parceiro
+        /// </summary>
+        public int? IdPartner { get; set; }
+        /// <summary>
         /// Papéis do usuário
         /// </summary>
         [MaxLength(500)]
@@ -55,14 +59,18 @@ namespace ias.Rebens.api.Models
         /// <param name="adminUser"></param>
         public AdminUserModel(AdminUser adminUser)
         {
-            this.Id = adminUser.Id;
-            this.Name = adminUser.Name;
-            this.Email = adminUser.Email;
-            this.LastLogin = adminUser.LastLogin;
-            this.Active = adminUser.Status == (int)Enums.AdminUserStatus.Active;
-            this.IdOperation = adminUser.IdOperation;
-            this.Roles = adminUser.Roles;
-            this.IdOperationPartner = adminUser.IdOperationPartner;
+            if (adminUser != null)
+            {
+                this.Id = adminUser.Id;
+                this.Name = adminUser.Name;
+                this.Email = adminUser.Email;
+                this.LastLogin = adminUser.LastLogin;
+                this.Active = adminUser.Status == (int)Enums.AdminUserStatus.Active;
+                this.IdOperation = adminUser.IdOperation;
+                this.Roles = adminUser.Roles;
+                this.IdPartner = adminUser.IdPartner;
+                this.IdOperationPartner = adminUser.IdOperationPartner;
+            }
         }
 
         /// <summary>
@@ -81,6 +89,7 @@ namespace ias.Rebens.api.Models
                 IdOperation = this.IdOperation,
                 Roles = this.Roles,
                 IdOperationPartner = this.IdOperationPartner,
+                IdPartner = this.IdPartner,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };

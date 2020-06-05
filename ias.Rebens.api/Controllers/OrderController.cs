@@ -250,7 +250,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult ListForValidation([FromQuery] int page = 0, [FromQuery] int pageItems = 20, [FromQuery] string word = null, [FromQuery] int? idOperation = null)
         {
             var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (principal.IsInRole(Enums.Roles.administrator.ToString()))
             {
                 if (principal?.Claims != null)
                 {

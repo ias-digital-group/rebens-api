@@ -110,7 +110,7 @@ namespace ias.Rebens
                                 && (!status.HasValue || (status.HasValue && a.Status == (status.Value ? 1 : 2)))
                                 && (!idOperationPartner.HasValue || a.IdOperationPartner == idOperationPartner.Value)
                                 && (string.IsNullOrEmpty(role) || a.Roles == role)
-                                && (userRole == "master" || a.Roles != "master")
+                                && (userRole == Enums.Roles.master.ToString() || a.Roles != Enums.Roles.master.ToString())
                                 ); ;
                     switch (sort.ToLower())
                     {
@@ -232,14 +232,19 @@ namespace ias.Rebens
                         update.Status = adminUser.Status;
                         if(!string.IsNullOrEmpty(adminUser.Roles))
                             update.Roles = adminUser.Roles;
-                        if (adminUser.Roles == "partnerApprover" || adminUser.Roles == "partnerAdministrator")
+                        if (adminUser.Roles == Enums.Roles.partnerAdministrator.ToString() || adminUser.Roles == Enums.Roles.partnerApprover.ToString())
                             update.IdOperationPartner = adminUser.IdOperationPartner;
                         else
                             update.IdOperationPartner = null;
 
+                        if (adminUser.Roles == Enums.Roles.voucherChecker.ToString())
+                            update.IdPartner = adminUser.IdPartner;
+                        else
+                            update.IdPartner = null;
 
-                        if (adminUser.Roles != "master" && adminUser.Roles != "administratorRebens" &&
-                            adminUser.Roles != "publisherRebens" && adminUser.Roles != "customer")
+
+                        if (adminUser.Roles != Enums.Roles.master.ToString() && adminUser.Roles != Enums.Roles.administratorRebens.ToString() &&
+                            adminUser.Roles != Enums.Roles.publisherRebens.ToString() && adminUser.Roles != Enums.Roles.customer.ToString())
                             update.IdOperation = adminUser.IdOperation;
                         else
                             update.IdOperation = null;

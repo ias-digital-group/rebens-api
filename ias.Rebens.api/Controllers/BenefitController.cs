@@ -634,11 +634,11 @@ namespace ias.Rebens.api.Controllers
         public IActionResult UseValidation([FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "", [FromQuery]int? idPartner = null)
         {
             var principal = HttpContext.User;
-            if (principal.IsInRole("voucherChecker"))
+            if (principal.IsInRole(Enums.Roles.voucherChecker.ToString()))
             {
                 if (principal?.Claims != null)
                 {
-                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "partnerId");
+                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
                     if (partnerId == null)
                         return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrado!" });
                     if (int.TryParse(partnerId.Value, out int tmp))
