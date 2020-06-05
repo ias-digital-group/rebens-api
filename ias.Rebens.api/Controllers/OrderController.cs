@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer,master,administrator,administratorRebens")]
     [ApiController]
     public class OrderController : ControllerBase
     {
@@ -234,6 +234,93 @@ namespace ias.Rebens.api.Controllers
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto vazio" });
+        }
+
+        /// <summary>
+        /// Retorna uma lista com produtos para validação
+        /// </summary>
+        /// <returns>Lista com os números</returns>
+        /// <response code="200">Retorna a lista com os números, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("Validation")]
+        [ProducesResponseType(typeof(ResultPageModel<ProductValidationModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListForValidation([FromQuery] int page = 0, [FromQuery] int pageItems = 20, [FromQuery] string word = null, [FromQuery] int? idOperation = null)
+        {
+            var principal = HttpContext.User;
+            if (principal.IsInRole("administrator"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    if (int.TryParse(operationId.Value, out int tmp))
+                        idOperation = tmp;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
+            var list = repo.ListItemsByOperation(page, pageItems, word, out string error, idOperation);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<ProductValidationModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<ProductValidationModel>()
+                };
+
+                foreach (var item in list)
+                    ret.Data.Add(new ProductValidationModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Valida um Produto
+        /// </summary>
+        /// <param name="id">id do produto</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok</returns>
+        /// <response code="200">Se o objeto for ataulizado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("Validate/{id}")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Validate(int id)
+        {
+            int idAdminUser = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (userId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+                if (!int.TryParse(userId.Value, out idAdminUser))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+
+            if(repo.SetItemUsed(id, idAdminUser, out string error))
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Item validado com sucesso!" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }

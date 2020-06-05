@@ -28,6 +28,7 @@ namespace ias.Rebens
         public string Roles { get; set; }
         public bool Deleted { get; set; }
         public int? IdOperationPartner { get; set; }
+        public int? IdPartner { get; set; }
 
         public virtual Operation Operation { get; set; }
         public virtual OperationPartner OperationPartner { get; set; }
