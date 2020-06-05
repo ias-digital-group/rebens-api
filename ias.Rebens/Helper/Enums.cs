@@ -196,6 +196,8 @@ namespace ias.Rebens.Enums
         generate = 4,
         [Description("Publicar")]
         publish = 5,
+        [Description("Validar Produto")]
+        voucherValidate = 15
     }
 
     public enum LogItem : int
@@ -258,6 +260,14 @@ namespace ias.Rebens.Enums
         OperationContact = 28,
         [Description("Endereço Operação")]
         OperationAddress = 29,
+        [Description("File")]
+        File = 30,
+        [Description("Empresa")]
+        Company = 31,
+        [Description("Pedido")]
+        Order = 32,
+        [Description("Item Pedido")]
+        OrderItem = 33,
 
     }
 
@@ -528,7 +538,9 @@ namespace ias.Rebens.Enums
         [Description("Aprovador Parceiro")]
         partnerApprover,
         [Description("Promotor")]
-        promoter
+        promoter,
+        [Description("Validador Voucher")]
+        voucherChecker
     }
 
     public enum GraduationTypeParent : int

@@ -16,5 +16,7 @@ namespace ias.Rebens
         bool HasOrderToProcess();
         void ProcessOrder();
         Order ReadByDispId(string id, out string error);
+        ResultPage<Entity.ProductValidateItem> ListItemsByOperation(int page, int pageItems, string word, out string error, int? idOperation = null);
+        bool SetItemUsed(int id, int idAdminUser, out string error);
     }
 }

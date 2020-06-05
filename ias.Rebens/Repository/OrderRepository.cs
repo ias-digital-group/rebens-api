@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ias.Rebens.Entity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
@@ -366,6 +369,101 @@ namespace ias.Rebens
                 int idLog = logError.Create("OrderRepository.ReadByItem", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar ler o pedido. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<ProductValidateItem> ListItemsByOperation(int page, int pageItems, string word, out string error, int? idOperation = null)
+        {
+            ResultPage<ProductValidateItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.OrderItem.Where(o => o.Order.Status == "PAID" &&
+                                        (!idOperation.HasValue || o.Order.IdOperation == idOperation) &&
+                                        (string.IsNullOrEmpty(word) || o.Voucher == word));
+
+                    var total = tmpList.Count();
+                    var list = tmpList.OrderByDescending(o => o.Created).Skip(page * pageItems).Take(pageItems)
+                                    .Select(i => new ProductValidateItem() {
+                                        Id = i.Id,
+                                        ItemName = i.Name,
+                                        Created = i.Created,
+                                        Used = i.UsedDate,
+                                        IdOrder = i.Order.Id,
+                                        IdCustomer = i.Order.IdCustomer,
+                                        IdOperation = i.Order.IdOperation,
+                                        CustomerCpf = i.Order.Customer.Cpf,
+                                        CustomerName = i.Order.Customer.Name,
+                                        OperationName = i.Order.Operation.Title, 
+                                        Voucher = i.Voucher
+                                    }).ToList();
+
+                    foreach(var item in list)
+                    {
+                        if (item.Used.HasValue)
+                        {
+                            var log = db.LogAction.FirstOrDefault(a => a.Action == (int)Enums.LogAction.voucherValidate
+                                                && a.Item == (int)Enums.LogItem.OrderItem
+                                                && a.IdItem == item.Id);
+                            if(log != null)
+                            {
+                                item.IdAdminUser = log.IdAdminUser;
+                                item.AdminUserName = log.AdminUser.Name;
+                            }
+                        }
+                    }
+
+                    ret = new ResultPage<ProductValidateItem>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.ListItemsByOperation", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os pedidos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public bool SetItemUsed(int id, int idAdminUser, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.OrderItem.SingleOrDefault(i => i.Id == id);
+                    if(update != null)
+                    {
+                        update.UsedDate = DateTime.UtcNow;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.voucherValidate,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = id,
+                            Item = (int)Enums.LogItem.OrderItem
+                        });
+
+                        db.SaveChanges();
+                        ret = true;
+                        error = null;
+                    } 
+                    else
+                        error = "Produto não encontrado!";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("WirecardPaymentRepository.SetItemUsed", ex.Message, "", ex.StackTrace);
+                error = $"Ocorreu um erro ao tentar validar o item. (erro: {idLog})";
             }
             return ret;
         }
