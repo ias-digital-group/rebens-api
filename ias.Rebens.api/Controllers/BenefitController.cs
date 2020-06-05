@@ -631,7 +631,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<BenefitUseListItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult UseValidation(int id, [FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "", [FromQuery]int? idPartner = null)
+        public IActionResult UseValidation([FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "", [FromQuery]int? idPartner = null)
         {
             var principal = HttpContext.User;
             if (principal.IsInRole("voucherChecker"))

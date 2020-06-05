@@ -385,7 +385,7 @@ namespace ias.Rebens
                                         (string.IsNullOrEmpty(word) || o.Voucher == word));
 
                     var total = tmpList.Count();
-                    var list = tmpList.OrderByDescending(o => o.Created).Skip(page * pageItems).Take(pageItems)
+                    var list = tmpList.OrderBy(o => o.UsedDate).ThenByDescending(o => o.Created).Skip(page * pageItems).Take(pageItems)
                                     .Select(i => new ProductValidateItem() {
                                         Id = i.Id,
                                         ItemName = i.Name,
@@ -410,7 +410,9 @@ namespace ias.Rebens
                             if(log != null)
                             {
                                 item.IdAdminUser = log.IdAdminUser;
-                                item.AdminUserName = log.AdminUser.Name;
+                                var admin = db.AdminUser.SingleOrDefault(a => a.Id == log.IdAdminUser);
+                                if (admin != null)
+                                    item.AdminUserName = admin.Name;
                             }
                         }
                     }
