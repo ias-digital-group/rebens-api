@@ -281,5 +281,43 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public ResultPage<Entity.BenefitUseListItem> ValidateListPage(int page, int pageItems, string word, out string error, int? idPartner = null)
+        {
+            ResultPage<Entity.BenefitUseListItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.BenefitUse.Where(b => b.IdBenefitType == (int)Enums.BenefitType.OffLine
+                                                    && (string.IsNullOrEmpty(word) || b.Code.Contains(word))
+                                                    && (!idPartner.HasValue || b.Benefit.IdPartner == idPartner));
+                    var total = tmpList.Count();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).Select(b => new Entity.BenefitUseListItem() { 
+                                        Id = b.Id,
+                                        BenefitName = b.Benefit.Name,
+                                        Code = b.Code,
+                                        Created = b.Created,
+                                        CustomerCpf = b.Customer.Cpf,
+                                        CustomerName = b.Customer.Name,
+                                        IdBenefit = b.IdBenefit,
+                                        IdCustomer = b.IdCustomer,
+                                        PartnerName = b.Name
+                                }).ToList();
+
+                    ret = new ResultPage<Entity.BenefitUseListItem>(list, page, pageItems, total);
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AddressRepository.ValidateListPage", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os usos. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
     }
 }
