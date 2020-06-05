@@ -11,7 +11,7 @@ namespace ias.Rebens.api.Controllers
     /// Benefit Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens,voucherChecker")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens,couponChecker")]
     [ApiController]
     public class BenefitController : ControllerBase
     {
@@ -634,7 +634,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult UseValidation([FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "", [FromQuery]int? idPartner = null)
         {
             var principal = HttpContext.User;
-            if (principal.IsInRole(Enums.Roles.voucherChecker.ToString()))
+            if (principal.IsInRole(Enums.Roles.couponChecker.ToString()))
             {
                 if (principal?.Claims != null)
                 {
@@ -649,8 +649,6 @@ namespace ias.Rebens.api.Controllers
                 else
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrado!" });
             }
-
-            
 
             var list = benefitUseRepo.ValidateListPage(page, pageItems, searchWord, out string error, idPartner);
 
@@ -675,6 +673,36 @@ namespace ias.Rebens.api.Controllers
                 return Ok(ret);
             }
 
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Valida um cupom
+        /// </summary>
+        /// <param name="id">id do cupom</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok</returns>
+        /// <response code="200">Se o objeto for ataulizado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("Validate/{id}")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Validate(int id)
+        {
+            int idAdminUser = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (userId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+                if (!int.TryParse(userId.Value, out idAdminUser))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            }
+            else
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+
+            if (benefitUseRepo.SetUsed(id, idAdminUser, out string error))
+                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Item validado com sucesso!" });
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }

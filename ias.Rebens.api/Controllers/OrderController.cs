@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer,master,administrator,administratorRebens")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer,master,administrator,administratorRebens,couponChecker")]
     [ApiController]
     public class OrderController : ControllerBase
     {
@@ -250,7 +250,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult ListForValidation([FromQuery] int page = 0, [FromQuery] int pageItems = 20, [FromQuery] string word = null, [FromQuery] int? idOperation = null)
         {
             var principal = HttpContext.User;
-            if (principal.IsInRole(Enums.Roles.administrator.ToString()))
+            if (principal.IsInRole(Enums.Roles.administrator.ToString()) || principal.IsInRole(Enums.Roles.ticketChecker.ToString()))
             {
                 if (principal?.Claims != null)
                 {

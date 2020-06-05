@@ -73,7 +73,7 @@ namespace ias.Rebens.api.Controllers
                     if (user.IdOperation.HasValue)
                         modules = operationRepo.LoadModulesNames(user.IdOperation.Value, out error);
 
-                    if(user.Roles == Enums.Roles.voucherChecker.ToString())
+                    if(user.Roles == Enums.Roles.couponChecker.ToString())
                         identity.AddClaim(new Claim("operationPartnerId", user.IdPartner.HasValue ? user.IdPartner.Value.ToString() : "0"));
                     else
                         identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
@@ -295,7 +295,7 @@ namespace ias.Rebens.api.Controllers
                         if (user.IdOperation.HasValue)
                             modules = operationRepo.LoadModulesNames(user.IdOperation.Value, out _);
 
-                        if (user.Roles == Enums.Roles.voucherChecker.ToString())
+                        if (user.Roles == Enums.Roles.couponChecker.ToString())
                             identity.AddClaim(new Claim("operationPartnerId", user.IdPartner.HasValue ? user.IdPartner.Value.ToString() : "0"));
                         else
                             identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));

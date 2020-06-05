@@ -16,6 +16,6 @@ namespace ias.Rebens
         bool GetCustomerWithdrawSummary(int idCustomer, out decimal available, out decimal blocked, out string error);
         decimal GetCustomerBalance(int idCustomer, out string error);
         ResultPage<Entity.BenefitUseListItem> ValidateListPage(int page, int pageItems, string word, out string error, int? idPartner = null);
-
+        bool SetUsed(int id, int idAdminUser, out string error);
     }
 }

@@ -237,11 +237,10 @@ namespace ias.Rebens
                         else
                             update.IdOperationPartner = null;
 
-                        if (adminUser.Roles == Enums.Roles.voucherChecker.ToString())
+                        if (adminUser.Roles == Enums.Roles.couponChecker.ToString())
                             update.IdPartner = adminUser.IdPartner;
                         else
                             update.IdPartner = null;
-
 
                         if (adminUser.Roles != Enums.Roles.master.ToString() && adminUser.Roles != Enums.Roles.administratorRebens.ToString() &&
                             adminUser.Roles != Enums.Roles.publisherRebens.ToString() && adminUser.Roles != Enums.Roles.customer.ToString())

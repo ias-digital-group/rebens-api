@@ -319,5 +319,38 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool SetUsed(int id, int idAdminUser, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.BenefitUse.SingleOrDefault(c => c.Id == id);
+                    update.UseDate = DateTime.UtcNow;
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        IdAdminUser = idAdminUser,
+                        Action = (int)Enums.LogAction.voucherValidate,
+                        Created = DateTime.UtcNow,
+                        IdItem = id,
+                        Item = (int)Enums.LogItem.BenefitUse
+                    });
+                    db.SaveChanges();
+
+                    error = null;
+                    ret = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BenefitUseRepository.SetUsed", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o Uso de Benefícios. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
     }
 }

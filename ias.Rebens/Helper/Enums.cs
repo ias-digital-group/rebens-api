@@ -268,6 +268,8 @@ namespace ias.Rebens.Enums
         Order = 32,
         [Description("Item Pedido")]
         OrderItem = 33,
+        [Description("Uso de benefício")]
+        BenefitUse = 34
 
     }
 
@@ -539,8 +541,10 @@ namespace ias.Rebens.Enums
         partnerApprover,
         [Description("Promotor")]
         promoter,
-        [Description("Validador Voucher")]
-        voucherChecker
+        [Description("Validador Ingresso")]
+        ticketChecker,
+        [Description("Validador Cupom")]
+        couponChecker
     }
 
     public enum GraduationTypeParent : int

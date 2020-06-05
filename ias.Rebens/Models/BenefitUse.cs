@@ -17,6 +17,7 @@ namespace ias.Rebens
         public int Status { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public DateTime? UseDate { get; set; }
 
         public virtual Customer Customer { get; set; }
         public virtual Benefit Benefit { get; set; }

@@ -52,6 +52,7 @@ namespace ias.Rebens.api.Models
         /// Data
         /// </summary>
         public string Date { get; set; }
+        public bool Used { get; set; }
 
         /// <summary>
         /// Contrutor
@@ -64,16 +65,20 @@ namespace ias.Rebens.api.Models
         /// <param name="benefitUse"></param>
         public BenefitUseModel(BenefitUse benefitUse)
         {
-            this.Id = benefitUse.Id;
-            this.IdBenefit = benefitUse.IdBenefit;
-            this.IdBenefitType = benefitUse.IdBenefitType;
-            this.IdCustomer = benefitUse.IdCustomer;
-            this.Name = benefitUse.Name;
-            this.Amount = benefitUse.IdBenefitType == (int)Enums.BenefitType.Cashback ? (benefitUse.Amount.HasValue ? benefitUse.Amount.Value.ToString("N") : "") : "";
-            this.Comission = benefitUse.IdBenefitType == (int)Enums.BenefitType.Cashback ? (benefitUse.Comission.HasValue ? benefitUse.Comission.Value.ToString("N") : "") : "";
-            this.IdStatus = benefitUse.Status;
-            this.Status = Enums.EnumHelper.GetEnumDescription((Enums.BenefitUseStatus)benefitUse.Status);
-            this.Date = benefitUse.Created.ToString("dd/MM/yyyy");
+            if (benefitUse != null)
+            {
+                this.Id = benefitUse.Id;
+                this.IdBenefit = benefitUse.IdBenefit;
+                this.IdBenefitType = benefitUse.IdBenefitType;
+                this.IdCustomer = benefitUse.IdCustomer;
+                this.Name = benefitUse.Name;
+                this.Amount = benefitUse.IdBenefitType == (int)Enums.BenefitType.Cashback ? (benefitUse.Amount.HasValue ? benefitUse.Amount.Value.ToString("N") : "") : "";
+                this.Comission = benefitUse.IdBenefitType == (int)Enums.BenefitType.Cashback ? (benefitUse.Comission.HasValue ? benefitUse.Comission.Value.ToString("N") : "") : "";
+                this.IdStatus = benefitUse.Status;
+                this.Status = Enums.EnumHelper.GetEnumDescription((Enums.BenefitUseStatus)benefitUse.Status);
+                this.Date = TimeZoneInfo.ConvertTimeFromUtc(benefitUse.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.Used = benefitUse.UseDate.HasValue;
+            }
         }
     }
 }
