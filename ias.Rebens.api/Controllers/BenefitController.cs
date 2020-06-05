@@ -11,11 +11,12 @@ namespace ias.Rebens.api.Controllers
     /// Benefit Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens,voucherChecker")]
     [ApiController]
     public class BenefitController : ControllerBase
     {
         private IBenefitRepository repo;
+        private IBenefitUseRepository benefitUseRepo;
         private IAddressRepository addressRepo;
         private IStaticTextRepository staticTextRepo;
         private ICategoryRepository categoryRepo;
@@ -30,14 +31,16 @@ namespace ias.Rebens.api.Controllers
         /// <param name="categoryRepository">Injeção de dependencia do repositório de Categoria</param>
         /// <param name="operationRepository">Injeção de dependencia do repositório de Operação</param>
         /// <param name="staticTextRepository">Injeção de dependencia do repositório de Texto Estático</param>
+        /// <param name="benefitUseRepository">Injeção de dependencia do repositório de Uso de beneficio</param>
         public BenefitController(IBenefitRepository benefitRepository, IAddressRepository addressRepository, ICategoryRepository categoryRepository, 
-            IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
+            IOperationRepository operationRepository, IStaticTextRepository staticTextRepository, IBenefitUseRepository benefitUseRepository)
         {
             this.repo = benefitRepository;
             this.addressRepo = addressRepository;
             this.categoryRepo = categoryRepository;
             this.operationRepo = operationRepository;
             this.staticTextRepo = staticTextRepository;
+            this.benefitUseRepo = benefitUseRepository;
             this.constant = new Constant();
         }
 
@@ -608,6 +611,68 @@ namespace ias.Rebens.api.Controllers
             if (repo.Duplicate(id, out int newId, out string error))
             {
                 return Ok(new JsonModel() { Status = "ok", Message = $"{newId}" });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista os vouchers Varejo Local para validaçaõ
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="idPartner">id do parceiro</param>
+        /// <returns>Lista com os vouchers encontrados</returns>
+        /// <response code="200">Retorna a list, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("UseValidation")]
+        [ProducesResponseType(typeof(ResultPageModel<BenefitUseListItemModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult UseValidation(int id, [FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "", [FromQuery]int? idPartner = null)
+        {
+            var principal = HttpContext.User;
+            if (principal.IsInRole("voucherChecker"))
+            {
+                if (principal?.Claims != null)
+                {
+                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "partnerId");
+                    if (partnerId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrado!" });
+                    if (int.TryParse(partnerId.Value, out int tmp))
+                        idPartner = tmp;
+                    else
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrado!" });
+                }
+                else
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrado!" });
+            }
+
+            
+
+            var list = benefitUseRepo.ValidateListPage(page, pageItems, searchWord, out string error, idPartner);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<BenefitUseListItemModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<BenefitUseListItemModel>()
+                };
+                foreach (var b in list.Page)
+                    ret.Data.Add(new BenefitUseListItemModel(b));
+
+                return Ok(ret);
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
