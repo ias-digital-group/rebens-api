@@ -10,13 +10,13 @@ namespace ias.Rebens.Integration
     public class WirecardHelper
     {
         // Sandbox
-        //private const string TOKEN = "TEhFUUxVRDdPOE9QT0pWU0U1SkZFRzVJRjhXWU5HMlM6TkZWSzlVRUJHVEJJSVUwWE9KMkdFWUc3TUU5S0xaQUNDWkJCUEhEUQ==";
-        //private const string SIGNATURE_URL = "https://sandbox.moip.com.br/assinaturas/v1/";
-        //private const string PAYMENT_URL = "https://sandbox.moip.com.br/v2/";
+        private const string TOKEN = "TEhFUUxVRDdPOE9QT0pWU0U1SkZFRzVJRjhXWU5HMlM6TkZWSzlVRUJHVEJJSVUwWE9KMkdFWUc3TUU5S0xaQUNDWkJCUEhEUQ==";
+        private const string SIGNATURE_URL = "https://sandbox.moip.com.br/assinaturas/v1/";
+        private const string PAYMENT_URL = "https://sandbox.moip.com.br/v2/";
         // Production
-        private const string TOKEN = "MkdQN1pHWEk3QTBYUkJZT0ZISjlUSVg1Qk1HQ0xKTUs6UUgyT0JGQVBaNjFJSEdMVU9TVzg3WURXRjNYTVpFNU9HMEFOQlE2VQ==";
-        private const string SIGNATURE_URL = "https://api.moip.com.br/assinaturas/v1/";
-        private const string PAYMENT_URL = "https://api.moip.com.br/v2/";
+        //private const string TOKEN = "MkdQN1pHWEk3QTBYUkJZT0ZISjlUSVg1Qk1HQ0xKTUs6UUgyT0JGQVBaNjFJSEdMVU9TVzg3WURXRjNYTVpFNU9HMEFOQlE2VQ==";
+        //private const string SIGNATURE_URL = "https://api.moip.com.br/assinaturas/v1/";
+        //private const string PAYMENT_URL = "https://api.moip.com.br/v2/";
 
         #region Order
         public bool CheckPaymentStatus(WirecardPayment payment)
@@ -98,7 +98,8 @@ namespace ias.Rebens.Integration
                         Created = DateTime.Now,
                         IdStatus = int.Parse(item["invoice"]["status"]["code"].ToString()),
                         Modified = DateTime.Now,
-                        Status = item["invoice"]["status"]["description"].ToString()
+                        Status = item["invoice"]["status"]["description"].ToString(),
+                        Occurrence = 1
                     };
                     if (item["invoice"]["amount"] != null && int.TryParse(item["invoice"]["amount"].ToString(), out int invoiceAmount))
                         invoice.Amount = (decimal)(invoiceAmount / 100);
@@ -119,6 +120,10 @@ namespace ias.Rebens.Integration
                         Created = DateTime.Now,
                         Modified = DateTime.Now,
                         Amount = sub.Amount
+                    };
+                    sub.Customer = new Customer()
+                    {
+                        Cpf = item["customer"]["code"].ToString()
                     };
 
                     invoice.Payments.Add(payment);

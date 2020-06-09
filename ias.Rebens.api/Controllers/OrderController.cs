@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer,master,administrator,administratorRebens,couponChecker")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "customer,master,administrator,administratorRebens,ticketChecker")]
     [ApiController]
     public class OrderController : ControllerBase
     {
@@ -321,6 +321,33 @@ namespace ias.Rebens.api.Controllers
             if(repo.SetItemUsed(id, idAdminUser, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Item validado com sucesso!" });
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Salva uma Assinatura
+        /// </summary>
+        /// <param name="payment">pagamento</param>
+        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok</returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("SaveSubscription")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SaveSubscription([FromBody] WirecardPaymentModel payment)
+        {
+            if (payment != null)
+            {
+                var wp = payment.GetEntity();
+
+                if (paymentRepo.Create(wp, out string error))
+                {
+                    repo.SendOrderConfirmationEmail(wp.IdOrder, out error);
+                    return Ok(value: new JsonCreateResultModel() { Status = "ok", Message = "Pagamento criado com sucesso!" });
+                }
+
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto vazio" });
         }
     }
 }

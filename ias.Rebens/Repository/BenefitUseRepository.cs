@@ -302,7 +302,8 @@ namespace ias.Rebens
                                         CustomerName = b.Customer.Name,
                                         IdBenefit = b.IdBenefit,
                                         IdCustomer = b.IdCustomer,
-                                        PartnerName = b.Name
+                                        PartnerName = b.Name,
+                                        UsedDate = b.UseDate
                                 }).ToList();
 
                     ret = new ResultPage<Entity.BenefitUseListItem>(list, page, pageItems, total);

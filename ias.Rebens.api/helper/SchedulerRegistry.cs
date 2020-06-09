@@ -24,6 +24,7 @@ namespace ias.Rebens.api.helper
             Schedule(() => new ZanoxUpdateJob(serviceScopeFactory)).ToRunNow().AndEvery(2).Hours();
             Schedule(() => new WirecardJob(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
             Schedule(() => new KeepAlive(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
+            Schedule(() => new WirecardSubscriptionJob(serviceScopeFactory)).ToRunNow().AndEvery(1).Days().At(1,30);
         }
     }
 }

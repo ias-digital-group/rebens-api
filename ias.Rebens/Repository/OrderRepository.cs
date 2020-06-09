@@ -223,11 +223,17 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var order = db.Order.Include("Customer").SingleOrDefault(o => o.Id == idOrder);
+                    var order = db.Order.Include("Customer").Include("OrderItems").SingleOrDefault(o => o.Id == idOrder);
                    if(order != null)
                     {
                         string body = $"<p>Olá {order.Customer.Name}, </p><br />";
                         body += $"<h2>Recebemos o seu pedido #{order.DispId}</h2><br /><br />";
+                        body += "<h3>Resumo do Pedido</h3><br /><table><thead><tr><th>Produto</th><th>Valor</th></tr></thead><tbody>";
+                        foreach(var item in order.OrderItems)
+                        {
+                            body += $"<tr><td>{item.Name}</td><td>R$ {item.Price.ToString().Replace(",","").Replace(".",",")}</td><td>";
+                        }
+                        body += "</tbody></table><br /><br />";
                         body += $"<p>Estamos aguardando a confirmação do pagamento, e assim que for autorizado enviaremos um e-mail com todas as informações necessárias para você. </p>";
 
                         var staticText = db.StaticText.Where(t => t.IdOperation == order.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
@@ -251,7 +257,7 @@ namespace ias.Rebens
                         }
 
                         if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
-                        if (Helper.EmailHelper.SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"UNICAMPI EDUCAÇÃO - Pedido #{order.DispId}", message, fromEmail, operation.Title, out error))
+                        if (Helper.EmailHelper.SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", message, fromEmail, operation.Title, out error))
                         {
                             error = null;
                             ret = true;
@@ -382,7 +388,7 @@ namespace ias.Rebens
                 {
                     var tmpList = db.OrderItem.Where(o => o.Order.Status == "PAID" &&
                                         (!idOperation.HasValue || o.Order.IdOperation == idOperation) &&
-                                        (string.IsNullOrEmpty(word) || o.Voucher == word));
+                                        (string.IsNullOrEmpty(word) || o.Voucher.Contains(word)));
 
                     var total = tmpList.Count();
                     var list = tmpList.OrderBy(o => o.UsedDate).ThenByDescending(o => o.Created).Skip(page * pageItems).Take(pageItems)

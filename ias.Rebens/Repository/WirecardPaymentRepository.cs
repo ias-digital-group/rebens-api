@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Amazon.Route53.Model;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -148,6 +149,126 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 logError.Create("WirecardPaymentRepository.ProcessPayments", ex.Message, "", ex.StackTrace);
+            }
+        }
+
+        public void ProcessSignatures()
+        {
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var wcHelper = new Integration.WirecardHelper();
+                    var list = wcHelper.ListSubscriptions();
+                    foreach(var item in list)
+                    {
+                        var subscription = db.MoipSignature.SingleOrDefault(s => s.Code == item.Code);
+                        if (subscription != null)
+                        {
+                            subscription.Amount = item.Amount;
+                            subscription.PlanCode = item.PlanCode;
+                            subscription.ExpirationDate = item.ExpirationDate;
+                            subscription.NextInvoiceDate = item.NextInvoiceDate;
+                            subscription.PaymentMethod = item.PaymentMethod;
+                            subscription.Status = item.Status;
+                            subscription.Modified = DateTime.UtcNow;
+
+                            var tmpInvoice = item.Invoices.First();
+                            var invoice = db.MoipInvoice.SingleOrDefault(i => i.Id == tmpInvoice.Id);
+                            if(invoice != null)
+                            {
+                                invoice.Amount = tmpInvoice.Amount;
+                                invoice.IdStatus = tmpInvoice.IdStatus;
+                                invoice.Status = tmpInvoice.Status;
+                                invoice.Modified = DateTime.UtcNow;
+                                invoice.Occurrence++;
+
+                                var tmpPayment = tmpInvoice.Payments.First();
+                                if (tmpPayment != null)
+                                {
+                                    var payment = db.MoipPayment.SingleOrDefault(p => p.MoipId == tmpPayment.MoipId && p.IdMoipInvoice == tmpInvoice.Id);
+                                    if (payment != null)
+                                    {
+                                        payment.Amount = tmpPayment.Amount;
+                                        payment.Brand = tmpPayment.Brand;
+                                        payment.Description = tmpPayment.Description;
+                                        payment.FirstSixDigits = tmpPayment.FirstSixDigits;
+                                        payment.HolderName = tmpPayment.HolderName;
+                                        payment.IdStatus = tmpPayment.IdStatus;
+                                        payment.LastFourDigits = tmpPayment.LastFourDigits;
+                                        payment.Modified = DateTime.UtcNow;
+                                        payment.PaymentMethod = tmpPayment.PaymentMethod;
+                                        payment.Status = tmpPayment.Status;
+                                        payment.Vault = tmpPayment.Vault;
+                                    }
+                                    else
+                                    {
+                                        tmpPayment.Created = tmpPayment.Modified = DateTime.UtcNow;
+                                        tmpPayment.IdMoipSignature = subscription.Id;
+                                        tmpPayment.IdMoipInvoice = invoice.Id;
+                                        db.MoipPayment.Add(tmpPayment);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                var tmpPayment = tmpInvoice.Payments.First();
+                                tmpInvoice.Created = tmpInvoice.Modified = DateTime.UtcNow;
+                                tmpInvoice.IdMoipSignature = subscription.Id;
+                                tmpInvoice.Payments = null;
+                                db.MoipInvoice.Add(tmpInvoice);
+                                db.SaveChanges();
+
+                                tmpPayment.Created = tmpPayment.Modified = DateTime.UtcNow;
+                                tmpPayment.IdMoipSignature = subscription.Id;
+                                tmpPayment.IdMoipInvoice = tmpInvoice.Id;
+                                db.MoipPayment.Add(tmpPayment);
+                            }
+                            db.SaveChanges();
+                        }
+                        else
+                        {
+                            var customer = db.Customer.SingleOrDefault(c => c.Cpf == item.Customer.Cpf && c.IdOperation == 73);
+                            if (customer != null)
+                            {
+                                var tmpSignature = item;
+                                var tmpInvoice = item.Invoices.First();
+                                var tmpPayment = item.Invoices.First().Payments.First();
+
+                                tmpSignature.Customer = null;
+                                tmpSignature.IdCustomer = customer.Id;
+                                tmpSignature.IdOperation = 73;
+                                tmpSignature.Invoices = null;
+                                tmpSignature.Payments = null;
+                                db.MoipSignature.Add(tmpSignature);
+                                db.SaveChanges();
+                                
+                                tmpInvoice.Created = tmpInvoice.Modified = DateTime.UtcNow;
+                                tmpInvoice.IdMoipSignature = tmpSignature.Id;
+                                tmpInvoice.Payments = null;
+                                db.MoipInvoice.Add(tmpInvoice);
+                                db.SaveChanges();
+                                
+                                tmpPayment.IdMoipInvoice = tmpInvoice.Id;
+                                tmpPayment.IdMoipSignature = tmpSignature.Id;
+                                tmpPayment.Created = tmpPayment.Modified = DateTime.UtcNow;
+                                db.MoipPayment.Add(tmpPayment);
+                                db.SaveChanges();
+                            }
+                        }
+                        
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("WirecardPaymentRepository.ProcessSignatures", ex.Message, "", ex.StackTrace);
+                if(ex.InnerException != null)
+                {
+                    logError.Create("WirecardPaymentRepository.ProcessSignatures - INNER", ex.InnerException.Message, "", ex.InnerException.Message);
+                }
+                
             }
         }
     }

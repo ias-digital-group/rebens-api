@@ -17,6 +17,8 @@ namespace ias.Rebens.api.Models
         public string CustomerName { get; set; }
         public string CustomerCpf { get; set; }
         public string Created { get; set; }
+        public bool Used { get; set; }
+        public string UsedDate { get; set; }
 
         public BenefitUseListItemModel() { }
         public BenefitUseListItemModel(BenefitUseListItem item) {
@@ -31,6 +33,8 @@ namespace ias.Rebens.api.Models
                 this.CustomerName = item.CustomerName;
                 this.CustomerCpf = item.CustomerCpf;
                 this.Created = TimeZoneInfo.ConvertTimeFromUtc(item.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.Used = item.UsedDate.HasValue;
+                this.UsedDate = item.UsedDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(item.UsedDate.Value, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider) : "";
             }
         }
     }

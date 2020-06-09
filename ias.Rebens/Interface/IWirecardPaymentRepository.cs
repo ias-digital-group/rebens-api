@@ -11,5 +11,6 @@ namespace ias.Rebens
         WirecardPayment Read(string id, out string error);
         bool HasPaymentToProcess();
         void ProcessPayments();
+        void ProcessSignatures();
     }
 }

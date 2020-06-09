@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace TestApp
 {
@@ -18,11 +19,26 @@ namespace TestApp
             var sw = new Stopwatch();
             sw.Start();
 
-            var ret = TestAWS();
+            var zpar1 = HttpUtility.UrlDecode("ozxE75LALXbDmxwuQetQPw%3d%3d");
+            var zpar2 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
+            var zpar3 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
 
-            Task.WaitAll(ret);
+            Console.WriteLine($"zpar1: {zpar1}");
+            Console.WriteLine($"zpar2: {zpar2}");
+            Console.WriteLine($"zpar3: {zpar3}");
 
-            Console.WriteLine($"result: {ret}");
+            var decode1 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar1);
+            var decode2 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar2);
+            var decode3 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar3);
+
+            Console.WriteLine($"decode1: {decode1}");
+            Console.WriteLine($"decode2: {decode2}");
+            Console.WriteLine($"decode3: {decode3}");
+
+        
+            //Task.WaitAll(ret);
+
+            //Console.WriteLine($"result: {ret}");
 
             sw.Stop();
             Console.WriteLine("Elapsed Time : " + sw.ElapsedMilliseconds + "ms");
