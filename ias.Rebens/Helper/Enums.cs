@@ -197,7 +197,10 @@ namespace ias.Rebens.Enums
         [Description("Publicar")]
         publish = 5,
         [Description("Validar Produto")]
-        voucherValidate = 15
+        voucherValidate = 15,
+        [Description("Login")]
+        login = 16
+
     }
 
     public enum LogItem : int
@@ -286,7 +289,11 @@ namespace ias.Rebens.Enums
         [Description("payment.created")]
         PaymentCreated = 5,
         [Description("payment.status_updated")]
-        PaymentStatusUpdated = 6
+        PaymentStatusUpdated = 6,
+        [Description("subscription.canceled")]
+        SubscriptionCanceled = 7,
+        [Description("subscription.suspended")]
+        SubscriptionSuspended = 8,
     }
 
     public enum MoipNotificationStatus : int

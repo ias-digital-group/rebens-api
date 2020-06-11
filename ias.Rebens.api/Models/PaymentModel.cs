@@ -38,18 +38,24 @@ namespace ias.Rebens.api.Models
         /// Status
         /// </summary>
         public string Status { get; set; }
+        public string SignatureCode { get; set; }
+
 
         public PaymentModel() { }
 
         public PaymentModel(MoipPayment payment)
         {
-            this.Id = payment.Id;
-            this.DueDate = payment.Created.ToString("dd/MM/yyyy");
-            this.PayDate = payment.IdStatus == (int)Enums.MoipPaymentStatus.authorized || payment.IdStatus == (int)Enums.MoipPaymentStatus.done ? payment.Modified.ToString("dd/MM/yyyy") : "";
-            this.Receipt = payment.IdMoipInvoice.ToString();
-            this.PaymentMethod = string.IsNullOrEmpty(payment.Brand) || string.IsNullOrEmpty(payment.LastFourDigits) ? "" : payment.Brand + " final " + payment.LastFourDigits;
-            this.Amount = payment.Amount.ToString("N");
-            this.Status = Enums.EnumHelper.GetEnumDescription((Enums.MoipPaymentStatus)payment.IdStatus);
+            if (payment != null)
+            {
+                this.Id = payment.Id;
+                this.DueDate = TimeZoneInfo.ConvertTimeFromUtc(payment.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.PayDate = payment.IdStatus == (int)Enums.MoipPaymentStatus.authorized || payment.IdStatus == (int)Enums.MoipPaymentStatus.done ? payment.Modified.ToString("dd/MM/yyyy") : "";
+                this.Receipt = payment.IdMoipInvoice.ToString(Constant.FormatProvider);
+                this.PaymentMethod = string.IsNullOrEmpty(payment.Brand) || string.IsNullOrEmpty(payment.LastFourDigits) ? "" : payment.Brand + " final " + payment.LastFourDigits;
+                this.Amount = payment.Amount.ToString("N", Constant.FormatProvider);
+                this.Status = Enums.EnumHelper.GetEnumDescription((Enums.MoipPaymentStatus)payment.IdStatus);
+                this.SignatureCode = payment.Signature.Code;
+            }
         }
     }
 }

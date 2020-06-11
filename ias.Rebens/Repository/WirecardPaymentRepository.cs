@@ -133,10 +133,10 @@ namespace ias.Rebens
                     var dt = DateTime.UtcNow.AddMinutes(-15);
                     var list = db.WirecardPayment
                         .Where(p => (p.Status == "CREATED" || p.Status == "WAITING" || p.Status == "IN_ANALYSIS") && p.Modified < dt)
-                        .OrderBy(p => p.Modified).Take(10);
+                        .OrderBy(p => p.Modified).Take(10).ToList();
                     var wcHelper = new Integration.WirecardHelper();
-                    var staticText = db.StaticText.Where(t => t.IdOperation == 1 && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
-                    var operation = db.Operation.Single(o => o.Id == 1);
+                    //var staticText = db.StaticText.Where(t => t.IdOperation == 1 && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
+                    //var operation = db.Operation.Single(o => o.Id == 1);
                     foreach (var item in list)
                     {
                         wcHelper.CheckPaymentStatus(item);
@@ -186,7 +186,7 @@ namespace ias.Rebens
                                 var tmpPayment = tmpInvoice.Payments.First();
                                 if (tmpPayment != null)
                                 {
-                                    var payment = db.MoipPayment.SingleOrDefault(p => p.MoipId == tmpPayment.MoipId && p.IdMoipInvoice == tmpInvoice.Id);
+                                    var payment = db.MoipPayment.SingleOrDefault(p => p.MoipId == tmpPayment.MoipId);
                                     if (payment != null)
                                     {
                                         payment.Amount = tmpPayment.Amount;

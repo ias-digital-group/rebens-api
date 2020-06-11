@@ -94,8 +94,7 @@ namespace ias.Rebens.api.Controllers
                         Event = notification.Event,
                         Modified = DateTime.UtcNow,
                         Status = (int)Enums.MoipNotificationStatus.New,
-                        Resources = notification.Resource.ToString(),
-                        IdOperation = 1
+                        Resources = notification.Resource.ToString()
                     };
 
                     moipNotificationRepo.Create(moipNotification, out string error);

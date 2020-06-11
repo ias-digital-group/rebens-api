@@ -1016,7 +1016,7 @@ namespace ias.Rebens
 
             modelBuilder.Entity<MoipPayment>(entity =>
             {
-                entity.Property(e => e.MoipId).IsRequired().HasColumnType("bigint");
+                entity.Property(e => e.MoipId).IsRequired().HasMaxLength(50);
 
                 entity.Property(e => e.Amount).IsRequired().HasColumnType("money");
 

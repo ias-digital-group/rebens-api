@@ -8,7 +8,7 @@ namespace ias.Rebens
     {
         public int Id { get; set; }
         public int IdMoipInvoice { get; set; }
-        public long MoipId { get; set; }
+        public string MoipId { get; set; }
         public int IdMoipSignature { get; set; }
         public decimal Amount { get; set; }
         public int IdStatus { get; set; }

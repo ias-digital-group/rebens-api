@@ -11,7 +11,6 @@ namespace ias.Rebens
         public string Envoirement { get; set; }
         public string Resources { get; set; }
         public int Status { get; set; }
-        public int IdOperation { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
     }

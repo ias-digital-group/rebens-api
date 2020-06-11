@@ -13,24 +13,30 @@ namespace ias.Rebens.Integration
         const string API_KEY = "dMt0h1FYL4yaOAIG";
         const string API_KEY_V3 = "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";
 
-        public Models.SendinBlueModel Send(Dictionary<string, string> listDestinataries, string fromEmail, string fromName, string subject, string body)
+        public Models.SendinBlueModel Send(Dictionary<string, string> listDestinataries, string fromEmail, string fromName, string subject, string body, string attachment = null)
         {
             var resultModel = new Models.SendinBlueModel();
 
             Dictionary<string, Object> data = new Dictionary<string, Object>();
             //Dictionary<string, string> to = new Dictionary<string, string>();
             //to.Add(toEmail, toName);
-            List<string> from_name = new List<string>();
-            from_name.Add(fromEmail);
-            from_name.Add(fromName);
-            //List<string> attachment = new List<string>();
-            //attachment.Add("https://domain.com/path-to-file/filename1.pdf");
-            //attachment.Add("https://domain.com/path-to-file/filename2.jpg");
+            List<string> from_name = new List<string>
+            {
+                fromEmail,
+                fromName
+            };
+
 
             data.Add("to", listDestinataries);
             data.Add("from", from_name);
             data.Add("subject", subject);
             data.Add("html", body);
+            if (attachment != null)
+            {
+                List<string> attachments = new List<string>();
+                attachments.Add(attachment);
+                data.Add("attachment", attachments);
+            }
 
             string content = JsonConvert.SerializeObject(data);
             ASCIIEncoding encoding = new ASCIIEncoding();

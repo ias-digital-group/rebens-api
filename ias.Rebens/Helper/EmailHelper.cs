@@ -103,7 +103,24 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendDefaultEmail(IStaticTextRepository staticTextRepo, string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error)
+        public static bool SendProductVoucher(Customer customer, Order order, Operation operation, string fromEmail, string fileName, out string error)
+        {
+            error = null;
+            var constant = new Constant();
+            string body = $"<p>Olá {customer.Name}, </p><br />";
+            body += $"<h2>O pagamento do seu pedido #{order.DispId} foi aprovado.</h2><br /><br />";
+            body += "<h3>Resumo do Pedido</h3><br /><table style='width: 100%'><thead><tr><th>Produto</th><th>Valor</th></tr></thead><tbody>";
+            foreach (var item in order.OrderItems)
+            {
+                body += $"<tr><td>{item.Name}</td><td>R$ {item.Price.ToString("N").Replace(",", "").Replace(".", ",")}</td></tr>";
+            }
+            body += "</tbody></table><br /><br />";
+            body += $"<p>Estamos enviando anexo os seus ingressos, mas caso necessite você também pode acessá-los através desse link <a href='{constant.URL}Voucher/Order/{order.DispId}' target='_blank'>{constant.URL}Voucher/Order/{order.DispId}</a>.</p>";
+
+            return SendDefaultEmail(customer.Email, customer.Name, order.IdOperation, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", body, fromEmail, operation.Title, out error, fileName);
+        }
+
+        public static bool SendDefaultEmail(IStaticTextRepository staticTextRepo, string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error, string attachment = null)
         {
             var staticText = staticTextRepo.ReadByType(idOperation, (int)Enums.StaticTextType.Email, out error);
             if (staticText != null)
@@ -111,7 +128,7 @@ namespace ias.Rebens.Helper
                 var sendingBlue = new Integration.SendinBlueHelper();
                 string message = staticText.Html.Replace("###BODY###", body);
                 var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-                var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, message);
+                var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, message, attachment);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -119,12 +136,12 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendDefaultEmail(string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error)
+        public static bool SendDefaultEmail(string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error, string attachment = null)
         {
             error = "";
             var sendingBlue = new Integration.SendinBlueHelper();
             var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-            var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, body);
+            var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, body, attachment);
             if (result.Status)
                 return true;
             error = result.Message;
@@ -203,6 +220,29 @@ namespace ias.Rebens.Helper
             {
                 return false;
             }
+        }
+
+        public static bool SendOrderConfirmationEmail(Order order, Operation operation, string fromEmail, out string error)
+        {
+            string body = $"<p>Olá {order.Customer.Name}, </p><br />";
+            body += $"<h2>Recebemos o seu pedido #{order.DispId}</h2><br /><br />";
+            body += "<h3>Resumo do Pedido</h3><br /><table style='width: 100%'><thead><tr><th>Produto</th><th>Valor</th></tr></thead><tbody>";
+            foreach (var item in order.OrderItems)
+            {
+                body += $"<tr><td>{item.Name}</td><td>R$ {item.Price.ToString().Replace(",", "").Replace(".", ",")}</td></tr>";
+            }
+            body += "</tbody></table><br /><br />";
+            body += $"<p>Estamos aguardando a confirmação do pagamento, e assim que for autorizado enviaremos um e-mail com todas as informações necessárias para você. </p>";
+
+            return SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", body, fromEmail, operation.Title, out error);
+        }
+
+        public static bool SendSignatureConfirmationEmail(Customer customer, Operation operation, string fromEmail, out string error)
+        {
+            string body = $"<p>Olá {customer.Name}, </p><br />";
+            body += $"<h2>Acabamos de receber a confirmação da sua assinatura no nosso clube.</h2><br /><br />";
+
+            return SendDefaultEmail(customer.Email, customer.Name, operation.Id, $"{operation.Title.ToUpper()} - Assinatura", body, fromEmail, operation.Title, out error);
         }
     }
 }

@@ -139,10 +139,14 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    string filter1 = EnumHelper.GetEnumDescription(MoipNotificationEvent.SubscriptionCreated);
-                    string filter2 = EnumHelper.GetEnumDescription(MoipNotificationEvent.SubscriptionUpdated);
+                    string[] filter = {
+                        EnumHelper.GetEnumDescription(MoipNotificationEvent.SubscriptionCreated),
+                        EnumHelper.GetEnumDescription(MoipNotificationEvent.SubscriptionUpdated),
+                        EnumHelper.GetEnumDescription(MoipNotificationEvent.SubscriptionUpdated),
+                        EnumHelper.GetEnumDescription(MoipNotificationEvent.SubscriptionUpdated)
+                        };
 
-                    ret = db.MoipNotification.Any(n => n.Status == (int)MoipNotificationStatus.New && (n.Event == filter1 || n.Event == filter2));
+                    ret = db.MoipNotification.Any(n => n.Status == (int)MoipNotificationStatus.New && filter.Contains(n.Event));
                 }
             }
             catch (Exception ex)
@@ -160,10 +164,12 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    string filter1 = EnumHelper.GetEnumDescription(MoipNotificationEvent.InvoiceCreated);
-                    string filter2 = EnumHelper.GetEnumDescription(MoipNotificationEvent.InvoiceStatusUpdated);
+                    string[] filter = {
+                        EnumHelper.GetEnumDescription(MoipNotificationEvent.InvoiceCreated),
+                        EnumHelper.GetEnumDescription(MoipNotificationEvent.InvoiceStatusUpdated)
+                    };
 
-                    ret = db.MoipNotification.Any(n => n.Status == (int)MoipNotificationStatus.New && (n.Event == filter1 || n.Event == filter2));
+                    ret = db.MoipNotification.Any(n => n.Status == (int)MoipNotificationStatus.New && filter.Contains(n.Event));
                 }
             }
             catch (Exception ex)
@@ -181,10 +187,12 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    string filter1 = EnumHelper.GetEnumDescription(MoipNotificationEvent.PaymentCreated);
-                    string filter2 = EnumHelper.GetEnumDescription(MoipNotificationEvent.PaymentStatusUpdated);
+                    string[] filter = {
+                        EnumHelper.GetEnumDescription(MoipNotificationEvent.PaymentCreated),
+                        EnumHelper.GetEnumDescription(MoipNotificationEvent.PaymentStatusUpdated)
+                    };
 
-                    ret = db.MoipNotification.Any(n => n.Status == (int)MoipNotificationStatus.New && (n.Event == filter1 || n.Event == filter2));
+                    ret = db.MoipNotification.Any(n => n.Status == (int)MoipNotificationStatus.New && filter.Contains(n.Event));
                 }
             }
             catch (Exception ex)
@@ -210,8 +218,8 @@ namespace ias.Rebens
                             try
                             {
                                 var jObj = JObject.Parse(item.Resources);
-                                string cpf = jObj["customer"]["code"].ToString();
-                                var customer = db.Customer.SingleOrDefault(c => c.Cpf == cpf && c.IdOperation == item.IdOperation);
+                                int customerId = Convert.ToInt32(jObj["customer"]["code"].ToString());
+                                var customer = db.Customer.SingleOrDefault(c => c.Id == customerId);
                                 if (customer != null)
                                 {
                                     string code = jObj["code"].ToString();
@@ -227,7 +235,7 @@ namespace ias.Rebens
                                         PaymentMethod = jObj["payment_method"].ToString(),
                                         PlanCode = jObj["plan"]["code"].ToString(),
                                         Status = jObj["status"].ToString(),
-                                        IdOperation = item.IdOperation
+                                        IdOperation = customer.IdOperation
                                     };
 
                                     if(jObj["expiration_date"] != null)
@@ -237,44 +245,67 @@ namespace ias.Rebens
 
                                     db.MoipSignature.Add(signature);
 
+                                    if(signature.Status.ToUpper() == "ACTIVE" || signature.Status.ToUpper() == "TRIAL")
+                                    {
+                                        var operation = db.Operation.Single(o => o.Id == customer.IdOperation);
+                                        var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)StaticTextType.OperationConfiguration);
+                                        string fromEmail = "";
+                                        if (configuration != null)
+                                        {
+                                            var jObj2 = JObject.Parse(configuration.Html);
+                                            var listFields = jObj2["fields"].Children();
+                                            foreach (var item2 in listFields)
+                                            {
+                                                if (item2["name"].ToString() == "contact-email")
+                                                {
+                                                    fromEmail = item2["data"].ToString();
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                                        Helper.EmailHelper.SendSignatureConfirmationEmail(customer, operation, fromEmail, out _);
+                                    }
+
                                     item.Status = (int)MoipNotificationStatus.Processed;
                                     item.Modified = DateTime.UtcNow;
 
                                     //if(signature.Status == "ACTIVE")
                                     //{
-                                        if (!db.DrawItem.Any(d => d.IdCustomer == customer.Id && d.IdDraw == 1 && d.Modified.Year == DateTime.Now.Year && d.Modified.Month == DateTime.Now.Month))
-                                        {
-                                            var di = db.DrawItem.Where(d => d.IdDraw == 1 && !d.IdCustomer.HasValue).OrderBy(d => Guid.NewGuid()).FirstOrDefault();
-                                            if (di != null)
-                                            {
-                                                di.IdCustomer = customer.Id;
-                                                di.Modified = DateTime.Now;
-                                                db.SaveChanges();
-                                            }
-                                        }
+                                        //if (!db.DrawItem.Any(d => d.IdCustomer == customer.Id && d.IdDraw == 1 && d.Modified.Year == DateTime.Now.Year && d.Modified.Month == DateTime.Now.Month))
+                                        //{
+                                        //    var di = db.DrawItem.Where(d => d.IdDraw == 1 && !d.IdCustomer.HasValue).OrderBy(d => Guid.NewGuid()).FirstOrDefault();
+                                        //    if (di != null)
+                                        //    {
+                                        //        di.IdCustomer = customer.Id;
+                                        //        di.Modified = DateTime.Now;
+                                        //        db.SaveChanges();
+                                        //    }
+                                        //}
 
-                                        if(!db.Coupon.Any(c => c.IdCustomer == customer.Id && c.Modified.Year == DateTime.Now.Year && c.Modified.Month == DateTime.Now.Month && c.Modified.Day == DateTime.Now.Day))
-                                        {
-                                            var couponHelper = new Integration.CouponToolsHelper();
-                                            var coupon = new Coupon()
-                                            {
-                                                Campaign = "Raspadinha Unicap",
-                                                IdCustomer = customer.Id,
-                                                IdCouponCampaign = 1,
-                                                ValidationCode = Helper.SecurityHelper.GenerateCode(18),
-                                                Locked = false,
-                                                Status = (int)Enums.CouponStatus.pendent,
-                                                VerifiedDate = DateTime.UtcNow,
-                                                Created = DateTime.UtcNow,
-                                                Modified = DateTime.UtcNow
-                                            };
+                                        //if(!db.Coupon.Any(c => c.IdCustomer == customer.Id && c.Modified.Year == DateTime.Now.Year && c.Modified.Month == DateTime.Now.Month && c.Modified.Day == DateTime.Now.Day))
+                                        //{
+                                        //    var couponHelper = new Integration.CouponToolsHelper();
+                                        //    var coupon = new Coupon()
+                                        //    {
+                                        //        Campaign = "Raspadinha Unicap",
+                                        //        IdCustomer = customer.Id,
+                                        //        IdCouponCampaign = 1,
+                                        //        ValidationCode = Helper.SecurityHelper.GenerateCode(18),
+                                        //        Locked = false,
+                                        //        Status = (int)Enums.CouponStatus.pendent,
+                                        //        VerifiedDate = DateTime.UtcNow,
+                                        //        Created = DateTime.UtcNow,
+                                        //        Modified = DateTime.UtcNow
+                                        //    };
 
-                                            if (couponHelper.CreateSingle(customer, coupon, out string error))
-                                            {
-                                                db.Coupon.Add(coupon);
-                                                db.SaveChanges();
-                                            }
-                                        }
+                                        //    if (couponHelper.CreateSingle(customer, coupon, out string error))
+                                        //    {
+                                        //        db.Coupon.Add(coupon);
+                                        //        db.SaveChanges();
+                                        //    }
+                                        //}
                                     //}
                                 }
                                 else
@@ -308,12 +339,12 @@ namespace ias.Rebens
                     var list2 = db.MoipNotification.Where(n => n.Status == (int)MoipNotificationStatus.New && n.Event == filter).OrderBy(n => n.Created);
                     if (list2 != null && list2.Count() > 0)
                     {
-                        foreach (var item in list)
+                        foreach (var item in list2)
                         {
                             try { 
                                 var jObj = JObject.Parse(item.Resources);
-                                string cpf = jObj["customer"]["code"].ToString();
-                                var customer = db.Customer.SingleOrDefault(c => c.Cpf == cpf && c.IdOperation == item.IdOperation);
+                                int customerId = Convert.ToInt32(jObj["customer"]["code"].ToString());
+                                var customer = db.Customer.SingleOrDefault(c => c.Id == customerId);
                                 if (customer != null)
                                 {
                                     string code = jObj["code"].ToString();
@@ -348,7 +379,7 @@ namespace ias.Rebens
                                         signature.PaymentMethod = jObj["payment_method"].ToString();
                                         signature.PlanCode = jObj["plan"]["code"].ToString();
                                         signature.Status = jObj["status"].ToString();
-                                        signature.IdOperation = item.IdOperation;
+                                        signature.IdOperation = customer.IdOperation;
 
                                         if (jObj["next_invoice_date"] != null)
                                             signature.ExpirationDate = new DateTime(Convert.ToInt32(jObj["expiration_date"]["year"].ToString()), Convert.ToInt32(jObj["expiration_date"]["month"].ToString()), Convert.ToInt32(jObj["expiration_date"]["day"].ToString()));
@@ -387,6 +418,98 @@ namespace ias.Rebens
 
                         db.SaveChanges();
                     }
+
+                    filter = EnumHelper.GetEnumDescription(MoipNotificationEvent.SubscriptionSuspended);
+                    var list3 = db.MoipNotification.Where(n => n.Status == (int)MoipNotificationStatus.New && n.Event == filter).OrderBy(n => n.Created);
+                    if (list3 != null && list3.Count() > 0)
+                    {
+                        foreach (var item in list3)
+                        {
+                            try
+                            {
+                                var jObj = JObject.Parse(item.Resources);
+                                string code = jObj["code"].ToString();
+                                var signature = db.MoipSignature.SingleOrDefault(s => s.Code == code);
+                                if (signature != null)
+                                {
+                                    signature.Status = "SUSPENDED";
+                                    signature.Modified = DateTime.UtcNow;
+
+                                    item.Status = (int)MoipNotificationStatus.Processed;
+                                    item.Modified = DateTime.UtcNow;
+                                }
+                                else
+                                {
+                                    item.Status = (int)MoipNotificationStatus.Ignored;
+                                    item.Modified = DateTime.UtcNow;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                item.Status = (int)MoipNotificationStatus.Error;
+                                item.Modified = DateTime.UtcNow;
+
+                                db.LogError.Add(new LogError()
+                                {
+                                    Reference = "ProcessSubscription",
+                                    Complement = "id:" + item.Id,
+                                    Message = ex.Message,
+                                    StackTrace = ex.StackTrace,
+                                    Created = DateTime.UtcNow
+                                });
+                            }
+
+                            Thread.Sleep(100);
+                        }
+
+                        db.SaveChanges();
+                    }
+
+                    filter = EnumHelper.GetEnumDescription(MoipNotificationEvent.SubscriptionCanceled);
+                    var list4 = db.MoipNotification.Where(n => n.Status == (int)MoipNotificationStatus.New && n.Event == filter).OrderBy(n => n.Created);
+                    if (list4 != null && list4.Count() > 0)
+                    {
+                        foreach (var item in list4)
+                        {
+                            try
+                            {
+                                var jObj = JObject.Parse(item.Resources);
+                                string code = jObj["code"].ToString();
+                                var signature = db.MoipSignature.SingleOrDefault(s => s.Code == code);
+                                if (signature != null)
+                                {
+                                    signature.Status = "CANCELED";
+                                    signature.Modified = DateTime.UtcNow;
+
+                                    item.Status = (int)MoipNotificationStatus.Processed;
+                                    item.Modified = DateTime.UtcNow;
+                                }
+                                else
+                                {
+                                    item.Status = (int)MoipNotificationStatus.Ignored;
+                                    item.Modified = DateTime.UtcNow;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                item.Status = (int)MoipNotificationStatus.Error;
+                                item.Modified = DateTime.UtcNow;
+
+                                db.LogError.Add(new LogError()
+                                {
+                                    Reference = "ProcessSubscription",
+                                    Complement = "id:" + item.Id,
+                                    Message = ex.Message,
+                                    StackTrace = ex.StackTrace,
+                                    Created = DateTime.UtcNow
+                                });
+                            }
+
+                            Thread.Sleep(100);
+                        }
+
+                        db.SaveChanges();
+                    }
                 }
             }
             catch (Exception ex)
@@ -403,7 +526,6 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     string filter = EnumHelper.GetEnumDescription(MoipNotificationEvent.InvoiceCreated);
-
                     var list = db.MoipNotification.Where(n => n.Status == (int)MoipNotificationStatus.New && n.Event == filter).OrderBy(n => n.Created);
                     if(list != null && list.Count() > 0)
                     {
@@ -469,7 +591,7 @@ namespace ias.Rebens
                     var list2 = db.MoipNotification.Where(n => n.Status == (int)MoipNotificationStatus.New && n.Event == filter).OrderBy(n => n.Created);
                     if(list2 != null && list2.Count() > 0)
                     {
-                        foreach (var item in list)
+                        foreach (var item in list2)
                         {
                             try
                             {
@@ -546,7 +668,6 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     string filter = EnumHelper.GetEnumDescription(MoipNotificationEvent.PaymentCreated);
-
                     var list = db.MoipNotification.Where(n => n.Status == (int)MoipNotificationStatus.New && n.Event == filter).OrderBy(n => n.Created);
                     if (list != null && list.Count() > 0)
                     {
@@ -564,13 +685,12 @@ namespace ias.Rebens
                                     {
                                         Created = DateTime.Now,
                                         Modified = DateTime.Now,
-                                        Id = Convert.ToInt32(jObj["id"].ToString()),
                                         IdMoipInvoice = Convert.ToInt32(jObj["invoice_id"].ToString()),
                                         Status = jObj["status"]["description"].ToString(),
                                         IdStatus = Convert.ToInt32(jObj["status"]["code"].ToString()),
                                         IdMoipSignature = signature.Id,
                                         Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100,
-                                        MoipId = 0
+                                        MoipId = jObj["id"].ToString()
 
                                     };
 
@@ -638,7 +758,7 @@ namespace ias.Rebens
                     var list2 = db.MoipNotification.Where(n => n.Status == (int)MoipNotificationStatus.New && n.Event == filter).OrderBy(n => n.Created);
                     if (list2 != null && list2.Count() > 0)
                     {
-                        foreach (var item in list)
+                        foreach (var item in list2)
                         {
                             try
                             {
@@ -647,8 +767,8 @@ namespace ias.Rebens
                                 var signature = db.MoipSignature.SingleOrDefault(s => s.Code == code);
                                 if (signature != null)
                                 {
-                                    int paymentId = Convert.ToInt32(jObj["id"].ToString());
-                                    var payment = db.MoipPayment.SingleOrDefault(p => p.Id == paymentId);
+                                    string paymentId = jObj["id"].ToString();
+                                    var payment = db.MoipPayment.SingleOrDefault(p => p.MoipId == paymentId);
                                     if (payment != null)
                                     {
                                         payment.Modified = DateTime.Now;

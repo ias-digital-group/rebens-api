@@ -6,8 +6,10 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace ias.Rebens
 {
@@ -202,6 +204,27 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    ret = db.Order.Include("OrderItems").SingleOrDefault(o => o.DispId == id);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OrderRepository.ReadByDispId", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o pedido. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public Order ReadByWirecardId(string id, out string error)
+        {
+            Order ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
                     ret = db.Order.Include("OrderItems").SingleOrDefault(o => o.WirecardId == id);
                     error = null;
                 }
@@ -210,7 +233,7 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("OrderRepository.ReadByWirecardId", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar criar ler o pedido. (erro:" + idLog + ")";
+                error = "Ocorreu um erro ao tentar ler o pedido. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
@@ -226,19 +249,6 @@ namespace ias.Rebens
                     var order = db.Order.Include("Customer").Include("OrderItems").SingleOrDefault(o => o.Id == idOrder);
                    if(order != null)
                     {
-                        string body = $"<p>Olá {order.Customer.Name}, </p><br />";
-                        body += $"<h2>Recebemos o seu pedido #{order.DispId}</h2><br /><br />";
-                        body += "<h3>Resumo do Pedido</h3><br /><table><thead><tr><th>Produto</th><th>Valor</th></tr></thead><tbody>";
-                        foreach(var item in order.OrderItems)
-                        {
-                            body += $"<tr><td>{item.Name}</td><td>R$ {item.Price.ToString().Replace(",","").Replace(".",",")}</td><td>";
-                        }
-                        body += "</tbody></table><br /><br />";
-                        body += $"<p>Estamos aguardando a confirmação do pagamento, e assim que for autorizado enviaremos um e-mail com todas as informações necessárias para você. </p>";
-
-                        var staticText = db.StaticText.Where(t => t.IdOperation == order.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active)
-                                            .OrderByDescending(t => t.Modified).FirstOrDefault();
-                        string message = staticText.Html.Replace("###BODY###", body);
                         var operation = db.Operation.Single(o => o.Id == order.IdOperation);
                         var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
                         string fromEmail = "";
@@ -257,7 +267,7 @@ namespace ias.Rebens
                         }
 
                         if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
-                        if (Helper.EmailHelper.SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", message, fromEmail, operation.Title, out error))
+                        if (Helper.EmailHelper.SendOrderConfirmationEmail(order, operation, fromEmail, out error))
                         {
                             error = null;
                             ret = true;
@@ -310,14 +320,15 @@ namespace ias.Rebens
                                 && o.Modified < dt)
                         .OrderBy(o => o.Modified).Take(10);
                     var wcHelper = new Integration.WirecardHelper();
-                    
+                    var orderHelper = new Helper.OrderHelper();
+                    var constant = new Constant();
+
                     foreach (var item in list)
                     {
                         if (wcHelper.CheckOrderStatus(item))
                         {
                             if (item.Status == "PAID")
                             {
-                                var staticText = db.StaticText.Where(t => t.IdOperation == item.IdOperation && t.IdStaticTextType == (int)Enums.StaticTextType.Email && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
                                 var customer = db.Customer.Single(c => c.Id == item.IdCustomer);
                                 var operation = db.Operation.Single(o => o.Id == item.IdOperation);
                                 string fromEmail = "";
@@ -337,14 +348,20 @@ namespace ias.Rebens
                                 }
                                 if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
 
-                                if (Helper.EmailHelper.SendCourseVoucher(staticText, customer, item, operation, fromEmail, out string error))
+                                string fileName = "";
+                                if (orderHelper.GeneratePdf(item.DispId))
+                                    fileName = $"{constant.URL}files/{item.DispId}-order.pdf";
+                                
+                                if (Helper.EmailHelper.SendProductVoucher(customer, item, operation, fromEmail, fileName, out string error))
                                 {
                                     var logError = new LogErrorRepository(this._connectionString);
                                     logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");
                                 }
+                                Thread.Sleep(100);
                             }
                         }
                     }
+
                     db.SaveChanges();
                 }
             }

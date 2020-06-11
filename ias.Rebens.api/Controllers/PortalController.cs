@@ -406,6 +406,7 @@ namespace ias.Rebens.api.Controllers
                 {
                     if (customer.CheckPassword(model.Password))
                     {
+                        //logActionRepo.Create(Enums.LogAction.login, Enums.LogItem.Customer, customer.Id, out _);
                         var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
                         return Ok(Data);
                     }
@@ -1554,6 +1555,7 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+
 
         /// <summary>
         /// Retorna uma lista com os parceiros da operação

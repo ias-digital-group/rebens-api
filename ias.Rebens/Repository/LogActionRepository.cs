@@ -15,6 +15,32 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public void Create(Enums.LogAction action, LogItem item, int idItem, int idAdminUser, out string error)
+        {
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    db.LogAction.Add(new LogAction() { 
+                        Action = (int)action,
+                        Created = DateTime.UtcNow,
+                        IdItem = (int)idItem,
+                        Item = (int)item,
+                        IdAdminUser = idAdminUser
+                    });
+                    db.SaveChanges();
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("LogActionRepository.Create", ex.Message, $"idItem: {idItem}, item: {item.ToString()}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar o histórico. (erro:" + idLog + ")";
+            }
+        }
+
         public List<LogAction> ListByItem(LogItem item, int idItem, out string error)
         {
             List<LogAction> ret;

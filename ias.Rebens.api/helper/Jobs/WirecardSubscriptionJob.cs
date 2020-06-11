@@ -17,10 +17,31 @@ namespace ias.Rebens.api.helper
             using (var serviceScope = serviceScopeFactory.CreateScope())
             {
                 ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();
-                IWirecardPaymentRepository wireRepo = serviceScope.ServiceProvider.GetService<IWirecardPaymentRepository>();
+                IMoipNotificationRepository repo = serviceScope.ServiceProvider.GetService<IMoipNotificationRepository>();
 
                 log.Create("WirecardSubscriptionJob", "START", "", "");
-                wireRepo.ProcessSignatures();
+                if (repo.HasSubscriptionToProcess())
+                {
+                    log.Create("WirecardSubscriptionJob.ProcessSubscription", "START", "", "");
+                    repo.ProcessSubscription();
+                    log.Create("WirecardSubscriptionJob.ProcessSubscription", "DONE", "", "");
+                }
+
+                if (repo.HasInvoicesToProcess())
+                {
+                    log.Create("WirecardSubscriptionJob.ProcessInvoices", "START", "", "");
+                    repo.ProcessInvoices();
+                    log.Create("WirecardSubscriptionJob.ProcessInvoices", "DONE", "", "");
+                }
+
+                if (repo.HasPaymentsToProcess())
+                {
+                    log.Create("WirecardSubscriptionJob.ProcessPayments", "START", "", "");
+                    repo.ProcessPayments();
+                    log.Create("WirecardSubscriptionJob.ProcessPayments", "DONE", "", "");
+                }
+
+                //wireRepo.ProcessSignatures();
                 log.Create("WirecardSubscriptionJob", "END", "", "");
             }
         }

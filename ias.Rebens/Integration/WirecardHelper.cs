@@ -108,7 +108,7 @@ namespace ias.Rebens.Integration
                     var payment = new MoipPayment()
                     {
                         IdMoipInvoice = invoice.Id,
-                        MoipId = long.Parse(item["code"].ToString()),
+                        MoipId = item["code"].ToString(),
                         IdStatus = invoice.IdStatus,
                         Status = invoice.Status,
                         PaymentMethod = sub.PaymentMethod,
@@ -123,7 +123,7 @@ namespace ias.Rebens.Integration
                     };
                     sub.Customer = new Customer()
                     {
-                        Cpf = item["customer"]["code"].ToString()
+                        Id = Convert.ToInt32(item["customer"]["code"].ToString())
                     };
 
                     invoice.Payments.Add(payment);

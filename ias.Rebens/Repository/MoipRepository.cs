@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.MoipPayment.Where(p => p.Signature.IdCustomer == idCustomer).OrderByDescending(p => p.Created).Skip(page * pageItems).Take(pageItems).ToList();
+                    var list = db.MoipPayment.Include("Signature").Where(p => p.Signature.IdCustomer == idCustomer)
+                        .OrderByDescending(p => p.Created).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.MoipPayment.Count(p => p.Signature.IdCustomer == idCustomer);
 
                     ret = new ResultPage<MoipPayment>(list, page, pageItems, total);

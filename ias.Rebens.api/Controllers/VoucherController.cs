@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Rotativa.AspNetCore;
 
@@ -15,8 +17,8 @@ namespace ias.Rebens.api.Controllers
         private IOperationRepository operationRepo;
         private ICourseRepository courseRepo;
         private ICourseCollegeRepository courseCollegeRepo;
-        private ICourseUseRepository courseUseRepo;
         private IOrderRepository orderRepo;
+        private IHostingEnvironment _hostingEnvironment;
 
         /// <summary>
         /// Construtor
@@ -27,18 +29,19 @@ namespace ias.Rebens.api.Controllers
         /// <param name="operationRepository"></param>
         /// <param name="courseUseRepository"></param>
         /// <param name="courseRepository"></param>
+        /// <param name="hostingEnvironment"></param>
         public VoucherController(IBenefitUseRepository benefitUseRepository, IBenefitRepository benefitRepository, ICustomerRepository customerRepository, 
-            IOperationRepository operationRepository, ICourseUseRepository courseUseRepository, ICourseRepository courseRepository,
-            IOrderRepository orderRepository, ICourseCollegeRepository courseCollegeRepository)
+            IOperationRepository operationRepository, ICourseRepository courseRepository,
+            IOrderRepository orderRepository, ICourseCollegeRepository courseCollegeRepository, IHostingEnvironment hostingEnvironment)
         {
             this.benefitUseRepo = benefitUseRepository;
             this.benefitRepo = benefitRepository;
             this.customerRepo = customerRepository;
             this.operationRepo = operationRepository;
             this.courseRepo = courseRepository;
-            this.courseUseRepo = courseUseRepository;
             this.orderRepo = orderRepository;
             this.courseCollegeRepo = courseCollegeRepository;
+            this._hostingEnvironment = hostingEnvironment;
         }
 
 
@@ -121,7 +124,7 @@ namespace ias.Rebens.api.Controllers
                 try
                 {
                     var model = new Models.VoucherCourseModel();
-                    model.Order = orderRepo.ReadByDispId(code, out string error);
+                    model.Order = orderRepo.ReadByWirecardId(code, out string error);
                     if(model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count == 1)
                     {
                         model.Course = courseRepo.ReadForContract(model.Order.OrderItems.First().IdCourse.Value, out _);
@@ -152,6 +155,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);
                         model.Operation = operationRepo.Read(model.Customer.IdOperation, out _);
+
                         return new ViewAsPdf("Order", "ingressos.pdf", model);
                         //return View("Order", model);
                     }
@@ -160,6 +164,48 @@ namespace ias.Rebens.api.Controllers
             }
 
             return View("Error");
+        }
+
+        public IActionResult GetOrderPdf(string code)
+        {
+            if (!string.IsNullOrEmpty(code))
+            {
+                try
+                {
+                    var model = new Models.VoucherOrderModel()
+                    {
+                        Order = orderRepo.ReadByDispId(code, out string error)
+                    };
+
+                    if (model.Order != null && model.Order.OrderItems != null && model.Order.OrderItems.Count > 0)
+                    {
+                        model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);
+                        model.Operation = operationRepo.Read(model.Customer.IdOperation, out _);
+
+                        string webRootPath = _hostingEnvironment.WebRootPath;
+                        string newPath = Path.Combine(webRootPath, "files");
+                        if (!Directory.Exists(newPath))
+                            Directory.CreateDirectory(newPath);
+
+                        var pdf = new ViewAsPdf("Order", "ingressos.pdf", model)
+                        {
+                            FileName = model.Order.DispId + "-order.pdf",
+                            CustomSwitches = "--page-offset 0 --footer-center [page] --footer-font-size 8"
+                        };
+                        byte[] pdfData = pdf.BuildFile(ControllerContext).Result;
+                        string fullPath = newPath + "\\" + pdf.FileName;
+                        using (var fileStream = new FileStream(fullPath, FileMode.Create, FileAccess.Write))
+                        {
+                            fileStream.Write(pdfData, 0, pdfData.Length);
+                        }
+
+                        return Ok();
+                    }
+                }
+                catch { }
+            }
+
+            return StatusCode(400);
         }
 
         public IActionResult OrderItem(string code, string tkt)
