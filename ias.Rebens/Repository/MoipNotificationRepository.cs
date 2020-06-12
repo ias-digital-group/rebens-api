@@ -265,7 +265,10 @@ namespace ias.Rebens
                                         }
 
                                         if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
-                                        Helper.EmailHelper.SendSignatureConfirmationEmail(customer, operation, fromEmail, out _);
+                                        string html = "###BODY###";
+                                        var staticText = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)StaticTextType.Email);
+                                        if (staticText != null) html = staticText.Html;
+                                        Helper.EmailHelper.SendSignatureConfirmationEmail(customer, operation, fromEmail, html, out _);
                                     }
 
                                     item.Status = (int)MoipNotificationStatus.Processed;

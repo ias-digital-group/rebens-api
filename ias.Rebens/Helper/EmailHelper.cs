@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Amazon.Route53.Model;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -103,7 +104,7 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendProductVoucher(Customer customer, Order order, Operation operation, string fromEmail, string fileName, out string error)
+        public static bool SendProductVoucher(Customer customer, Order order, Operation operation, string fromEmail, string fileName, string html, out string error)
         {
             error = null;
             var constant = new Constant();
@@ -116,8 +117,9 @@ namespace ias.Rebens.Helper
             }
             body += "</tbody></table><br /><br />";
             body += $"<p>Estamos enviando anexo os seus ingressos, mas caso necessite você também pode acessá-los através desse link <a href='{constant.URL}Voucher/Order/{order.DispId}' target='_blank'>{constant.URL}Voucher/Order/{order.DispId}</a>.</p>";
-
-            return SendDefaultEmail(customer.Email, customer.Name, order.IdOperation, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", body, fromEmail, operation.Title, out error, fileName);
+            
+            string message = html.Replace("###BODY###", body);
+            return SendDefaultEmail(customer.Email, customer.Name, fromEmail, operation.Title, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", message, out error, fileName);
         }
 
         public static bool SendDefaultEmail(IStaticTextRepository staticTextRepo, string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error, string attachment = null)
@@ -136,24 +138,12 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendDefaultEmail(string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error, string attachment = null)
+        public static bool SendDefaultEmail(string toEmail, string toName, string fromEmail, string fromName, string subject, string body, out string error, string attachment = null)
         {
             error = "";
             var sendingBlue = new Integration.SendinBlueHelper();
             var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-            var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, body, attachment);
-            if (result.Status)
-                return true;
-            error = result.Message;
-            return false;
-        }
-
-        public static bool SendDefaultEmail(string toEmail, string toName, string fromEmail, string fromName, string subject, string body, out string error)
-        {
-            error = "";
-            var sendingBlue = new Integration.SendinBlueHelper();
-            var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-            var result = sendingBlue.Send(listDestinataries, fromEmail, fromName, subject, body);
+            var result = sendingBlue.Send(listDestinataries, fromEmail, fromName, subject, body, attachment);
             if (result.Status)
                 return true;
             error = result.Message;
@@ -222,7 +212,7 @@ namespace ias.Rebens.Helper
             }
         }
 
-        public static bool SendOrderConfirmationEmail(Order order, Operation operation, string fromEmail, out string error)
+        public static bool SendOrderConfirmationEmail(Order order, Operation operation, string fromEmail, string html, out string error)
         {
             string body = $"<p>Olá {order.Customer.Name}, </p><br />";
             body += $"<h2>Recebemos o seu pedido #{order.DispId}</h2><br /><br />";
@@ -234,15 +224,17 @@ namespace ias.Rebens.Helper
             body += "</tbody></table><br /><br />";
             body += $"<p>Estamos aguardando a confirmação do pagamento, e assim que for autorizado enviaremos um e-mail com todas as informações necessárias para você. </p>";
 
-            return SendDefaultEmail(order.Customer.Email, order.Customer.Name, order.IdOperation, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", body, fromEmail, operation.Title, out error);
+            string message = html.Replace("###BODY###", body);
+            return SendDefaultEmail(order.Customer.Email, order.Customer.Name, fromEmail, operation.Title, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", message, out error);
         }
 
-        public static bool SendSignatureConfirmationEmail(Customer customer, Operation operation, string fromEmail, out string error)
+        public static bool SendSignatureConfirmationEmail(Customer customer, Operation operation, string fromEmail, string html, out string error)
         {
             string body = $"<p>Olá {customer.Name}, </p><br />";
             body += $"<h2>Acabamos de receber a confirmação da sua assinatura no nosso clube.</h2><br /><br />";
 
-            return SendDefaultEmail(customer.Email, customer.Name, operation.Id, $"{operation.Title.ToUpper()} - Assinatura", body, fromEmail, operation.Title, out error);
+            string message = html.Replace("###BODY###", body);
+            return SendDefaultEmail(customer.Email, customer.Name, fromEmail, operation.Title, $"{operation.Title.ToUpper()} - Assinatura", message, out error);
         }
     }
 }

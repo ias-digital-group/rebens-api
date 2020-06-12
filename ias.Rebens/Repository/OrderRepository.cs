@@ -267,7 +267,10 @@ namespace ias.Rebens
                         }
 
                         if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
-                        if (Helper.EmailHelper.SendOrderConfirmationEmail(order, operation, fromEmail, out error))
+                        string html = "###BODY###";
+                        var staticText = db.StaticText.SingleOrDefault(s=> s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.Email);
+                        if (staticText != null) html = staticText.Html;
+                        if (Helper.EmailHelper.SendOrderConfirmationEmail(order, operation, fromEmail, html, out error))
                         {
                             error = null;
                             ret = true;
@@ -351,8 +354,11 @@ namespace ias.Rebens
                                 string fileName = "";
                                 if (orderHelper.GeneratePdf(item.DispId))
                                     fileName = $"{constant.URL}files/{item.DispId}-order.pdf";
-                                
-                                if (Helper.EmailHelper.SendProductVoucher(customer, item, operation, fromEmail, fileName, out string error))
+
+                                string html = "###BODY###";
+                                var staticText = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.Email);
+                                if (staticText != null) html = staticText.Html;
+                                if (Helper.EmailHelper.SendProductVoucher(customer, item, operation, fromEmail, fileName, html, out string error))
                                 {
                                     var logError = new LogErrorRepository(this._connectionString);
                                     logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");
