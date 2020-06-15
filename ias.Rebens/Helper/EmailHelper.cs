@@ -104,7 +104,7 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendProductVoucher(Customer customer, Order order, Operation operation, string fromEmail, string fileName, string html, out string error)
+        public static bool SendProductVoucher(Customer customer, Order order, Operation operation, string fromEmail, List<string> fileName, string html, out string error)
         {
             error = null;
             var constant = new Constant();
@@ -122,7 +122,7 @@ namespace ias.Rebens.Helper
             return SendDefaultEmail(customer.Email, customer.Name, fromEmail, operation.Title, $"{operation.Title.ToUpper()} - Pedido #{order.DispId}", message, out error, fileName);
         }
 
-        public static bool SendDefaultEmail(IStaticTextRepository staticTextRepo, string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error, string attachment = null)
+        public static bool SendDefaultEmail(IStaticTextRepository staticTextRepo, string toEmail, string toName, int idOperation, string subject, string body, string emailFrom, string nameFrom, out string error, List<string> attachments = null)
         {
             var staticText = staticTextRepo.ReadByType(idOperation, (int)Enums.StaticTextType.Email, out error);
             if (staticText != null)
@@ -130,7 +130,7 @@ namespace ias.Rebens.Helper
                 var sendingBlue = new Integration.SendinBlueHelper();
                 string message = staticText.Html.Replace("###BODY###", body);
                 var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-                var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, message, attachment);
+                var result = sendingBlue.Send(listDestinataries, emailFrom, nameFrom, subject, message, attachments);
                 if (result.Status)
                     return true;
                 error = result.Message;
@@ -138,12 +138,12 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendDefaultEmail(string toEmail, string toName, string fromEmail, string fromName, string subject, string body, out string error, string attachment = null)
+        public static bool SendDefaultEmail(string toEmail, string toName, string fromEmail, string fromName, string subject, string body, out string error, List<string> attachments = null)
         {
             error = "";
             var sendingBlue = new Integration.SendinBlueHelper();
             var listDestinataries = new Dictionary<string, string> { { toEmail, toName } };
-            var result = sendingBlue.Send(listDestinataries, fromEmail, fromName, subject, body, attachment);
+            var result = sendingBlue.Send(listDestinataries, fromEmail, fromName, subject, body, attachments);
             if (result.Status)
                 return true;
             error = result.Message;

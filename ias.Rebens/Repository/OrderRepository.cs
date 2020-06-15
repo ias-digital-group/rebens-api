@@ -351,14 +351,18 @@ namespace ias.Rebens
                                 }
                                 if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
 
-                                string fileName = "";
-                                if (orderHelper.GeneratePdf(item.DispId))
-                                    fileName = $"{constant.URL}files/{item.DispId}-order.pdf";
+                                List<string> files = new List<string>();
+                                foreach(var oi in item.OrderItems)
+                                {
+                                    if (orderHelper.GenerateItemPdf(item.DispId, oi.Voucher))
+                                        files.Add($"{constant.URL}files/{item.DispId}-ingresso-{oi.Voucher}.pdf");
+                                }
+                                
 
                                 string html = "###BODY###";
                                 var staticText = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)Enums.StaticTextType.Email);
                                 if (staticText != null) html = staticText.Html;
-                                if (Helper.EmailHelper.SendProductVoucher(customer, item, operation, fromEmail, fileName, html, out string error))
+                                if (Helper.EmailHelper.SendProductVoucher(customer, item, operation, fromEmail, files, html, out string error))
                                 {
                                     var logError = new LogErrorRepository(this._connectionString);
                                     logError.Create("WirecardPaymentRepository.ProcessOrder SendMail", error, "", "");

@@ -232,5 +232,45 @@ namespace ias.Rebens.api.Controllers
 
             return View("Error");
         }
+
+        public IActionResult GetOrderItemPdf(string code, string tkt)
+        {
+            if (!string.IsNullOrEmpty(code))
+            {
+                try
+                {
+                    var model = new Models.VoucherOrderModel()
+                    {
+                        Order = orderRepo.ReadByItem(code, tkt, out string error)
+                    };
+
+                    if (model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count > 0)
+                    {
+                        model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);
+                        model.Operation = operationRepo.Read(model.Customer.IdOperation, out _);
+
+                        var pdf = new ViewAsPdf("Order", "ingresso.pdf", model)
+                        {
+                            FileName = $"{model.Order.DispId}-ingresso-{tkt}.pdf",
+                            CustomSwitches = "--page-offset 0 --footer-center [page] --footer-font-size 8"
+                        };
+
+                        string webRootPath = _hostingEnvironment.WebRootPath;
+                        string newPath = Path.Combine(webRootPath, "files");
+                        byte[] pdfData = pdf.BuildFile(ControllerContext).Result;
+                        string fullPath = newPath + "\\" + pdf.FileName;
+                        using (var fileStream = new FileStream(fullPath, FileMode.Create, FileAccess.Write))
+                        {
+                            fileStream.Write(pdfData, 0, pdfData.Length);
+                        }
+
+                        return Ok();
+                    }
+                }
+                catch { }
+            }
+
+            return View("Error");
+        }
     }
 }
