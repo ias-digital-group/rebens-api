@@ -1057,6 +1057,8 @@ namespace ias.Rebens
 
                 entity.Property(e => e.PlanCode).IsRequired().HasMaxLength(50);
 
+                entity.Property(e => e.PlanName).IsRequired().HasMaxLength(200);
+
                 entity.Property(e => e.CreationDate).HasColumnType("date");
 
                 entity.Property(e => e.ExpirationDate).HasColumnType("date");

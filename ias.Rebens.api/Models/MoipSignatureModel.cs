@@ -11,6 +11,7 @@ namespace ias.Rebens.api.Models
         public string Code { get; set; }
         public int IdCustomer { get; set; }
         public string PlanCode { get; set; }
+        public string PlanName { get; set; }
         public DateTime CreationDate { get; set; }
         public DateTime ExpirationDate { get; set; }
         public DateTime NextInvoiceDate { get; set; }
@@ -28,6 +29,7 @@ namespace ias.Rebens.api.Models
                 this.Code = signature.Code;
                 this.IdCustomer = signature.IdCustomer;
                 this.PlanCode = signature.PlanCode;
+                this.PlanName = signature.PlanName;
                 this.CreationDate = TimeZoneInfo.ConvertTimeFromUtc(signature.CreationDate, Constant.TimeZone);
                 this.ExpirationDate = TimeZoneInfo.ConvertTimeFromUtc(signature.ExpirationDate, Constant.TimeZone);
                 this.NextInvoiceDate = signature.NextInvoiceDate;
@@ -45,6 +47,7 @@ namespace ias.Rebens.api.Models
                 Code = this.Code,
                 IdCustomer = this.IdCustomer,
                 PlanCode = this.PlanCode,
+                PlanName = this.PlanName,
                 CreationDate = DateTime.UtcNow,
                 ExpirationDate = DateTime.UtcNow,
                 NextInvoiceDate = this.NextInvoiceDate,

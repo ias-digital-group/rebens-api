@@ -218,34 +218,26 @@ namespace ias.Rebens
                             try
                             {
                                 var jObj = JObject.Parse(item.Resources);
-                                int customerId = Convert.ToInt32(jObj["customer"]["code"].ToString());
-                                var customer = db.Customer.SingleOrDefault(c => c.Id == customerId);
-                                if (customer != null)
+                                string code = jObj["code"].ToString();
+                                var signature = db.MoipSignature.SingleOrDefault(s => s.Code == code);
+                                if(signature != null)
                                 {
-                                    string code = jObj["code"].ToString();
-                                    MoipSignature signature = new MoipSignature()
-                                    {
-                                        IdCustomer = customer.Id,
-                                        Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100,
-                                        Code = code,
-                                        Created = DateTime.Now,
-                                        CreationDate = new DateTime(Convert.ToInt32(jObj["creation_date"]["year"].ToString()), Convert.ToInt32(jObj["creation_date"]["month"].ToString()), Convert.ToInt32(jObj["creation_date"]["day"].ToString())),
-                                        Modified = DateTime.Now,
-                                        NextInvoiceDate = new DateTime(Convert.ToInt32(jObj["next_invoice_date"]["year"].ToString()), Convert.ToInt32(jObj["next_invoice_date"]["month"].ToString()), Convert.ToInt32(jObj["next_invoice_date"]["day"].ToString())),
-                                        PaymentMethod = jObj["payment_method"].ToString(),
-                                        PlanCode = jObj["plan"]["code"].ToString(),
-                                        Status = jObj["status"].ToString(),
-                                        IdOperation = customer.IdOperation
-                                    };
-
-                                    if(jObj["expiration_date"] != null)
+                                    signature.CreationDate = new DateTime(Convert.ToInt32(jObj["creation_date"]["year"].ToString()), Convert.ToInt32(jObj["creation_date"]["month"].ToString()), Convert.ToInt32(jObj["creation_date"]["day"].ToString()));
+                                    signature.Amount = Convert.ToDecimal(jObj["amount"].ToString()) / 100;
+                                    signature.Modified = DateTime.Now;
+                                    signature.NextInvoiceDate = new DateTime(Convert.ToInt32(jObj["next_invoice_date"]["year"].ToString()), Convert.ToInt32(jObj["next_invoice_date"]["month"].ToString()), Convert.ToInt32(jObj["next_invoice_date"]["day"].ToString()));
+                                    signature.PaymentMethod = jObj["payment_method"].ToString();
+                                    signature.Status = jObj["status"].ToString();
+                                    signature.PlanCode = jObj["plan"]["code"].ToString();
+                                    if (jObj["expiration_date"] != null)
                                         signature.ExpirationDate = new DateTime(Convert.ToInt32(jObj["expiration_date"]["year"].ToString()), Convert.ToInt32(jObj["expiration_date"]["month"].ToString()), Convert.ToInt32(jObj["expiration_date"]["day"].ToString()));
                                     else
                                         signature.ExpirationDate = signature.NextInvoiceDate;
 
-                                    db.MoipSignature.Add(signature);
+                                    var customer = db.Customer.Single(c => c.Id == signature.IdCustomer);
 
-                                    if(signature.Status.ToUpper() == "ACTIVE" || signature.Status.ToUpper() == "TRIAL")
+
+                                    if (signature.Status.ToUpper() == "ACTIVE" || signature.Status.ToUpper() == "TRIAL")
                                     {
                                         var operation = db.Operation.Single(o => o.Id == customer.IdOperation);
                                         var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == operation.Id && s.IdStaticTextType == (int)StaticTextType.OperationConfiguration);
@@ -273,43 +265,6 @@ namespace ias.Rebens
 
                                     item.Status = (int)MoipNotificationStatus.Processed;
                                     item.Modified = DateTime.UtcNow;
-
-                                    //if(signature.Status == "ACTIVE")
-                                    //{
-                                        //if (!db.DrawItem.Any(d => d.IdCustomer == customer.Id && d.IdDraw == 1 && d.Modified.Year == DateTime.Now.Year && d.Modified.Month == DateTime.Now.Month))
-                                        //{
-                                        //    var di = db.DrawItem.Where(d => d.IdDraw == 1 && !d.IdCustomer.HasValue).OrderBy(d => Guid.NewGuid()).FirstOrDefault();
-                                        //    if (di != null)
-                                        //    {
-                                        //        di.IdCustomer = customer.Id;
-                                        //        di.Modified = DateTime.Now;
-                                        //        db.SaveChanges();
-                                        //    }
-                                        //}
-
-                                        //if(!db.Coupon.Any(c => c.IdCustomer == customer.Id && c.Modified.Year == DateTime.Now.Year && c.Modified.Month == DateTime.Now.Month && c.Modified.Day == DateTime.Now.Day))
-                                        //{
-                                        //    var couponHelper = new Integration.CouponToolsHelper();
-                                        //    var coupon = new Coupon()
-                                        //    {
-                                        //        Campaign = "Raspadinha Unicap",
-                                        //        IdCustomer = customer.Id,
-                                        //        IdCouponCampaign = 1,
-                                        //        ValidationCode = Helper.SecurityHelper.GenerateCode(18),
-                                        //        Locked = false,
-                                        //        Status = (int)Enums.CouponStatus.pendent,
-                                        //        VerifiedDate = DateTime.UtcNow,
-                                        //        Created = DateTime.UtcNow,
-                                        //        Modified = DateTime.UtcNow
-                                        //    };
-
-                                        //    if (couponHelper.CreateSingle(customer, coupon, out string error))
-                                        //    {
-                                        //        db.Coupon.Add(coupon);
-                                        //        db.SaveChanges();
-                                        //    }
-                                        //}
-                                    //}
                                 }
                                 else
                                 {

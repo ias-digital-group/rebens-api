@@ -14,6 +14,28 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
+        public MoipSignature GetUserSignature(int idCustomer, out string error)
+        {
+            MoipSignature ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.MoipSignature.FirstOrDefault(c => c.IdCustomer == idCustomer &&
+                                (c.Status.ToUpper() == "ACTIVE" || c.Status.ToUpper() == "TRIAL"));
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("MoipRepository.GetUserSignature", ex.Message, $"idCustomer:{idCustomer}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar carregar a assinatura. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         public ResultPage<MoipPayment> ListPaymentsByCustomer(int idCustomer, int page, int pageItems, out string error)
         {
             ResultPage<MoipPayment> ret;
@@ -125,7 +147,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool SaveSignature(MoipSignature signature)
+        public bool SaveSignature(MoipSignature signature, out string error)
         {
             var ret = false;
             try
@@ -148,13 +170,15 @@ namespace ias.Rebens
 
                     db.SaveChanges();
                     ret = true;
+                    error = null;
                 }
             }
             catch(Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                logError.Create("MoipRepository.SaveSignature", ex.Message, "", ex.StackTrace);
+                int idLog = logError.Create("MoipRepository.SaveSignature", ex.Message, "", ex.StackTrace);
                 ret = false;
+                error = $"Ocorreu um erro ao tentar salvar a assinatura. (erro: {idLog})";
             }
 
             return ret;

@@ -1342,5 +1342,36 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public string GetFromEmail(int id)
+        {
+            string ret = "";
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var configuration = db.StaticText.SingleOrDefault(s => s.IdOperation == id && s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                    if (configuration != null)
+                    {
+                        var jObj2 = JObject.Parse(configuration.Html);
+                        var listFields = jObj2["fields"].Children();
+                        foreach (var item2 in listFields)
+                        {
+                            if (item2["name"].ToString() == "contact-email")
+                            {
+                                ret = item2["data"].ToString();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("OperationRepository.GetFromEmail", ex.Message, $"id: {id}", ex.StackTrace);
+            }
+            return string.IsNullOrEmpty(ret) ? "contato@rebens.com.br" : ret;
+        }
     }
 }

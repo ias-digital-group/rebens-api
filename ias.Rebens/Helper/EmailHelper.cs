@@ -219,7 +219,7 @@ namespace ias.Rebens.Helper
             body += "<h3>Resumo do Pedido</h3><br /><table style='width: 100%'><thead><tr><th>Produto</th><th>Valor</th></tr></thead><tbody>";
             foreach (var item in order.OrderItems)
             {
-                body += $"<tr><td>{item.Name}</td><td>R$ {item.Price.ToString().Replace(",", "").Replace(".", ",")}</td></tr>";
+                body += $"<tr><td>{item.Name}</td><td>R$ {item.Price.ToString("N").Replace(",", "").Replace(".", ",")}</td></tr>";
             }
             body += "</tbody></table><br /><br />";
             body += $"<p>Estamos aguardando a confirmação do pagamento, e assim que for autorizado enviaremos um e-mail com todas as informações necessárias para você. </p>";
@@ -235,6 +235,14 @@ namespace ias.Rebens.Helper
 
             string message = html.Replace("###BODY###", body);
             return SendDefaultEmail(customer.Email, customer.Name, fromEmail, operation.Title, $"{operation.Title.ToUpper()} - Assinatura", message, out error);
+        }
+
+        public static bool SendSignatureCreationEmail(Customer customer, Operation operation, string fromEmail, IStaticTextRepository staticTextRepository, out string error)
+        {
+            string body = $"<p>Olá {customer.Name}, </p><br />";
+            body += $"<h2>Recebemos a sua assinatura, estamos aguardando a confirmação do pagamento, assim que recebermos você já poderá começar a utilizar o nosso clube.</h2><br /><br />";
+
+            return SendDefaultEmail(staticTextRepository, customer.Email, customer.Name, operation.Id, $"{operation.Title.ToUpper()} - Assinatura", body, fromEmail, operation.Title, out error);
         }
     }
 }

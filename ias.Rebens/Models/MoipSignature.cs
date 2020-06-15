@@ -16,6 +16,7 @@ namespace ias.Rebens
         public string Code { get; set; }
         public int IdCustomer { get; set; }
         public string PlanCode { get; set; }
+        public string PlanName { get; set; }
         public DateTime CreationDate { get; set; }
         public DateTime ExpirationDate { get; set; }
         public DateTime NextInvoiceDate { get; set; }

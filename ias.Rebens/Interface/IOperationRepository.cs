@@ -52,5 +52,6 @@ namespace ias.Rebens
 
         string LoadModulesNames(int id, out string error);
         List<Operation> ListWithModule(string module, out string error);
+        string GetFromEmail(int id);
     }
 }

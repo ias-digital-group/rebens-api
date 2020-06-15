@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
@@ -2415,6 +2416,88 @@ namespace ias.Rebens.api.Controllers
         }
         #endregion FreeCourse
 
+        #region Wirecard
+        /// <summary>
+        /// Cria uma assinatura
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("Subscription")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Subscription([FromBody] MoipSignatureModel model)
+        {
+            if (model != null)
+            {
+                int idCustomer = 0;
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                    if (customerId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                    if (!int.TryParse(customerId.Value, out idCustomer))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                }
+
+                var customer = customerRepo.Read(idCustomer, out _);
+                if (customer != null)
+                {
+                    var signature = model.GetMoipSignature();
+                    signature.IdCustomer = customer.Id;
+                    signature.IdOperation = customer.IdOperation;
+
+                    if (moipRepo.SaveSignature(signature, out string error))
+                    {
+                        var operation = operationRepo.Read(customer.IdOperation, out _);
+                        if (operation != null)
+                        {
+                            string fromEmail = operationRepo.GetFromEmail(operation.Id);
+                            Helper.EmailHelper.SendSignatureCreationEmail(customer, operation, fromEmail, staticTextRepo, out _);
+                        }
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Assinatura criada com sucesso", Id = signature.Id });
+                    }
+
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                }
+
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "O objeto está vazio!" });
+        }
+
+        /// <summary>
+        /// retorna a assinatura ativa de um cliente
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for encontrado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("GetSubscription")]
+        [ProducesResponseType(typeof(MoipSignatureModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetSubscription()
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var signature = moipRepo.GetUserSignature(idCustomer, out string error);
+            if (string.IsNullOrEmpty(error))
+                return Ok(new MoipSignatureModel(signature));
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion Wirecard
+
         /// <summary>
         /// Retorna uma lista com os números da sorte
         /// </summary>
@@ -2481,22 +2564,19 @@ namespace ias.Rebens.api.Controllers
             identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
             identity.AddClaim(new Claim("cpf", customer.Cpf));
 
-            if(customer.IdOperation == 1)
+            var plan = customerRepo.CheckPlanStatus(customer.Id);
+            string planStatus = "-1";
+            if(plan != null)
             {
-                var plan = customerRepo.CheckPlanStatus(customer.Id);
-                string planStatus = "-1";
-                if(plan != null)
+                switch(plan.Status.ToUpper())
                 {
-                    switch(plan.Status.ToUpper())
-                    {
-                        case "ACTIVE": planStatus = "1";break;
-                        case "CANCELED": planStatus = "2";break;
-                        default: planStatus = "0";break;
-                    }
+                    case "ACTIVE": planStatus = "1";break;
+                    case "CANCELED": planStatus = "2";break;
+                    default: planStatus = "0";break;
                 }
-                identity.AddClaim(new Claim("planStatus", planStatus));
-                identity.AddClaim(new Claim("subscriptionCode", plan != null ? plan.Code : ""));
             }
+            identity.AddClaim(new Claim("planStatus", planStatus));
+            identity.AddClaim(new Claim("subscriptionCode", plan != null ? plan.Code : ""));
 
             DateTime dataCriacao = DateTime.UtcNow;
             DateTime dataExpiracao = dataCriacao.AddDays(2);
