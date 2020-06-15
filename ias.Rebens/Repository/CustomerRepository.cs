@@ -33,6 +33,7 @@ namespace ias.Rebens
                     db.SaveChanges();
                     error = null;
                 }
+                SaveLog(customer.Id, CustomerLogAction.signup);
             }
             catch (Exception ex)
             {
@@ -432,6 +433,29 @@ namespace ias.Rebens
                 ret = false;
             }
             return ret;
+        }
+
+        public void SaveLog(int id, CustomerLogAction action, string extra = null)
+        {
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    db.CustomerLog.Add(new CustomerLog()
+                    {
+                        IdCustomer = id,
+                        Action = (int)action,
+                        Created = DateTime.UtcNow,
+                        Extra = extra
+                    });
+                    db.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("CustomerRepository.SaveLog", ex.Message, $"id:{id}, action:{action}", ex.StackTrace);
+            }
         }
     }
 }

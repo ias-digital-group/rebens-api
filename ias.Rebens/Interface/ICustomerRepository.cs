@@ -37,5 +37,7 @@ namespace ias.Rebens
         MoipSignature CheckPlanStatus(int id);
 
         bool SaveSendingblueId(int id, int blueId, out string error);
+
+        void SaveLog(int id, Enums.CustomerLogAction action, string extra);
     }
 }

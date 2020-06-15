@@ -392,23 +392,21 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Login([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if(!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var operation = operationRepo.Read(operationGuid, out string error);
+            var operation = operationRepo.Read(operationGuid, out _);
 
             if (operation != null)
             {
-                var customer = customerRepo.ReadByEmail(model.Email, operation.Id, out error);
+                var customer = customerRepo.ReadByEmail(model.Email, operation.Id, out string error);
                 if (customer != null && (customer.Status != (int)Enums.CustomerStatus.Inactive && customer.Status != (int)Enums.CustomerStatus.Validation))
                 {
                     if (customer.CheckPassword(model.Password))
                     {
-                        //logActionRepo.Create(Enums.LogAction.login, Enums.LogItem.Customer, customer.Id, out _);
                         var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
+                        customerRepo.SaveLog(customer.Id, Enums.CustomerLogAction.login, null);
+                        
                         return Ok(Data);
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
@@ -931,6 +929,8 @@ namespace ias.Rebens.api.Controllers
                     if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
                     {
                         var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
+                        customerRepo.SaveLog(customer.Id, Enums.CustomerLogAction.validate, null);
+
                         return Ok(Data);
                     }
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
@@ -2492,8 +2492,13 @@ namespace ias.Rebens.api.Controllers
 
             var signature = moipRepo.GetUserSignature(idCustomer, out string error);
             if (string.IsNullOrEmpty(error))
-                return Ok(new MoipSignatureModel(signature));
+            {
+                if(signature != null)
+                    return Ok(new MoipSignatureModel(signature));
 
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O cliente não possui assinatura!" });
+            }
+                
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
         #endregion Wirecard

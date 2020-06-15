@@ -50,6 +50,7 @@ namespace ias.Rebens
         public virtual DbSet<CourseUse> CourseUse { get; set; }
         public virtual DbSet<CourseView> CourseView { get; set; }
         public virtual DbSet<Customer> Customer { get; set; }
+        public virtual DbSet<CustomerLog> CustomerLog { get; set; }
         public virtual DbSet<CustomerPromoter> CustomerPromoter { get; set; }
         public virtual DbSet<CustomerReferal> CustomerReferal { get; set; }
         public virtual DbSet<Draw> Draw { get; set; }
@@ -735,6 +736,17 @@ namespace ias.Rebens
                     .HasForeignKey(e => e.IdAddress)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Customer_Address");
+            });
+
+            modelBuilder.Entity<CustomerLog>(entity =>
+            {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(e => e.Customer)
+                    .WithMany(e => e.CustomerLogs)
+                    .HasForeignKey(e => e.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_CustomerLog_Customer");
             });
 
             modelBuilder.Entity<CustomerPromoter>(entity =>

@@ -70,6 +70,16 @@ namespace ias.Rebens.Enums
         FreeCourse = 2
     }
 
+    public enum CustomerLogAction : int
+    {
+        [Description("Cadastro")]
+        signup = 1,
+        [Description("Validação")]
+        validate = 2,
+        [Description("Login")]
+        login = 3,
+    }
+
     public enum CourseUseStatus : int
     {
         [Description("Gerado")]
