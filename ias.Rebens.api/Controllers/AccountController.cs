@@ -185,23 +185,23 @@ namespace ias.Rebens.api.Controllers
         /// <returns></returns>
         /// <respons code="200"></respons>
         /// <respons code="400"></respons>
-        [HttpPost("ChangePassword"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens,promoter")]
+        [HttpPost("ChangePassword"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens,promoter,couponChecker,ticketChecker")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
         {
-            int idAmin = 0;
+            int idAdmin = 0;
             var principal = HttpContext.User;
             if (principal?.Claims != null)
             {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
+                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (tmpId == null)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idAmin))
+                if (!int.TryParse(tmpId.Value, out idAdmin))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
             }
 
-            var user = repo.Read(idAmin, out string error);
+            var user = repo.Read(idAdmin, out string error);
             if(user != null)
             {
                 if(user.CheckPassword(model.OldPassword))
@@ -210,7 +210,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         var salt = Helper.SecurityHelper.GenerateSalt();
                         var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.NewPassword, salt);
-                        if (repo.ChangePassword(idAmin, encryptedPassword, salt, out error))
+                        if (repo.ChangePassword(idAdmin, encryptedPassword, salt, out error))
                             return Ok(new JsonModel() { Status = "ok" });
                         
                         return StatusCode(400, new JsonModel() { Status = "error", Message = error });
