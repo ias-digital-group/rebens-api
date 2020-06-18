@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿    using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -164,6 +164,7 @@ namespace ias.Rebens
                         update.PaymentMethod = signature.PaymentMethod;
                         update.PlanCode = signature.PlanCode;
                         update.Status = signature.Status;
+                        update.PlanName = signature.PlanName;
                     }
                     else
                         db.MoipSignature.Add(signature);
@@ -179,6 +180,71 @@ namespace ias.Rebens
                 int idLog = logError.Create("MoipRepository.SaveSignature", ex.Message, "", ex.StackTrace);
                 ret = false;
                 error = $"Ocorreu um erro ao tentar salvar a assinatura. (erro: {idLog})";
+            }
+
+            return ret;
+        }
+
+        public bool UpdatePlan(string code, string planCode, string planName, out string error)
+        {
+            var ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.MoipSignature.SingleOrDefault(s => s.Code == code);
+                    if (update != null)
+                    {
+                        update.PlanCode = planCode;
+                        update.PlanName = planName;
+                        update.Modified = DateTime.UtcNow;
+                        db.SaveChanges();
+
+                        ret = true;
+                        error = null;
+                    }
+                    else
+                        error = "Assinatura não encontrada!";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("MoipRepository.UpdatePlan", ex.Message, $"code: {code}", ex.StackTrace);
+                ret = false;
+                error = $"Ocorreu um erro ao tentar alterar o plano da assinatura. (erro: {idLog})";
+            }
+
+            return ret;
+        }
+
+        public bool CancelSignature(string code, out string error)
+        {
+            var ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.MoipSignature.SingleOrDefault(s => s.Code == code);
+                    if (update != null)
+                    {
+                        update.Status = "CANCELED";
+                        update.Modified = DateTime.UtcNow;
+                        db.SaveChanges();
+
+                        ret = true;
+                        error = null;
+                    }
+                    else
+                        error = "Assinatura não encontrada!";
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("MoipRepository.CancelSignature", ex.Message, $"code: {code}", ex.StackTrace);
+                ret = false;
+                error = $"Ocorreu um erro ao tentar cancelar a assinatura. (erro: {idLog})";
             }
 
             return ret;

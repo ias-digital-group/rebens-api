@@ -22,6 +22,7 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class PortalController : ControllerBase
     {
+        #region Attributes
         private IAddressRepository addrRepo;
         private IBannerRepository bannerRepo;
         private IBenefitRepository benefitRepo;
@@ -51,7 +52,9 @@ namespace ias.Rebens.api.Controllers
         private IPartnerRepository partnerRepo;
         private ILogErrorRepository logErrorRepo;
         private Constant constant;
+        #endregion Attributes
 
+        #region Constructor
         /// <summary>
         /// 
         /// </summary>
@@ -123,6 +126,7 @@ namespace ias.Rebens.api.Controllers
             this.logErrorRepo = logErrorRepository;
             this.constant = new Constant();
         }
+        #endregion Constructor
 
         /// <summary>
         /// Retorna os items da home não logada
@@ -179,6 +183,7 @@ namespace ias.Rebens.api.Controllers
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
+        #region StaticText
         /// <summary>
         /// Retorna o texto da página requerida
         /// </summary>
@@ -290,7 +295,9 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+        #endregion StaticText
 
+        #region Forms
         /// <summary>
         /// Salvar um contato
         /// </summary>
@@ -375,7 +382,9 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+        #endregion Forms
 
+        #region Account
         /// <summary>
         /// Autentica um usuário na api
         /// </summary>
@@ -416,6 +425,532 @@ namespace ias.Rebens.api.Controllers
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
         }
 
+        /// <summary>
+        /// Cria um novo cliente
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="signUp"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpPost("SignUp")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SignUp([FromHeader(Name = "x-operation-code")] string operationCode, [FromBody] SignUpModel signUp)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.ReadForSignUp(operationGuid, out bool openSignUp, out string error);
+
+            if (operation != null)
+            {
+                if (!customerRepo.CheckEmailAndCpf(signUp.Email, signUp.Cpf, operation.Id, out error))
+                {
+                    Customer customer = null;
+                    CustomerReferal referal = null;
+                    OperationCustomer oc = operationCustomerRepo.ReadByCpf(signUp.Cpf, operation.Id, out error);
+
+                    if (oc != null)
+                    {
+                        customer = new Customer()
+                        {
+                            Email = signUp.Email,
+                            Cpf = signUp.Cpf,
+                            Name = oc.Name,
+                            Phone = oc.Phone,
+                            Cellphone = oc.Cellphone,
+                            Created = DateTime.Now,
+                            Modified = DateTime.Now,
+                            Status = (int)Enums.CustomerStatus.Validation,
+                            CustomerType = (int)Enums.CustomerType.Customer,
+                            Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
+                            IdOperation = operation.Id
+                        };
+                    }
+                    else
+                    {
+                        referal = customerReferalRepo.ReadByEmail(signUp.Email, operation.Id, out error);
+                        if (referal != null)
+                        {
+                            customer = new Customer()
+                            {
+                                Email = signUp.Email,
+                                Cpf = signUp.Cpf,
+                                Name = referal.Name,
+                                Created = DateTime.Now,
+                                Modified = DateTime.Now,
+                                Status = (int)Enums.CustomerStatus.Validation,
+                                CustomerType = (int)Enums.CustomerType.Referal,
+                                Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
+                                IdOperation = operation.Id
+                            };
+                        }
+                    }
+
+                    if (customer == null && openSignUp)
+                    {
+                        customer = new Customer()
+                        {
+                            Email = signUp.Email,
+                            Cpf = signUp.Cpf,
+                            Created = DateTime.Now,
+                            Modified = DateTime.Now,
+                            Status = (int)Enums.CustomerStatus.Validation,
+                            CustomerType = (int)Enums.CustomerType.Customer,
+                            Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
+                            IdOperation = operation.Id
+                        };
+                    }
+                    else
+                        error = "O cpf digitado não está cadastrado em nossa base!";
+
+                    if (customer != null)
+                    {
+                        if (customerRepo.Create(customer, out error))
+                        {
+                            string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                            if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                            Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, fromEmail, out error);
+
+                            if (oc != null)
+                                operationCustomerRepo.SetSigned(oc.Id, out error);
+                            else if (referal != null)
+                                customerReferalRepo.ChangeStatus(referal.Id, Enums.CustomerReferalStatus.SignUp, out error);
+
+                            return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
+                        }
+                    }
+
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Email ou CPF já cadastrado!" });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
+        /// Cria um novo cliente
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="validateCustomer"></param>
+        /// <param name="signingConfigurations"></param>
+        /// <param name="tokenConfigurations"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o cliente for validado com sucesso já é retornado o token</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpPost("ValidateCustomer")]
+        [ProducesResponseType(typeof(PortalTokenModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ValidateCustomer([FromHeader(Name = "x-operation-code")] string operationCode, [FromBody] ValidateCustomerModel validateCustomer, [FromServices] helper.SigningConfigurations signingConfigurations, [FromServices] helper.TokenOptions tokenConfigurations)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.Read(operationGuid, out string error);
+
+            if (operation != null)
+            {
+                var customer = customerRepo.ReadByCode(validateCustomer.Code.Replace(" ", "+"), operation.Id, out error);
+
+                if (customer != null)
+                {
+                    customer.SetPassword(validateCustomer.Password);
+                    if (customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
+                    {
+                        var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
+                        customerRepo.SaveLog(customer.Id, Enums.CustomerLogAction.validate, null);
+
+                        return Ok(Data);
+                    }
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "reading customer - " + validateCustomer.Code, Data = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida! (code: " + operationCode + ")" });
+        }
+
+        private PortalTokenModel LoadToken(Customer customer, helper.TokenOptions tokenConfigurations, helper.SigningConfigurations signingConfigurations)
+        {
+            ClaimsIdentity identity = new ClaimsIdentity(
+                            new GenericIdentity(customer.Email),
+                            new[] {
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+                            new Claim(JwtRegisteredClaimNames.UniqueName, customer.Email)
+                            }
+                        );
+
+            identity.AddClaim(new Claim(ClaimTypes.Role, "customer"));
+            //foreach (var policy in user.Permissions)
+            //    identity.AddClaim(new Claim("permissions", "permission1"));
+
+            identity.AddClaim(new Claim("operationId", customer.IdOperation.ToString()));
+            identity.AddClaim(new Claim("Id", customer.Id.ToString()));
+            identity.AddClaim(new Claim("Name", string.IsNullOrEmpty(customer.Name) ? "" : customer.Name));
+            identity.AddClaim(new Claim("Email", customer.Email));
+            identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
+            identity.AddClaim(new Claim("cpf", customer.Cpf));
+
+            var plan = customerRepo.CheckPlanStatus(customer.Id);
+            string planStatus = "-1";
+            if (plan != null)
+            {
+                switch (plan.Status.ToUpper())
+                {
+                    case "ACTIVE": planStatus = "1"; break;
+                    case "CANCELED": planStatus = "2"; break;
+                    default: planStatus = "0"; break;
+                }
+            }
+            identity.AddClaim(new Claim("planStatus", planStatus));
+            identity.AddClaim(new Claim("subscriptionCode", plan != null ? plan.Code : ""));
+
+            DateTime dataCriacao = DateTime.UtcNow;
+            DateTime dataExpiracao = dataCriacao.AddDays(2);
+
+            var handler = new JwtSecurityTokenHandler();
+            var securityToken = handler.CreateToken(new SecurityTokenDescriptor
+            {
+                Issuer = tokenConfigurations.Issuer,
+                Audience = tokenConfigurations.Audience,
+                SigningCredentials = signingConfigurations.SigningCredentials,
+                Subject = identity,
+                NotBefore = dataCriacao,
+                Expires = dataExpiracao
+            });
+            var token = handler.WriteToken(securityToken);
+
+
+            var Data = new PortalTokenModel()
+            {
+                authenticated = true,
+                created = dataCriacao,
+                expiration = dataExpiracao,
+                accessToken = token
+            };
+            Data.balance = benefitUseRepo.GetCustomerBalance(customer.Id, out string error);
+            Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
+
+            return Data;
+        }
+
+        /// <summary>
+        /// Cria um novo cliente
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="customer"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpPost("CustomerCreate")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult CustomerCreate([FromHeader(Name = "x-operation-code")] string operationCode, [FromBody] CustomerModel customer)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.Read(operationGuid, out string error);
+
+            if (operation != null)
+            {
+                var cust = customer.GetEntity();
+                Address addr = null;
+                cust.IdOperation = operation.Id;
+
+                if (customer.Address != null)
+                {
+                    addr = customer.Address.GetEntity();
+                    if (addrRepo.Create(addr, out error))
+                        cust.IdAddress = addr.Id;
+                }
+
+                if (!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+
+                string password = Helper.SecurityHelper.CreatePassword();
+                cust.SetPassword(password);
+                if (customerRepo.Create(cust, out error))
+                {
+                    var sendingBlue = new Integration.SendinBlueHelper();
+                    var body = $"<p>Seu cadastro foi realizado com sucesso!</p><p>Segue a sua senha temporária, sugerimos que você troque essa senha imediatamente:<br />Senha:<b>{password}</b></p>";
+                    var listDestinataries = new Dictionary<string, string>() { { cust.Email, cust.Name } };
+                    var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Cadatro realizado com sucesso", body);
+
+                    if (sendingBlue.CreateContact(cust, addr, operation, out int blueId, out string error1))
+                    {
+                        if (!customerRepo.SaveSendingblueId(cust.Id, blueId, out error1))
+                        {
+                            logErrorRepo.Create("PortalController.CustomerCreate", error1, "Save sendingblue id", "");
+                        }
+                    }
+                    else
+                        logErrorRepo.Create("PortalController.CustomerCreate", error1, "Create sendingblue id", "");
+
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = cust.Id });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
+        /// Atualiza um cliente
+        /// </summary>
+        /// <param name="customer"></param>
+        /// <param name="signingConfigurations"></param>
+        /// <param name="tokenConfigurations"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for atualizado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPut("CustomerUpdate")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult CustomerUpdate([FromBody] CustomerModel customer, [FromServices] helper.SigningConfigurations signingConfigurations, [FromServices] helper.TokenOptions tokenConfigurations)
+        {
+            int idOperation = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                if (operationId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                if (!int.TryParse(operationId.Value, out idOperation))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            }
+
+            var cust = customer.GetEntity();
+            cust.IdOperation = idOperation;
+            string error = null;
+
+            if (customer.Address != null)
+            {
+                var addr = customer.Address.GetEntity();
+                if (addr.Id > 0)
+                {
+                    if (addrRepo.Update(addr, out error))
+                        cust.IdAddress = addr.Id;
+                }
+                else if (addrRepo.Create(addr, out error))
+                    cust.IdAddress = addr.Id;
+            }
+
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+
+            cust.Status = (int)Enums.CustomerStatus.Active;
+            if (customerRepo.Update(cust, out error))
+            {
+                var Data = LoadToken(cust, tokenConfigurations, signingConfigurations);
+                Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
+                if (idOperation == 1 && !string.IsNullOrEmpty(cust.Name))
+                {
+                    try
+                    {
+                        var coupon = new Coupon()
+                        {
+                            Campaign = "Raspadinha Unicap",
+                            IdCustomer = cust.Id,
+                            IdCouponCampaign = 1,
+                            ValidationCode = Helper.SecurityHelper.GenerateCode(18),
+                            Locked = false,
+                            Status = (int)Enums.CouponStatus.pendent,
+                            VerifiedDate = DateTime.UtcNow,
+                            Created = DateTime.UtcNow,
+                            Modified = DateTime.UtcNow
+                        };
+
+                        var couponHelper = new Integration.CouponToolsHelper();
+                        if (couponHelper.CreateSingle(cust, coupon, out error))
+                            couponRepo.Create(coupon, out error);
+                    }
+                    catch { }
+                }
+
+                return Ok(Data);
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Altera a senha do cliente
+        /// </summary>
+        /// <param name="model">{ Id: id do cliente, OldPassword: senha antiga, NewPassword: nova senha, NewPasswordConfirm: confirmação da nova senha }</param>
+        /// <returns></returns>
+        /// <respons code="200"></respons>
+        /// <respons code="400"></respons>
+        [HttpPost("ChangePassword")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ChangePassword([FromBody] ChangePasswordModel model)
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var customer = customerRepo.Read(idCustomer, out string error);
+            if (customer != null)
+            {
+                if (customer.CheckPassword(model.OldPassword))
+                {
+                    if (model.NewPassword == model.NewPasswordConfirm)
+                    {
+                        var salt = Helper.SecurityHelper.GenerateSalt();
+                        var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.NewPassword, salt);
+                        if (customerRepo.ChangePassword(idCustomer, encryptedPassword, salt, null, out error))
+                            return Ok(new JsonModel() { Status = "ok" });
+
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                    }
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "A nova senha e a confirmação da nova senha devem ser iguais!" });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "A senha atual não confere!" });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = string.IsNullOrEmpty(error) ? "Cliente não encontrado" : error });
+        }
+
+        /// <summary>
+        /// Lembrete de senha
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="email">Email</param>
+        /// <returns></returns>
+        /// <respons code="200"></respons>
+        /// <respons code="400"></respons>
+        [AllowAnonymous]
+        [HttpPost("RememberPassword")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult RememberPassword([FromHeader(Name = "x-operation-code")] string operationCode, [FromQuery] string email)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.Read(operationGuid, out string error);
+
+            if (operation != null)
+            {
+                var user = customerRepo.ReadByEmail(email, operation.Id, out error);
+                if (user != null)
+                {
+                    if (customerRepo.ChangeStatus(user.Id, Enums.CustomerStatus.ChangePassword, out error))
+                    {
+                        string emailFrom = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                        if (string.IsNullOrEmpty(emailFrom) || !Helper.EmailHelper.IsValidEmail(emailFrom)) emailFrom = "contato@rebens.com.br";
+                        if (Helper.EmailHelper.SendPasswordRecovery(staticTextRepo, operation, emailFrom, user, out error))
+                            return Ok(new JsonModel() { Status = "ok", Message = "Enviamos um link com as instruções para definir uma nova senha." });
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                    }
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O e-mail informado não está cadastrado no clube!" });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
+        /// Cria um novo cliente
+        /// </summary>
+        /// <param name="operationCode"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for criado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpPost("SaveOperationPartnerCustomer")]
+        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult SaveOperationPartnerCustomer([FromHeader(Name = "x-operation-code")] string operationCode, [FromBody] OperationPartnerCustomerModel model)
+        {
+            Guid.TryParse(operationCode, out Guid operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var operation = operationRepo.ReadForSignUp(operationGuid, out bool openSignUp, out string error);
+            if (operation != null)
+            {
+                var customer = model.GetEntity();
+                customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
+                if (operationPartnerRepo.CreateCustomer(customer, out error))
+                {
+                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                    string body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {customer.Name}.</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Obrigado pelo cadastro!</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Enviamos sua solicitação para o RH validar seus dados e confirmar seu cadastro.</p>";
+                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, fromEmail, operation.Title, out error);
+
+                    body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá,</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Recebemos a solicitação de cadastro para aprovação, acesse o sistema para avaliar a solicitação.</p><br /><p style=\"text-align:center;\"><a href=\"{constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ACESSAR SISTEMA</a></p>";
+                    var listDestinataries = operationPartnerRepo.ListDestinataries(customer.IdOperationPartner, out error);
+                    Helper.EmailHelper.SendAdminEmail(listDestinataries, $"{operation.Title} - Novo cadastro de parceiro", body, out error);
+
+
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Seu cadastro ira passar por um processo de validação e em breve entraremos em contato.", Id = customer.Id });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
+        /// Retorna o cliente conforme o ID
+        /// </summary>
+        /// <returns>Parceiros</returns>
+        /// <response code="200">Retorna o cliente, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("GetCustomer")]
+        [ProducesResponseType(typeof(JsonDataModel<CustomerModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetCustomer()
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var customer = customerRepo.Read(idCustomer, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (customer == null || customer.Id == 0)
+                    return NoContent();
+                return Ok(new JsonDataModel<CustomerModel>() { Data = new CustomerModel(customer) });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion Account
+
+        #region Content
         /// <summary>
         /// Retorna os items da home logada
         /// </summary>
@@ -724,452 +1259,6 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Cria um novo cliente
-        /// </summary>
-        /// <param name="operationCode"></param>
-        /// <param name="customer"></param>
-        /// <returns></returns>
-        /// <response code="200">Se o objeto for criado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpPost("CustomerCreate")]
-        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult CustomerCreate([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]CustomerModel customer)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            var operation = operationRepo.Read(operationGuid, out string error);
-
-            if (operation != null)
-            {
-                var cust = customer.GetEntity();
-                Address addr = null;
-                cust.IdOperation = operation.Id;
-
-                if (customer.Address != null)
-                {
-                    addr = customer.Address.GetEntity();
-                    if (addrRepo.Create(addr, out error))
-                        cust.IdAddress = addr.Id;
-                }
-
-                if (!string.IsNullOrEmpty(error))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-
-                string password = Helper.SecurityHelper.CreatePassword();
-                cust.SetPassword(password);
-                if (customerRepo.Create(cust, out error))
-                {
-                    var sendingBlue = new Integration.SendinBlueHelper();
-                    var body = $"<p>Seu cadastro foi realizado com sucesso!</p><p>Segue a sua senha temporária, sugerimos que você troque essa senha imediatamente:<br />Senha:<b>{password}</b></p>";
-                    var listDestinataries = new Dictionary<string, string>() { { cust.Email, cust.Name } };
-                    var result = sendingBlue.Send(listDestinataries, "contato@rebens.com.br", operation.Title, "Cadatro realizado com sucesso", body);
-
-                    if (sendingBlue.CreateContact(cust, addr, operation, out int blueId, out string error1))
-                    {
-                        if (!customerRepo.SaveSendingblueId(cust.Id, blueId, out error1))
-                        {
-                            logErrorRepo.Create("PortalController.CustomerCreate", error1, "Save sendingblue id", "");
-                        }
-                    }
-                    else
-                        logErrorRepo.Create("PortalController.CustomerCreate", error1, "Create sendingblue id", "");
-
-                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = cust.Id });
-                }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-            }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-        }
-
-        /// <summary>
-        /// Cria um novo cliente
-        /// </summary>
-        /// <param name="operationCode"></param>
-        /// <param name="signUp"></param>
-        /// <returns></returns>
-        /// <response code="200">Se o objeto for criado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpPost("SignUp")]
-        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult SignUp([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]SignUpModel signUp)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            var operation = operationRepo.ReadForSignUp(operationGuid, out bool openSignUp, out string error);
-
-            if (operation != null)
-            {
-                if(!customerRepo.CheckEmailAndCpf(signUp.Email, signUp.Cpf, operation.Id, out error))
-                {
-                    Customer customer = null;
-                    CustomerReferal referal = null;
-                    OperationCustomer oc = operationCustomerRepo.ReadByCpf(signUp.Cpf, operation.Id, out error);
-
-                    if (oc != null)
-                    {
-                        customer = new Customer()
-                        {
-                            Email = signUp.Email,
-                            Cpf = signUp.Cpf,
-                            Name = oc.Name,
-                            Phone = oc.Phone,
-                            Cellphone = oc.Cellphone,
-                            Created = DateTime.Now,
-                            Modified = DateTime.Now,
-                            Status = (int)Enums.CustomerStatus.Validation,
-                            CustomerType = (int)Enums.CustomerType.Customer,
-                            Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                            IdOperation = operation.Id
-                        };
-                    }
-                    else
-                    {
-                        referal = customerReferalRepo.ReadByEmail(signUp.Email, operation.Id, out error);
-                        if (referal != null)
-                        {
-                            customer = new Customer()
-                            {
-                                Email = signUp.Email,
-                                Cpf = signUp.Cpf,
-                                Name = referal.Name,
-                                Created = DateTime.Now,
-                                Modified = DateTime.Now,
-                                Status = (int)Enums.CustomerStatus.Validation,
-                                CustomerType = (int)Enums.CustomerType.Referal,
-                                Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                                IdOperation = operation.Id
-                            };
-                        }
-                    }
-
-                    if (customer == null && openSignUp)
-                    {
-                        customer = new Customer()
-                        {
-                            Email = signUp.Email,
-                            Cpf = signUp.Cpf,
-                            Created = DateTime.Now,
-                            Modified = DateTime.Now,
-                            Status = (int)Enums.CustomerStatus.Validation,
-                            CustomerType = (int)Enums.CustomerType.Customer,
-                            Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                            IdOperation = operation.Id
-                        };
-                    }
-                    else
-                        error = "O cpf digitado não está cadastrado em nossa base!";
-
-                    if(customer != null)
-                    {
-                        if (customerRepo.Create(customer, out error))
-                        {
-                            string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
-                            if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
-                            Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, fromEmail, out error);
-
-                            if (oc != null)
-                                operationCustomerRepo.SetSigned(oc.Id, out error);
-                            else if (referal != null)
-                                customerReferalRepo.ChangeStatus(referal.Id, Enums.CustomerReferalStatus.SignUp, out error);
-
-                            return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
-                        }
-                    }
-                    
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-                }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Email ou CPF já cadastrado!" });
-            }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-        }
-
-        /// <summary>
-        /// Cria um novo cliente
-        /// </summary>
-        /// <param name="operationCode"></param>
-        /// <param name="validateCustomer"></param>
-        /// <param name="signingConfigurations"></param>
-        /// <param name="tokenConfigurations"></param>
-        /// <returns></returns>
-        /// <response code="200">Se o cliente for validado com sucesso já é retornado o token</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpPost("ValidateCustomer")]
-        [ProducesResponseType(typeof(PortalTokenModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ValidateCustomer([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]ValidateCustomerModel validateCustomer, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            var operation = operationRepo.Read(operationGuid, out string error);
-
-            if (operation != null)
-            {
-                var customer = customerRepo.ReadByCode(validateCustomer.Code.Replace(" ", "+"), operation.Id, out error);
-
-                if(customer != null)
-                {
-                    customer.SetPassword(validateCustomer.Password);
-                    if(customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
-                    {
-                        var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
-                        customerRepo.SaveLog(customer.Id, Enums.CustomerLogAction.validate, null);
-
-                        return Ok(Data);
-                    }
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
-                }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "reading customer - " + validateCustomer.Code, Data = error });
-            }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida! (code: " + operationCode + ")" });
-        }
-
-        /// <summary>
-        /// Atualiza um cliente
-        /// </summary>
-        /// <param name="customer"></param>
-        /// <param name="signingConfigurations"></param>
-        /// <param name="tokenConfigurations"></param>
-        /// <returns></returns>
-        /// <response code="200">Se o objeto for atualizado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPut("CustomerUpdate")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult CustomerUpdate([FromBody] CustomerModel customer, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
-        {
-            int idOperation = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
-
-            var cust = customer.GetEntity();
-            cust.IdOperation = idOperation;
-            string error = null;
-
-            if (customer.Address != null)
-            {
-                var addr = customer.Address.GetEntity();
-                if (addr.Id > 0)
-                {
-                    if (addrRepo.Update(addr, out error))
-                        cust.IdAddress = addr.Id;
-                }
-                else if (addrRepo.Create(addr, out error))
-                    cust.IdAddress = addr.Id;
-            }
-
-            if (!string.IsNullOrEmpty(error))
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-
-            cust.Status = (int)Enums.CustomerStatus.Active;
-            if (customerRepo.Update(cust, out error))
-            {
-                var Data = LoadToken(cust, tokenConfigurations, signingConfigurations);
-                Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
-                if (idOperation == 1 && !string.IsNullOrEmpty(cust.Name))
-                {
-                    try
-                    {
-                        var coupon = new Coupon()
-                        {
-                            Campaign = "Raspadinha Unicap",
-                            IdCustomer = cust.Id,
-                            IdCouponCampaign = 1,
-                            ValidationCode = Helper.SecurityHelper.GenerateCode(18),
-                            Locked = false,
-                            Status = (int)Enums.CouponStatus.pendent,
-                            VerifiedDate = DateTime.UtcNow,
-                            Created = DateTime.UtcNow,
-                            Modified = DateTime.UtcNow
-                        };
-
-                        var couponHelper = new Integration.CouponToolsHelper();
-                        if (couponHelper.CreateSingle(cust, coupon, out error))
-                            couponRepo.Create(coupon, out error);
-                    }
-                    catch { }
-                }
-
-                return Ok(Data);
-            }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Altera a senha do cliente
-        /// </summary>
-        /// <param name="model">{ Id: id do cliente, OldPassword: senha antiga, NewPassword: nova senha, NewPasswordConfirm: confirmação da nova senha }</param>
-        /// <returns></returns>
-        /// <respons code="200"></respons>
-        /// <respons code="400"></respons>
-        [HttpPost("ChangePassword")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
-        {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
-
-            var customer = customerRepo.Read(idCustomer, out string error);
-            if (customer != null)
-            {
-                if (customer.CheckPassword(model.OldPassword))
-                {
-                    if (model.NewPassword == model.NewPasswordConfirm)
-                    {
-                        var salt = Helper.SecurityHelper.GenerateSalt();
-                        var encryptedPassword = Helper.SecurityHelper.EncryptPassword(model.NewPassword, salt);
-                        if (customerRepo.ChangePassword(idCustomer, encryptedPassword, salt, null, out error))
-                            return Ok(new JsonModel() { Status = "ok" });
-
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-                    }
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "A nova senha e a confirmação da nova senha devem ser iguais!" });
-                }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "A senha atual não confere!" });
-            }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = string.IsNullOrEmpty(error) ? "Cliente não encontrado" : error });
-        }
-
-        /// <summary>
-        /// Lembrete de senha
-        /// </summary>
-        /// <param name="operationCode"></param>
-        /// <param name="email">Email</param>
-        /// <returns></returns>
-        /// <respons code="200"></respons>
-        /// <respons code="400"></respons>
-        [AllowAnonymous]
-        [HttpPost("RememberPassword")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult RememberPassword([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]string email)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            var operation = operationRepo.Read(operationGuid, out string error);
-
-            if (operation != null)
-            {
-                var user = customerRepo.ReadByEmail(email, operation.Id, out error);
-                if (user != null)
-                {
-                    if(customerRepo.ChangeStatus(user.Id, Enums.CustomerStatus.ChangePassword, out error))
-                    {
-                        string emailFrom = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
-                        if (string.IsNullOrEmpty(emailFrom) || !Helper.EmailHelper.IsValidEmail(emailFrom)) emailFrom = "contato@rebens.com.br";
-                        if (Helper.EmailHelper.SendPasswordRecovery(staticTextRepo, operation, emailFrom, user, out error))
-                            return Ok(new JsonModel() { Status = "ok", Message = "Enviamos um link com as instruções para definir uma nova senha." });
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-                    }
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Ocorreu um erro ao tentar enviar o lembrete da senha!" });
-                }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "O e-mail informado não está cadastrado no clube!" });
-            }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-        }
-
-        /// <summary>
-        /// Retorna o cliente conforme o ID
-        /// </summary>
-        /// <returns>Parceiros</returns>
-        /// <response code="200">Retorna o cliente, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("GetCustomer")]
-        [ProducesResponseType(typeof(JsonDataModel<CustomerModel>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GetCustomer()
-        {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
-
-            var customer = customerRepo.Read(idCustomer, out string error);
-
-            if (string.IsNullOrEmpty(error))
-            {
-                if (customer == null || customer.Id == 0)
-                    return NoContent();
-                return Ok(new JsonDataModel<CustomerModel>() { Data = new CustomerModel(customer) });
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Retorna as informações necessárias para a página de Resgate
-        /// </summary>
-        /// <returns></returns>
-        /// <response code="200">Retorna o resumo para página de resgate, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("GetWithdrawSummary"), Authorize("Bearer", Roles = "customer")]
-        [ProducesResponseType(typeof(JsonDataModel<BalanceSummaryModel>), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GetWithdrawSummary()
-        {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
-
-            if(benefitUseRepo.GetCustomerWithdrawSummary(idCustomer, out decimal available, out decimal blocked, out string error))
-                return Ok(new JsonDataModel<BalanceSummaryModel>() { Data = new BalanceSummaryModel() { AvailableBalance = available, BlokedBalance = blocked, Total = (available + blocked) } });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
         /// Retorna o histórico de Benefícios do usuário logado
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
@@ -1182,7 +1271,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<BenefitUseModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListBenefitHistory([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
+        public IActionResult ListBenefitHistory([FromQuery] int page = 0, [FromQuery] int pageItems = 30)
         {
             int idCustomer = 0;
             var principal = HttpContext.User;
@@ -1218,6 +1307,179 @@ namespace ias.Rebens.api.Controllers
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
+        /// <summary>
+        /// Retorna a lista com os banners imperdíveis
+        /// </summary>
+        /// <param name="operationCode">código da operação, obrigatório</param>
+        /// <returns></returns>
+        /// <response code="200">Retorna a lista com os banners Imperdíveis, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("UnmissableBanners")]
+        [ProducesResponseType(typeof(ResultPageModel<PortalBannerModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListUnmissableBanners([FromHeader(Name = "x-operation-code")] string operationCode)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+            int idOperation = 0;
+            string error;
+
+            if (operationGuid == Guid.Empty)
+            {
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
+                    if (operationId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                    if (!int.TryParse(operationId.Value, out idOperation))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+                }
+            }
+            else
+            {
+                var operation = operationRepo.Read(operationGuid, out error);
+                idOperation = operation.Id;
+            }
+            if (idOperation == 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.Benefit, out error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<PortalBannerModel>>()
+                {
+                    Data = new List<PortalBannerModel>()
+                };
+                foreach (var banner in list)
+                    ret.Data.Add(new PortalBannerModel(banner, null, null, null));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna as perguntas e respostas da página faq
+        /// </summary>
+        /// <param name="operationCode">código da operação, obrigatório</param>
+        /// <returns></returns>
+        /// <response code="200">Retorna as perguntas e respostas da página faq, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("Faq")]
+        [ProducesResponseType(typeof(JsonDataModel<List<FaqModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult Faq([FromHeader(Name = "x-operation-code")] string operationCode)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            if (operationGuid != null && operationGuid != Guid.Empty)
+            {
+                var list = faqRepo.ListByOperation(operationGuid, out string error);
+                if (string.IsNullOrEmpty(error))
+                {
+                    if (list == null || list.Count == 0)
+                        return NoContent();
+
+                    var ret = new JsonDataModel<List<FaqModel>>() { Data = new List<FaqModel>() };
+                    foreach (var faq in list)
+                        ret.Data.Add(new FaqModel(faq));
+
+                    return Ok(ret);
+                }
+
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+        }
+
+        /// <summary>
+        /// Retorna uma lista com os parceiros da operação
+        /// </summary>
+        /// <param name="operationCode">código da operação, obrigatório</param>
+        /// <returns>Lista com os parceiros</returns>
+        /// <response code="200">Retorna a lista com os parceiros, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("ListOperationPartners")]
+        [ProducesResponseType(typeof(JsonDataModel<List<OperationPartnerModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListOperationPartners([FromHeader(Name = "x-operation-code")] string operationCode)
+        {
+            Guid operationGuid = Guid.Empty;
+            Guid.TryParse(operationCode, out operationGuid);
+
+            if (operationGuid == Guid.Empty)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            var list = operationPartnerRepo.ListActiveByOperation(operationGuid, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<OperationPartnerModel>>()
+                {
+                    Data = new List<OperationPartnerModel>()
+                };
+
+                foreach (var item in list)
+                    ret.Data.Add(new OperationPartnerModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion Content
+
+        #region cashback
+        /// <summary>
+        /// Retorna as informações necessárias para a página de Resgate
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Retorna o resumo para página de resgate, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("GetWithdrawSummary"), Authorize("Bearer", Roles = "customer")]
+        [ProducesResponseType(typeof(JsonDataModel<BalanceSummaryModel>), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetWithdrawSummary()
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            if(benefitUseRepo.GetCustomerWithdrawSummary(idCustomer, out decimal available, out decimal blocked, out string error))
+                return Ok(new JsonDataModel<BalanceSummaryModel>() { Data = new BalanceSummaryModel() { AvailableBalance = available, BlokedBalance = blocked, Total = (available + blocked) } });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        
         /// <summary>
         /// Registra um resgate
         /// </summary>
@@ -1350,7 +1612,9 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+        #endregion cashback
 
+        #region coupons
         /// <summary>
         /// Retorna o histórico de Cupons do cliente logado
         /// </summary>
@@ -1402,246 +1666,7 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
-
-        /// <summary>
-        /// Retorna a lista com os banners imperdíveis
-        /// </summary>
-        /// <param name="operationCode">código da operação, obrigatório</param>
-        /// <returns></returns>
-        /// <response code="200">Retorna a lista com os banners Imperdíveis, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpGet("UnmissableBanners")]
-        [ProducesResponseType(typeof(ResultPageModel<PortalBannerModel>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListUnmissableBanners([FromHeader(Name = "x-operation-code")]string operationCode)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-            int idOperation = 0;
-            string error;
-
-            if (operationGuid == Guid.Empty)
-            {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
-            }
-            else
-            {
-                var operation = operationRepo.Read(operationGuid, out error);
-                idOperation = operation.Id;
-            }
-            if (idOperation == 0)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            var list = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.Benefit, out error);
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.Count == 0)
-                    return NoContent();
-
-                var ret = new JsonDataModel<List<PortalBannerModel>>()
-                {
-                    Data = new List<PortalBannerModel>()
-                };
-                foreach (var banner in list)
-                    ret.Data.Add(new PortalBannerModel(banner, null, null, null));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Retorna as perguntas e respostas da página faq
-        /// </summary>
-        /// <param name="operationCode">código da operação, obrigatório</param>
-        /// <returns></returns>
-        /// <response code="200">Retorna as perguntas e respostas da página faq, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpGet("Faq")]
-        [ProducesResponseType(typeof(JsonDataModel<List<FaqModel>>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Faq([FromHeader(Name = "x-operation-code")]string operationCode)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            if (operationGuid != null && operationGuid != Guid.Empty)
-            {
-                var list = faqRepo.ListByOperation(operationGuid, out string error);
-                if (string.IsNullOrEmpty(error))
-                {
-                    if (list == null || list.Count == 0)
-                        return NoContent();
-
-                    var ret = new JsonDataModel<List<FaqModel>>() { Data = new List<FaqModel>() };
-                    foreach (var faq in list)
-                        ret.Data.Add(new FaqModel(faq));
-
-                    return Ok(ret);
-                }
-
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-            }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-        }
-
-        /// <summary>
-        /// Retorna uma lista com o histórico de pagamento do cliente
-        /// </summary>
-        /// <param name="page">página, não obrigatório (default=0)</param>
-        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <returns>Lista com o histórico de pagamento</returns>
-        /// <response code="200">Retorna a lista com o histórico de pagamento, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("ListPayments"), Authorize("Bearer", Roles = "customer")]
-        [ProducesResponseType(typeof(ResultPageModel<PaymentModel>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListPayments([FromQuery]int page = 0, int pageItems = 30)
-        {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
-
-            var list = moipRepo.ListPaymentsByCustomer(idCustomer, page, pageItems, out string error);
-
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.Count() == 0)
-                    return NoContent();
-
-                var ret = new ResultPageModel<PaymentModel>()
-                {
-                    Data = new List<PaymentModel>(),
-                    CurrentPage = list.CurrentPage,
-                    HasNextPage = list.HasNextPage,
-                    HasPreviousPage = list.HasPreviousPage,
-                    ItemsPerPage = list.ItemsPerPage,
-                    TotalItems = list.TotalItems,
-                    TotalPages = list.TotalPages,
-
-                };
-
-                foreach (var item in list)
-                    ret.Data.Add(new PaymentModel(item));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-
-        /// <summary>
-        /// Retorna uma lista com os parceiros da operação
-        /// </summary>
-        /// <param name="operationCode">código da operação, obrigatório</param>
-        /// <returns>Lista com os parceiros</returns>
-        /// <response code="200">Retorna a lista com os parceiros, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpGet("ListOperationPartners")]
-        [ProducesResponseType(typeof(JsonDataModel<List<OperationPartnerModel>>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListOperationPartners([FromHeader(Name = "x-operation-code")]string operationCode)
-        {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            var list = operationPartnerRepo.ListActiveByOperation(operationGuid, out string error);
-
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.Count == 0)
-                    return NoContent();
-
-                var ret = new JsonDataModel<List<OperationPartnerModel>>()
-                {
-                    Data = new List<OperationPartnerModel>()
-                };
-
-                foreach (var item in list)
-                    ret.Data.Add(new OperationPartnerModel(item));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Cria um novo cliente
-        /// </summary>
-        /// <param name="operationCode"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        /// <response code="200">Se o objeto for criado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [AllowAnonymous]
-        [HttpPost("SaveOperationPartnerCustomer")]
-        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult SaveOperationPartnerCustomer([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody]OperationPartnerCustomerModel model)
-        {
-            Guid.TryParse(operationCode, out Guid operationGuid);
-
-            if (operationGuid == Guid.Empty)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-
-            var operation = operationRepo.ReadForSignUp(operationGuid, out bool openSignUp, out string error);
-            if (operation != null)
-            {
-                var customer = model.GetEntity();
-                customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
-                if (operationPartnerRepo.CreateCustomer(customer, out error))
-                {
-                    string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
-                    if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
-                    string body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {customer.Name}.</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Obrigado pelo cadastro!</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Enviamos sua solicitação para o RH validar seus dados e confirmar seu cadastro.</p>";
-                    Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, fromEmail, operation.Title, out error);
-
-                    body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá,</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Recebemos a solicitação de cadastro para aprovação, acesse o sistema para avaliar a solicitação.</p><br /><p style=\"text-align:center;\"><a href=\"{constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ACESSAR SISTEMA</a></p>";
-                    var listDestinataries = operationPartnerRepo.ListDestinataries(customer.IdOperationPartner, out error);
-                    Helper.EmailHelper.SendAdminEmail(listDestinataries, $"{operation.Title} - Novo cadastro de parceiro", body, out error);
-
-
-                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Seu cadastro ira passar por um processo de validação e em breve entraremos em contato.", Id = customer.Id });
-                }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-            }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-        }
+        #endregion coupons
 
         #region Course
         /// <summary>
@@ -2416,7 +2441,7 @@ namespace ias.Rebens.api.Controllers
         }
         #endregion FreeCourse
 
-        #region Wirecard
+        #region subscription
         /// <summary>
         /// Cria uma assinatura
         /// </summary>
@@ -2501,8 +2526,95 @@ namespace ias.Rebens.api.Controllers
                 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
-        #endregion Wirecard
 
+        /// <summary>
+        /// Cancela uma assinatura
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for encontrado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPut("Subscription/{code}/cancel")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult CancelSubscription(string code)
+        {
+            if(moipRepo.CancelSignature(code, out string error))
+                return Ok(new JsonModel() { Status = "ok" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Altera o plano de uma assinatura
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Se o objeto for encontrado com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPut("Subscription/ChangePlan")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ChangeSubscriptionPlan([FromBody] MoipSignatureChangePlanModel model)
+        {
+            if (moipRepo.UpdatePlan(model.Code, model.PlanCode, model.PlanName, out string error))
+                return Ok(new JsonModel() { Status = "ok" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna uma lista com o histórico de pagamento do cliente
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <returns>Lista com o histórico de pagamento</returns>
+        /// <response code="200">Retorna a lista com o histórico de pagamento, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListPayments"), Authorize("Bearer", Roles = "customer")]
+        [ProducesResponseType(typeof(ResultPageModel<PaymentModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListPayments([FromQuery] int page = 0, int pageItems = 30)
+        {
+            int idCustomer = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                if (customerId == null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                if (!int.TryParse(customerId.Value, out idCustomer))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            }
+
+            var list = moipRepo.ListPaymentsByCustomer(idCustomer, page, pageItems, out string error);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.Count() == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<PaymentModel>()
+                {
+                    Data = new List<PaymentModel>(),
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+
+                };
+
+                foreach (var item in list)
+                    ret.Data.Add(new PaymentModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion subscription
+
+        #region LuckNumbers
         /// <summary>
         /// Retorna uma lista com os números da sorte
         /// </summary>
@@ -2547,71 +2659,6 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
-
-        private PortalTokenModel LoadToken(Customer customer, helper.TokenOptions tokenConfigurations, helper.SigningConfigurations signingConfigurations)
-        {
-            ClaimsIdentity identity = new ClaimsIdentity(
-                            new GenericIdentity(customer.Email),
-                            new[] {
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-                            new Claim(JwtRegisteredClaimNames.UniqueName, customer.Email)
-                            }
-                        );
-
-            identity.AddClaim(new Claim(ClaimTypes.Role, "customer"));
-            //foreach (var policy in user.Permissions)
-            //    identity.AddClaim(new Claim("permissions", "permission1"));
-
-            identity.AddClaim(new Claim("operationId", customer.IdOperation.ToString()));
-            identity.AddClaim(new Claim("Id", customer.Id.ToString()));
-            identity.AddClaim(new Claim("Name", string.IsNullOrEmpty(customer.Name) ? "" : customer.Name));
-            identity.AddClaim(new Claim("Email", customer.Email));
-            identity.AddClaim(new Claim("Status", ((Enums.CustomerStatus)customer.Status).ToString().ToLower()));
-            identity.AddClaim(new Claim("cpf", customer.Cpf));
-
-            var plan = customerRepo.CheckPlanStatus(customer.Id);
-            string planStatus = "-1";
-            if(plan != null)
-            {
-                switch(plan.Status.ToUpper())
-                {
-                    case "ACTIVE": planStatus = "1";break;
-                    case "CANCELED": planStatus = "2";break;
-                    default: planStatus = "0";break;
-                }
-            }
-            identity.AddClaim(new Claim("planStatus", planStatus));
-            identity.AddClaim(new Claim("subscriptionCode", plan != null ? plan.Code : ""));
-
-            DateTime dataCriacao = DateTime.UtcNow;
-            DateTime dataExpiracao = dataCriacao.AddDays(2);
-
-            var handler = new JwtSecurityTokenHandler();
-            var securityToken = handler.CreateToken(new SecurityTokenDescriptor
-            {
-                Issuer = tokenConfigurations.Issuer,
-                Audience = tokenConfigurations.Audience,
-                SigningCredentials = signingConfigurations.SigningCredentials,
-                Subject = identity,
-                NotBefore = dataCriacao,
-                Expires = dataExpiracao
-            });
-            var token = handler.WriteToken(securityToken);
-
-
-            var Data = new PortalTokenModel()
-            {
-                authenticated = true,
-                created = dataCriacao,
-                expiration = dataExpiracao,
-                accessToken = token
-            };
-            Data.balance = benefitUseRepo.GetCustomerBalance(customer.Id, out string error);
-            Data.picture = string.IsNullOrEmpty(customer.Picture) ? "/images/default-avatar.png" : customer.Picture;
-
-            return Data;
-        }
-
-
+        #endregion LuckNumbers
     }
 }

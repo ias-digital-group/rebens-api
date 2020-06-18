@@ -11,5 +11,7 @@ namespace ias.Rebens
         bool SavePayment(MoipPayment payment, string signatureCode);
         ResultPage<MoipPayment> ListPaymentsByCustomer(int idCustomer, int page, int pageItems, out string error);
         MoipSignature GetUserSignature(int idCustomer, out string error);
+        bool CancelSignature(string code, out string error);
+        bool UpdatePlan(string code, string planCode, string planName, out string error);
     }
 }
