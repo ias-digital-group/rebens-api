@@ -2480,7 +2480,7 @@ namespace ias.Rebens.api.Controllers
                         if (operation != null)
                         {
                             string fromEmail = operationRepo.GetFromEmail(operation.Id);
-                            Helper.EmailHelper.SendSignatureCreationEmail(customer, operation, fromEmail, staticTextRepo, out _);
+                            Helper.EmailHelper.SendSignatureCreationEmail(customer, operation, signature, fromEmail, staticTextRepo, out _);
                         }
                         return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Assinatura criada com sucesso", Id = signature.Id });
                     }
@@ -2494,7 +2494,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// retorna a assinatura ativa de um cliente
+        /// retorna a assinatura de um cliente
         /// </summary>
         /// <returns></returns>
         /// <response code="200">Se o objeto for encontrado com sucesso</response>

@@ -23,6 +23,9 @@ namespace ias.Rebens
                 {
                     ret = db.MoipSignature.FirstOrDefault(c => c.IdCustomer == idCustomer &&
                                 (c.Status.ToUpper() == "ACTIVE" || c.Status.ToUpper() == "TRIAL"));
+
+                    if(ret == null)
+                        ret = db.MoipSignature.Where(c => c.IdCustomer == idCustomer).OrderByDescending(c => c.Modified).FirstOrDefault();
                     error = null;
                 }
             }

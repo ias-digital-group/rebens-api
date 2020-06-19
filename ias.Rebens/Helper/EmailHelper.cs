@@ -237,10 +237,10 @@ namespace ias.Rebens.Helper
             return SendDefaultEmail(customer.Email, customer.Name, fromEmail, operation.Title, $"{operation.Title.ToUpper()} - Assinatura", message, out error);
         }
 
-        public static bool SendSignatureCreationEmail(Customer customer, Operation operation, string fromEmail, IStaticTextRepository staticTextRepository, out string error)
+        public static bool SendSignatureCreationEmail(Customer customer, Operation operation, MoipSignature signature, string fromEmail, IStaticTextRepository staticTextRepository, out string error)
         {
             string body = $"<p>Olá {customer.Name}, </p><br />";
-            body += $"<h2>Recebemos a sua assinatura, estamos aguardando a confirmação do pagamento, assim que recebermos você já poderá começar a utilizar o nosso clube.</h2><br /><br />";
+            body += $"<h2>Recebemos a sua assinatura do nosso plano ${signature.PlanName}, estamos aguardando a confirmação do pagamento, assim que recebermos você já poderá começar a utilizar o nosso clube.</h2><br /><br />";
 
             return SendDefaultEmail(staticTextRepository, customer.Email, customer.Name, operation.Id, $"{operation.Title.ToUpper()} - Assinatura", body, fromEmail, operation.Title, out error);
         }
