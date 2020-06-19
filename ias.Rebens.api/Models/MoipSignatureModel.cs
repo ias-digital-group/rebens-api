@@ -19,6 +19,8 @@ namespace ias.Rebens.api.Models
         public string Status { get; set; }
         public decimal Amount { get; set; }
         public int IdOperation { get; set; }
+        public string AmountString { get { return this.Amount.ToString("N", Constant.FormatProvider); } }
+        public string NextInvoiceDateString { get { return this.NextInvoiceDate.ToString("dd/MM/yyyy"); } }
         public CustomerModel Customer { get; set; }
 
         public MoipSignatureModel() { }
