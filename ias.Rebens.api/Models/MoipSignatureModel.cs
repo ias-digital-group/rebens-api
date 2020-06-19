@@ -19,6 +19,7 @@ namespace ias.Rebens.api.Models
         public string Status { get; set; }
         public decimal Amount { get; set; }
         public int IdOperation { get; set; }
+        public CustomerModel Customer { get; set; }
 
         public MoipSignatureModel() { }
 
@@ -37,6 +38,8 @@ namespace ias.Rebens.api.Models
                 this.Status = signature.Status;
                 this.Amount = signature.Amount;
                 this.IdOperation = signature.IdOperation;
+                if (signature.Customer != null)
+                    this.Customer = new CustomerModel(signature.Customer);
             }
         }
 

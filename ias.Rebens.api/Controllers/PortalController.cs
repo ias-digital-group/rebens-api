@@ -2554,9 +2554,13 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangeSubscriptionPlan([FromBody] MoipSignatureChangePlanModel model)
         {
-            if (moipRepo.UpdatePlan(model.Code, model.PlanCode, model.PlanName, out string error))
-                return Ok(new JsonModel() { Status = "ok" });
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            if (model != null)
+            {
+                if (moipRepo.UpdatePlan(model.Code, model.PlanCode, model.PlanName, model.Amount, model.NextInvoice, out string error))
+                    return Ok(new JsonModel() { Status = "ok" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            }
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto não pode ser nulo" });
         }
 
         /// <summary>

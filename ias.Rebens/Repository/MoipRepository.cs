@@ -188,7 +188,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool UpdatePlan(string code, string planCode, string planName, out string error)
+        public bool UpdatePlan(string code, string planCode, string planName, decimal amount, DateTime nextInvoice, out string error)
         {
             var ret = false;
             try
@@ -200,6 +200,8 @@ namespace ias.Rebens
                     {
                         update.PlanCode = planCode;
                         update.PlanName = planName;
+                        update.Amount = amount;
+                        update.NextInvoiceDate = nextInvoice;
                         update.Modified = DateTime.UtcNow;
                         db.SaveChanges();
 
@@ -250,6 +252,33 @@ namespace ias.Rebens
                 error = $"Ocorreu um erro ao tentar cancelar a assinatura. (erro: {idLog})";
             }
 
+            return ret;
+        }
+
+        public ResultPage<MoipSignature> ListSubscriptions(int page, int pageItems, string word, out string error, int? idOperation)
+        {
+            ResultPage<MoipSignature> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var list = db.MoipSignature.Include("Customer").Where(s => (!idOperation.HasValue || s.IdOperation == idOperation)
+                                    && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word)))
+                        .OrderByDescending(s => s.Customer.Name).Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = db.MoipSignature.Count(s => (!idOperation.HasValue || s.IdOperation == idOperation)
+                                    && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word)));
+
+                    ret = new ResultPage<MoipSignature>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("MoipRepository.ListSubscriptions", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as assinaturas. (erro:" + idLog + ")";
+                ret = null;
+            }
             return ret;
         }
     }

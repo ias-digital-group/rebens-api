@@ -10,5 +10,7 @@ namespace ias.Rebens.api.Models
         public string Code { get; set; }
         public string PlanCode { get; set; }
         public string PlanName { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime NextInvoice { get; set; }
     }
 }
