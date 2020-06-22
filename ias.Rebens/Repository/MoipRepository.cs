@@ -46,7 +46,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.MoipPayment.Include("Signature").Where(p => p.Signature.IdCustomer == idCustomer)
+                    var list = db.MoipPayment.Include("Signature").Include("Invoice").Where(p => p.Signature.IdCustomer == idCustomer)
                         .OrderByDescending(p => p.Created).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.MoipPayment.Count(p => p.Signature.IdCustomer == idCustomer);
 
@@ -262,11 +262,16 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    int? idInvoice = null;
+                    if (int.TryParse(word, out int tmp))
+                        idInvoice = tmp;
                     var list = db.MoipSignature.Include("Customer").Where(s => (!idOperation.HasValue || s.IdOperation == idOperation)
-                                    && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word)))
+                                    && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word))
+                                    && (!idInvoice.HasValue || s.Payments.Any(p => p.IdMoipInvoice == idInvoice)))
                         .OrderByDescending(s => s.Customer.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = db.MoipSignature.Count(s => (!idOperation.HasValue || s.IdOperation == idOperation)
-                                    && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word)));
+                                    && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word))
+                                    && (!idInvoice.HasValue || s.Payments.Any(p => p.IdMoipInvoice == idInvoice)));
 
                     ret = new ResultPage<MoipSignature>(list, page, pageItems, total);
                     error = null;

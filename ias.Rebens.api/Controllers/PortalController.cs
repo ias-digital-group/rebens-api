@@ -2556,9 +2556,33 @@ namespace ias.Rebens.api.Controllers
         {
             if (model != null)
             {
-                if (moipRepo.UpdatePlan(model.Code, model.PlanCode, model.PlanName, model.Amount, model.NextInvoice, out string error))
-                    return Ok(new JsonModel() { Status = "ok" });
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                int idCustomer = 0;
+                var principal = HttpContext.User;
+                if (principal?.Claims != null)
+                {
+                    var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
+                    if (customerId == null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                    if (!int.TryParse(customerId.Value, out idCustomer))
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                }
+
+                var customer = customerRepo.Read(idCustomer, out _);
+                if (customer != null)
+                {
+                    
+                    if (moipRepo.UpdatePlan(model.Code, model.PlanCode, model.PlanName, model.Amount, model.NextInvoice, out string error))
+                    {
+                        var operation = operationRepo.Read(customer.IdOperation, out _);
+                        var signature = moipRepo.GetUserSignature(idCustomer, out _);
+                        string fromEmail = operationRepo.GetFromEmail(operation.Id);
+                        Helper.EmailHelper.SendSignaturePlanChangeEmail(customer, operation, signature, fromEmail, staticTextRepo, out _);
+
+                        return Ok(new JsonModel() { Status = "ok" });
+                    }
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                }
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto não pode ser nulo" });
         }

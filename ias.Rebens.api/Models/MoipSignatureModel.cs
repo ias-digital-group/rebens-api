@@ -22,6 +22,7 @@ namespace ias.Rebens.api.Models
         public string AmountString { get { return this.Amount.ToString("N", Constant.FormatProvider); } }
         public string NextInvoiceDateString { get { return this.NextInvoiceDate.ToString("dd/MM/yyyy"); } }
         public CustomerModel Customer { get; set; }
+        public string Modified { get; set; }
 
         public MoipSignatureModel() { }
 
@@ -40,6 +41,7 @@ namespace ias.Rebens.api.Models
                 this.Status = signature.Status;
                 this.Amount = signature.Amount;
                 this.IdOperation = signature.IdOperation;
+                this.Modified = TimeZoneInfo.ConvertTimeFromUtc(signature.Modified, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm", Constant.FormatProvider);
                 if (signature.Customer != null)
                     this.Customer = new CustomerModel(signature.Customer);
             }

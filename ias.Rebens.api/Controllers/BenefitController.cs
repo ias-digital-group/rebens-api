@@ -15,13 +15,13 @@ namespace ias.Rebens.api.Controllers
     [ApiController]
     public class BenefitController : ControllerBase
     {
-        private IBenefitRepository repo;
-        private IBenefitUseRepository benefitUseRepo;
-        private IAddressRepository addressRepo;
-        private IStaticTextRepository staticTextRepo;
-        private ICategoryRepository categoryRepo;
-        private IOperationRepository operationRepo;
-        private Constant constant;
+        private readonly IBenefitRepository repo;
+        private readonly IBenefitUseRepository benefitUseRepo;
+        private readonly IAddressRepository addressRepo;
+        private readonly IStaticTextRepository staticTextRepo;
+        private readonly ICategoryRepository categoryRepo;
+        private readonly IOperationRepository operationRepo;
+        private readonly Constant constant;
 
         /// <summary>
         /// Construtor

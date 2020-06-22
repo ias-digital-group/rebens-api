@@ -39,6 +39,7 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string Status { get; set; }
         public string SignatureCode { get; set; }
+        public string PlanName { get; set; }
 
 
         public PaymentModel() { }
@@ -53,8 +54,9 @@ namespace ias.Rebens.api.Models
                 this.Receipt = payment.IdMoipInvoice.ToString(Constant.FormatProvider);
                 this.PaymentMethod = string.IsNullOrEmpty(payment.Brand) || string.IsNullOrEmpty(payment.LastFourDigits) ? "" : payment.Brand + " final " + payment.LastFourDigits;
                 this.Amount = payment.Amount.ToString("N", Constant.FormatProvider);
-                this.Status = Enums.EnumHelper.GetEnumDescription((Enums.MoipPaymentStatus)payment.IdStatus);
+                this.Status = payment.Invoice.Status;
                 this.SignatureCode = payment.Signature.Code;
+                this.PlanName = payment.Signature.PlanName;
             }
         }
     }

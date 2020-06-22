@@ -240,9 +240,17 @@ namespace ias.Rebens.Helper
         public static bool SendSignatureCreationEmail(Customer customer, Operation operation, MoipSignature signature, string fromEmail, IStaticTextRepository staticTextRepository, out string error)
         {
             string body = $"<p>Olá {customer.Name}, </p><br />";
-            body += $"<h2>Recebemos a sua assinatura do nosso plano ${signature.PlanName}, estamos aguardando a confirmação do pagamento, assim que recebermos você já poderá começar a utilizar o nosso clube.</h2><br /><br />";
+            body += $"<h2>Recebemos a sua assinatura do nosso plano {signature.PlanName}, estamos aguardando a confirmação do pagamento, assim que recebermos você já poderá começar a utilizar o nosso clube.</h2><br /><br />";
 
             return SendDefaultEmail(staticTextRepository, customer.Email, customer.Name, operation.Id, $"{operation.Title.ToUpper()} - Assinatura", body, fromEmail, operation.Title, out error);
+        }
+
+        public static bool SendSignaturePlanChangeEmail(Customer customer, Operation operation, MoipSignature signature, string fromEmail, IStaticTextRepository staticTextRepository, out string error)
+        {
+            string body = $"<p>Olá {customer.Name}, </p><br />";
+            body += $"<h2>A sua assinatura foi alterada com sucesso, seu novo plano é {signature.PlanName}, a cobrança do seu novo plano acontecerá no dia {signature.NextInvoiceDate.ToString("dd/MM/yyyy")}.</h2><br /><br />";
+
+            return SendDefaultEmail(staticTextRepository, customer.Email, customer.Name, operation.Id, $"{operation.Title.ToUpper()} - Alteração de Plano", body, fromEmail, operation.Title, out error);
         }
     }
 }
