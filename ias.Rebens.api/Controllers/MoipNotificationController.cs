@@ -83,8 +83,8 @@ namespace ias.Rebens.api.Controllers
                 logErrorRepo.Create(new LogError() { Reference = "Controller.MoipNotification.Post", Complement = $"authorization:{authorization}, event:{notification.Event}", Message = notification.Resource.ToString(), Created = DateTime.Now, StackTrace = "Env:" + notification.Env });
             }
             catch { }
-            if (authorization == constant.MoipNotificationAuthorization)
-            {
+            //if (authorization == constant.MoipNotificationAuthorization)
+            //{
                 if (notification != null && notification.Resource != null)
                 {
                     var moipNotification = new MoipNotification()
@@ -99,7 +99,7 @@ namespace ias.Rebens.api.Controllers
 
                     moipNotificationRepo.Create(moipNotification, out string error);
                 }
-            }
+            //}
             return Ok();
         }
     }
