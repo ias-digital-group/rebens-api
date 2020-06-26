@@ -38,7 +38,28 @@ namespace ias.Rebens.api.Models
                 this.ExpirationDate = TimeZoneInfo.ConvertTimeFromUtc(signature.ExpirationDate, Constant.TimeZone);
                 this.NextInvoiceDate = signature.NextInvoiceDate;
                 this.PaymentMethod = signature.PaymentMethod;
-                this.Status = signature.Status;
+                switch (signature.Status.ToUpper())
+                {
+                    case "ACTIVE":
+                        this.Status = "Ativa";
+                        break;
+                    case "SUSPENDED":
+                        this.Status = "Suspensa";
+                        break;
+                    case "EXPIRED":
+                        this.Status = "Expirada";
+                        break;
+                    case "OVERDUE":
+                        this.Status = "Atrasada";
+                        break;
+                    case "CANCELED":
+                        this.Status = "Cancelada";
+                        break;
+                    case "TRIAL":
+                        this.Status = "Teste";
+                        break;
+                }
+                
                 this.Amount = signature.Amount;
                 this.IdOperation = signature.IdOperation;
                 this.Modified = TimeZoneInfo.ConvertTimeFromUtc(signature.Modified, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm", Constant.FormatProvider);
