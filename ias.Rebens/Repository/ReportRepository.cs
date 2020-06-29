@@ -115,9 +115,14 @@ namespace ias.Rebens
                                         select new { idStatus = g.Key, total = g.Count() };
                             foreach (var user in users)
                             {
+                                int total = user.total;
+                                if (user.idStatus == (int)Enums.CustomerStatus.Incomplete)
+                                    total += db.Customer.Count(c => c.IdOperation == operation.Id && c.Status == (int)Enums.CustomerStatus.ChangePassword);
                                 dashOperation.Users.Labels.Add(Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)user.idStatus));
-                                dashOperation.Users.Data.Add(user.idStatus == (int)Enums.CustomerStatus.Active ? user.total - totalPaid : user.total);
+                                dashOperation.Users.Data.Add(user.idStatus == (int)Enums.CustomerStatus.Active ? total - totalPaid : total);
                             }
+
+                           
 
                             // indicações
                             dashOperation.TotalReferals = db.CustomerReferal.Count(c => c.Customer.IdOperation == operation.Id);

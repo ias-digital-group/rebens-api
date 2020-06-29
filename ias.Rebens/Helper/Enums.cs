@@ -126,7 +126,7 @@ namespace ias.Rebens.Enums
 
     public enum CustomerStatus : int
     {
-        [Description("Ativo")]
+        [Description("Ativo/Completo")]
         Active = 1,
         [Description("Inativo")]
         Inactive = 2,
