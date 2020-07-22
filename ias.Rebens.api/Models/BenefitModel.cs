@@ -93,6 +93,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string PartnerImage { get; set; }
         /// <summary>
+        /// Nome do Parceiro
+        /// </summary>
+        public string PartnerName { get; set; }
+        /// <summary>
         /// Descrição do Parceiro
         /// </summary>
         public string PartnerDescription { get; set; }
@@ -122,6 +126,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Texto do Voucher
         /// </summary>
+        [MaxLength(500)]
         public string VoucherText { get; set; }
         /// <summary>
         /// Id da operação quando o benefício é exclusivo
@@ -148,6 +153,16 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
         /// <summary>
+        /// Valor do Imposto
+        /// </summary>
+        public decimal? TaxAmount { get; set; }
+        /// <summary>
+        /// Cashback disponível para o cliente
+        /// </summary>
+        public decimal? AvailableCashback { get; set; }
+        public int[] Operations { get; set; }
+
+        /// <summary>
         /// Construtor
         /// </summary>
         public BenefitModel() { }
@@ -159,55 +174,64 @@ namespace ias.Rebens.api.Models
         /// <param name="idCustomer"></param>
         public BenefitModel(string URL, Benefit benefit, int? idCustomer = null)
         {
-            this.Id = benefit.Id;
-            this.Name = benefit.Name;
-            this.Title = benefit.Title;
-            this.Image = benefit.Image;
-            this.DueDate = benefit.DueDate;
-            this.MaxDiscountPercentage = benefit.MaxDiscountPercentage;
-            this.CpvPercentage = benefit.CPVPercentage;
-            this.MinDiscountPercentage = benefit.MinDiscountPercentage;
-            this.CashbackAmount = benefit.CashbackAmount;
-            this.Start = benefit.Start;
-            this.End = benefit.End;
-            this.IdBenefitType = benefit.IdBenefitType;
-            this.Exclusive = benefit.Exclusive;
-            this.Active = benefit.Active;
-            this.IdIntegrationType = benefit.IdIntegrationType;
-            this.IdPartner = benefit.IdPartner;
-            this.Link = benefit.Link;
-            this.BenefitCall = benefit.Call;
-            this.VoucherText = benefit.VoucherText;
-            this.IdOperation = benefit.IdOperation;
-            this.HomeHighlight = benefit.HomeHighlight;
-            this.HomeBenefitHighlight = benefit.HomeBenefitHighlight;
-
-            if (this.IdBenefitType == (int)Enums.BenefitType.OffLine && idCustomer.HasValue)
-                this.Link = URL + "Voucher/?tp=b&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
-            if (this.IdBenefitType == (int)Enums.BenefitType.Cashback && idCustomer.HasValue)
-                this.Link = benefit.Link + (benefit.Link.IndexOf('?') > 0 ? "&" : "?") + "zpar0=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
-
-            if (benefit.Partner != null)
+            if (benefit != null)
             {
-                this.PartnerImage = benefit.Partner.Logo;
-                if(benefit.Partner.StaticText != null)
-                    this.PartnerDescription = benefit.Partner.StaticText.Html;
-            }
+                this.Id = benefit.Id;
+                this.Name = benefit.Name;
+                this.Title = benefit.Title;
+                this.Image = benefit.Image;
+                this.DueDate = benefit.DueDate;
+                this.MaxDiscountPercentage = benefit.MaxDiscountPercentage;
+                this.CpvPercentage = benefit.CPVPercentage;
+                this.MinDiscountPercentage = benefit.MinDiscountPercentage;
+                this.CashbackAmount = benefit.CashbackAmount;
+                this.Start = benefit.Start;
+                this.End = benefit.End;
+                this.IdBenefitType = benefit.IdBenefitType;
+                this.Exclusive = benefit.Exclusive;
+                this.Active = benefit.Active;
+                this.IdIntegrationType = benefit.IdIntegrationType;
+                this.IdPartner = benefit.IdPartner;
+                this.Link = benefit.Link;
+                this.BenefitCall = benefit.Call;
+                this.VoucherText = benefit.VoucherText;
+                this.IdOperation = benefit.IdOperation;
+                this.HomeHighlight = benefit.HomeHighlight;
+                this.HomeBenefitHighlight = benefit.HomeBenefitHighlight;
+                this.TaxAmount = benefit.TaxAmount;
+                this.AvailableCashback = benefit.AvailableCashback;
 
-            if (benefit.StaticTexts != null)
-            {
-                foreach(var text in benefit.StaticTexts)
+                if (this.IdBenefitType == (int)Enums.BenefitType.OffLine && idCustomer.HasValue)
+                    this.Link = URL + "Voucher/?tp=b&code=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+                if (this.IdBenefitType == (int)Enums.BenefitType.Cashback && idCustomer.HasValue)
+                    this.Link = benefit.Link + (benefit.Link.IndexOf('?') > 0 ? "&" : "?") + "zpar0=" + System.Web.HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(this.Id + "|" + idCustomer.Value));
+
+                if (benefit.Partner != null)
                 {
-                    switch((Enums.StaticTextType)text.IdStaticTextType)
+                    this.PartnerImage = benefit.Partner.Logo;
+                    this.PartnerName = benefit.Partner.Name;
+                    if (benefit.Partner.StaticText != null)
+                        this.PartnerDescription = benefit.Partner.StaticText.Html;
+                }
+
+                if (benefit.StaticTexts != null)
+                {
+                    foreach (var text in benefit.StaticTexts)
                     {
-                        case Enums.StaticTextType.BenefitDetail:
-                            this.Detail = text.Html;
-                            break;
-                        case Enums.StaticTextType.BenefitHowToUse:
-                            this.HowToUse = text.Html;
-                            break;
+                        switch ((Enums.StaticTextType)text.IdStaticTextType)
+                        {
+                            case Enums.StaticTextType.BenefitDetail:
+                                this.Detail = text.Html;
+                                break;
+                            case Enums.StaticTextType.BenefitHowToUse:
+                                this.HowToUse = text.Html;
+                                break;
+                        }
                     }
                 }
+
+                if (benefit.BenefitOperations != null)
+                    this.Operations = benefit.BenefitOperations.Select(op => op.IdOperation).ToArray();
             }
         }
 
@@ -240,7 +264,9 @@ namespace ias.Rebens.api.Models
                 VoucherText = this.VoucherText,
                 IdOperation = this.IdOperation,
                 HomeHighlight = this.HomeHighlight,
-                HomeBenefitHighlight = this.HomeBenefitHighlight
+                HomeBenefitHighlight = this.HomeBenefitHighlight,
+                TaxAmount = this.TaxAmount,
+                AvailableCashback = this.AvailableCashback
             };
         }
 
@@ -322,13 +348,16 @@ namespace ias.Rebens.api.Models
         /// <param name="benefit"></param>
         public BenefitListItem(Benefit benefit)
         {
-            this.Id = benefit.Id;
-            this.Title = benefit.Title;
-            this.IdBenefitType = benefit.IdBenefitType;
-            this.BenefitCall = benefit.Call;
-            this.BenefitType = Enums.EnumHelper.GetEnumDescription((Enums.BenefitType)benefit.IdBenefitType);
-            if (benefit.Partner != null)
-                this.Image = benefit.Partner.Logo;
+            if (benefit != null)
+            {
+                this.Id = benefit.Id;
+                this.Title = benefit.Title;
+                this.IdBenefitType = benefit.IdBenefitType;
+                this.BenefitCall = benefit.Call;
+                this.BenefitType = Enums.EnumHelper.GetEnumDescription((Enums.BenefitType)benefit.IdBenefitType);
+                if (benefit.Partner != null)
+                    this.Image = benefit.Partner.Logo;
+            }
         }
     }
 

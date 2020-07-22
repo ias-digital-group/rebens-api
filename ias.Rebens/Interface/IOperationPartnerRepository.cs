@@ -8,23 +8,13 @@ namespace ias.Rebens
     {
         OperationPartner Read(int id, out string error);
 
-        ResultPage<OperationPartner> ListPage(int page, int pageItems, string word, string sort, int idOperation, out string error, bool? status = null);
+        ResultPage<Entity.OperationPartnerListItem> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null, int? idOperation = null);
 
         bool Delete(int id, out string error);
 
         bool Create(OperationPartner partner, out string error);
 
         bool Update(OperationPartner partner, out string error);
-
-        bool CreateCustomer(OperationPartnerCustomer customer, out string error);
-
-        bool DeleteCustomer(int idCustomer, out string error);
-
-        bool UpdateCustomerStatus(int idCustomer, int status, int idAdminUser, out string error, out Operation operation, out Customer customer, out OperationPartnerCustomer partnerCustomer);
-
-        OperationPartnerCustomer ReadCustomer(int idCustomer, out string error);
-
-        ResultPage<OperationPartnerCustomer> ListCustomers(int page, int pageItems, string word, string sort, out string error, int? status = null, int? idOperationPartner = null, int? idOperation = null);
 
         List<OperationPartner> ListActiveByOperation(Guid operationCode, out string error);
 

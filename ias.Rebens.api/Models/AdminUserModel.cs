@@ -39,14 +39,63 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public int? IdOperationPartner { get; set; }
         /// <summary>
-        /// Id do parceiro
+        /// Retorna o nome do clube que esse usuário faz parte
         /// </summary>
-        public int? IdPartner { get; set; }
+        public string Operation { get; }
+        /// <summary>
+        /// Retorna o nome do parceiro que esse usuário faz parte
+        /// </summary>
+        public string OperationPartner { get; }
         /// <summary>
         /// Papéis do usuário
         /// </summary>
         [MaxLength(500)]
         public string Roles { get; set; }
+        /// <summary>
+        /// Foto do usuário (100x100)
+        /// </summary>
+        [MaxLength(500)]
+        public string Picture { get; set; }
+        /// <summary>
+        /// Sobrenome do usuário
+        /// </summary>
+        [Required]
+        [MaxLength(200)]
+        public string Surname { get; set; }
+        /// <summary>
+        /// CPF do usuário
+        /// </summary>
+        [Required]
+        [MaxLength(50)]
+        public string Doc { get; set; }
+        /// <summary>
+        /// Telefone
+        /// </summary>
+        [MaxLength(50)]
+        public string PhoneMobile { get; set; }
+        /// <summary>
+        /// Telefone Comercial
+        /// </summary>
+        [MaxLength(50)]
+        public string PhoneComercial { get; set; }
+        /// <summary>
+        /// Celular comercial
+        /// </summary>
+        [MaxLength(50)]
+        public string PhoneComercialMobile { get; set; }
+        /// <summary>
+        /// Ramal do telefone comercial
+        /// </summary>
+        [MaxLength(50)]
+        public string PhoneComercialBranch { get; set; }
+        /// <summary>
+        /// Nome amigável do Papel do usuário
+        /// </summary>
+        public string RoleName { get; }
+        /// <summary>
+        /// Retorna as iniciais do ususário
+        /// </summary>
+        public string Initials { get; }
 
         /// <summary>
         /// Construtor
@@ -63,13 +112,43 @@ namespace ias.Rebens.api.Models
             {
                 this.Id = adminUser.Id;
                 this.Name = adminUser.Name;
+                this.Surname = adminUser.Surname;
                 this.Email = adminUser.Email;
                 this.LastLogin = adminUser.LastLogin;
-                this.Active = adminUser.Status == (int)Enums.AdminUserStatus.Active;
+                this.Active = adminUser.Active;
                 this.IdOperation = adminUser.IdOperation;
                 this.Roles = adminUser.Roles;
-                this.IdPartner = adminUser.IdPartner;
                 this.IdOperationPartner = adminUser.IdOperationPartner;
+                this.Picture = adminUser.Picture;
+                this.Doc = adminUser.Doc;
+                this.PhoneComercial = adminUser.PhoneComercial;
+                this.PhoneComercialBranch = adminUser.PhoneComercialBranch;
+                this.PhoneComercialMobile = adminUser.PhoneComercialMobile;
+                this.PhoneMobile = adminUser.PhoneMobile;
+                this.Initials = adminUser.Name.Substring(0, 1) + (string.IsNullOrEmpty(adminUser.Surname) ? "" : adminUser.Surname.Substring(0, 1));
+                if (Enum.TryParse(adminUser.Roles, out Enums.Roles role))
+                    this.RoleName = Enums.EnumHelper.GetEnumDescription(role);
+                if (adminUser.IdOperation.HasValue && adminUser.Operation != null)
+                    this.Operation = adminUser.Operation.Title;
+                else if(this.Roles == Enums.Roles.master.ToString()
+                        || this.Roles == Enums.Roles.administratorRebens.ToString()
+                        || this.Roles == Enums.Roles.publisherRebens.ToString())
+                {
+                    this.Operation = "Todos";
+                }
+                if (adminUser.IdOperationPartner.HasValue && adminUser.OperationPartner != null)
+                    this.OperationPartner = adminUser.OperationPartner.Name;
+                else if (this.Roles == Enums.Roles.master.ToString()
+                        || this.Roles == Enums.Roles.administratorRebens.ToString()
+                        || this.Roles == Enums.Roles.publisherRebens.ToString())
+                {
+                    this.OperationPartner = "Rebens";
+                }
+                else if (this.Roles == Enums.Roles.administrator.ToString()
+                      || this.Roles == Enums.Roles.publisher.ToString())
+                {
+                    this.OperationPartner = this.Operation;
+                }
             }
         }
 
@@ -83,13 +162,19 @@ namespace ias.Rebens.api.Models
             {
                 Id = this.Id,
                 Name = this.Name,
+                Surname = this.Surname,
                 Email = this.Email,
                 LastLogin = this.LastLogin,
-                Status = this.Active ? (int)Enums.AdminUserStatus.Active : (int)Enums.AdminUserStatus.Inactive,
+                Active = this.Active,
                 IdOperation = this.IdOperation,
                 Roles = this.Roles,
+                Doc = this.Doc,
+                Picture = this.Picture,
+                PhoneMobile = this.PhoneMobile,
+                PhoneComercial = this.PhoneComercial,
+                PhoneComercialBranch = this.PhoneComercialBranch,
+                PhoneComercialMobile = this.PhoneComercialMobile,
                 IdOperationPartner = this.IdOperationPartner,
-                IdPartner = this.IdPartner,
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };

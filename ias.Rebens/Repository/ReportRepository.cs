@@ -24,7 +24,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Customer.Include("Operation").Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
-                                    && (!idPartner.HasValue || (idPartner.HasValue && db.OperationPartnerCustomer.Any(c => c.IdOperationPartner == idPartner && a.Id == c.IdCustomer)))
+                                    && (!idPartner.HasValue || (idPartner.HasValue && a.IdOperationPartner == idPartner))
                                     && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
                                     && (!status.HasValue || (status.HasValue && a.Status == status)));
                     switch (sort.ToLower())
@@ -56,10 +56,7 @@ namespace ias.Rebens
                     }
 
                     var customers = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Customer.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
-                                    && (!idPartner.HasValue || (idPartner.HasValue && db.OperationPartnerCustomer.Any(c => c.IdOperationPartner == idPartner && a.Id == c.IdCustomer)))
-                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
-                                    && (!status.HasValue || (status.HasValue && a.Status == status)));
+                    var total = tmpList.Count();
 
                     var list = new List<CustomerReportItem>();
                     customers.ForEach(c => {
@@ -115,17 +112,12 @@ namespace ias.Rebens
                                         select new { idStatus = g.Key, total = g.Count() };
                             foreach (var user in users)
                             {
-                                int total = user.total;
-                                if (user.idStatus == (int)Enums.CustomerStatus.Incomplete)
-                                    total += db.Customer.Count(c => c.IdOperation == operation.Id && c.Status == (int)Enums.CustomerStatus.ChangePassword);
                                 dashOperation.Users.Labels.Add(Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)user.idStatus));
-                                dashOperation.Users.Data.Add(user.idStatus == (int)Enums.CustomerStatus.Active ? total - totalPaid : total);
+                                dashOperation.Users.Data.Add(user.total);
                             }
 
-                           
-
                             // indicações
-                            dashOperation.TotalReferals = db.CustomerReferal.Count(c => c.Customer.IdOperation == operation.Id);
+                            dashOperation.TotalReferals = db.Customer.Count(c => c.IdOperation == operation.Id && c.IdCustomerReferer.HasValue);
 
                             // Região - estados
                             var tmpStates = (from c in db.Customer
@@ -209,10 +201,9 @@ namespace ias.Rebens
                     };
                     var tmpView = (from b in db.BenefitView
                                        where (!idOperation.HasValue || (idOperation.HasValue && b.Customer.IdOperation == idOperation.Value))
-                                        && !b.Benefit.Deleted
                                        group b by b.Benefit.Name into g
                                        orderby g.Count()
-                                       select new { Title = g.Key, Total = g.Count() }).OrderByDescending(t => t.Total).Take(10).ToList();
+                                       select new { Title = g.Key, Total = g.Count() }).OrderBy(t => t.Total).Take(10).ToList();
                     foreach (var i in tmpView)
                     {
                         ret.BenefitView.Labels.Add(i.Title);
@@ -230,10 +221,9 @@ namespace ias.Rebens
                     };
                     var tmpUsed = (from b in db.BenefitUse
                                      where (!idOperation.HasValue || (idOperation.HasValue && b.Customer.IdOperation == idOperation.Value))
-                                        && !b.Benefit.Deleted
                                      group b by b.Name into g
                                      orderby g.Count()
-                                     select new { Title = g.Key, Total = g.Count() }).OrderByDescending(t => t.Total).Take(10).ToList();
+                                     select new { Title = g.Key, Total = g.Count() }).OrderBy(t => t.Total).Take(10).ToList();
                     foreach (var i in tmpUsed)
                     {
                         string tit = i.Title;

@@ -28,7 +28,7 @@ namespace ias.Rebens.Integration
             var hash = (new SHA1Managed()).ComputeHash(Encoding.UTF8.GetBytes(temp));
             string signature = string.Join("", hash.Select(b => b.ToString("x2")).ToArray());
 
-            var fileBytes = File.ReadAllBytes(filePath);
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
             string encodedFile = "data:image/png;base64," + Convert.ToBase64String(fileBytes);
 
             HttpWebRequest request = WebRequest.Create(URL) as HttpWebRequest;

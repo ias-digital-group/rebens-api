@@ -19,7 +19,7 @@ namespace ias.Rebens
             _connectionString = connectionString;
         }
 
-        public bool AddAddress(int idBenefit, int idAddress, out string error)
+        public bool AddAddress(int idBenefit, int idAddress, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -29,6 +29,14 @@ namespace ias.Rebens
                     if (!db.BenefitAddress.Any(o => o.IdBenefit == idBenefit && o.IdAddress == idAddress))
                     {
                         db.BenefitAddress.Add(new BenefitAddress() { IdAddress = idAddress, IdBenefit = idBenefit });
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.addAddress,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idBenefit,
+                            Item = (int)Enums.LogItem.Benefit
+                        });
                         db.SaveChanges();
                     }
                     error = null;
@@ -36,15 +44,24 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.AddAddress", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.AddAddress", "", ex);
                 error = "Ocorreu um erro ao tentar adicionar o endereço. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public bool AddOperation(int idBenefit, int idOperation, int idPostion, out string error)
+        public List<Benefit> ListToCheckLinks()
+        {
+            List<Benefit> ret;
+            using (var db = new RebensContext(this._connectionString))
+            {
+                ret = db.Benefit.Where(b => b.Active && b.Link != "").ToList();
+            }
+            return ret;
+        }
+
+        public bool AddOperation(int idBenefit, int idOperation, int idPostion, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -54,6 +71,14 @@ namespace ias.Rebens
                     if (!db.BenefitOperation.Any(o => o.IdBenefit == idBenefit && o.IdOperation == idOperation))
                     {
                         db.BenefitOperation.Add(new BenefitOperation() { IdOperation = idOperation, IdBenefit = idBenefit, Created = DateTime.UtcNow, Modified = DateTime.UtcNow, IdPosition = idPostion });
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.addOperation,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idBenefit,
+                            Item = (int)Enums.LogItem.Benefit
+                        });
                         db.SaveChanges();
                     }
                     error = null;
@@ -61,15 +86,14 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.AddOperation", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.AddOperation", "", ex);
                 error = "Ocorreu um erro ao tentar adicionar a operação. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public bool Create(Benefit benefit, out string error)
+        public bool Create(Benefit benefit, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -80,20 +104,30 @@ namespace ias.Rebens
                     benefit.Deleted = false;
                     db.Benefit.Add(benefit);
                     db.SaveChanges();
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.create,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = benefit.Id,
+                        Item = (int)Enums.LogItem.Benefit
+                    });
+                    db.SaveChanges();
+
                     error = null;
                 }
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.Create", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.Create", "", ex);
                 error = "Ocorreu um erro ao tentar criar o benefício. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -103,21 +137,28 @@ namespace ias.Rebens
                     var benefit = db.Benefit.SingleOrDefault(c => c.Id == id);
                     benefit.Deleted = true;
                     benefit.Modified = DateTime.UtcNow;
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = id,
+                        Item = (int)Enums.LogItem.Benefit
+                    });
                     db.SaveChanges();
                     error = null;
                 }
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.Delete", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.Delete", "", ex);
                 error = "Ocorreu um erro ao tentar excluir o beneficio. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public bool DeleteAddress(int idBenefit, int idAddress, out string error)
+        public bool DeleteAddress(int idBenefit, int idAddress, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -128,6 +169,14 @@ namespace ias.Rebens
                     if (tmp != null)
                     {
                         db.BenefitAddress.Remove(tmp);
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.removeAddress,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idBenefit,
+                            Item = (int)Enums.LogItem.Benefit
+                        });
                         db.SaveChanges();
                     }
                     error = null;
@@ -135,15 +184,14 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.DeleteAddress", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.DeleteAddress", "", ex);
                 error = "Ocorreu um erro ao tentar excluir o endereço. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public bool DeleteOperation(int idBenefit, int idOperation, out string error)
+        public bool DeleteOperation(int idBenefit, int idOperation, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -154,6 +202,14 @@ namespace ias.Rebens
                     if (tmp != null)
                     {
                         db.BenefitOperation.Remove(tmp);
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.removeOperation,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idBenefit,
+                            Item = (int)Enums.LogItem.Benefit
+                        });
                         db.SaveChanges();
                     }
                     error = null;
@@ -161,8 +217,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.DeleteOperation", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.DeleteOperation", "", ex);
                 error = "Ocorreu um erro ao tentar excluir a Operação. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -178,7 +233,7 @@ namespace ias.Rebens
                 {
                     if (!int.TryParse(word, out int benefitId))
                         benefitId = 0;
-                    var tmpList = db.Benefit.Where(b => !b.Deleted 
+                    var tmpList = db.Benefit.Include("Partner").Where(b => !b.Deleted 
                                     && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word) || b.Id == benefitId)
                                     && (!status.HasValue || (status.HasValue && b.Active == status.Value))
                                     && (!type.HasValue || (type.HasValue && b.IdBenefitType == type.Value))
@@ -215,16 +270,7 @@ namespace ias.Rebens
                         page = 0;
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Benefit.Count(b => !b.Deleted
-                                    && (string.IsNullOrEmpty(word) || b.Name.Contains(word) || b.Title.Contains(word) || b.Partner.Name.Contains(word) || b.Id == benefitId)
-                                    && (!status.HasValue || (status.HasValue && b.Active == status.Value))
-                                    && (!type.HasValue || (type.HasValue && b.IdBenefitType == type.Value))
-                                    && (!idOperation.HasValue || (idOperation.HasValue &&
-                                         (
-                                            (exclusive && b.Exclusive && b.IdOperation == idOperation) ||
-                                            (!exclusive && (b.IdOperation == idOperation || b.BenefitOperations.Any(bo => bo.IdOperation == idOperation)))
-                                         ))
-                                       ));
+                    var total = tmpList.Count();
 
                     ret = new ResultPage<Benefit>(list, page, pageItems, total);
 
@@ -233,20 +279,9 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListPage", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListPage", "", ex);
                 error = "Ocorreu um erro ao tentar listar os benefícios. (erro:" + idLog + ")";
                 ret = null;
-            }
-            return ret;
-        }
-
-        public List<Benefit> ListToCheckLinks()
-        {
-            List<Benefit> ret;
-            using (var db = new RebensContext(this._connectionString))
-            {
-                ret = db.Benefit.Where(b => b.Active && b.Link != "").ToList();
             }
             return ret;
         }
@@ -260,6 +295,7 @@ namespace ias.Rebens
                 {
                     ret = db.Benefit.Include("BenefitOperations").Include("BenefitAddresses")
                         .Include("StaticTexts").Include("Partner")
+                        .Include("BenefitOperations")
                         .SingleOrDefault(b => !b.Deleted && b.Id == id);
                     if (ret.Partner != null && ret.Partner.IdStaticText.HasValue)
                         ret.Partner.StaticText = db.StaticText.SingleOrDefault(s => s.Id == ret.Partner.IdStaticText.Value);
@@ -268,15 +304,14 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.Read", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.Read", "", ex);
                 error = "Ocorreu um erro ao tentar ler o benefício. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
         }
 
-        public bool Update(Benefit benefit, out string error)
+        public bool Update(Benefit benefit, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -309,6 +344,17 @@ namespace ias.Rebens
                         update.IdOperation = benefit.IdOperation;
                         update.HomeHighlight = benefit.HomeHighlight;
                         update.HomeBenefitHighlight = benefit.HomeBenefitHighlight;
+                        update.TaxAmount = benefit.TaxAmount;
+                        update.AvailableCashback = benefit.AvailableCashback;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = benefit.Id,
+                            Item = (int)Enums.LogItem.Benefit
+                        });
 
                         db.SaveChanges();
                         error = null;
@@ -321,8 +367,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.Update", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.Update", "", ex);
                 error = "Ocorreu um erro ao tentar atualizar o benefício. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -367,7 +412,7 @@ namespace ias.Rebens
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListByAddress", ex.Message, $"idAddress: {idAddress}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListByAddress", $"idAddress: {idAddress}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -410,8 +455,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListByCategory", ex.Message, $"idCategory: {idCategory}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListByCategory", $"idCategory: {idCategory}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -454,8 +498,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListByOperation", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListByOperation", $"idOperation: {idOperation}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -546,8 +589,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListByOperation", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListByOperation", $"idOperation: {idOperation}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -590,8 +632,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListByType", ex.Message, $"idType: {idType}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListByType", $"idType: {idType}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -634,8 +675,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListByPartner", ex.Message, $"idPartner: {idPartner}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListByPartner", $"idPartner: {idPartner}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -678,15 +718,14 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListByIntegrationType", ex.Message, $"idIntegrationType: {idIntegrationType}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListByIntegrationType", $"idIntegrationType: {idIntegrationType}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
         }
 
-        public bool AddCategory(int idBenefit, int idCategory, out string error)
+        public bool AddCategory(int idBenefit, int idCategory, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -696,6 +735,14 @@ namespace ias.Rebens
                     if (!db.BenefitCategory.Any(o => o.IdBenefit == idBenefit && o.IdCategory == idCategory))
                     {
                         db.BenefitCategory.Add(new BenefitCategory() { IdCategory = idCategory, IdBenefit = idBenefit });
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.addCategory,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idBenefit,
+                            Item = (int)Enums.LogItem.Benefit
+                        });
                         db.SaveChanges();
                     }
                     error = null;
@@ -703,15 +750,14 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.AddCategory", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.AddCategory", "", ex);
                 error = "Ocorreu um erro ao tentar adicionar a categoria. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public bool DeleteCategory(int idBenefit, int idCategory, out string error)
+        public bool DeleteCategory(int idBenefit, int idCategory, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -722,6 +768,14 @@ namespace ias.Rebens
                     if (tmp != null)
                     {
                         db.BenefitCategory.Remove(tmp);
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.removeCategory,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = idBenefit,
+                            Item = (int)Enums.LogItem.Benefit
+                        });
                         db.SaveChanges();
                     }
                     error = null;
@@ -729,8 +783,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.DeleteCategory", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.DeleteCategory", "", ex);
                 error = "Ocorreu um erro ao tentar excluir o categoria. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -750,8 +803,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListPositions", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListPositions", "", ex);
                 error = "Ocorreu um erro ao tentar listar as posições. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -774,8 +826,7 @@ namespace ias.Rebens
             }
             catch(Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ReadCallAndPartnerLogo", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ReadCallAndPartnerLogo", "", ex);
                 error = "Ocorreu um erro ao tentar ler a chamada e o logo do parceiro. (erro:" + idLog + ")";
                 title = logo = call = null;
             }
@@ -794,15 +845,14 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListActive", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListActive", "", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
         }
 
-        public bool SaveCategories(int idBenefit, string categoryIds, out string error)
+        public bool SaveCategories(int idBenefit, string categoryIds, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -829,8 +879,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.SaveCategories", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.SaveCategories", "", ex);
                 error = "Ocorreu um erro ao tentar salvar as categorias. (erro:" + idLog + ")";
                 ret = false;
             }
@@ -876,8 +925,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListForHomePortal", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListForHomePortal", $"idOperation: {idOperation}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -933,8 +981,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListForHomeBenefitPortal", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListForHomeBenefitPortal", $"idOperation: {idOperation}", ex);
                 error = "Ocorreu um erro ao tentar listar os benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -960,8 +1007,7 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListStates", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListStates", $"idOperation: {idOperation}", ex);
                 error = "Ocorreu um erro ao tentar listar os estados dos benefício. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -987,27 +1033,35 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ListCities", ex.Message, $"idOperation: {idOperation}", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ListCities", $"idOperation: {idOperation}", ex);
                 error = "Ocorreu um erro ao tentar listar as cidades dos benefício. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
         }
 
-        public bool ChangeActive(int idBenefit, bool active, out string error)
+        public bool ToggleActive(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var update = db.Benefit.SingleOrDefault(c => c.Id == idBenefit);
+                    var update = db.Benefit.SingleOrDefault(c => c.Id == id);
                     if (update != null)
                     {
-                        update.Active = active;
+                        ret = !update.Active;
+                        update.Active = ret;
                         update.Modified = DateTime.UtcNow;
 
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.Benefit,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
                         db.SaveChanges();
                         error = null;
                     }
@@ -1020,15 +1074,14 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("BenefitRepository.ChangeActive", ex.Message, "", ex.StackTrace);
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ChangeActive", "", ex);
                 error = "Ocorreu um erro ao tentar atualizar o benefício. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
         }
 
-        public bool Duplicate(int id, out int newId, out string error)
+        public bool Duplicate(int id, out int newId, int idAdminUser, out string error)
         {
             bool ret = false;
             newId = 0;
@@ -1105,6 +1158,15 @@ namespace ias.Rebens
                             });
                         }
 
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.duplicate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.Benefit,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+
                         db.SaveChanges();
                         error = null;
                         ret = true;
@@ -1115,8 +1177,35 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
-                int idLog = Helper.LogErrorHelper.Create(this._connectionString, "CourseRepository.Duplicate", "", ex);
+                int idLog = LogErrorHelper.Create(this._connectionString, "CourseRepository.Duplicate", "", ex);
                 error = "Ocorreu um erro ao tentar duplicar o curso. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public bool ConnectOperations(int id, int[] operations, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpOperations = db.BenefitOperation.Where(b => b.IdBenefit == id);
+                    db.BenefitOperation.RemoveRange(tmpOperations);
+                    db.SaveChanges();
+
+                    foreach (var op in operations)
+                        db.BenefitOperation.Add(new BenefitOperation() { IdOperation = op, IdBenefit = id, IdPosition = 1, Created  = DateTime.UtcNow, Modified = DateTime.UtcNow });
+                    db.SaveChanges();
+
+                    ret = true;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ConnectOperations", "", ex);
+                error = "Ocorreu um erro ao tentar ajustar as conexões das operação. (erro:" + idLog + ")";
             }
             return ret;
         }

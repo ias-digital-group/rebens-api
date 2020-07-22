@@ -6,13 +6,14 @@ using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace ias.Rebens.api.Controllers
 {
     [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
-    public class ReportController : ControllerBase
+    public class ReportController : BaseApiController
     {
         private IReportRepository repo;
 
@@ -37,21 +38,17 @@ namespace ias.Rebens.api.Controllers
         {
             int? idOperation = null;
             var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out int tmpIdOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    idOperation = tmpIdOperation;
-                }
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
-            var ret = new JsonDataModel<Dashboard>();
-            ret.Data = repo.LoadDashboard(out string error, null, null, idOperation);
+            var ret = new JsonDataModel<Dashboard>
+            {
+                Data = repo.LoadDashboard(out string error, null, null, idOperation)
+            };
             if (string.IsNullOrEmpty(error))
                 return Ok(ret);
 
@@ -79,21 +76,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCustomers([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null, [FromQuery]int? idPartner = null, [FromQuery]int? status = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (CheckRole("administrator"))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
             if (idOperation == 0) idOperation = null;
@@ -148,21 +135,11 @@ namespace ias.Rebens.api.Controllers
         public IActionResult ListBenefitUse([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", 
             [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null, [FromQuery]DateTime? startDate = null, [FromQuery]DateTime? endDate = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (CheckRole("administrator"))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
             var list = repo.ListBenefitUsePage(page, pageItems, searchWord, sort, out string error, idOperation, startDate, endDate);

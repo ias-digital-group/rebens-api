@@ -87,6 +87,45 @@ namespace ias.Rebens
             return ret;
         }
 
+        public int Create(string reference, string complement, Exception ex)
+        {
+            int ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    LogError log = new LogError()
+                    {
+                        Complement = complement,
+                        Created = DateTime.UtcNow,
+                        Message = ex.Message,
+                        Reference = reference,
+                        StackTrace = ex.StackTrace
+                    };
+                    db.LogError.Add(log);
+
+                    if (ex.InnerException != null)
+                        db.LogError.Add(new LogError()
+                        {
+                            Complement = complement,
+                            Created = DateTime.UtcNow,
+                            Message = ex.InnerException.Message,
+                            Reference = reference + " - INNER",
+                            StackTrace = ex.InnerException.StackTrace
+                        });
+
+                    db.SaveChanges();
+                    ret = log.Id;
+                }
+            }
+            catch
+            {
+                //Helper.EmailHelper.Send("israel@iasdigitalgroup.com", "Israel", "[vzt] - logerror error", "error on trying to save logError", false);
+                ret = 0;
+            }
+            return ret;
+        }
+
         public bool DeleteOlderThan(DateTime date)
         {
             bool ret = true;

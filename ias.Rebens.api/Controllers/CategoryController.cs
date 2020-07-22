@@ -13,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/Category")]
     [ApiController]
-    public class CategoryController : ControllerBase
+    public class CategoryController : BaseApiController
     {
         private ICategoryRepository repo;
         private ILogErrorRepository logRepo;
@@ -40,26 +40,26 @@ namespace ias.Rebens.api.Controllers
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <param name="active">active, não obrigatório (default=null)</param>
         /// <param name="idParent">id do pai, não obrigatório (default=null)</param>
-        /// <param name="type">tipo de categoria, obrigatório (1=beneficios, 2=cursos livres)</param>
+        /// <param name="type">tipo de categoria, não obrigatório (1=beneficios, 2=cursos livres)</param>
         /// <returns>Lista com as categorias encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet, Authorize("Bearer", Roles = "master,administrator,publiser,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(ResultPageModel<CategoryModel>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<CategoryListItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int type, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", 
-            [FromQuery]bool? active = null, [FromQuery]int? idParent = null)
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", 
+            [FromQuery]int? type = null, [FromQuery]bool? active = null, [FromQuery]int? idParent = null, [FromQuery]int? level = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, type, out string error, active, idParent);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, type, active, idParent, level);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<CategoryModel>()
+                var ret = new ResultPageModel<CategoryListItemModel>()
                 {
                     CurrentPage = list.CurrentPage,
                     HasNextPage = list.HasNextPage,
@@ -67,10 +67,10 @@ namespace ias.Rebens.api.Controllers
                     ItemsPerPage = list.ItemsPerPage,
                     TotalItems = list.TotalItems,
                     TotalPages = list.TotalPages,
-                    Data = new List<CategoryModel>()
+                    Data = new List<CategoryListItemModel>()
                 };
                 foreach (var cat in list.Page)
-                    ret.Data.Add(new CategoryModel(cat));
+                    ret.Data.Add(new CategoryListItemModel(cat));
 
                 return Ok(ret);
             }
@@ -116,8 +116,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]CategoryModel category)
         {
-            var model = new JsonModel();
-            if (repo.Update(category.GetEntity(), out string error))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (repo.Update(category.GetEntity(), idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Categoria atualizada com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -135,8 +138,12 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]CategoryModel category)
         {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             var cat = category.GetEntity();
-            if(repo.Create(cat, out string error))
+            if(repo.Create(cat, idAdminUser, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Categoria criada com sucesso!", Id = cat.Id });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -154,8 +161,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            var model = new JsonModel();
-            if (repo.Delete(id, out string error))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (repo.Delete(id, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Categoria apagada com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -185,14 +195,9 @@ namespace ias.Rebens.api.Controllers
             var principal = HttpContext.User;
             if (operationGuid == Guid.Empty)
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
             {
@@ -245,6 +250,30 @@ namespace ias.Rebens.api.Controllers
 
                 return Ok(ret);
             }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Ativa/Inativa uma categoria
+        /// </summary>
+        /// <param name="id">id da categoria</param>
+        /// <returns></returns>
+        /// <response code="200">Se o tudo ocorrer sem erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/ToggleActive")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ToggleActive(int id)
+        {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            var status = repo.ToggleActive(id, idAdminUser, out string error);
+
+            if (string.IsNullOrEmpty(error))
+                return Ok(new JsonModel() { Status = "ok", Data = status });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

@@ -13,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/BankAccount"), Authorize("Bearer", Roles = "customer")]
     [ApiController]
-    public class BankAccountController : ControllerBase
+    public class BankAccountController : BaseApiController
     {
         private IBankAccountRepository repo;
 
@@ -43,16 +43,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecida!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecida!" });
-            }
+            int idCustomer = GetCustomerId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             var list = repo.ListPage(idCustomer, page, pageItems, searchWord, sort, out string error);
 
@@ -61,14 +54,16 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<BankAccountModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<BankAccountModel>();
+                var ret = new ResultPageModel<BankAccountModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<BankAccountModel>()
+                };
                 foreach (var part in list.Page)
                     ret.Data.Add(new BankAccountModel(part));
 
@@ -117,11 +112,8 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]BankAccountModel account)
         {
-            var model = new JsonModel();
-            string error = null;
-
             var part = account.GetEntity();
-            if (repo.Update(part, out error))
+            if (repo.Update(part, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Conta atualizada com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -139,21 +131,12 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]BankAccountModel account)
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecida!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecida!" });
-            }
+            int idCustomer = GetCustomerId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
-            var model = new JsonModel();
             var part = account.GetEntity();
             part.IdCustomer = idCustomer;
-
             if (repo.Create(part, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Conta criada com sucesso!", Id = part.Id });
 
@@ -172,8 +155,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            var model = new JsonModel();
-
             if (repo.Delete(id, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Conta apagada com sucesso!" });
 

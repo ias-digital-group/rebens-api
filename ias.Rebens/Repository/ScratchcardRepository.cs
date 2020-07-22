@@ -345,14 +345,14 @@ namespace ias.Rebens
                     {
                         case ScratchcardType.opened:
                         case ScratchcardType.closedPartner:
-                            ret = db.Customer.Where(c => c.IdOperation == idOperation && c.Status != (int)CustomerStatus.Inactive
+                            ret = db.Customer.Where(c => c.IdOperation == idOperation && !c.Active
                                                     && c.Status != (int)CustomerStatus.Validation)
                                                 .Select(c => c.Id).ToList();
                             break;
                         case ScratchcardType.closed:
-                            ret = db.Customer.Where(c => c.IdOperation == idOperation && c.Status != (int)CustomerStatus.Inactive
+                            ret = db.Customer.Where(c => c.IdOperation == idOperation && !c.Active
                                                     && c.Status != (int)CustomerStatus.Validation
-                                                    && !db.OperationPartnerCustomer.Any(p => p.IdCustomer == c.Id))
+                                                    && !c.IdOperationPartner.HasValue)
                                                 .Select(c => c.Id).ToList();
                             break;
                         case ScratchcardType.subscription:

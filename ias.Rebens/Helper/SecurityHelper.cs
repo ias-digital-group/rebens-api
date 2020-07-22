@@ -156,7 +156,7 @@ namespace ias.Rebens.Helper
             string otp = string.Empty;
             for (int i = 0; i < length; i++)
             {
-                string character;
+                string character = string.Empty;
                 do
                 {
                     int index = new Random().Next(0, characters.Length);

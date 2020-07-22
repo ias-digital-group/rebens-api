@@ -10,14 +10,16 @@ namespace ias.Rebens
 
         ResultPage<Faq> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null);
 
-        bool Delete(int id, out string error);
+        bool Delete(int id, int idAdminUser, out string error);
 
-        bool Create(Faq category, out string error);
+        bool Create(Faq category, int idAdminUser, out string error);
 
-        bool Update(Faq category, out string error);
+        bool Update(Faq category, int idAdminUser, out string error);
 
         ResultPage<Faq> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
 
         List<Faq> ListByOperation(Guid operationCode, out string error);
+
+        bool ToggleActive(int id, int idAdminUser, out string error);
     }
 }

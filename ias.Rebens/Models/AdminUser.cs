@@ -8,10 +8,9 @@ namespace ias.Rebens
     {
         public AdminUser()
         {
-            OperationPartnerCustomers = new HashSet<OperationPartnerCustomer>();
             Courses = new HashSet<Course>();
             FreeCourses = new HashSet<FreeCourse>();
-            CustomerPromoters = new HashSet<CustomerPromoter>();
+            Customers = new HashSet<Customer>();
             LogActions = new HashSet<LogAction>();
         }
 
@@ -21,21 +20,27 @@ namespace ias.Rebens
         public DateTime? LastLogin { get; set; }
         public string EncryptedPassword { get; set; }
         public string PasswordSalt { get; set; }
-        public int Status { get; set; }
+        public bool Active { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
         public int? IdOperation { get; set; }
         public string Roles { get; set; }
         public bool Deleted { get; set; }
         public int? IdOperationPartner { get; set; }
+        public string Picture { get; set; }
+        public string Surname { get; set; }
+        public string Doc { get; set; }
+        public string PhoneMobile { get; set; }
+        public string PhoneComercial { get; set; }
+        public string PhoneComercialMobile { get; set; }
+        public string PhoneComercialBranch { get; set; }
         public int? IdPartner { get; set; }
 
         public virtual Operation Operation { get; set; }
         public virtual OperationPartner OperationPartner { get; set; }
-        public virtual ICollection<OperationPartnerCustomer> OperationPartnerCustomers { get; set; }
         public virtual ICollection<Course> Courses { get; set; }
         public virtual ICollection<FreeCourse> FreeCourses { get; set; }
-        public virtual ICollection<CustomerPromoter> CustomerPromoters { get; set; }
+        public virtual ICollection<Customer> Customers { get; set; }
         public virtual ICollection<LogAction> LogActions { get; set; }
 
         public void SetPassword(string password)

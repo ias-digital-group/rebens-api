@@ -10,11 +10,11 @@ namespace ias.Rebens
 
         ResultPage<Address> ListPage(int page, int pageItems, string word, string sort, out string error);
 
-        bool Delete(int id, out string error);
+        bool Delete(int id, int idAdminUser, out string error);
 
-        bool Create(Address address, out string error);
+        bool Create(Address address, int idAdminUser, out string error);
 
-        bool Update(Address address, out string error);
+        bool Update(Address address, int idAdminUser, out string error);
 
         ResultPage<Address> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
 

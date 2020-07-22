@@ -1,6 +1,7 @@
 ﻿using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Scaffolding;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "master,publisher,administrator,administratorRebens,publisherRebens")]
     [ApiController]
-    public class ContactController : ControllerBase
+    public class ContactController : BaseApiController
     {
         private IContactRepository repo;
         private IAddressRepository addrRepo;
@@ -35,6 +36,9 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
         /// <param name="sort">Ordenação campos (Id, Name, Email, JobTitle), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="active">Status</param>
+        /// <param name="type">Tipo de contato</param>
+        /// <param name="idItem">Id do vínculo do contato</param>
         /// <returns>Lista com os contatos encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -43,50 +47,34 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<ContactModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", 
+                                    [FromQuery]string searchWord = "", [FromQuery]bool? active = null, [FromQuery]int? type = null, [FromQuery]int? idItem = null)
         {
             int? idOperation = null;
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator"))
+            if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
-            else if (principal.IsInRole("publisher"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId != null && int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                }
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, type, idItem, active, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<ContactModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<ContactModel>();
+                var ret = new ResultPageModel<ContactModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<ContactModel>()
+                };
                 foreach (var contact in list.Page)
                     ret.Data.Add(new ContactModel(contact));
 
@@ -103,7 +91,7 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Contato</returns>
         /// <response code="200">Retorna o contato, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>b
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(JsonDataModel<ContactModel>), 200)]
         [ProducesResponseType(204)]
@@ -134,20 +122,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody] ContactModel contact)
         {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             var cont = contact.GetEntity();
             string error = null;
 
             if (contact.Address != null)
             {
                 var addr = contact.Address.GetEntity();
-                if (addrRepo.Update(addr, out error))
+                if (addrRepo.Update(addr, idAdminUser, out error))
                     cont.IdAddress = addr.Id;
             }
 
             if (!string.IsNullOrEmpty(error))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            if (repo.Update(cont, out error))
+            if (repo.Update(cont, idAdminUser, out error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Contato atualizado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -165,20 +157,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] ContactModel contact)
         {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             var cont = contact.GetEntity();
             string error = null;
 
             if(contact.Address != null)
             {
                 var addr = contact.Address.GetEntity();
-                if (addrRepo.Create(addr, out error))
+                if (addrRepo.Create(addr, idAdminUser, out error))
                     cont.IdAddress = addr.Id;
             }
 
             if (!string.IsNullOrEmpty(error))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             
-            if (repo.Create(cont, out error))
+            if (repo.Create(cont, idAdminUser, out error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Contato criado com sucesso!", Id = cont.Id });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -196,9 +192,37 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            if (repo.Delete(id, out string error))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (repo.Delete(id, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Contato apagado com sucesso!" });
             
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Ativa/Inativa um contato
+        /// </summary>
+        /// <param name="id">id do contato</param>
+        /// <returns></returns>
+        /// <response code="200">Se o tudo ocorrer sem erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/ToggleActive")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ToggleActive(int id)
+        {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            var status = repo.ToggleActive(id, idAdminUser, out string error);
+
+            if (string.IsNullOrEmpty(error))
+                return Ok(new JsonModel() { Status = "ok", Data = status });
+
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }

@@ -71,40 +71,6 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool AddContact(int idOperation, int idContact, int idAdminUser, out string error)
-        {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    if (!db.OperationContact.Any(o => o.IdOperation == idOperation && o.IdContact == idContact))
-                    {
-                        db.LogAction.Add(new LogAction()
-                        {
-                            Action = (int)Enums.LogAction.create,
-                            Created = DateTime.UtcNow,
-                            IdAdminUser = idAdminUser,
-                            IdItem = idContact,
-                            Item = (int)Enums.LogItem.OperationContact
-                        });
-
-                        db.OperationContact.Add(new OperationContact() { IdContact = idContact, IdOperation = idOperation });
-                        db.SaveChanges();
-                    }
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("OperationRepository.Read", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar adicionar o endereço. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
         public bool Create(Operation operation, int idAdminUser, out string error)
         {
             bool ret = true;
@@ -137,7 +103,6 @@ namespace ias.Rebens
                             Url = "operation-" + operation.Id
                         };
                         db.StaticText.Add(config);
-                        db.SaveChanges();
                     }
 
                     var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url != "contract" && s.Active);
@@ -157,8 +122,22 @@ namespace ias.Rebens
                             Title = page.Title,
                             Url = page.Url
                         });
+
                     }
                     db.StaticText.AddRange(listPages);
+                    db.SaveChanges();
+
+                    foreach(var page in listPages)
+                    {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.create,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = page.Id,
+                            Item = (int)Enums.LogItem.StaticText
+                        });
+                    }
 
                     db.LogAction.Add(new LogAction()
                     {
@@ -215,41 +194,9 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool DeleteContact(int idOperation, int idContact, int idAdminUser, out string error)
+        public ResultPage<Entity.OperationListItem> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null)
         {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    db.LogAction.Add(new LogAction()
-                    {
-                        Action = (int)Enums.LogAction.delete,
-                        Created = DateTime.UtcNow,
-                        IdAdminUser = idAdminUser,
-                        IdItem = idContact,
-                        Item = (int)Enums.LogItem.OperationContact
-                    });
-
-                    var tmp = db.OperationContact.SingleOrDefault(o => o.IdOperation == idOperation && o.IdContact == idContact);
-                    db.OperationContact.Remove(tmp);
-                    db.SaveChanges();
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("OperationRepository.Read", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar excluir o contato. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
-        public ResultPage<Operation> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null)
-        {
-            ResultPage<Operation> ret;
+            ResultPage<Entity.OperationListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -291,12 +238,46 @@ namespace ias.Rebens
                             break;
                     }
 
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Operation.Count(o => !o.Deleted
-                                    && (string.IsNullOrEmpty(word) || o.Domain.Contains(word) || o.Title.Contains(word) || o.CompanyName.Contains(word) || o.CompanyDoc.Contains(word))
-                                    && (!status.HasValue || (status.HasValue && o.Active == status.Value)));
+                    var total = tmpList.Count();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).Select(o => new Entity.OperationListItem() { 
+                        Id = o.Id,
+                        Active = o.Active,
+                        CompanyName = o.CompanyName,
+                        Created = o.Created,
+                        Image = o.Image,
+                        PublishedDate = o.PublishedDate,
+                        Title = o.Title,
+                        Domain = o.Domain,
+                        TemporarySubdomain = o.TemporarySubdomain,
+                        TemporaryPublishedDate = o.TemporaryPublishedDate
+                    }).ToList();
 
-                    ret = new ResultPage<Operation>(list, page, pageItems, total);
+                    list.ForEach(c =>
+                    {
+                        var createUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Operation && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.create)
+                                            .OrderBy(a => a.Created).FirstOrDefault();
+                        var modifiedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Operation && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.update)
+                                            .OrderByDescending(a => a.Created).FirstOrDefault();
+                        var publishedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Operation && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.publish)
+                                            .OrderByDescending(a => a.Created).FirstOrDefault();
+                        if (createUser != null)
+                            c.CreatedUserName = createUser.AdminUser.Name + " " + createUser.AdminUser.Surname;
+                        else
+                            c.CreatedUserName = " - ";
+                        if (modifiedUser != null)
+                        {
+                            c.ModifiedUserName = modifiedUser.AdminUser.Name + " " + modifiedUser.AdminUser.Surname;
+                            c.Modified = modifiedUser.Created;
+                        }
+                        else
+                            c.ModifiedUserName = " - ";
+                        if (publishedUser != null)
+                            c.PublishedUserName = publishedUser.AdminUser.Name + " " + publishedUser.AdminUser.Surname;
+                        else
+                            c.PublishedUserName = " - ";
+                    });
+
+                    ret = new ResultPage<Entity.OperationListItem>(list, page, pageItems, total);
 
                     error = null;
                 }
@@ -319,7 +300,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Operation.Include("OperationContacts").SingleOrDefault(o => !o.Deleted && o.Id == id);
+                    ret = db.Operation.Include("MainAddress").Include("MainContact").SingleOrDefault(o => !o.Deleted && o.Id == id);
                     error = null;
                 }
             }
@@ -417,6 +398,10 @@ namespace ias.Rebens
                         update.CompanyName = operation.CompanyName;
                         update.IdOperationType = operation.IdOperationType;
                         update.Modified = DateTime.UtcNow;
+                        if(operation.IdMainAddress.HasValue)
+                            update.IdMainAddress = operation.IdMainAddress;
+                        if (operation.IdMainContact.HasValue)
+                            update.IdMainContact = operation.IdMainContact; 
                         if (update.Image != operation.Image)
                         {
                             update.Image = operation.Image;
@@ -1339,6 +1324,77 @@ namespace ias.Rebens
                 int idLog = logError.Create("OperationRepository.ListWithModule", ex.Message, $"module: {module}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as operações que possuem o módulo requisitado. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Operation.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        ret = !update.Active;
+                        
+                        update.Active = ret;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.Operation,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+
+                        db.SaveChanges();
+
+                        if (update.Active)
+                        {
+                            var awsHelper = new Integration.AWSHelper();
+                            if (!string.IsNullOrEmpty(update.Domain))
+                            {
+                                try
+                                {
+                                    awsHelper.DisableBucketAsync(update.Domain).Wait();
+                                }
+                                catch (Exception ex)
+                                {
+                                    ret = false;
+                                    error = $"Ocorreu um erro ao tentar bloquear o acesso na Amazon. Mensagem: '{ex.Message}'";
+                                }
+                            }
+                            try
+                            {
+                                awsHelper.DisableBucketAsync($"{update.TemporarySubdomain}.sistemarebens.com.br").Wait();
+                            }
+                            catch (Exception ex)
+                            {
+                                ret = false;
+                                error = $"Ocorreu um erro ao tentar bloquear o acesso na Amazon. Mensagem: '{ex.Message}'";
+                            }
+                        }
+
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Operação não encontrada!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar a operação. (erro:" + idLog + ")";
+                ret = false;
             }
             return ret;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace ias.Rebens.api.Models
 {
@@ -49,14 +50,6 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public bool TargetBlank { get; set; }
         /// <summary>
-        /// Id do benefício
-        /// </summary>
-        public int? IdBenefit { get; set; }
-        /// <summary>
-        /// é de benefício
-        /// </summary>
-        public bool IsBenefit { get { return this.IdBenefit.HasValue; } }
-        /// <summary>
         /// Ativo
         /// </summary>
         [Required]
@@ -87,6 +80,7 @@ namespace ias.Rebens.api.Models
         /// aparece na home
         /// </summary>
         public bool BannerShowBenefit { get; set; }
+        public int[] Operations { get; set; }
         /// <summary>
         /// Construtor
         /// </summary>
@@ -106,13 +100,15 @@ namespace ias.Rebens.api.Models
             this.IdType = banner.Type;
             this.Type = Enums.EnumHelper.GetEnumDescription((Enums.BannerType)banner.Type);
             this.TargetBlank = banner.Target == "_blank";
-            this.IdBenefit = banner.IdBenefit;
             this.Active = banner.Active;
             this.Start = banner.Start.Value;
             this.End = banner.End.Value;
             this.BannerShowHome = (banner.IdBannerShow & (int)Enums.BannerShow.HomeNotLogged) == (int)Enums.BannerShow.HomeNotLogged;
             this.BannerShowHomeLogged = (banner.IdBannerShow & (int)Enums.BannerShow.HomeLogged) == (int)Enums.BannerShow.HomeLogged;
             this.BannerShowBenefit = (banner.IdBannerShow & (int)Enums.BannerShow.Benefit) == (int)Enums.BannerShow.Benefit;
+            if (banner.BannerOperations != null)
+                this.Operations = banner.BannerOperations.Select(op => op.IdOperation).ToArray();
+
         }
 
         /// <summary>
@@ -130,7 +126,6 @@ namespace ias.Rebens.api.Models
                 Link = this.Link,
                 Type = this.IdType,
                 Target = this.TargetBlank ? "_blank" : "_self",
-                IdBenefit = this.IdBenefit,
                 Active = this.Active,
                 Start = this.Start,
                 End = this.End,
@@ -140,6 +135,96 @@ namespace ias.Rebens.api.Models
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };
+        }
+    }
+
+    public class BannerListItemModel
+    {
+        /// <summary>
+        /// Id
+        /// </summary>
+        [Required]
+        public int Id { get; set; }
+        /// <summary>
+        /// Nome
+        /// </summary>
+        [Required]
+        [MaxLength(200)]
+        public string Name { get; set; }
+        /// <summary>
+        /// Imagem
+        /// </summary>
+        [Required]
+        [MaxLength(500)]
+        public string Image { get; set; }
+        /// <summary>
+        /// Ordem
+        /// </summary>
+        [Required]
+        public int Order { get; set; }
+        /// <summary>
+        /// Tipo
+        /// </summary>
+        public string Type { get; set; }
+        /// <summary>
+        /// Nome do clube
+        /// </summary>
+        public string OperationName { get; set; }
+        /// <summary>
+        /// Data da criação
+        /// </summary>
+        public string Created { get; set; }
+        /// <summary>
+        /// Nome do ususário que criou
+        /// </summary>
+        public string CreatedUserName { get; set; }
+        /// <summary>
+        /// Data da Modificação
+        /// </summary>
+        public string Modified { get; set; }
+        /// <summary>
+        /// Nome do último usuário que modificou
+        /// </summary>
+        public string ModifiedUserName { get; set; }
+        /// <summary>
+        /// Onde aparece
+        /// </summary>
+        public string BannerShow { get; set; }
+        /// <summary>
+        /// Status do banner
+        /// </summary>
+        public bool Active { get; set; }
+  
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public BannerListItemModel() { }
+
+        /// <summary>
+        /// Construtor que recebe um Banner e popula os atributos
+        /// </summary>
+        /// <param name="banner"></param>
+        public BannerListItemModel(Entity.BannerListItem banner)
+        {
+            this.Id = banner.Id;
+            this.Name = banner.Name;
+            this.Image = banner.Image;
+            this.Order = banner.Order;
+            this.Type = Enums.EnumHelper.GetEnumDescription((Enums.BannerType)banner.Type);
+            this.Created = TimeZoneInfo.ConvertTimeFromUtc(banner.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+            this.Modified = TimeZoneInfo.ConvertTimeFromUtc(banner.Modified, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+            this.CreatedUserName = banner.AdminUserCreated;
+            this.ModifiedUserName = banner.AdminUserModified;
+            this.OperationName = banner.OperationName;
+            this.Active = banner.Active;
+            this.BannerShow = "";
+            if ((banner.IdBannerShow & (int)Enums.BannerShow.HomeNotLogged) == (int)Enums.BannerShow.HomeNotLogged)
+                this.BannerShow = "H, ";
+            if ((banner.IdBannerShow & (int)Enums.BannerShow.HomeLogged) == (int)Enums.BannerShow.HomeLogged)
+                this.BannerShow += "HL, ";
+            if ((banner.IdBannerShow & (int)Enums.BannerShow.Benefit) == (int)Enums.BannerShow.Benefit)
+                this.BannerShow += "HB";
+            this.BannerShow = this.BannerShow.Trim().TrimEnd(',');
         }
     }
 

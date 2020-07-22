@@ -1,5 +1,4 @@
-﻿using Amazon.Route53.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -43,7 +42,7 @@ namespace ias.Rebens.Helper
             return false;
         }
 
-        public static bool SendCustomerReferal(IStaticTextRepository staticTextRepo, Operation operation, Customer customer, CustomerReferal referal, string emailFrom, string color, out string error)
+        public static bool SendCustomerReferal(IStaticTextRepository staticTextRepo, Operation operation, Customer customer, string emailFrom, string color, out string error)
         {
             var staticText = staticTextRepo.ReadByType(operation.Id, (int)Enums.StaticTextType.Email, out error);
             if (staticText != null)
@@ -53,13 +52,13 @@ namespace ias.Rebens.Helper
                 string domain = (string.IsNullOrEmpty(operation.Domain) ? operation.TemporarySubdomain + ".sistemarebens.com.br" : operation.Domain);
                 if (operation.Id == 1)
                 {
-                    msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {referal.Name}<br /><br />Você foi convidado para participar do {operation.Title}</p>";
+                    msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {customer.Name}<br /><br />Você foi convidado para participar do {operation.Title}</p>";
                     msg += $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão abaixo para se cadastrar</p><br /><br />";
                     msg += $"<p style='text-align:center;'><a href='{domain}' target='_blank' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;font-size: 14px;padding: 15px 50px;font-family:verdana, arial, Helvetica; color: #ffffff;background-color:#427147;border-radius:50px;'>CADASTRAR</a></p>";
                 }
                 else
                 {
-                    msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá {referal.Name}</p><br /><br />";
+                    msg = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá {customer.Name}</p><br /><br />";
                     msg += "<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Você foi convidado por um dos nossos participantes para ingressar em um Clube de Vantagens Exclusivo.</p><br />";
                     msg += "<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão <b>“Quero fazer parte”</b>.</p>";
                     msg += $"<p style='text-align:center'><a href='{domain}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:{color};color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>QUERO ME CADASTRAR</a></p>";
@@ -71,7 +70,7 @@ namespace ias.Rebens.Helper
                 //    msg += $"<p>Clique no link, para se cadastrar: <a href='{domain}'>{domain}</a></p>";
                 //}
                 string body = staticText.Html.Replace("###BODY###", msg);
-                var listDestinataries = new Dictionary<string, string> { { referal.Email, referal.Name } };
+                var listDestinataries = new Dictionary<string, string> { { customer.Email, customer.Name } };
                 var result = sendingBlue.Send(listDestinataries, emailFrom, "Contato", "Indicação - " + operation.Title, body);
                 if (result.Status)
                     return true;

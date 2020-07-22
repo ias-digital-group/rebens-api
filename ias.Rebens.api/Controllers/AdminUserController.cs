@@ -8,6 +8,7 @@ using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.XSSF.Streaming.Values;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -15,9 +16,9 @@ namespace ias.Rebens.api.Controllers
     /// AdminUser Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,administratorRebens,partnerAdministrator")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,administratorRebens,partnerAdministrator,publisher,publisherRebens,promoter")]
     [ApiController]
-    public class AdminUserController : ControllerBase
+    public class AdminUserController : BaseApiController
     {
         private IAdminUserRepository repo;
         private Constant constant;
@@ -42,6 +43,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="idOperation">id da operação, não obrigatório (default=null)</param>
         /// <param name="active">active, não obrigatório (default=null)</param>
         /// <param name="role">papel, não obrigatório (default=null)</param>
+        /// <param name="idOperationPartner">id do parceiro, não obrigatório (default=null)</param>
         /// <returns>Lista com os usuários encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -50,51 +52,27 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<AdminUserModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "",
-            [FromQuery]int? idOperation = null, [FromQuery]bool? active = null, [FromQuery]string role = null)
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 25, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "",
+            [FromQuery]int? idOperation = null, [FromQuery]bool? active = null, [FromQuery]string role = null, [FromQuery]int? idOperationPartner = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("partnerAdministrator"))
+            if (CheckRoles(new string[2] { "administrator", "partnerAdministrator" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
+                idOperation = GetOperationId(out string errorId);
+                if(errorId != null)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            int? idOperationPartner = null;
-            if (principal.IsInRole("partnerAdministrator"))
+            idOperationPartner = null;
+            if (CheckRole("partnerAdministrator"))
             {
-                if (principal?.Claims != null)
-                {
-                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
-                    if (partnerId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
-                    if (int.TryParse(partnerId.Value, out int tmpId))
-                        idOperationPartner = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
-                }
-                else
+                idOperationPartner = GetOperationPartnerId(out string errorId);
+                if(errorId != null)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
             }
 
-            string userRole = "";
-            var uRole = principal.Claims.SingleOrDefault(c => c.Type == ClaimTypes.Role);
-            if (uRole != null)
-                userRole = uRole.Value;
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não tem acesso a essa funcionalidade!" });
-
-
+            string userRole = GetRole(out string roleError);
+            if (roleError != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = roleError });
 
             var list = repo.ListPage(userRole, page, pageItems, searchWord, sort, out string error, idOperation, active, role, idOperationPartner);
             if (string.IsNullOrEmpty(error))
@@ -135,7 +113,14 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Get(int id)
         {
-            var admin = repo.Read(id, out string error);
+            if (CheckRoles(new string[3] { "publisher", "publisherRebens", "promoter" }))
+            {
+                id = GetAdminUserId(out string errorId);
+                if(errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            }
+
+            var admin = repo.ReadFull(id, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -159,10 +144,16 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]AdminUserModel user)
         {
-            var model = new JsonModel();
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if(errorId !=null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (CheckRoles(new string[] { "publisher", "publisherRebens", "promoter" }) && user.Id != idAdminUser)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Ação não permitida!" });
+
             var admin = user.GetEntity();
            
-            if (repo.Update(admin, out string error))
+            if (repo.Update(admin, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Usuário atualizado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -182,39 +173,30 @@ namespace ias.Rebens.api.Controllers
         {
             var admin = user.GetEntity();
 
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("partnerAdministrator"))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null) 
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (CheckRoles(new string[] { "administrator", "partnerAdministrator" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        admin.IdOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
-            if (principal.IsInRole("partnerAdministrator"))
-            {
-                if (principal?.Claims != null)
-                {
-                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
-                    if (partnerId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
-                    if (int.TryParse(partnerId.Value, out int tmpId))
-                        admin.IdOperationPartner = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrada!" });
+                admin.IdOperation = GetOperationId(out errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
-            if (repo.Create(admin, out string error))
+            if (CheckRole("partnerAdministrator"))
+            {
+                admin.IdOperationPartner = GetOperationPartnerId(out errorId);
+                if(errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
+
+            if(!repo.CheckCPF(admin.Id, admin.Doc, out string errorCpf))
+                return StatusCode(400, new JsonModel() { Status = "errorCPF", Message = errorCpf });
+            if (!repo.CheckEmail(admin.Id, admin.Email, out string errorEmail))
+                return StatusCode(400, new JsonModel() { Status = "errorEmail", Message = errorEmail });
+
+            if (repo.Create(admin, idAdminUser, out string error))
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
                 string body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {admin.Name}.</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Você foi cadastrado na plataforma <b>Sistema Rebens</b>, clique no botão <b>“Ativar Cadastro”</b> para validar seu cadastro e cadastrar sua senha.</p>";
@@ -242,8 +224,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            var model = new JsonModel();
-            if (repo.Delete(id, out string error))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (repo.Delete(id, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Usuário apagado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -266,15 +251,39 @@ namespace ias.Rebens.api.Controllers
             if (admin != null)
             {
                 var code = HttpUtility.UrlEncode(Helper.SecurityHelper.SimpleEncryption(admin.Email));
-                string body = $"<p>Olá {admin.Name} você foi cadastrado na plataforma Rebens, clique no link abaixo para validar o seu cadastro e cadastrar a sua senha.</p>";
-                body += $"<br /><br /><p style='text-align:center;'><a href='{constant.URL}#/validate?c={code}' style='display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;'>Ativar Cadastro</a></p>";
+                string body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá, {admin.Name}.</p> <br /><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Clique no botão <b>“Alterar Senha”</b>  para cadastrar uma nova senha.</p>";
+                body += $"<br /><br /><p style=\"text-align:center;\"><a href=\"{constant.AppSettings.App.URL}#/validate?c={code}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ALTERAR SENHA</a></p>";
                 var listDestinataries = new Dictionary<string, string>() { { admin.Email, admin.Name } };
-                Helper.EmailHelper.SendAdminEmail(listDestinataries, "Rebens - Validação de cadastro", body, out error);
+                Helper.EmailHelper.SendAdminEmail(listDestinataries, "Rebens - Alteração de senha", body, out error);
 
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "E-mail de validação reenviado com sucesso!" });
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+        }
+
+        /// <summary>
+        /// Ativa/Inativa um usuário
+        /// </summary>
+        /// <param name="id">id do usuário</param>
+        /// <returns></returns>
+        /// <response code="200">Se o tudo ocorrer sem erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/ToggleActive")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ToggleActive(int id)
+        {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            var status = repo.ToggleActive(id, idAdminUser, out string error);
+
+            if (string.IsNullOrEmpty(error))
+                return Ok(new JsonModel() { Status = "ok", Data = status });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }

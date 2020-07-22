@@ -11,18 +11,16 @@ namespace ias.Rebens
             BankAccounts = new HashSet<BankAccount>();
             BenefitUses = new HashSet<BenefitUse>();
             BenefitViews = new HashSet<BenefitView>();
-            CustomerReferals = new HashSet<CustomerReferal>();
+            CustomerReferals = new HashSet<Customer>();
             Coupons = new HashSet<Coupon>();
             Withdraws = new HashSet<Withdraw>();
             ZanoxSales = new HashSet<ZanoxSale>();
             Signatures = new HashSet<MoipSignature>();
-            PartnerCustomers = new HashSet<OperationPartnerCustomer>();
             CourseViews = new HashSet<CourseView>();
             CourseUses = new HashSet<CourseUse>();
             CourseCustomerRates = new HashSet<CourseCustomerRate>();
             DrawItems = new HashSet<DrawItem>();
             Orders = new HashSet<Order>();
-            CustomerPromoters = new HashSet<CustomerPromoter>();
             Draws = new HashSet<ScratchcardDraw>();
             CustomerLogs = new HashSet<CustomerLog>();
         }
@@ -49,7 +47,15 @@ namespace ias.Rebens
         public string WirecardId { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public bool Active { get; set; }
         public int? SendinblueListId { get; set; }
+        public int? IdOperationPartner { get; set; }
+        public DateTime? SignUpDate { get; set; }
+        public int? ComplementaryStatus { get; set; }
+        public int? DegreeOfKinship { get; set; }
+        public int? IdCustomerReferer { get; set; }
+        public int? IdPromoter { get; set; }
+
 
         public virtual Operation Operation { get; set; }
         public virtual Address Address { get; set; }
@@ -57,19 +63,20 @@ namespace ias.Rebens
         public virtual ICollection<BenefitUse> BenefitUses { get; set; }
         public virtual ICollection<BenefitView> BenefitViews { get; set; }
         public virtual ICollection<Coupon> Coupons { get; set; }
-        public virtual ICollection<CustomerReferal> CustomerReferals { get; set; }
+        public virtual Customer CustomerReferer { get; set; }
         public virtual ICollection<MoipSignature> Signatures { get; set; }
         public virtual ICollection<Withdraw> Withdraws { get; set; }
         public virtual ICollection<ZanoxSale> ZanoxSales { get; set; }
-        public virtual ICollection<OperationPartnerCustomer> PartnerCustomers { get; set; }
+        public virtual OperationPartner OperationPartner { get; set; }
         public virtual ICollection<CourseView> CourseViews { get; set; }
         public virtual ICollection<CourseUse> CourseUses { get; set; }
         public virtual ICollection<CourseCustomerRate> CourseCustomerRates { get; set; }
         public virtual ICollection<DrawItem> DrawItems { get; set; }
         public virtual ICollection<Order> Orders { get; set; }
-        public virtual ICollection<CustomerPromoter> CustomerPromoters { get; set; }
+        public virtual AdminUser Promoter { get; set; }
         public virtual ICollection<ScratchcardDraw> Draws { get; set; }
         public virtual ICollection<CustomerLog> CustomerLogs { get; set; }
+        public virtual ICollection<Customer> CustomerReferals { get; set; }
 
         public void SetPassword(string password)
         {

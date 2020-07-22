@@ -12,10 +12,9 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/CustomerReferal")]
     [ApiController]
-    public class CustomerReferalController : ControllerBase
+    public class CustomerReferalController : BaseApiController
     {
-        private ICustomerReferalRepository repo;
-        private ICustomerRepository customerRepo;
+        private ICustomerRepository repo;
         private IOperationRepository operationRepo;
         private IStaticTextRepository staticTextRepo;
 
@@ -26,10 +25,9 @@ namespace ias.Rebens.api.Controllers
         /// <param name="customerRepository"></param>
         /// <param name="operationRepository"></param>
         /// <param name="staticTextRepository"></param>
-        public CustomerReferalController(ICustomerReferalRepository customerReferalRepository, ICustomerRepository customerRepository, IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
+        public CustomerReferalController(ICustomerRepository customerRepository, IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
         {
-            this.repo = customerReferalRepository;
-            this.customerRepo = customerRepository;
+            this.repo = customerRepository;
             this.operationRepo = operationRepository;
             this.staticTextRepo = staticTextRepository;
         }
@@ -51,42 +49,26 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "")
         {
-            ResultPage<CustomerReferal> list;
+            ResultPage<Customer> list;
             string error;
             int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal != null && principal.IsInRole("customer"))
+            if (CheckRole("customer"))
             {
-
-                if (principal?.Claims != null)
-                {
-                    var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                    if (customerId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                    if (!int.TryParse(customerId.Value, out idCustomer))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                }
-                list = repo.ListByCustomer(idCustomer, page, pageItems, searchWord, sort, out error);
+                idCustomer = GetCustomerId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+                list = repo.ListReferalByCustomer(idCustomer, page, pageItems, searchWord, sort, out error);
             }
             else
             {
                 int? idOperation = null;
-                if (principal.IsInRole("administrator"))
+                if (CheckRole("administrator"))
                 {
-                    if (principal?.Claims != null)
-                    {
-                        var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                        if (operationId == null)
-                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                        if (int.TryParse(operationId.Value, out int tmpId))
-                            idOperation = tmpId;
-                        else
-                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    }
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                    idOperation = GetOperationId(out string errorId);
+                    if (errorId != null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
                 }
-                list = repo.ListPage(page, pageItems, searchWord, sort, idOperation, out error);
+                list = repo.ListReferalPage(page, pageItems, searchWord, sort, idOperation, out error);
             }
                 
 
@@ -153,8 +135,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody] CustomerReferalModel customerReferal)
         {
-            var model = new JsonModel();
-
             if (repo.Update(customerReferal.GetEntity(), out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Indicação atualizada com sucesso!" });
 
@@ -173,32 +153,21 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] CustomerReferalModel customerReferal)
         {
-            int idCustomer = 0;
-            int idOperation = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
+            int idCustomer = GetCustomerId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            int idOperation = GetOperationId(out errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             var operation = operationRepo.Read(idOperation, out string error);
-            var customer = customerRepo.Read(idCustomer, out error);
+            var customer = repo.Read(idCustomer, out error);
 
-            if(repo.CheckLimit(operation.Id, customer.Id, out int limit, out error))
+            if(repo.CheckReferalLimit(operation.Id, customer.Id, out int limit, out error))
             {
                 var referal = customerReferal.GetEntity();
-                referal.IdStatus = (int)Enums.CustomerReferalStatus.pending;
-                referal.IdCustomer = idCustomer;
+                referal.ComplementaryStatus = (int)Enums.CustomerComplementaryStatus.pending;
+                referal.IdCustomerReferer = idCustomer;
                 referal.Created = referal.Modified = DateTime.Now;
                 if (repo.Create(referal, operation.Id, out error))
                 {
@@ -206,7 +175,7 @@ namespace ias.Rebens.api.Controllers
                     string color = operationRepo.GetConfigurationOption(operation.Id, "color", out _);
                     if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
 
-                    Helper.EmailHelper.SendCustomerReferal(staticTextRepo, operation, customer, referal, fromEmail, color, out error);
+                    Helper.EmailHelper.SendCustomerReferal(staticTextRepo, operation, referal, fromEmail, color, out error);
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Indicação criada com sucesso!", Id = referal.Id });
                 }
@@ -228,9 +197,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            var model = new JsonModel();
-
-            if (repo.Delete(id, out string error))
+            if (repo.DeleteReferal(id, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Indicação apagada com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

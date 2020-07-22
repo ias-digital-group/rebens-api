@@ -62,31 +62,31 @@ namespace ias.Rebens.api.Models
         /// Construtor que popula 
         /// </summary>
         /// <param name="customerReferal"></param>
-        public CustomerReferalModel(CustomerReferal customerReferal)
+        public CustomerReferalModel(Customer customer)
         {
-            this.Id = customerReferal.Id;
-            this.IdCustomer = customerReferal.IdCustomer;
-            this.IdStatus = customerReferal.IdStatus;
-            this.Name = customerReferal.Name;
-            this.Email = customerReferal.Email;
-            this.Status = Enums.EnumHelper.GetEnumDescription((Enums.CustomerReferalStatus)customerReferal.IdStatus);
-            this.Date = customerReferal.Created;
-            this.DegreeOfKinship = customerReferal.DegreeOfKinship;
-            if (customerReferal.Customer != null)
-                this.CustomerName = customerReferal.Customer.Name;
+            this.Id = customer.Id;
+            this.IdCustomer = customer.IdCustomerReferer.Value;
+            this.IdStatus = customer.ComplementaryStatus.Value;
+            this.Name = customer.Name;
+            this.Email = customer.Email;
+            this.Status = Enums.EnumHelper.GetEnumDescription((Enums.CustomerComplementaryStatus)customer.ComplementaryStatus.Value);
+            this.Date = customer.Created;
+            this.DegreeOfKinship = customer.DegreeOfKinship;
+            if (customer.CustomerReferer != null)
+                this.CustomerName = customer.CustomerReferer.Name;
         }
 
         /// <summary>
         /// Retorna um objeto CustomerReferal
         /// </summary>
         /// <returns></returns>
-        public CustomerReferal GetEntity()
+        public Customer GetEntity()
         {
-            return new CustomerReferal()
+            return new Customer()
             {
                 Id = this.Id,
-                IdStatus = this.IdStatus,
-                IdCustomer = this.IdCustomer,
+                ComplementaryStatus = this.IdStatus,
+                IdCustomerReferer = this.IdCustomer,
                 Name = this.Name,
                 Email = this.Email,
                 Created = this.Date,

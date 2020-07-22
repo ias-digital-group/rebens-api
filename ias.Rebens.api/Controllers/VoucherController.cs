@@ -17,6 +17,7 @@ namespace ias.Rebens.api.Controllers
         private IOperationRepository operationRepo;
         private ICourseRepository courseRepo;
         private ICourseCollegeRepository courseCollegeRepo;
+        private ICourseUseRepository courseUseRepo;
         private IOrderRepository orderRepo;
         private IHostingEnvironment _hostingEnvironment;
 
@@ -69,7 +70,6 @@ namespace ias.Rebens.api.Controllers
                             Models.VoucherModel model = GenerateBenefitVoucher(id, customer, operation, out error);
                             if (model != null)
                                 return new ViewAsPdf("Index", "voucher.pdf", model);
-                            //return View("Index", model);
                         }
                     }
                 }
@@ -115,6 +115,7 @@ namespace ias.Rebens.api.Controllers
 
             return model;
         }
+
 
         public IActionResult Course(string code)
         {

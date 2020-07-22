@@ -19,7 +19,6 @@ namespace ias.Rebens
         public int Id { get; set; }
         public string Name { get; set; }
         public string Title { get; set; }
-        public int IdAdminUser { get; set; }
         public string Image { get; set; }
         public DateTime? DueDate { get; set; }
         public string Link { get; set; }
@@ -27,6 +26,8 @@ namespace ias.Rebens
         public decimal? CPVPercentage { get; set; }
         public decimal? MinDiscountPercentage { get; set; }
         public decimal? CashbackAmount { get; set; }
+        public decimal? TaxAmount { get; set; }
+        public decimal? AvailableCashback { get; set; }
         public DateTime? Start { get; set; }
         public DateTime? End { get; set; }
         public int IdBenefitType { get; set; }

@@ -184,18 +184,18 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// recebe um arquivo e salva no servidor
+        /// recebe uma imagem e salva no servidor
         /// </summary>
         /// <returns></returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se ocorrer algum erro</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [Authorize("Bearer", Roles = "master,administrator,customer,publisher,administratorRebens,publisherRebens")]
-        [HttpPost("UploadFile"), DisableRequestSizeLimit]
+        [HttpPost("UploadImage"), DisableRequestSizeLimit]
         [ProducesResponseType(typeof(FileUploadResultModel), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult UploadFile()
+        public IActionResult UploadImage()
         {
             try
             {
@@ -220,6 +220,51 @@ namespace ias.Rebens.api.Controllers
                         return Ok(new FileUploadResultModel() { FileName = ret.public_id + extension, Url = ret.secure_url });
 
                     return StatusCode(400, new JsonModel() { Status = "error", Message = ret.Message });
+                }
+
+                return NoContent();
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// recebe um arquivo e salva no servidor
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns></returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se ocorrer algum erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [Authorize("Bearer", Roles = "master,administrator,customer,publisher,administratorRebens,publisherRebens")]
+        [HttpPost("UploadFile/{type}"), DisableRequestSizeLimit]
+        [ProducesResponseType(typeof(FileUploadResultModel), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult UploadFile(string type)
+        {
+            try
+            {
+                var file = Request.Form.Files[0];
+                string webRootPath = _hostingEnvironment.WebRootPath;
+                string newPath = Path.Combine(webRootPath, "files", type);
+                if (!Directory.Exists(newPath))
+                    Directory.CreateDirectory(newPath);
+
+                if (file.Length > 0)
+                {
+                    string extension = Path.GetExtension(file.FileName);
+                    string fileName = Guid.NewGuid().ToString("n") + extension;
+                    string fullPath = Path.Combine(newPath, fileName);
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        file.CopyTo(stream);
+                    }
+                    var constant = new Constant();
+                    return Ok(new FileUploadResultModel() { FileName = fileName, Url = $"{constant.URL}files/{type}/{fileName}" });
                 }
 
                 return NoContent();

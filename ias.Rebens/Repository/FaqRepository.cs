@@ -14,7 +14,7 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public bool Create(Faq faq, out string error)
+        public bool Create(Faq faq, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -23,6 +23,30 @@ namespace ias.Rebens
                 {
                     faq.Modified = faq.Created = DateTime.UtcNow;
                     db.Faq.Add(faq);
+                    db.SaveChanges();
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.create,
+                        Created = DateTime.UtcNow,
+                        Item = (int)Enums.LogItem.Faq,
+                        IdItem = faq.Id,
+                        IdAdminUser = idAdminUser
+                    });
+
+                    var text = db.StaticText.SingleOrDefault(s => s.IdOperation == faq.IdOperation && s.Url == "faq" && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
+                    if (text != null)
+                    {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.StaticText,
+                            IdItem = text.Id,
+                            IdAdminUser = idAdminUser
+                        });
+                    }
+
                     db.SaveChanges();
                     error = null;
                 }
@@ -37,7 +61,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -46,6 +70,28 @@ namespace ias.Rebens
                 {
                     var item = db.Faq.SingleOrDefault(c => c.Id == id);
                     db.Faq.Remove(item);
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        Item = (int)Enums.LogItem.Faq,
+                        IdItem = id,
+                        IdAdminUser = idAdminUser
+                    });
+
+                    var text = db.StaticText.SingleOrDefault(s => s.IdOperation == item.IdOperation && s.Url == "faq" && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
+                    if (text != null)
+                    {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.StaticText,
+                            IdItem = text.Id,
+                            IdAdminUser = idAdminUser
+                        });
+                    }
                     db.SaveChanges();
                     error = null;
                 }
@@ -190,7 +236,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(Faq faq, out string error)
+        public bool Update(Faq faq, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -206,6 +252,28 @@ namespace ias.Rebens
                         update.Order = faq.Order;
                         update.Active = faq.Active;
                         update.Modified = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.Faq,
+                            IdItem = update.Id,
+                            IdAdminUser = idAdminUser
+                        });
+
+                        var text = db.StaticText.SingleOrDefault(s => s.IdOperation == faq.IdOperation && s.Url == "faq" && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
+                        if(text != null)
+                        {
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = (int)Enums.LogAction.update,
+                                Created = DateTime.UtcNow,
+                                Item = (int)Enums.LogItem.StaticText,
+                                IdItem = text.Id,
+                                IdAdminUser = idAdminUser
+                            });
+                        }
 
                         db.SaveChanges();
                         error = null;
@@ -252,6 +320,62 @@ namespace ias.Rebens
                 int idLog = logError.Create("FaqRepository.ListByOperatiion", ex.Message, $"operationCode: {operationCode}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as perguntas. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Faq.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        ret = !update.Active;
+                        update.Active = ret;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.Faq,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+
+                        var text = db.StaticText.SingleOrDefault(s => s.IdOperation == update.IdOperation && s.Url == "faq" && s.IdStaticTextType == (int)Enums.StaticTextType.Pages);
+                        if (text != null)
+                        {
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = (int)Enums.LogAction.update,
+                                Created = DateTime.UtcNow,
+                                Item = (int)Enums.LogItem.StaticText,
+                                IdItem = text.Id,
+                                IdAdminUser = idAdminUser
+                            });
+                        }
+
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Pergunta não encontrada!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("FaqRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar a pergunta. (erro:" + idLog + ")";
+                ret = false;
             }
             return ret;
         }

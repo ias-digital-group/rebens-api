@@ -22,7 +22,6 @@ namespace ias.Rebens.api.helper
 
         public void Execute()
         {
-            
             using (var serviceScope = serviceScopeFactory.CreateScope())
             {
                 ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();

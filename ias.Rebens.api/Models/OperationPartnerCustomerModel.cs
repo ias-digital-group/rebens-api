@@ -66,35 +66,38 @@ namespace ias.Rebens.api.Models
         /// Construtor
         /// </summary>
         /// <param name="customer"></param>
-        public OperationPartnerCustomerModel(OperationPartnerCustomer customer)
+        public OperationPartnerCustomerModel(Customer customer)
         {
             this.Id = customer.Id;
             this.Name = customer.Name;
             this.Email = customer.Email;
             this.Cpf = customer.Cpf;
-            this.IdOperationPartner = customer.IdOperationPartner;
-            this.Status = customer.Status;
-            this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.OperationPartnerCustomerStatus)customer.Status);
+            this.IdOperationPartner = customer.IdOperationPartner.Value;
+            this.Status = customer.ComplementaryStatus.Value;
+            this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.CustomerComplementaryStatus)customer.Status);
             if (customer.OperationPartner != null)
                 this.OperationPartnerName = customer.OperationPartner.Name;
-            if (customer.IdAdminUser.HasValue && customer.AdminUser != null)
-                this.AdminUserName = customer.AdminUser.Name;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public OperationPartnerCustomer GetEntity()
+        public Customer GetEntity()
         {
-            return new OperationPartnerCustomer()
+            return new Customer()
             {
                 Id = this.Id,
                 Name = this.Name,
                 Email = this.Email,
                 Cpf = this.Cpf,
                 IdOperationPartner = this.IdOperationPartner,
-                Status = this.Status
+                ComplementaryStatus = this.Status,
+                CustomerType = (int)Enums.CustomerType.Partner,
+                Active = true, 
+                Created = DateTime.UtcNow,
+                Modified = DateTime.UtcNow,
+                Status = (int)Enums.CustomerStatus.Validation
             };
         }
     }

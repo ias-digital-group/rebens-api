@@ -62,101 +62,17 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool DeleteCustomer(int idCustomer, out string error)
+        public ResultPage<Entity.OperationPartnerListItem> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null, int? idOperation = null)
         {
-            bool ret = true;
+            ResultPage<Entity.OperationPartnerListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var update = db.OperationPartnerCustomer.SingleOrDefault(p => p.Id == idCustomer);
-                    update.Modified = DateTime.UtcNow;
-                    update.Status = (int)Enums.OperationPartnerCustomerStatus.deleted;
-                    db.SaveChanges();
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("OperationPartnerRepository.DeleteCustomer", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar apagar o cliente parceiro. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
-        public ResultPage<OperationPartnerCustomer> ListCustomers(int page, int pageItems, string word, string sort, out string error, int? status = null, int? idOperationPartner = null, int? idOperation = null)
-        {
-            ResultPage<OperationPartnerCustomer> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var tmpList = db.OperationPartnerCustomer.Include("OperationPartner").Where(c => !c.OperationPartner.Deleted 
-                                        && c.Status != (int)Enums.OperationPartnerCustomerStatus.deleted 
-                                        && (!idOperationPartner.HasValue || idOperationPartner.Value == 0 || c.IdOperationPartner == idOperationPartner)
-                                        && (!idOperation.HasValue || idOperation.Value == 0 || c.OperationPartner.IdOperation == idOperation)
-                                        && (!status.HasValue || status.Value == 0 || c.Status == status.Value)
-                                        && (string.IsNullOrEmpty(word) || c.Name.Contains(word) || c.Email.Contains(word)));
-                    switch (sort.ToLower())
-                    {
-                        case "name asc":
-                            tmpList = tmpList.OrderBy(f => f.Name);
-                            break;
-                        case "name desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Name);
-                            break;
-                        case "id asc":
-                            tmpList = tmpList.OrderBy(f => f.Id);
-                            break;
-                        case "id desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Id);
-                            break;
-                        case "email asc":
-                            tmpList = tmpList.OrderBy(f => f.Email);
-                            break;
-                        case "email desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Email);
-                            break;
-                        case "cpf asc":
-                            tmpList = tmpList.OrderBy(f => f.Cpf);
-                            break;
-                        case "cpf desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Cpf);
-                            break;
-                    }
-
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.OperationPartnerCustomer.Count(c => !c.OperationPartner.Deleted
-                                        && c.Status != (int)Enums.OperationPartnerCustomerStatus.deleted
-                                        && (!idOperationPartner.HasValue || idOperationPartner.Value == 0 || c.IdOperationPartner == idOperationPartner)
-                                        && (!idOperation.HasValue || idOperation.Value == 0 || c.OperationPartner.IdOperation == idOperation)
-                                        && (!status.HasValue || status.Value == 0 || c.Status == status.Value)
-                                        && (string.IsNullOrEmpty(word) || c.Name.Contains(word) || c.Email.Contains(word)));
-
-                    ret = new ResultPage<OperationPartnerCustomer>(list, page, pageItems, total);
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("OperationPartnerRepository.ListCustomers", ex.Message, $"idOperationPartner: {idOperationPartner}", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar listar os clientes. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public ResultPage<OperationPartner> ListPage(int page, int pageItems, string word, string sort, int idOperation, out string error, bool? status = null)
-        {
-            ResultPage<OperationPartner> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var tmpList = db.OperationPartner.Where(p => !p.Deleted && p.IdOperation == idOperation && (!status.HasValue || p.Active == status.Value) && (string.IsNullOrEmpty(word) || p.Name.Contains(word)));
+                    var tmpList = db.OperationPartner.Where(p => !p.Deleted 
+                                                                && (!idOperation.HasValue || p.IdOperation == idOperation.Value)
+                                                                && (!status.HasValue || p.Active == status.Value) 
+                                                                && (string.IsNullOrEmpty(word) || p.Name.Contains(word)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -173,10 +89,35 @@ namespace ias.Rebens
                             break;
                     }
 
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.OperationPartner.Count(p => !p.Deleted && p.IdOperation == idOperation && (!status.HasValue || p.Active == status.Value) && (string.IsNullOrEmpty(word) || p.Name.Contains(word)));
+                    var total = tmpList.Count();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).Select(p => new Entity.OperationPartnerListItem() { 
+                            Id = p.Id,
+                            Name = p.Name,
+                            Active = p.Active,
+                            IdOperation = p.IdOperation,
+                            Doc = p.Doc
+                    }).ToList();
 
-                    ret = new ResultPage<OperationPartner>(list, page, pageItems, total);
+                    list.ForEach(c =>
+                    {
+                        var createUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Operation && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.create)
+                                            .OrderBy(a => a.Created).FirstOrDefault();
+                        var modifiedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Operation && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.update)
+                                            .OrderByDescending(a => a.Created).FirstOrDefault();
+                        if (createUser != null)
+                            c.CreatedUserName = createUser.AdminUser.Name + " " + createUser.AdminUser.Surname;
+                        else
+                            c.CreatedUserName = " - ";
+                        if (modifiedUser != null)
+                        {
+                            c.ModifiedUserName = modifiedUser.AdminUser.Name + " " + modifiedUser.AdminUser.Surname;
+                            c.Modified = modifiedUser.Created;
+                        }
+                        else
+                            c.ModifiedUserName = " - ";
+                    });
+
+                    ret = new ResultPage<Entity.OperationPartnerListItem>(list, page, pageItems, total);
                     error = null;
                 }
             }
@@ -211,61 +152,6 @@ namespace ias.Rebens
             return ret;
         }
 
-        public OperationPartnerCustomer ReadCustomer(int idCustomer, out string error)
-        {
-            OperationPartnerCustomer ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    ret = db.OperationPartnerCustomer.SingleOrDefault(p => p.Status != (int)Enums.OperationPartnerCustomerStatus.deleted && p.Id == idCustomer);
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("OperationPartnerRepository.ReadCustomer", ex.Message, $"idCustomer: {idCustomer}", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar criar ler o parceiro. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
-
-        public bool CreateCustomer(OperationPartnerCustomer customer, out string error)
-        {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var operation = db.Operation.Single(o => o.OperationPartners.Any(p => p.Id == customer.IdOperationPartner));
-                    if(db.Customer.Any(c => (c.Email == customer.Email || c.Cpf == customer.Cpf) && c.IdOperation == operation.Id))
-                    {
-                        error = "O CPF ou Email já estão cadastrados em nosso sistema.";
-                    }
-                    else if(!db.OperationPartnerCustomer.Any(c => (c.Email == customer.Email || c.Cpf == customer.Cpf) && c.IdOperationPartner == customer.IdOperationPartner))
-                    {
-                        customer.Modified = customer.Created = DateTime.UtcNow;
-                        customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
-                        db.OperationPartnerCustomer.Add(customer);
-                        db.SaveChanges();
-                    }
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("OperationPartnerRepository.CreateCustomer", ex.Message, "", ex.StackTrace);
-                if(ex.InnerException != null)
-                    logError.Create("OperationPartnerRepository.CreateCustomer", ex.InnerException.Message, "", ex.InnerException.StackTrace);
-                error = "Ocorreu um erro ao tentar criar o cliente. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
         public bool Update(OperationPartner partner, out string error)
         {
             bool ret = true;
@@ -278,6 +164,7 @@ namespace ias.Rebens
                     {
                         update.Active = partner.Active;
                         update.Name = partner.Name;
+                        update.Doc = partner.Doc;
                         update.Modified = DateTime.UtcNow;
 
                         db.SaveChanges();
@@ -295,75 +182,6 @@ namespace ias.Rebens
                 int idLog = logError.Create("OperationPartnerRepository.Update", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar atualizar o parceiro. (erro:" + idLog + ")";
                 ret = false;
-            }
-            return ret;
-        }
-
-        public bool UpdateCustomerStatus(int idCustomer, int status, int idAdminUser, out string error, out Operation operation, out Customer customer, out OperationPartnerCustomer partnerCustomer)
-        {
-            bool ret = false;
-            operation = null;
-            customer = null;
-            partnerCustomer = null;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var update = db.OperationPartnerCustomer.SingleOrDefault(c => c.Id == idCustomer);
-                    if (update != null)
-                    {
-                        if (update.Status == (int)Enums.OperationPartnerCustomerStatus.newCustomer || update.Status == (int)Enums.OperationPartnerCustomerStatus.reproved)
-                        {
-                            update.Status = status;
-                            update.Modified = DateTime.UtcNow;
-                            update.IdAdminUser = idAdminUser;
-                            db.SaveChanges();
-
-                            operation = db.Operation.Single(o => o.OperationPartners.Any(p => p.Id == update.IdOperationPartner));
-                            int idOperation = operation.Id;
-                            customer = db.Customer.SingleOrDefault(c => (c.Cpf == update.Cpf || c.Email == update.Email) && c.IdOperation == idOperation);
-
-                            if (update.Status == (int)Enums.OperationPartnerCustomerStatus.approved)
-                            {
-                                if(customer == null)
-                                {
-                                    customer = new Customer()
-                                    {
-                                        Name = update.Name,
-                                        Cpf = update.Cpf,
-                                        Email = update.Email,
-                                        CustomerType = (int)Enums.CustomerType.Customer,
-                                        Created = DateTime.Now,
-                                        Modified = DateTime.Now,
-                                        Status = (int)Enums.CustomerStatus.Validation,
-                                        Code = Helper.SecurityHelper.HMACSHA1(update.Email, update.Email + "|" + update.Cpf),
-                                        IdOperation = operation.Id
-                                    };
-
-                                    db.Customer.Add(customer);
-                                    db.SaveChanges();
-                                }
-
-                                update.IdCustomer = customer.Id;
-                                db.SaveChanges();
-                            }
-
-                            partnerCustomer = update;
-                            error = null;
-                            ret = true;
-                        }
-                        else
-                            error = "O status desse cliente não pode ser alterado, pois ele já foi aprovado!";
-                    }
-                    else
-                        error = "Cliente não encontrado!";
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("OperationPartnerRepository.UpdateCustomerStatus", ex.Message, $"idCustomer: {idCustomer}, status:{status}", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar atualizar o cliente. (erro:" + idLog + ")";
             }
             return ret;
         }
