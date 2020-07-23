@@ -196,9 +196,7 @@ namespace ias.Rebens.api.Controllers
 
             if (!string.IsNullOrEmpty(error))
             {
-                Guid operationGuid = Guid.Empty;
-                Guid.TryParse(operationCode, out operationGuid);
-                if (operationGuid == Guid.Empty)
+                if (!Guid.TryParse(operationCode, out Guid operationGuid))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
                 text = staticTextRepo.ReadText(operationGuid, page, out error);
             }

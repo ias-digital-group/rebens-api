@@ -19,7 +19,7 @@ namespace ias.Rebens.api.Controllers
                 var tempId = principal.Claims.SingleOrDefault(c => c.Type == "id");
                 if (tempId == null)
                     error = "Usuário não encontrado!";
-                if (int.TryParse(tempId.Value, out int tmpId))
+                else if (int.TryParse(tempId.Value, out int tmpId))
                 {
                     ret = tmpId;
                     error = null;
@@ -41,7 +41,7 @@ namespace ias.Rebens.api.Controllers
                 var tempId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
                 if (tempId == null)
                     error = "Operação não encontrada!";
-                if (int.TryParse(tempId.Value, out int tmpId))
+                else if (int.TryParse(tempId.Value, out int tmpId))
                 {
                     ret = tmpId;
                     error = null;
@@ -63,7 +63,7 @@ namespace ias.Rebens.api.Controllers
                 var tempId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
                 if (tempId == null)
                     error = "Parceiro não encontrado!";
-                if (int.TryParse(tempId.Value, out int tmpId))
+                else if (int.TryParse(tempId.Value, out int tmpId))
                 {
                     ret = tmpId;
                     error = null;
@@ -141,7 +141,7 @@ namespace ias.Rebens.api.Controllers
                 var tempId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
                 if (tempId == null)
                     error = "Cliente não encontrado!";
-                if (int.TryParse(tempId.Value, out int tmpId))
+                else if (int.TryParse(tempId.Value, out int tmpId))
                 {
                     ret = tmpId;
                     error = null;
