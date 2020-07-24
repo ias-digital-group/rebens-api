@@ -19,5 +19,7 @@ namespace ias.Rebens
         List<OperationPartner> ListActiveByOperation(Guid operationCode, out string error);
 
         Dictionary<string, string> ListDestinataries(int idOperationPartner, out string error);
+
+        bool ToggleActive(int id, int idAdminUser, out string error);
     }
 }

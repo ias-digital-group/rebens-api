@@ -234,5 +234,48 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.OperationPartner.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        ret = !update.Active;
+                        update.Active = ret;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.OperationPartner,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Parceiro não encontrado!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("OperationPartnerRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o parceiro. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
     }
 }

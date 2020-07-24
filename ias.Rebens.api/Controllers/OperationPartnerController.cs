@@ -163,6 +163,30 @@ namespace ias.Rebens.api.Controllers
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
+        /// <summary>
+        /// Ativa/Inativa um parceiro de uma operação
+        /// </summary>
+        /// <param name="id">id do parceiro</param>
+        /// <returns></returns>
+        /// <response code="200">Se o tudo ocorrer sem erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/ToggleActive")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ToggleActive(int id)
+        {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            var status = repo.ToggleActive(id, idAdminUser, out string error);
+
+            if (string.IsNullOrEmpty(error))
+                return Ok(new JsonModel() { Status = "ok", Data = status });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
         #region OperationPartnerCustomer
         /// <summary>
         /// Lista os clientes de um parceiro da operação 
