@@ -769,6 +769,25 @@ namespace ias.Rebens
                     .HasForeignKey(e => e.IdAddress)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Customer_Address");
+
+                entity.HasOne(e => e.CustomerReferer)
+                    .WithMany(e => e.CustomerReferals)
+                    .HasForeignKey(e => e.IdCustomerReferer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Customer_CustomerReferer");
+
+                entity.HasOne(e => e.OperationPartner)
+                    .WithMany(e => e.Customers)
+                    .HasForeignKey(e => e.IdOperationPartner)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Customer_OperationPartner");
+
+                entity.HasOne(e => e.Promoter)
+                    .WithMany(e => e.Customers)
+                    .HasForeignKey(e => e.IdPromoter)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Customer_Promoter");
+                
             });
 
             modelBuilder.Entity<CustomerLog>(entity =>

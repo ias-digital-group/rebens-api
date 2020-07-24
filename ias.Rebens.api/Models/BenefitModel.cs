@@ -160,7 +160,14 @@ namespace ias.Rebens.api.Models
         /// Cashback disponível para o cliente
         /// </summary>
         public decimal? AvailableCashback { get; set; }
+        /// <summary>
+        /// Array com os ids das operações que esse benefício é vinculado
+        /// </summary>
         public int[] Operations { get; set; }
+        /// <summary>
+        /// Array com os ids das categorias que esse benefício é vinculado
+        /// </summary>
+        public int[] Categories { get; set; }
 
         /// <summary>
         /// Construtor
@@ -232,6 +239,8 @@ namespace ias.Rebens.api.Models
 
                 if (benefit.BenefitOperations != null)
                     this.Operations = benefit.BenefitOperations.Select(op => op.IdOperation).ToArray();
+                if (benefit.BenefitCategories != null)
+                    this.Categories = benefit.BenefitCategories.Select(op => op.IdCategory).ToArray();
             }
         }
 

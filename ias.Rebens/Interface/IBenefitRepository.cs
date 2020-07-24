@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ias.Rebens
 {
@@ -16,17 +15,9 @@ namespace ias.Rebens
 
         bool Update(Benefit benefit, int idAdminUser, out string error);
 
-        bool AddOperation(int idBenefit, int idOperation, int idPostion, int idAdminUser, out string error);
-
         bool AddAddress(int idBenefit, int idAddress, int idAdminUser, out string error);
 
-        bool DeleteOperation(int idBenefit, int idOperation, int idAdminUser, out string error);
-
         bool DeleteAddress(int idBenefit, int idAddress, int idAdminUser, out string error);
-
-        bool AddCategory(int idBenefit, int idCategory, int idAdminUser, out string error);
-
-        bool DeleteCategory(int idBenefit, int idCategory, int idAdminUser, out string error);
 
         ResultPage<Benefit> ListByAddress(int idAddress, int page, int pageItems, string word, string sort, out string error);
 
@@ -65,5 +56,6 @@ namespace ias.Rebens
         List<Benefit> ListToCheckLinks();
 
         bool ConnectOperations(int id, int[] operations, out string error);
+        bool ConnectCategories(int id, int[] categories, out string error);
     }
 }

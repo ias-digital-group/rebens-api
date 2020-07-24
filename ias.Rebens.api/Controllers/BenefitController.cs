@@ -138,6 +138,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]BenefitModel benefit)
         {
+            if (benefit == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto não pode ser nulo!" });
+
             int idAdminUser = GetAdminUserId(out string errorId);
             if (errorId != null)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
@@ -155,7 +158,8 @@ namespace ias.Rebens.api.Controllers
                     var howToUse = benefit.GetHowToUse();
                     staticTextRepo.Update(howToUse, idAdminUser, out error);
                 }
-                if (repo.ConnectOperations(part.Id, benefit.Operations, out error))
+                if (repo.ConnectOperations(part.Id, benefit.Operations, out error) && 
+                    repo.ConnectCategories(part.Id, benefit.Categories, out error))
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Benefício atualizado com sucesso!", Id = part.Id });
                 else
                     return Ok(new JsonCreateResultModel() { Status = "error", Message = error, Id = part.Id });
@@ -176,6 +180,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]BenefitModel benefit)
         {
+            if(benefit == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto não pode ser nulo!" });
+
             int? idOperation = null;
             if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
@@ -196,7 +203,6 @@ namespace ias.Rebens.api.Controllers
                 item.IdIntegrationType = (int)Enums.IntegrationType.Own;
             }
 
-
             if (repo.Create(item, idAdminUser, out string error))
             {
                 if (!string.IsNullOrEmpty(benefit.Detail))
@@ -212,7 +218,8 @@ namespace ias.Rebens.api.Controllers
                     staticTextRepo.Create(howToUse, out error);
                 }
 
-                if (repo.ConnectOperations(item.Id, benefit.Operations, out error))
+                if (repo.ConnectOperations(item.Id, benefit.Operations, out error) &&
+                    repo.ConnectCategories(item.Id, benefit.Categories, out error))
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Benefício criado com sucesso!", Id = item.Id });
                 else
                     return Ok(new JsonCreateResultModel() { Status = "error", Message = error, Id = item.Id });
@@ -369,28 +376,6 @@ namespace ias.Rebens.api.Controllers
         /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
         /// <response code="200">Víncula um benefício com uma categoria</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("AddCategory")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult AddCategory([FromBody]BenefitCategoryModel model)
-        {
-            int idAdminUser = GetAdminUserId(out string errorId);
-            if (errorId != null)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
-
-            if (repo.AddCategory(model.IdBenefit, model.IdCategory, idAdminUser, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Categoria adicionada com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Adiciona uma categoria a um benefício
-        /// </summary>
-        /// <param name="model">{ IdBenefit: 0, IdCategory: 0 }</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Víncula um benefício com uma categoria</response>
-        /// <response code="400">Se ocorrer algum erro</response>
         [HttpPost("SaveCategories")]
         [ProducesResponseType(typeof(JsonModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
@@ -402,29 +387,6 @@ namespace ias.Rebens.api.Controllers
 
             if (repo.SaveCategories(model.IdBenefit, model.CategoryIds, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Categorias salvas com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Remove uma categoria de um benefício
-        /// </summary>
-        /// <param name="id">id do benefício</param>
-        /// <param name="idCategory">id da categoria</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Remove o vínculo de benefício com uma categoria</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}/Category/{idCategory}")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult RemoveCategory(int id, int idCategory)
-        {
-            int idAdminUser = GetAdminUserId(out string errorId);
-            if (errorId != null)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
-
-            if (repo.DeleteCategory(id, idCategory, idAdminUser, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Categoria removida com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -459,51 +421,6 @@ namespace ias.Rebens.api.Controllers
             }
 
             return Ok(new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Adiciona uma operação a um benefício
-        /// </summary>
-        /// <param name="model">{ IdBenefit: 0, id: 0 }</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Víncula um benefício com uma Operação</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("AddOperation")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult AddOperation([FromBody]BenefitOperationModel model)
-        {
-            int idAdminUser = GetAdminUserId(out string errorId);
-            if (errorId != null)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
-
-            if (repo.AddOperation(model.IdBenefit, model.IdOperation, model.IdPosition, idAdminUser, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Operação adicionada com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Remove uma operação de um benefício
-        /// </summary>
-        /// <param name="id">id do benefício</param>
-        /// <param name="idOperation">id da categoria</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Remove o vínculo de benefício com uma operação</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}/Operation/{idOperation}")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult RemoveOperation(int id, int idOperation)
-        {
-            int idAdminUser = GetAdminUserId(out string errorId);
-            if (errorId != null)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
-
-            if (repo.DeleteOperation(id, idOperation, idAdminUser, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Operação removida com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>

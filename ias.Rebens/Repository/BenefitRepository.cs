@@ -61,38 +61,6 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool AddOperation(int idBenefit, int idOperation, int idPostion, int idAdminUser, out string error)
-        {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    if (!db.BenefitOperation.Any(o => o.IdBenefit == idBenefit && o.IdOperation == idOperation))
-                    {
-                        db.BenefitOperation.Add(new BenefitOperation() { IdOperation = idOperation, IdBenefit = idBenefit, Created = DateTime.UtcNow, Modified = DateTime.UtcNow, IdPosition = idPostion });
-                        db.LogAction.Add(new LogAction()
-                        {
-                            Action = (int)Enums.LogAction.addOperation,
-                            Created = DateTime.UtcNow,
-                            IdAdminUser = idAdminUser,
-                            IdItem = idBenefit,
-                            Item = (int)Enums.LogItem.Benefit
-                        });
-                        db.SaveChanges();
-                    }
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.AddOperation", "", ex);
-                error = "Ocorreu um erro ao tentar adicionar a operação. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
         public bool Create(Benefit benefit, int idAdminUser, out string error)
         {
             bool ret = true;
@@ -186,39 +154,6 @@ namespace ias.Rebens
             {
                 int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.DeleteAddress", "", ex);
                 error = "Ocorreu um erro ao tentar excluir o endereço. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
-        public bool DeleteOperation(int idBenefit, int idOperation, int idAdminUser, out string error)
-        {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var tmp = db.BenefitOperation.SingleOrDefault(o => o.IdBenefit == idBenefit && o.IdOperation == idOperation);
-                    if (tmp != null)
-                    {
-                        db.BenefitOperation.Remove(tmp);
-                        db.LogAction.Add(new LogAction()
-                        {
-                            Action = (int)Enums.LogAction.removeOperation,
-                            Created = DateTime.UtcNow,
-                            IdAdminUser = idAdminUser,
-                            IdItem = idBenefit,
-                            Item = (int)Enums.LogItem.Benefit
-                        });
-                        db.SaveChanges();
-                    }
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.DeleteOperation", "", ex);
-                error = "Ocorreu um erro ao tentar excluir a Operação. (erro:" + idLog + ")";
                 ret = false;
             }
             return ret;
@@ -725,71 +660,6 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool AddCategory(int idBenefit, int idCategory, int idAdminUser, out string error)
-        {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    if (!db.BenefitCategory.Any(o => o.IdBenefit == idBenefit && o.IdCategory == idCategory))
-                    {
-                        db.BenefitCategory.Add(new BenefitCategory() { IdCategory = idCategory, IdBenefit = idBenefit });
-                        db.LogAction.Add(new LogAction()
-                        {
-                            Action = (int)Enums.LogAction.addCategory,
-                            Created = DateTime.UtcNow,
-                            IdAdminUser = idAdminUser,
-                            IdItem = idBenefit,
-                            Item = (int)Enums.LogItem.Benefit
-                        });
-                        db.SaveChanges();
-                    }
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.AddCategory", "", ex);
-                error = "Ocorreu um erro ao tentar adicionar a categoria. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
-        public bool DeleteCategory(int idBenefit, int idCategory, int idAdminUser, out string error)
-        {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var tmp = db.BenefitCategory.SingleOrDefault(o => o.IdBenefit == idBenefit && o.IdCategory == idCategory);
-                    if (tmp != null)
-                    {
-                        db.BenefitCategory.Remove(tmp);
-                        db.LogAction.Add(new LogAction()
-                        {
-                            Action = (int)Enums.LogAction.removeCategory,
-                            Created = DateTime.UtcNow,
-                            IdAdminUser = idAdminUser,
-                            IdItem = idBenefit,
-                            Item = (int)Enums.LogItem.Benefit
-                        });
-                        db.SaveChanges();
-                    }
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.DeleteCategory", "", ex);
-                error = "Ocorreu um erro ao tentar excluir o categoria. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
         public List<BenefitOperationPosition> ListPositions(out string error)
         {
             List<BenefitOperationPosition> ret;
@@ -1206,6 +1076,33 @@ namespace ias.Rebens
             {
                 int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ConnectOperations", "", ex);
                 error = "Ocorreu um erro ao tentar ajustar as conexões das operação. (erro:" + idLog + ")";
+            }
+            return ret;
+        }
+
+        public bool ConnectCategories(int id, int[] categories, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpCategories = db.BenefitCategory.Where(b => b.IdBenefit == id);
+                    db.BenefitCategory.RemoveRange(tmpCategories);
+                    db.SaveChanges();
+
+                    foreach (var op in categories)
+                        db.BenefitCategory.Add(new BenefitCategory() { IdCategory = op, IdBenefit = id });
+                    db.SaveChanges();
+
+                    ret = true;
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                int idLog = LogErrorHelper.Create(this._connectionString, "BenefitRepository.ConnectCategories", "", ex);
+                error = "Ocorreu um erro ao tentar ajustar as conexões das categorias. (erro:" + idLog + ")";
             }
             return ret;
         }
