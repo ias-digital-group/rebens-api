@@ -126,7 +126,6 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Texto do Voucher
         /// </summary>
-        [MaxLength(500)]
         public string VoucherText { get; set; }
         /// <summary>
         /// Id da operação quando o benefício é exclusivo

@@ -230,7 +230,7 @@ namespace ias.Rebens
                 {
                     ret = db.Benefit.Include("BenefitOperations").Include("BenefitAddresses")
                         .Include("StaticTexts").Include("Partner")
-                        .Include("BenefitOperations")
+                        .Include("BenefitCategories")
                         .SingleOrDefault(b => !b.Deleted && b.Id == id);
                     if (ret.Partner != null && ret.Partner.IdStaticText.HasValue)
                         ret.Partner.StaticText = db.StaticText.SingleOrDefault(s => s.Id == ret.Partner.IdStaticText.Value);
