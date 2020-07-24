@@ -95,7 +95,9 @@ namespace ias.Rebens
                             Name = p.Name,
                             Active = p.Active,
                             IdOperation = p.IdOperation,
-                            Doc = p.Doc
+                            Doc = p.Doc,
+                            Created = p.Created,
+                            Modified = p.Modified
                     }).ToList();
 
                     list.ForEach(c =>
@@ -109,10 +111,7 @@ namespace ias.Rebens
                         else
                             c.CreatedUserName = " - ";
                         if (modifiedUser != null)
-                        {
                             c.ModifiedUserName = modifiedUser.AdminUser.Name + " " + modifiedUser.AdminUser.Surname;
-                            c.Modified = modifiedUser.Created;
-                        }
                         else
                             c.ModifiedUserName = " - ";
                     });
