@@ -14,7 +14,7 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
         
-        public bool Create(OperationPartner partner, out string error)
+        public bool Create(OperationPartner partner, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -24,6 +24,16 @@ namespace ias.Rebens
                     partner.Modified = partner.Created = DateTime.UtcNow;
                     partner.Deleted = false;
                     db.OperationPartner.Add(partner);
+                    db.SaveChanges();
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.create,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = partner.Id,
+                        Item = (int)Enums.LogItem.OperationPartner
+                    });
                     db.SaveChanges();
                     error = null;
                 }
@@ -38,7 +48,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -48,6 +58,14 @@ namespace ias.Rebens
                     var update = db.OperationPartner.SingleOrDefault(p => p.Id == id);
                     update.Modified = DateTime.UtcNow;
                     update.Deleted = true;
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = id,
+                        Item = (int)Enums.LogItem.OperationPartner
+                    });
                     db.SaveChanges();
                     error = null;
                 }
@@ -151,7 +169,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(OperationPartner partner, out string error)
+        public bool Update(OperationPartner partner, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -165,6 +183,15 @@ namespace ias.Rebens
                         update.Name = partner.Name;
                         update.Doc = partner.Doc;
                         update.Modified = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = partner.Id,
+                            Item = (int)Enums.LogItem.OperationPartner
+                        });
 
                         db.SaveChanges();
                         error = null;

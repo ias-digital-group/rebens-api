@@ -119,8 +119,12 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]OperationPartnerModel partner)
         {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             var op = partner.GetEntity();
-            if (repo.Update(op, out string error))
+            if (repo.Update(op, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Parceiro da operação atualizado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -138,8 +142,12 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] OperationPartnerModel partner)
         {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             var op = partner.GetEntity();
-            if (repo.Create(op, out string error))
+            if (repo.Create(op, idAdminUser, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Parceiro criado com sucesso!", Id = op.Id });
             
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -157,7 +165,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            if (repo.Delete(id, out string error))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (repo.Delete(id, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Parceiro apagado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
