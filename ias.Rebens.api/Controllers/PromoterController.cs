@@ -61,7 +61,7 @@ namespace ias.Rebens.api.Controllers
                 if (errorId != null)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
-            else if (CheckRoles(new string[] { "administrator", "publisher" }))
+            else if (CheckRoles(new string[] { "administrator", "publisher", "promoter" }))
             {
                 idOperation = GetOperationId(out string errorId);
                 if (errorId != null)
