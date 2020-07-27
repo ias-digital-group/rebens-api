@@ -286,20 +286,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Validate(int id)
         {
-            int idAdminUser = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (!int.TryParse(userId.Value, out idAdminUser))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string error);
+            if(!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            if(repo.SetItemUsed(id, idAdminUser, out string error))
+            if(repo.SetItemUsed(id, idAdminUser, out error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Item validado com sucesso!" });
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

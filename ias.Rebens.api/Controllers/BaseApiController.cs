@@ -54,6 +54,28 @@ namespace ias.Rebens.api.Controllers
             return ret;
         }
 
+        public int GetPartnerId(out string error)
+        {
+            int ret = 0;
+            var principal = HttpContext.User;
+            if (principal?.Claims != null)
+            {
+                var tempId = principal.Claims.SingleOrDefault(c => c.Type == "partnerId");
+                if (tempId == null)
+                    error = "Parceiro não encontrado!";
+                else if (int.TryParse(tempId.Value, out int tmpId))
+                {
+                    ret = tmpId;
+                    error = null;
+                }
+                else
+                    error = "Parceiro não encontrado!";
+            }
+            else
+                error = "Parceiro não encontrado!";
+            return ret;
+        }
+
         public int GetOperationPartnerId(out string error)
         {
             int ret = 0;

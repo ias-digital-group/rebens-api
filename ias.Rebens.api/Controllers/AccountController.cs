@@ -253,6 +253,7 @@ namespace ias.Rebens.api.Controllers
 
             identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
             identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
+            identity.AddClaim(new Claim("partnerId", user.IdPartner.HasValue ? user.IdPartner.Value.ToString() : "0"));
             identity.AddClaim(new Claim("id", user.Id.ToString()));
             identity.AddClaim(new Claim("name", user.Name));
             identity.AddClaim(new Claim("surname", user.Surname));

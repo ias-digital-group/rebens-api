@@ -554,21 +554,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult UseValidation([FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "", [FromQuery]int? idPartner = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole(Enums.Roles.couponChecker.ToString()))
+            if (CheckRole(Enums.Roles.couponChecker.ToString()))
             {
-                if (principal?.Claims != null)
-                {
-                    var partnerId = principal.Claims.SingleOrDefault(c => c.Type == "operationPartnerId");
-                    if (partnerId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrado!" });
-                    if (int.TryParse(partnerId.Value, out int tmp))
-                        idPartner = tmp;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrado!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Parceiro não encontrado!" });
+                idPartner = GetPartnerId(out string errorId);
+                if(!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
             var list = benefitUseRepo.ValidateListPage(page, pageItems, searchWord, out string error, idPartner);
@@ -609,20 +599,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Validate(int id)
         {
-            int idAdminUser = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (!int.TryParse(userId.Value, out idAdminUser))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string error);
+            if(!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            if (benefitUseRepo.SetUsed(id, idAdminUser, out string error))
+            if (benefitUseRepo.SetUsed(id, idAdminUser, out error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Item validado com sucesso!" });
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
