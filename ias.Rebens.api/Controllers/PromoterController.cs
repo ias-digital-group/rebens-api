@@ -165,7 +165,8 @@ namespace ias.Rebens.api.Controllers
                 {
                     Email = customer.Email,
                     Cpf = customer.Cpf,
-                    Name = customer.Name + " " + customer.Surname,
+                    Name = customer.Name,
+                    Surname = customer.Surname,
                     Created = DateTime.Now,
                     Modified = DateTime.Now,
                     Status = (int)Enums.CustomerStatus.Validation,
