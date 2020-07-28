@@ -79,6 +79,46 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
+        /// Retorna uma lista de categorias conforme os parametros
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <param name="active">active, não obrigatório (default=null)</param>
+        /// <param name="idParent">id do pai, não obrigatório (default=null)</param>
+        /// <param name="type">tipo de categoria, não obrigatório (1=beneficios, 2=cursos livres)</param>
+        /// <returns>Lista com as categorias encontradas</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ListAll"), AllowAnonymous]
+        [ProducesResponseType(typeof(JsonDataModel<List<CategoryListItemModel>>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListAll([FromQuery] int type)
+        {
+            var list = repo.ListPage(0, 99999, null, "name asc", out string error, type, true, null, null);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new JsonDataModel<List<CategoryListItemModel>>()
+                {
+                    Data = new List<CategoryListItemModel>()
+                };
+                foreach (var cat in list.Page)
+                    ret.Data.Add(new CategoryListItemModel(cat));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
         /// Retorna a categoria conforme o ID
         /// </summary>
         /// <param name="id">Id da categoria desejada</param>
