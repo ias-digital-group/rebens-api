@@ -16,7 +16,7 @@ namespace ias.Rebens.api.Controllers
     /// AdminUser Controller
     /// </summary>
     [Produces("application/json")]
-    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,administratorRebens,partnerAdministrator,publisher,publisherRebens,promoter")]
+    [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,administratorRebens,partnerAdministrator,publisher,publisherRebens,promoter,ticketChecker,couponChecker,partnerApprover")]
     [ApiController]
     public class AdminUserController : BaseApiController
     {

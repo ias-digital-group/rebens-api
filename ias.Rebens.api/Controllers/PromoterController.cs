@@ -87,11 +87,7 @@ namespace ias.Rebens.api.Controllers
                     Data = new List<CustomerModel>()
                 };
                 foreach (var customer in list.Page)
-                {
-                    var tmp = new CustomerModel(customer);
-                    tmp.Cpf = tmp.Cpf.Replace(tmp.Cpf.Substring(2, 5), "*****");
-                    ret.Data.Add(tmp);
-                }
+                    ret.Data.Add(new CustomerModel(customer));
 
                 return Ok(ret);
             }

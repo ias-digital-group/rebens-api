@@ -115,6 +115,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody] FaqModel faq)
         {
+            if(faq == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto nulo" });
+
             int idAdminUser = GetAdminUserId(out string errorIdUser);
             if (errorIdUser != null)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = errorIdUser });
@@ -137,6 +140,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] FaqModel faq)
         {
+            if (faq == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto nulo" });
+
             int? idOperation = null;
             if (CheckRoles(new string[] { "administrator", "publisher" }))
             {

@@ -45,6 +45,7 @@ namespace ias.Rebens
                             IdItem = text.Id,
                             IdAdminUser = idAdminUser
                         });
+                        text.Modified = DateTime.UtcNow;
                     }
 
                     db.SaveChanges();
@@ -91,6 +92,7 @@ namespace ias.Rebens
                             IdItem = text.Id,
                             IdAdminUser = idAdminUser
                         });
+                        text.Modified = DateTime.UtcNow;
                     }
                     db.SaveChanges();
                     error = null;
@@ -273,6 +275,7 @@ namespace ias.Rebens
                                 IdItem = text.Id,
                                 IdAdminUser = idAdminUser
                             });
+                            text.Modified = DateTime.UtcNow;
                         }
 
                         db.SaveChanges();
@@ -358,6 +361,7 @@ namespace ias.Rebens
                                 IdItem = text.Id,
                                 IdAdminUser = idAdminUser
                             });
+                            text.Modified = DateTime.UtcNow;
                         }
 
                         db.SaveChanges();
