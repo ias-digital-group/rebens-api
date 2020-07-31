@@ -305,7 +305,6 @@ namespace ias.Rebens.api.Controllers
                             }
                         }
 
-
                         string content = JsonConvert.SerializeObject(ret);
 
                         HttpWebRequest request = WebRequest.Create(new Uri($"{constant.BuilderUrl}api/operations")) as HttpWebRequest;

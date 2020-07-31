@@ -314,6 +314,9 @@ namespace ias.Rebens
                                 IdItem = customer.Id,
                                 IdAdminUser = idAdminUser
                             });
+
+                            update.IdOperation = customer.IdOperation;
+                            update.IdOperationPartner = customer.IdOperationPartner;
                         }
 
                         db.SaveChanges();
