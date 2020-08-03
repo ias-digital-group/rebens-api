@@ -10,15 +10,17 @@ namespace ias.Rebens
 
         StaticText ReadText(int idOperation, string page, out string error);
 
-        ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, int idStaticTextType, out string error, int? idOperation = null);
+        ResultPage<Entity.StaticTextListItem> ListPage(int page, int pageItems, string word, string sort, int idStaticTextType, out string error, int? idOperation = null);
 
         bool Delete(int id, out string error);
 
         bool Create(StaticText staticText, out string error);
 
-        bool Update(StaticText staticText, out string error);
+        bool Update(StaticText staticText, int idAdminUser, out string error);
 
         StaticText ReadByType(int idOperation, int idType, out string error);
+
+        StaticText ReadByType(int idType, out string error);
 
         StaticText ReadText(Guid operationCode, string page, out string error);
 

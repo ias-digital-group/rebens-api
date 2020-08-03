@@ -3,6 +3,7 @@ using System.Linq;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Remotion.Linq.Clauses;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -12,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
     [ApiController]
-    public class BannerController : ControllerBase
+    public class BannerController : BaseApiController
     {
         private IBannerRepository repo;
         private IOperationRepository operationRepo;
@@ -43,37 +44,27 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet]
-        [ProducesResponseType(typeof(ResultPageModel<BannerModel>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<BannerListItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", 
-            [FromQuery]string searchWord = "", [FromQuery]bool? active = null, [FromQuery]int? type = null, [FromQuery]int? idOperation = null)
+            [FromQuery]string searchWord = "", [FromQuery]bool? active = null, [FromQuery]int? type = null, [FromQuery]int? idOperation = null, [FromQuery]string where = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation, active, type);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation, active, type, where);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<BannerModel>()
+                var ret = new ResultPageModel<BannerListItemModel>()
                 {
                     CurrentPage = list.CurrentPage,
                     HasNextPage = list.HasNextPage,
@@ -81,10 +72,10 @@ namespace ias.Rebens.api.Controllers
                     ItemsPerPage = list.ItemsPerPage,
                     TotalItems = list.TotalItems,
                     TotalPages = list.TotalPages,
-                    Data = new List<BannerModel>()
+                    Data = new List<BannerListItemModel>()
                 };
                 foreach (var banner in list.Page)
-                    ret.Data.Add(new BannerModel(banner));
+                    ret.Data.Add(new BannerListItemModel(banner));
 
                 return Ok(ret);
             }
@@ -130,10 +121,17 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody] BannerModel banner)
         {
-            var model = new JsonModel();
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
-            if (repo.Update(banner.GetEntity(), out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Banner atualizado com sucesso!" });
+            if (repo.Update(banner.GetEntity(), idAdminUser, out string error))
+            {
+                if (repo.ConnectOperations(banner.Id, banner.Operations, out error))
+                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Banner atualizado com sucesso!" });
+                else
+                    return Ok(new JsonCreateResultModel() { Status = "error", Message = error });
+            }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -151,39 +149,36 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Post([FromBody] BannerModel banner)
         {
             int? idOperation = null;
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
-            
-
-            var model = new JsonModel();
-
+             
             var b = banner.GetEntity();
-            if (repo.Create(b, out string error))
+            if (repo.Create(b, idAdminUser, out string error))
             {
                 if (idOperation.HasValue)
                 {
                     if (repo.AddOperation(b.Id, idOperation.Value, out error))
                         return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Banner criado com sucesso!", Id = b.Id });
+                    else
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = error, Id = b.Id });
                 }
                 else
-                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Banner criado com sucesso!", Id = b.Id });
-
+                {
+                    if(repo.ConnectOperations(b.Id, banner.Operations, out error))
+                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Banner criado com sucesso!", Id = b.Id });
+                    else
+                        return Ok(new JsonCreateResultModel() { Status = "error", Message = error, Id = b.Id });
+                }
+                    
             }
-                
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -200,9 +195,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            var model = new JsonModel();
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
-            if (repo.Delete(id, out string error))
+            if (repo.Delete(id, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Banner apagado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -220,8 +217,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddOperation([FromBody]BannerOperationModel model)
         {
-            var resultModel = new JsonModel();
-
             if (repo.AddOperation(model.IdBanner, model.IdOperation, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Operação adicionada com sucesso!" });
 
@@ -241,8 +236,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveOperation(int id, int idOperation)
         {
-            var resultModel = new JsonModel();
-
             if (repo.DeleteOperation(id, idOperation, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Operação removida com sucesso!" });
 
@@ -279,6 +272,30 @@ namespace ias.Rebens.api.Controllers
             }
 
             return Ok(new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Ativa/Inativa um banner
+        /// </summary>
+        /// <param name="id">id do banner</param>
+        /// <returns></returns>
+        /// <response code="200">Se o tudo ocorrer sem erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/ToggleActive")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ToggleActive(int id)
+        {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            var status = repo.ToggleActive(id, idAdminUser, out string error);
+
+            if (string.IsNullOrEmpty(error))
+                return Ok(new JsonModel() { Status = "ok", Data = status });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
     }
 }

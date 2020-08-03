@@ -17,8 +17,6 @@ namespace ias.Rebens
             FormEstablishments = new HashSet<FormEstablishment>();
             StaticTexts = new HashSet<StaticText>();
             OperationAddresses = new HashSet<OperationAddress>();
-            OperationContacts = new HashSet<OperationContact>();
-            OperationCustomers = new HashSet<OperationCustomer>();
             OperationPartners = new HashSet<OperationPartner>();
             CourseColleges = new HashSet<CourseCollege>();
             CourseModalities = new HashSet<CourseModality>();
@@ -55,7 +53,13 @@ namespace ias.Rebens
         public DateTime? PublishedDate { get; set; }
         public string TemporaryBuildVersion { get; set; }
         public string BuildVersion { get; set; }
+        public bool IsCustom { get; set; }
 
+        public int? IdMainAddress { get; set; }
+        public int? IdMainContact { get; set; }
+
+        public virtual Address MainAddress { get; set; }
+        public virtual Contact MainContact { get; set; }
         public virtual LogError LogError { get; set; }
         public virtual ICollection<Benefit> Benefits { get; set; }
         public virtual ICollection<AdminUser> AdminUsers { get; set; }
@@ -66,8 +70,6 @@ namespace ias.Rebens
         public virtual ICollection<FormEstablishment> FormEstablishments { get; set; }
         public virtual ICollection<StaticText> StaticTexts { get; set; }
         public virtual ICollection<OperationAddress> OperationAddresses { get; set; }
-        public virtual ICollection<OperationContact> OperationContacts { get; set; }
-        public virtual ICollection<OperationCustomer> OperationCustomers { get; set; }
         public virtual ICollection<OperationPartner> OperationPartners { get; set; }
         public virtual ICollection<Customer> Customers { get; set; }
         public virtual ICollection<CourseCollege> CourseColleges { get; set; }

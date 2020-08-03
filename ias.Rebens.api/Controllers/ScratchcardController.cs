@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -14,13 +15,14 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
-    public class ScratchcardController : ControllerBase
+    public class ScratchcardController : BaseApiController
     {
         private IScratchcardDrawRepository drawRepo;
         private IScratchcardRepository repo;
         private IStaticTextRepository staticTextRepo;
         private IOperationRepository operationRepo;
         private IHostingEnvironment _hostingEnvironment;
+        private ILogErrorRepository logErrorRepo;
 
         /// <summary>
         /// Constructor
@@ -29,7 +31,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="scratchcardPrizeRepository"></param>
         /// <param name="scratchcardDrawRepository"></param>
         /// <param name="hostingEnvironment"></param>
-        public ScratchcardController(IScratchcardRepository scratchcardRepository,
+        public ScratchcardController(IScratchcardRepository scratchcardRepository, ILogErrorRepository logErrorRepository,
                                         IScratchcardDrawRepository scratchcardDrawRepository, IHostingEnvironment hostingEnvironment,
                                         IOperationRepository operationRepository, IStaticTextRepository staticTextRepository)
         {
@@ -38,6 +40,7 @@ namespace ias.Rebens.api.Controllers
             this.operationRepo = operationRepository;
             this._hostingEnvironment = hostingEnvironment;
             this.staticTextRepo = staticTextRepository;
+            this.logErrorRepo = logErrorRepository;
         }
 
         /// <summary>
@@ -132,20 +135,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]ScratchcardModel scratchcard)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (int.TryParse(userId.Value, out int tmpId))
-                    idAdminUser = tmpId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             if (scratchcard != null)
             {
@@ -155,7 +147,7 @@ namespace ias.Rebens.api.Controllers
                     {
                         var reg = scratchcard.GetRegulation();
                         reg.Url = scratchcard.Id.ToString();
-                        staticTextRepo.Update(reg, out _);
+                        staticTextRepo.Update(reg, idAdminUser, out _);
                     }
                     return Ok(new JsonModel() { Status = "ok", Message = "Raspadinha atualizado com sucesso!" });
                 }
@@ -175,36 +167,19 @@ namespace ias.Rebens.api.Controllers
         [HttpPost, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
         [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult Post([FromBody]ScratchcardModel scratchcard)
+        public IActionResult Post([FromBody] ScratchcardModel scratchcard)
         {
-            int idAdminUser;
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             int? idOperation = null;
-            var principal = HttpContext.User;
-
-            if (principal?.Claims != null)
+            if (CheckRoles(new string[] { "administrator", "publisher"}))
             {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (int.TryParse(userId.Value, out int idUser))
-                    idAdminUser = idUser;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-
-
-                if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
+                idOperation = GetOperationId(out errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
 
 
             if (scratchcard != null)
@@ -241,20 +216,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (int.TryParse(userId.Value, out int tmpId))
-                    idAdminUser = tmpId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             if (repo.Delete(id, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Raspadinha apagada com sucesso!" });
@@ -315,20 +279,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Generate(int id)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (int.TryParse(userId.Value, out int tmpId))
-                    idAdminUser = tmpId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             string newPath = Path.Combine(_hostingEnvironment.WebRootPath, "files", "scratchcard");
             repo.GenerateScratchcards(id, idAdminUser, newPath).ConfigureAwait(false);
@@ -468,18 +421,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListByCustomer([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
-            int idCustomer;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+            int idCustomer = GetCustomerId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             var list = drawRepo.ListByCustomer(idCustomer, page, pageItems, out string error);
 
@@ -519,20 +463,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SetOpened(int id)
         {
-            int idCustomer;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
+            int idCustomer = GetCustomerId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
-            if(drawRepo.SetOpened(id, idCustomer))
+            if (drawRepo.SetOpened(id, idCustomer))
                 return Ok(new JsonModel() { Status = "ok" });
 
             return Ok(new JsonModel() { Status = "error", Message = "Cliente não reconhecido" });
@@ -550,24 +485,13 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SetPlayed(int id)
         {
-            int idCustomer, idOperation;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
+            int idCustomer = GetCustomerId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
-                if(operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+            int idOperation = GetOperationId(out errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             if(drawRepo.SetPlayed(id, idCustomer, idOperation))
                 return Ok(new JsonModel() { Status = "ok", Data = new { 
@@ -591,23 +515,51 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Validate(int id)
         {
-            int idCustomer;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não reconhecido!" });
+            int idCustomer = GetCustomerId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             if (drawRepo.Validate(id, idCustomer))
                 return Ok(new JsonModel() { Status = "ok" });
 
             return Ok(new JsonModel() { Status = "error", Message = "Cliente não reconhecido" });
+        }
+
+        /// <summary>
+        /// Run job
+        /// </summary>
+        /// <returns>Retorna um objeto com o status (ok, error)</returns>
+        /// <response code="200">Se a geração iniciar com sucesso</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("RunJob"), Authorize("Bearer", Roles = "master")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult RunJob()
+        {
+            try
+            {
+                logErrorRepo.Create("ScratchcardDailyJob", "START", "", "");
+                string path = Path.Combine(_hostingEnvironment.WebRootPath, "files", "scratchcard");
+
+                var list = repo.ListByDistributionType(Enums.ScratchcardDistribution.daily);
+                foreach (var item in list)
+                {
+                    var users = repo.ListCustomers(item.IdOperation, item.Type);
+                    foreach (var user in users)
+                    {
+                        drawRepo.SaveRandom(item.Id, path, user, DateTime.Now.Date, (item.ScratchcardExpire ? (DateTime?)DateTime.Now.Date : null), out _);
+                        Thread.Sleep(100);
+                    }
+
+                    Thread.Sleep(1000);
+                }
+                logErrorRepo.Create("ScratchcardDailyJob", "END", "", "");
+            }
+            catch( Exception ex)
+            {
+                return Ok(new JsonModel() { Status = "error", Message = ex.Message });
+            }
+            return Ok(new JsonModel() { Status = "ok" });
         }
     }
 }

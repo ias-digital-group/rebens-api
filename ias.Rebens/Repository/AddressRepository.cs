@@ -15,7 +15,7 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public bool Create(Address address, out string error)
+        public bool Create(Address address, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -25,6 +25,20 @@ namespace ias.Rebens
                     address.Modified = address.Created = DateTime.UtcNow;
                     db.Address.Add(address);
                     db.SaveChanges();
+
+                    if (idAdminUser > 0)
+                    {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.create,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = address.Id,
+                            Item = (int)Enums.LogItem.Address
+                        });
+                        db.SaveChanges();
+                    }
+
                     error = null;
                 }
             }
@@ -38,7 +52,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -62,8 +76,21 @@ namespace ias.Rebens
                     }
                     else
                     {
-                        var cat = db.Address.SingleOrDefault(c => c.Id == id);
-                        db.Address.Remove(cat);
+                        var address = db.Address.SingleOrDefault(c => c.Id == id);
+                        db.Address.Remove(address);
+
+                        if (idAdminUser > 0)
+                        {
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = (int)Enums.LogAction.delete,
+                                Created = DateTime.UtcNow,
+                                IdAdminUser = idAdminUser,
+                                IdItem = address.Id,
+                                Item = (int)Enums.LogItem.Address
+                            });
+                        }
+
                         db.SaveChanges();
                         error = null;
                     }
@@ -331,13 +358,13 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("AddressRepository.Read", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar criar ler o endereço. (erro:" + idLog + ")";
+                error = "Ocorreu um erro ao tentar ler o endereço. (erro:" + idLog + ")";
                 ret = null;
             }
             return ret;
         }
 
-        public bool Update(Address address, out string error)
+        public bool Update(Address address, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -359,6 +386,18 @@ namespace ias.Rebens
                         update.State = address.State;
                         update.Street = address.Street;
                         update.Zipcode = address.Zipcode;
+
+                        if (idAdminUser > 0)
+                        {
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = (int)Enums.LogAction.update,
+                                Created = DateTime.UtcNow,
+                                IdAdminUser = idAdminUser,
+                                IdItem = address.Id,
+                                Item = (int)Enums.LogItem.Address
+                            });
+                        }
 
                         db.SaveChanges();
                         error = null;

@@ -12,7 +12,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "customer,master,administrator,administratorRebens,ticketChecker")]
     [ApiController]
-    public class OrderController : ControllerBase
+    public class OrderController : BaseApiController
     {
         private IOrderRepository repo;
         private IWirecardPaymentRepository paymentRepo;
@@ -71,32 +71,20 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Post([FromBody] OrderModel order)
         {
             if(order == null)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto nulo!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto não pode ser nulo!" });
 
-            int idCustomer = 0;
-            int idOperation = 0;
-
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+            int idOperation = GetOperationId(out string errorId);
+            if(errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            int idCustomer = GetCustomerId(out errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             var addr = order.Customer.Address.GetEntity();
             if (addr.Id == 0)
-                addrRepo.Create(addr, out _);
+                addrRepo.Create(addr, 0, out _);
             else
-                addrRepo.Update(addr, out _);
+                addrRepo.Update(addr, 0, out _);
             var custo = order.Customer.GetEntity();
             custo.IdAddress = addr.Id;
             customerRepo.Update(custo, out _);
@@ -123,16 +111,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 20, [FromQuery]string word = null, [FromQuery]string sort = "" )
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+            int idCustomer = GetCustomerId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             var list = repo.ListByCustomer(idCustomer, page, pageItems, word, sort, out string error);
 
@@ -305,20 +286,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Validate(int id)
         {
-            int idAdminUser = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (!int.TryParse(userId.Value, out idAdminUser))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string error);
+            if(!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            if(repo.SetItemUsed(id, idAdminUser, out string error))
+            if(repo.SetItemUsed(id, idAdminUser, out error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Item validado com sucesso!" });
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

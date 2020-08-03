@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Linq;
+using Microsoft.EntityFrameworkCore.Scaffolding;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -12,7 +14,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/Partner")]
     [ApiController]
-    public class PartnerController : ControllerBase
+    public class PartnerController : BaseApiController
     {
         private IPartnerRepository repo;
         private IAddressRepository addressRepo;
@@ -47,7 +49,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="sort">Ordenação campos (Id, Name), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
         /// <param name="active">Active não obrigatório (default=null)</param>
-        /// <param name="type">tipo de categoria, obrigatório (1=beneficios, 2=cursos livres)</param>
+        /// <param name="type">tipo de categoria, não obrigatório (1=beneficios, 2=cursos livres)</param>
         /// <returns>Lista com os parceiros encontrados</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -56,16 +58,16 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<PartnerModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int type, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]bool? active = null)
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]int? type = null, [FromQuery]bool? active = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, type, out string error, active);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, type, active);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<PartnerModel>
+                var ret = new ResultPageModel<PartnerListItemModel>
                 {
                     CurrentPage = list.CurrentPage,
                     HasNextPage = list.HasNextPage,
@@ -73,10 +75,10 @@ namespace ias.Rebens.api.Controllers
                     ItemsPerPage = list.ItemsPerPage,
                     TotalItems = list.TotalItems,
                     TotalPages = list.TotalPages,
-                    Data = new List<PartnerModel>()
+                    Data = new List<PartnerListItemModel>()
                 };
                 foreach (var part in list.Page)
-                    ret.Data.Add(new PartnerModel(part));
+                    ret.Data.Add(new PartnerListItemModel(part));
 
                 return Ok(ret);
             }
@@ -123,11 +125,37 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]PartnerModel partner)
         {
-            var model = new JsonModel();
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             string error = null;
 
             var part = partner.GetEntity();
-            if (repo.Update(part, out error))
+            if (partner.MainAddress != null)
+            {
+                if (partner.MainAddress.Id > 0)
+                    addressRepo.Update(partner.MainAddress.GetEntity(), idAdminUser, out _);
+                else
+                {
+                    var addr = partner.MainAddress.GetEntity();
+                    if (addressRepo.Create(addr, idAdminUser, out _))
+                        part.IdMainAddress = addr.Id;
+                }
+            }
+            if (partner.MainContact != null)
+            {
+                if (partner.MainContact.Id > 0)
+                    contactRepo.Update(partner.MainContact.GetEntity(), idAdminUser, out _);
+                else
+                {
+                    var contact = partner.MainContact.GetEntity();
+                    if (contactRepo.Create(contact, idAdminUser, out _))
+                        part.IdMainContact = contact.Id;
+                }
+            }
+
+            if (repo.Update(part, idAdminUser, out error))
             {
                 if (!string.IsNullOrEmpty(partner.Description))
                 {
@@ -143,7 +171,7 @@ namespace ias.Rebens.api.Controllers
                     if (part.IdStaticText.HasValue)
                     {
                         text.Id = part.IdStaticText.Value;
-                        staticTextRepo.Update(text, out error);
+                        staticTextRepo.Update(text, idAdminUser, out error);
                     }
                     else
                     {
@@ -170,33 +198,26 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]PartnerModel partner)
         {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             string error = null;
-            int idContact = 0;
-
-            if (partner.Contacts != null && partner.Contacts.Count > 0)
+            if (partner.MainContact != null)
             {
-                foreach(var cont in partner.Contacts)
-                {
-                    var contact = cont.GetEntity();
-
-                    if (cont.Address != null)
-                    {
-                        var addr = cont.Address.GetEntity();
-                        if (addressRepo.Create(addr, out error))
-                        {
-                            contact.IdAddress = addr.Id;
-                            if (contactRepo.Create(contact, out error))
-                            {
-                                idContact = contact.Id;
-                            }
-                        }
-                    }
-                }
+                var contact = partner.MainContact.GetEntity();
+                if (contactRepo.Create(contact, idAdminUser, out error))
+                    partner.IdMainContact = contact.Id;
+            }
+            if (partner.MainAddress != null)
+            {
+                var addr = partner.MainAddress.GetEntity();
+                if (addressRepo.Create(addr, idAdminUser, out error))
+                    partner.IdMainAddress = addr.Id;
             }
 
             if (!string.IsNullOrEmpty(error))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-            
 
             var part = partner.GetEntity();
             if (!string.IsNullOrEmpty(partner.Description))
@@ -215,17 +236,9 @@ namespace ias.Rebens.api.Controllers
             }
 
 
-            if (repo.Create(part, out error))
-            {
-                if (idContact > 0)
-                {
-                    if (repo.AddContact(part.Id, idContact, out error))
-                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Parceiro criado com sucesso!", Id = part.Id });
-
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-                }
+            if (repo.Create(part, idAdminUser, out error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Parceiro criado com sucesso!", Id = part.Id });
-            }
+
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
@@ -241,7 +254,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            if (repo.Delete(id, out string error))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (repo.Delete(id, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Parceiro apagado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -332,47 +349,6 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Adiciona um contato a um parceiro
-        /// </summary>
-        /// <param name="model">{ idPartner: 0, idContact: 0 }</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Víncula um parceiro com um contato</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("AddContact"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult AddContact([FromBody]PartnerContactModel model)
-        {
-            var resultModel = new JsonModel();
-
-            if (repo.AddContact(model.IdPartner, model.IdContact, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Contato adicionado com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Remove um contato de um parceiro
-        /// </summary>
-        /// <param name="id">id do parceiro</param>
-        /// <param name="idContact">id do contato</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Remove o vínculo de benefício com endereço</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}/Contacts/{idContact}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult RemoveContact(int id, int idContact)
-        {
-            var resultModel = new JsonModel();
-
-            if (repo.DeleteContact(id, idContact, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Contato removido com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
         /// Adiciona um endereço a um parceiro
         /// </summary>
         /// <param name="model">{ idPartner: 0, idAddress: 0 }</param>
@@ -384,8 +360,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddAddress([FromBody]PartnerAddressModel model)
         {
-            var resultModel = new JsonModel();
-
             if (repo.AddAddress(model.IdPartner, model.IdAddress, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Endereço adicionado com sucesso!" });
 
@@ -405,8 +379,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveAddress(int id, int idAddress)
         {
-            var resultModel = new JsonModel();
-
             if (repo.DeleteAddress(id, idAddress, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Endereço removido com sucesso!" });
 
@@ -451,6 +423,30 @@ namespace ias.Rebens.api.Controllers
 
                 return Ok(ret);
             }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Ativa/Inativa um parceiro
+        /// </summary>
+        /// <param name="id">id do parceiro</param>
+        /// <returns></returns>
+        /// <response code="200">Se o tudo ocorrer sem erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/ToggleActive")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ToggleActive(int id)
+        {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            var status = repo.ToggleActive(id, idAdminUser, out string error);
+
+            if (string.IsNullOrEmpty(error))
+                return Ok(new JsonModel() { Status = "ok", Data = status });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

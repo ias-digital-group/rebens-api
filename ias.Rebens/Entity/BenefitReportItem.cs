@@ -23,7 +23,6 @@ namespace ias.Rebens
             this.HomeBenefitHighlight = benefit.HomeBenefitHighlight;
             this.HomeHighlight = benefit.HomeHighlight;
             this.Id = benefit.Id;
-            this.IdAdminUser = benefit.IdAdminUser;
             this.IdBenefitType = benefit.IdBenefitType;
             this.IdIntegrationType = benefit.IdIntegrationType;
             this.IdOperation = benefit.IdOperation;

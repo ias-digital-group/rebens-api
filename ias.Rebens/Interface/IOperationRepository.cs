@@ -14,17 +14,13 @@ namespace ias.Rebens
 
         Operation ReadForSignUp(Guid code, out bool openSignUp, out string error);
 
-        ResultPage<Operation> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null);
+        ResultPage<Entity.OperationListItem> ListPage(int page, int pageItems, string word, string sort, out string error, bool? status = null);
 
         bool Create(Operation operation, int idAdminUser, out string error);
 
         bool Update(Operation operation, int idAdminUser, out string error);
 
-        bool AddContact(int idOperation, int idContact, int idAdminUser, out string error);
-
         bool AddAddress(int idOperation, int idAddress, int idAdminUser, out string error);
-
-        bool DeleteContact(int idOperation, int idContact, int idAdminUser, out string error);
 
         bool DeleteAddress(int idOperation, int idAddress, int idAdminUser, out string error);
 
@@ -52,6 +48,8 @@ namespace ias.Rebens
 
         string LoadModulesNames(int id, out string error);
         List<Operation> ListWithModule(string module, out string error);
+        bool ToggleActive(int id, int idAdminUser, out string error);
+
         string GetFromEmail(int id);
     }
 }

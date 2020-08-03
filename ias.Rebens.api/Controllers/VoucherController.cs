@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Rotativa.AspNetCore;
@@ -17,6 +18,7 @@ namespace ias.Rebens.api.Controllers
         private IOperationRepository operationRepo;
         private ICourseRepository courseRepo;
         private ICourseCollegeRepository courseCollegeRepo;
+        private ICourseUseRepository courseUseRepo;
         private IOrderRepository orderRepo;
         private IHostingEnvironment _hostingEnvironment;
 
@@ -69,7 +71,6 @@ namespace ias.Rebens.api.Controllers
                             Models.VoucherModel model = GenerateBenefitVoucher(id, customer, operation, out error);
                             if (model != null)
                                 return new ViewAsPdf("Index", "voucher.pdf", model);
-                            //return View("Index", model);
                         }
                     }
                 }
@@ -116,16 +117,18 @@ namespace ias.Rebens.api.Controllers
             return model;
         }
 
+
         public IActionResult Course(string code)
         {
-
             if (!string.IsNullOrEmpty(code))
             {
                 try
                 {
-                    var model = new Models.VoucherCourseModel();
-                    model.Order = orderRepo.ReadByWirecardId(code, out string error);
-                    if(model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count == 1)
+                    var model = new Models.VoucherCourseModel
+                    {
+                        Order = orderRepo.ReadByWirecardId(code, out string error)
+                    };
+                    if (model.Order != null && model.Order.Status == "PAID" && model.Order.OrderItems != null && model.Order.OrderItems.Count == 1)
                     {
                         model.Course = courseRepo.ReadForContract(model.Order.OrderItems.First().IdCourse.Value, out _);
                         model.Customer = customerRepo.Read(model.Order.IdCustomer, out _);

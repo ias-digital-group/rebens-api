@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using ias.Rebens.Enums;
+using Microsoft.EntityFrameworkCore.Internal;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace ias.Rebens
 {
@@ -23,14 +25,45 @@ namespace ias.Rebens
 
         public bool Create(Customer customer, out string error)
         {
+            return Create(customer, 0, out error);
+        }
+
+        public bool Create(Customer customer, int idAdminUser, out string error)
+        {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    if(db.Customer.Any(c => c.IdOperation == customer.IdOperation && (c.Email == customer.Email || c.Cpf == customer.Cpf)))
+                    {
+                        error = "Este Cpf ou e-mail já está cadastrado na nossa base.";
+                        return false;
+                    }
+
                     customer.Modified = customer.Created = DateTime.UtcNow;
+                    if(idAdminUser > 0)
+                    {
+                        customer.Code = "";
+                        customer.Status = (int)CustomerStatus.PreSignup;
+                        customer.CustomerType = (int)CustomerType.PreSignup;
+                    }
                     db.Customer.Add(customer);
                     db.SaveChanges();
+
+                    if(idAdminUser > 0)
+                    {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.create,
+                            Created = DateTime.UtcNow,
+                            Item = (int)LogItem.Customer,
+                            IdItem = customer.Id,
+                            IdAdminUser = idAdminUser
+                        });
+                        db.SaveChanges();
+                    }
+
                     error = null;
                 }
                 SaveLog(customer.Id, CustomerLogAction.signup);
@@ -45,7 +78,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -54,6 +87,18 @@ namespace ias.Rebens
                 {
                     var customer = db.Customer.SingleOrDefault(c => c.Id == id);
                     db.Customer.Remove(customer);
+
+                    if (idAdminUser > 0)
+                    {
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.delete,
+                            Created = DateTime.UtcNow,
+                            Item = (int)LogItem.Customer,
+                            IdItem = customer.Id,
+                            IdAdminUser = idAdminUser
+                        });
+                    }
                     db.SaveChanges();
                     error = null;
                 }
@@ -90,15 +135,23 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Customer> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null)
+        public ResultPage<Customer> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, 
+                                                int? idOperationPartner = null, int? status = null, bool? active = null, int? idPromoter = null)
         {
             ResultPage<Customer> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Customer.Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation)) 
-                                    && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
+                    var tmpList = db.Customer.Include("Operation").Include("OperationPartner")
+                                    .Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
+                                        && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word) || a.Cpf.Contains(word))
+                                        && (!idOperationPartner.HasValue || (a.IdOperationPartner.Value == idOperationPartner.Value))
+                                        && (!status.HasValue 
+                                            || (status.HasValue && ((status.Value == (int)CustomerStatus.Incomplete && (a.Status == (int)CustomerStatus.ChangePassword)) 
+                                            || a.Status == status.Value)))
+                                        && (!active.HasValue || (a.Active == active.Value))
+                                        && (!idPromoter.HasValue || (idPromoter.HasValue && a.IdPromoter == idPromoter.Value)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -127,8 +180,8 @@ namespace ias.Rebens
                             break;
                     }
 
+                    var total = tmpList.Count();
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
-                    var total = db.Customer.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation)) && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)));
 
                     ret = new ResultPage<Customer>(list, page, pageItems, total);
 
@@ -152,7 +205,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Customer.Include("Address").SingleOrDefault(c => c.Id == id);
+                    ret = db.Customer.Include("Address").Include("Operation").Include("OperationPartner")
+                                        .SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }
@@ -210,11 +264,22 @@ namespace ias.Rebens
 
         public bool Update(Customer customer, out string error)
         {
+            return Update(customer, 0, out error);
+        }
+
+        public bool Update(Customer customer, int idAdminUser, out string error)
+        {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
+                    if (db.Customer.Any(c => c.Id != customer.Id && c.IdOperation == customer.IdOperation && (c.Email == customer.Email || c.Cpf == customer.Cpf)))
+                    {
+                        error = "Este Cpf ou e-mail já está cadastrado na nossa base.";
+                        return false;
+                    }
+
                     var update = db.Customer.SingleOrDefault(c => c.Id == customer.Id);
                     if (update != null)
                     {
@@ -222,7 +287,6 @@ namespace ias.Rebens
                         update.Cellphone = customer.Cellphone;
                         update.Configuration = customer.Configuration;
                         update.Cpf = customer.Cpf;
-                        update.CustomerType = customer.CustomerType;
                         update.Email = customer.Email;
                         update.Gender = customer.Gender;
                         update.Modified = DateTime.UtcNow;
@@ -230,12 +294,30 @@ namespace ias.Rebens
                         update.Surname = customer.Surname;
                         update.Phone = customer.Phone;
                         update.RG = customer.RG;
+                        if(!string.IsNullOrEmpty(customer.Code))
+                            update.Code = customer.Code;
+                        update.Active = customer.Active;
                         if(customer.Status != 0)
                             update.Status = customer.Status;
                         update.Picture = customer.Picture;
 
                         if (customer.IdAddress.HasValue && customer.IdAddress.Value != 0)
                             update.IdAddress = customer.IdAddress.Value;
+
+                        if (idAdminUser > 0)
+                        {
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = (int)Enums.LogAction.update,
+                                Created = DateTime.UtcNow,
+                                Item = (int)LogItem.Customer,
+                                IdItem = customer.Id,
+                                IdAdminUser = idAdminUser
+                            });
+
+                            update.IdOperation = customer.IdOperation;
+                            update.IdOperationPartner = customer.IdOperationPartner;
+                        }
 
                         db.SaveChanges();
                         error = null;
@@ -335,7 +417,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Customer.Any(c => c.IdOperation == idOperation && (c.Email == email || c.Cpf == cpf));
+                    ret = db.Customer.Any(c => c.IdOperation == idOperation && (c.Email == email || c.Cpf == cpf) && c.Status != (int)CustomerStatus.PreSignup);
                     error = null;
                 }
             }
@@ -435,6 +517,96 @@ namespace ias.Rebens
             return ret;
         }
 
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Customer.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        ret = !update.Active;
+                        update.Active = ret;
+                        update.Modified = DateTime.UtcNow;
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.AdminUser,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Usuário não encontrado!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o cliente. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public Customer ReadPreSign(string cpf, int idOperation, out string error)
+        {
+            Customer ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    cpf = cpf.Replace(".", "").Replace("-", "");
+                    string cpfMasked = cpf.Substring(0, 3) + "." + cpf.Substring(3, 3) + "." + cpf.Substring(6, 3) + "-" + cpf.Substring(9);
+
+                    ret = db.Customer.SingleOrDefault(o => (o.Cpf == cpf || o.Cpf == cpfMasked) && o.IdOperation == idOperation && o.Status == (int)Enums.CustomerStatus.PreSignup);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ReadByCpf", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o cliente. (erro:" + idLog + ")";
+                ret = null;
+            }
+
+            return ret;
+        }
+
+        public bool ChangeComplementaryStatus(int id, Enums.CustomerComplementaryStatus status, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var cr = db.Customer.SingleOrDefault(c => c.Id == id);
+                    cr.ComplementaryStatus = (int)status;
+                    cr.Modified = DateTime.UtcNow;
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ChangeComplementaryStatus", ex.Message, $"id:{id}, status:{status.ToString()}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar alterar o status complementar. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+        
         public void SaveLog(int id, CustomerLogAction action, string extra = null)
         {
             try
@@ -457,5 +629,246 @@ namespace ias.Rebens
                 logError.Create("CustomerRepository.SaveLog", ex.Message, $"id:{id}, action:{action}", ex.StackTrace);
             }
         }
+
+        #region Referal
+        public bool CheckReferalLimit(int idOperation, int idCustomer, out int limit, out string error)
+        {
+            bool ret = true;
+            error = null;
+            limit = 0;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var staticText = db.StaticText.SingleOrDefault(c => c.IdOperation == idOperation && c.IdStaticTextType == (int)Enums.StaticTextType.OperationConfiguration);
+                    var config = Helper.Config.JsonHelper<Helper.Config.OperationConfiguration>.GetObject(staticText.Html);
+                    foreach (var module in config.Modules)
+                    {
+                        if (module.Name == "customerReferal")
+                        {
+                            foreach (var field in module.Info.Fields)
+                            {
+                                if (field.Name == "max")
+                                {
+                                    if (int.TryParse(field.Data, out int temp))
+                                        limit = temp;
+
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+
+                    if (limit == 0)
+                        ret = true;
+                    else
+                    {
+                        var count = db.Customer.Count(c => c.IdCustomerReferer == idCustomer);
+                        ret = count < limit;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.CheckReferalLimit", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar verificar o limite. (erro:" + idLog + ")";
+                ret = false;
+            }
+
+            return ret;
+        }
+
+        public ResultPage<Customer> ListReferalByCustomer(int idCustomer, int page, int pageItems, string word, string sort, out string error)
+        {
+            ResultPage<Customer> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Customer.Where(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) && a.IdCustomerReferer == idCustomer);
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "email asc":
+                            tmpList = tmpList.OrderBy(f => f.Email);
+                            break;
+                        case "email desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Email);
+                            break;
+                        case "status asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "status desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = tmpList.Count();
+
+                    ret = new ResultPage<Customer>(list, page, pageItems, total);
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ListReferalByCustomer", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as indicações do cliente. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<Customer> ListReferalPage(int page, int pageItems, string word, string sort, int? idOperation, out string error)
+        {
+            ResultPage<Customer> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Customer.Where(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                                && (!idOperation.HasValue || (idOperation.HasValue && a.IdOperation == idOperation.Value))
+                                                && a.IdCustomerReferer.HasValue);
+                    switch (sort.ToLower())
+                    {
+                        case "name asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "name desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                        case "id asc":
+                            tmpList = tmpList.OrderBy(f => f.Id);
+                            break;
+                        case "id desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Id);
+                            break;
+                        case "email asc":
+                            tmpList = tmpList.OrderBy(f => f.Email);
+                            break;
+                        case "email desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Email);
+                            break;
+                        case "status asc":
+                            tmpList = tmpList.OrderBy(f => f.Name);
+                            break;
+                        case "status desc":
+                            tmpList = tmpList.OrderByDescending(f => f.Name);
+                            break;
+                    }
+
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var total = tmpList.Count();
+
+                    ret = new ResultPage<Customer>(list, page, pageItems, total);
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ListReferalPage", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as indicações. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public bool DeleteReferal(int id, out string error)
+        {
+            bool ret = true;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var customer = db.Customer.SingleOrDefault(c => c.Id == id);
+                    if(customer.ComplementaryStatus == (int)CustomerComplementaryStatus.pending)
+                    {
+                        db.Customer.Remove(customer);
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        error = "Essa indicação não pode ser apagada.";
+                        ret = false;
+                    }
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.DeleteReferal", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar excluir o cliente. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+        #endregion Referal
+
+        #region Promoter
+        public ResultPage<PromoterReportModel> Report(int page, int pageItems, string word, out string error, int? idOperation = null)
+        {
+            ResultPage<PromoterReportModel> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var list = db.AdminUser.Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
+                                            && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                            && a.Roles == Enums.Roles.promoter.ToString())
+                                        .Select(a => new PromoterReportModel()
+                                        {
+                                            Id = a.Id,
+                                            Name = a.Name,
+                                            Surname = a.Surname,
+                                            Email = a.Email,
+                                            Picture = a.Picture,
+                                            Operation = a.Operation.Title
+                                        }).OrderBy(a => a.Name).Skip(page * pageItems).Take(pageItems).ToList();
+
+                    list.ForEach(p =>
+                    {
+                        p.TotalActive = db.Customer.Count(c => c.IdPromoter == p.Id && c.Active);
+                        p.TotalInactive = db.Customer.Count(c => c.IdPromoter == p.Id && !c.Active);
+                        p.TotalIncomplete = db.Customer.Count(c => c.IdPromoter == p.Id && (c.Status == (int)CustomerStatus.Incomplete || c.Status == (int)CustomerStatus.ChangePassword));
+                        p.TotalValidation = db.Customer.Count(c => c.IdPromoter == p.Id && c.Status == (int)CustomerStatus.Validation);
+                        p.TotalComplete = db.Customer.Count(c => c.IdPromoter == p.Id && c.Status == (int)CustomerStatus.Active);
+                    });
+
+                    var total = db.AdminUser.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
+                                            && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                                            && a.Roles == Enums.Roles.promoter.ToString());
+                    ret = new ResultPage<PromoterReportModel>(list, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.Report", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar gerar o relatório os promotores. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+        #endregion Promoter
     }
 }

@@ -8,13 +8,14 @@ namespace ias.Rebens
     {
         Banner Read(int id, out string error);
 
-        ResultPage<Banner> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, int? type = null);
+        ResultPage<Entity.BannerListItem> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, 
+                                                    bool? status = null, int? type = null, string where = null);
 
-        bool Delete(int id, out string error);
+        bool Delete(int id, int idAdminUser, out string error);
 
-        bool Create(Banner banner, out string error);
+        bool Create(Banner banner, int idAdminUser, out string error);
 
-        bool Update(Banner banner, out string error);
+        bool Update(Banner banner, int idAdminUser, out string error);
 
         ResultPage<Banner> ListByOperation(int idOperation, int page, int pageItems, string word, string sort, out string error);
 
@@ -27,5 +28,9 @@ namespace ias.Rebens
         bool AddOperation(int idBanner, int idOperation, out string error);
 
         bool DeleteOperation(int idBanner, int idOperation, out string error);
+
+        bool ToggleActive(int id, int idAdminUser, out string error);
+
+        bool ConnectOperations(int id, int[] operations, out string error);
     }
 }

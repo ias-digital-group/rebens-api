@@ -36,19 +36,13 @@ namespace ias.Rebens.api.Models
         public int? IdParent { get; set; }
 
         /// <summary>
-        /// Ícone, nome da imagem representando o ícone
-        /// </summary>
-        [MaxLength(500)]
-        public string Icon { get; set; }
-
-        /// <summary>
         /// Se está ativa ou inativa
         /// </summary>
         [Required]
         public bool Active { get; set; }
     
         /// <summary>
-        /// O tipo de category (benefícios = 1, cursos livres = 2)
+        /// O tipo de category (benefícios = 4, cursos livres = 19)
         /// </summary>
         [Required]
         public int Type { get; set; }
@@ -61,6 +55,10 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string StatusName { get { return this.Active ? "Ativo" : "Inativo"; } }
         /// <summary>
+        /// Indica se a categoria possui filhos vinculados
+        /// </summary>
+        public bool HasChild { get; }
+        /// <summary>
         /// Construtor
         /// </summary>
         public CategoryModel() { }
@@ -71,20 +69,42 @@ namespace ias.Rebens.api.Models
         /// <param name="category"></param>
         public CategoryModel(Category category)
         {
-            this.Id = category.Id;
-            this.Name = category.Name;
-            this.IdParent = category.IdParent;
-            this.Order = category.Order;
-            this.Icon = category.Icon;
-            this.Active = category.Active;
-            this.Type = category.Type;
-
-            this.Categories = new List<CategoryModel>();
-
-            if (category.Categories != null)
+            if (category != null)
             {
-                foreach (var cat in category.Categories.OrderBy(c => c.Name))
-                    this.Categories.Add(new CategoryModel(cat));
+                this.Id = category.Id;
+                this.Name = category.Name;
+                this.IdParent = category.IdParent;
+                this.Order = category.Order;
+                this.Active = category.Active;
+                this.Type = category.Type;
+
+                this.Categories = new List<CategoryModel>();
+                if (category.Categories != null)
+                {
+                    foreach (var cat in category.Categories.OrderBy(c => c.Name))
+                        this.Categories.Add(new CategoryModel(cat));
+                }
+            }
+        }
+
+        public CategoryModel(CategoryItem category)
+        {
+            if (category != null)
+            {
+                this.Id = category.Id;
+                this.Name = category.Name;
+                this.IdParent = category.IdParent;
+                this.Order = category.Order;
+                this.Active = category.Active;
+                this.Type = category.Type;
+                this.HasChild = category.HasChild;
+
+                this.Categories = new List<CategoryModel>();
+                if (category.Categories != null)
+                {
+                    foreach (var cat in category.Categories.OrderBy(c => c.Name))
+                        this.Categories.Add(new CategoryModel(cat));
+                }
             }
         }
 
@@ -96,13 +116,72 @@ namespace ias.Rebens.api.Models
             return new Category()
             {
                 Active = this.Active,
-                Icon = this.Icon,
                 IdParent = this.IdParent,
                 Id = this.Id,
                 Name = this.Name,
                 Order = this.Order,
                 Type = this.Type
             };
+        }
+    }
+
+
+    public class CategoryListItemModel
+    {
+        /// <summary>
+        /// Id da categoria
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
+        /// Nome
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
+        /// Id do pai, caso seja uma subcategoria, caso contrário null
+        /// </summary>
+        public int? IdParent { get; set; }
+        /// <summary>
+        /// Se está ativa ou inativa
+        /// </summary>
+        [Required]
+        public bool Active { get; set; }
+        /// <summary>
+        /// Data da criação
+        /// </summary>
+        public string Created { get; set; }
+        /// <summary>
+        /// Nome do ususário que criou
+        /// </summary>
+        public string CreatedUserName { get; set; }
+        /// <summary>
+        /// Data da Modificação
+        /// </summary>
+        public string Modified { get; set; }
+        /// <summary>
+        /// Nome do último usuário que modificou
+        /// </summary>
+        public string ModifiedUserName { get; set; }
+        /// <summary>
+        /// O tipo de category (benefícios = 1, cursos livres = 2)
+        /// </summary>
+        public string Type { get; set; }
+
+        public CategoryListItemModel() { }
+
+        public CategoryListItemModel(Entity.CategoryListItem category)
+        {
+            if (category != null)
+            {
+                this.Id = category.Id;
+                this.Name = category.Name;
+                this.IdParent = category.IdParent;
+                this.Active = category.Active;
+                this.Created = TimeZoneInfo.ConvertTimeFromUtc(category.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.CreatedUserName = category.CreatedUserName;
+                this.Modified = TimeZoneInfo.ConvertTimeFromUtc(category.Modified, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.ModifiedUserName = category.ModifiedUserName;
+                this.Type = Enums.EnumHelper.GetEnumDescription((Enums.LogItem)category.IdType);
+            }
         }
     }
 
@@ -129,7 +208,6 @@ namespace ias.Rebens.api.Models
             this.Name = category.Name;
             this.IdParent = category.IdParent;
             this.Order = category.Order;
-            this.Icon = category.Icon;
             this.Active = category.Active;
             this.Checked = category.IdBenefit.HasValue;
         }

@@ -7,5 +7,8 @@ namespace ias.Rebens
     public class CategoryItem : Category
     {
         public int? IdBenefit { get; set; }
+        public bool HasChild { get; set; }
     }
+
+
 }

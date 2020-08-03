@@ -15,7 +15,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "master,publisher,administrator,administratorRebens,publisherRebens")]
     [ApiController]
-    public class DrawController : ControllerBase
+    public class DrawController : BaseApiController
     {
         private IDrawRepository repo;
 
@@ -46,23 +46,12 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
-            
 
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
 
@@ -130,9 +119,8 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Put([FromBody] DrawModel draw)
         {
             var item = draw.GetEntity();
-            string error = null;
 
-            if (repo.Update(item, out error))
+            if (repo.Update(item, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Sorteio atualizado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -151,9 +139,7 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Post([FromBody] DrawModel draw)
         {
             var item = draw.GetEntity();
-            string error = null;
-
-            if (repo.Create(item, out error))
+            if (repo.Create(item, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Sorteio criado com sucesso!", Id = item.Id });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

@@ -39,32 +39,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool AddContact(int idPartner, int idContact, out string error)
-        {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    if (!db.PartnerContact.Any(o => o.IdPartner == idPartner && o.IdContact == idContact))
-                    {
-                        db.PartnerContact.Add(new PartnerContact() { IdContact = idContact, IdPartner = idPartner });
-                        db.SaveChanges();
-                    }
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("PartnerRepository.AddContact", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar adicionar o endereço. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
-        public bool Create(Partner partner, out string error)
+        public bool Create(Partner partner, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -74,6 +49,16 @@ namespace ias.Rebens
                     partner.Modified = partner.Created = DateTime.UtcNow;
                     partner.Deleted = false;
                     db.Partner.Add(partner);
+                    db.SaveChanges();
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.create,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = partner.Id,
+                        Item = (int)Enums.LogItem.Partner
+                    });
                     db.SaveChanges();
                     error = null;
                 }
@@ -88,7 +73,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -106,7 +91,14 @@ namespace ias.Rebens
                         partner.Deleted = true;
                         partner.Modified = DateTime.UtcNow;
 
-                        db.Partner.Remove(partner);
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.delete,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = partner.Id,
+                            Item = (int)Enums.LogItem.Partner
+                        });
 
                         db.SaveChanges();
                         error = null;
@@ -146,41 +138,16 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool DeleteContact(int idPartner, int idContact, out string error)
+        public ResultPage<Entity.PartnerListItem> ListPage(int page, int pageItems, string word, string sort, out string error, int? type = null, bool? status = null)
         {
-            bool ret = true;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var tmp = db.PartnerContact.SingleOrDefault(o => o.IdPartner == idPartner && o.IdContact == idContact);
-                    var contact = db.Contact.SingleOrDefault(c => c.Id == idContact);
-                    db.Contact.Remove(contact);
-                    db.PartnerContact.Remove(tmp);
-                    db.SaveChanges();
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("PartnerRepository.DeleteContact", ex.Message, "", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar excluir o contato. (erro:" + idLog + ")";
-                ret = false;
-            }
-            return ret;
-        }
-
-        public ResultPage<Partner> ListPage(int page, int pageItems, string word, string sort, int type, out string error, bool? status = null)
-        {
-            ResultPage<Partner> ret;
+            ResultPage<Entity.PartnerListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var tmpList = db.Partner.Where(p => !p.Deleted && (string.IsNullOrEmpty(word) || p.Name.Contains(word))
                                         && (!status.HasValue || (status.HasValue && p.Active == status.Value))
-                                        && p.Type == type);
+                                        && (!type.HasValue || (type.HasValue && p.Type == type.Value)));
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -197,10 +164,41 @@ namespace ias.Rebens
                             break;
                     }
 
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).Select(p => new Entity.PartnerListItem()
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Logo = p.Logo,
+                        Active = p.Active,
+                        Created = p.Created,
+                        Modified = p.Modified,
+                        IdType = p.Type
+                    }).ToList();
+
+
                     var total = tmpList.Count();
 
-                    ret = new ResultPage<Partner>(list, page, pageItems, total);
+                    list.ForEach(c =>
+                    {
+                        var createUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Partner 
+                                                                                    && a.IdItem == c.Id 
+                                                                                    && a.Action == (int)Enums.LogAction.create)
+                                            .OrderBy(a => a.Created).FirstOrDefault();
+                        var modifiedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Partner 
+                                                                                    && a.IdItem == c.Id 
+                                                                                    && a.Action == (int)Enums.LogAction.update)
+                                            .OrderByDescending(a => a.Created).FirstOrDefault();
+                        if (createUser != null)
+                            c.CreatedUserName = createUser.AdminUser.Name + " " + createUser.AdminUser.Surname;
+                        else
+                            c.CreatedUserName = " - ";
+                        if (modifiedUser != null)
+                            c.ModifiedUserName = modifiedUser.AdminUser.Name + " " + modifiedUser.AdminUser.Surname;
+                        else
+                            c.ModifiedUserName = " - ";
+                    });
+
+                    ret = new ResultPage<Entity.PartnerListItem>(list, page, pageItems, total);
 
                     error = null;
                 }
@@ -222,7 +220,8 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Partner.Include("StaticText").SingleOrDefault(p => !p.Deleted && p.Id == id);
+                    ret = db.Partner.Include("StaticText").Include("MainAddress").Include("MainContact")
+                                        .SingleOrDefault(p => !p.Deleted && p.Id == id);
                     error = null;
                 }
             }
@@ -236,7 +235,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(Partner partner, out string error)
+        public bool Update(Partner partner, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -250,7 +249,20 @@ namespace ias.Rebens
                         update.Name = partner.Name;
                         update.Logo = partner.Logo;
                         update.Modified = DateTime.UtcNow;
-                        partner.IdStaticText = update.IdStaticText;
+                        update.IdStaticText = partner.IdStaticText;
+                        update.Cnpj = partner.Cnpj;
+                        update.CompanyName = partner.CompanyName;
+                        update.IdMainContact = partner.IdMainContact;
+                        update.IdMainAddress = partner.IdMainAddress;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = partner.Id,
+                            Item = (int)Enums.LogItem.Partner
+                        });
 
                         db.SaveChanges();
                         error = null;
@@ -310,7 +322,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Partner.Where(p => !p.Deleted && p.Active && p.Type == (int)Enums.PartnerType.FreeCourse
+                    ret = db.Partner.Where(p => !p.Deleted && p.Active && p.Type == (int)Enums.LogItem.FreeCourse
                                 && p.FreeCourses.Any(f => !f.Deleted && f.Active && f.IdOperation == idOperation)).OrderBy(p => p.Name).ToList();
 
                     error = null;
@@ -322,6 +334,49 @@ namespace ias.Rebens
                 int idLog = logError.Create("PartnerRepository.ListFreeCoursePartners", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os parceiros. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Partner.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        ret = !update.Active;
+                        update.Active = ret;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.Partner,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Parceiro não encontrado!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("PartnerRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o parceiro. (erro:" + idLog + ")";
+                ret = false;
             }
             return ret;
         }

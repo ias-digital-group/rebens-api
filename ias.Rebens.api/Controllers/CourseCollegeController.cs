@@ -12,7 +12,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/CourseCollege"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens")]
     [ApiController]
-    public class CourseCollegeController : ControllerBase
+    public class CourseCollegeController : BaseApiController
     {
         private ICourseCollegeRepository repo;
         private IAddressRepository addressRepo;
@@ -46,21 +46,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
             var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
@@ -147,21 +137,15 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Post([FromBody]CourseCollegeModel college)
         {
             int? idOperation = null;
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            
+            if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
             var p = college.GetEntity();
@@ -169,7 +153,7 @@ namespace ias.Rebens.api.Controllers
             if (college.Address != null)
             {
                 var addr = college.Address.GetEntity();
-                if (addressRepo.Create(addr, out string errorAddr))
+                if (addressRepo.Create(addr, idAdminUser, out string errorAddr))
                     p.IdAddress = addr.Id;
             }
 

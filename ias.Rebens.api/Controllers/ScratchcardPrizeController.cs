@@ -15,7 +15,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/ScratchcardPrize"), Authorize("Bearer", Roles = "master,publisher,administrator,administratorRebens,publisherRebens")]
     [ApiController]
-    public class ScratchcardPrizeController : ControllerBase
+    public class ScratchcardPrizeController :  BaseApiController
     {
         private IScratchcardPrizeRepository repo;
 
@@ -46,20 +46,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List(int id)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (int.TryParse(userId.Value, out int idUser))
-                    idAdminUser = idUser;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if(errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             var list = repo.List(id, out string error);
 
@@ -122,20 +111,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]ScratchcardPrizeModel prize)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (int.TryParse(userId.Value, out int tmpId))
-                    idAdminUser = tmpId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             if (prize != null)
             {
@@ -160,20 +138,10 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]ScratchcardPrizeModel prize)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (int.TryParse(userId.Value, out int tmpId))
-                    idAdminUser = tmpId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             if (prize != null)
             {
                 var p = prize.GetEntity();
@@ -198,20 +166,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (userId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (int.TryParse(userId.Value, out int tmpId))
-                    idAdminUser = tmpId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             if (repo.Delete(id, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Prêmio apagado com sucesso!" });

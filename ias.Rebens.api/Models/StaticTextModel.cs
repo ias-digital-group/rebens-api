@@ -46,6 +46,10 @@ namespace ias.Rebens.api.Models
         /// Id do tipo de texto estático
         /// </summary>
         public int IdStaticTextType { get; set; }
+        /// <summary>
+        /// Nome da operação
+        /// </summary>
+        public string OperationName { get; set; }
 
         /// <summary>
         /// Construtor
@@ -58,25 +62,30 @@ namespace ias.Rebens.api.Models
         /// <param name="staticText"></param>
         public StaticTextModel(StaticText staticText)
         {
-            this.Id = staticText.Id;
-            this.Name = staticText.Title;
-            this.Page = staticText.Url;
-            if (!string.IsNullOrEmpty(staticText.Html) && staticText.Html.StartsWith('{'))
+            if (staticText != null)
             {
-                try
+                this.Id = staticText.Id;
+                this.Name = staticText.Title;
+                this.Page = staticText.Url;
+                if (!string.IsNullOrEmpty(staticText.Html) && staticText.Html.StartsWith('{'))
                 {
-                    this.Data = JObject.Parse(staticText.Html);
+                    try
+                    {
+                        this.Data = JObject.Parse(staticText.Html);
+                    }
+                    catch
+                    {
+                        this.Data = staticText.Html;
+                    }
                 }
-                catch
-                {
+                else
                     this.Data = staticText.Html;
-                }
+                this.IdOperation = staticText.IdOperation.HasValue ? staticText.IdOperation.Value : 0;
+                this.Active = staticText.Active;
+                this.IdStaticTextType = staticText.IdStaticTextType;
+                if (staticText.Operation != null)
+                    this.OperationName = staticText.Operation.Title;
             }
-            else
-                this.Data = staticText.Html;
-            this.IdOperation = staticText.IdOperation.HasValue ? staticText.IdOperation.Value : 0;
-            this.Active = staticText.Active;
-            this.IdStaticTextType = staticText.IdStaticTextType;
         }
 
         /// <summary>
@@ -100,6 +109,102 @@ namespace ias.Rebens.api.Models
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow
             };
+        }
+    }
+
+    public class StaticTextListItemModel
+    {
+        /// <summary>
+        /// Id
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
+        /// Título
+        /// </summary>
+        public string Title { get; set; }
+        /// <summary>
+        /// Url
+        /// </summary>
+        public string Url { get; set; }
+        /// <summary>
+        /// Html ou objeto em json
+        /// </summary>
+        public string Html { get; set; }
+        /// <summary>
+        /// Style ou objeto em json
+        /// </summary>
+        public string Style { get; set; }
+        /// <summary>
+        /// Ordem
+        /// </summary>
+        public int Order { get; set; }
+        /// <summary>
+        /// Id do Tipo
+        /// </summary>
+        public int IdStaticTextType { get; set; }
+        /// <summary>
+        /// Tipo
+        /// </summary>
+        public string Type { get { return Enums.EnumHelper.GetEnumDescription((Enums.StaticTextType)this.IdStaticTextType); } }
+        /// <summary>
+        /// Id da operação
+        /// </summary>
+        public int IdOperation { get; set; }
+        /// <summary>
+        /// Nome da operação
+        /// </summary>
+        public string OperationName { get; set; }
+        /// <summary>
+        /// Logo da operação
+        /// </summary>
+        public string OperationLogo { get; set; }
+        /// <summary>
+        /// Status
+        /// </summary>
+        public bool Active { get; set; }
+        /// <summary>
+        /// Data cadastro
+        /// </summary>
+        public string Created { get; set; }
+        /// <summary>
+        /// Data última modificação
+        /// </summary>
+        public string Modified { get; set; }
+        /// <summary>
+        /// Id do benefício
+        /// </summary>
+        public int? IdBenefit { get; set; }
+        /// <summary>
+        /// Usuário que criou
+        /// </summary>
+        public string CreatedUserName { get; set; }
+        /// <summary>
+        /// último usuário que fez alguma alteração
+        /// </summary>
+        public string ModifiedUserName { get; set; }
+
+        public StaticTextListItemModel() { }
+
+        public StaticTextListItemModel(Entity.StaticTextListItem text) {
+            if (text != null)
+            {
+                this.Active = text.Active;
+                this.Created = TimeZoneInfo.ConvertTimeFromUtc(text.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.CreatedUserName = text.CreatedUserName;
+                this.Html = text.Html;
+                this.Id = text.Id;
+                this.IdBenefit = text.IdBenefit;
+                this.IdOperation = text.IdOperation;
+                this.IdStaticTextType = text.IdStaticTextType;
+                this.Modified = TimeZoneInfo.ConvertTimeFromUtc(text.Modified, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.ModifiedUserName = text.ModifiedUserName;
+                this.OperationLogo = text.OperationLogo;
+                this.OperationName = text.OperationName;
+                this.Order = text.Order;
+                this.Style = text.Style;
+                this.Title = text.Title;
+                this.Url = text.Url;
+            }
         }
     }
 }

@@ -39,16 +39,16 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Create(AdminUser adminUser, out string error)
+        public bool Create(AdminUser adminUser, int idAdminUser, out string error)
         {
             bool ret = true;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if (db.AdminUser.Any(a => a.Email == adminUser.Email))
+                    if (db.AdminUser.Any(a => a.Email == adminUser.Email || a.Doc == adminUser.Doc))
                     {
-                        error = "O e-mail digitado já está cadastrado em nossa base!";
+                        error = "Este Cpf ou e-mail já está cadastrado na nossa base.";
                         ret = false;
                     }
                     else
@@ -56,9 +56,21 @@ namespace ias.Rebens
                         adminUser.Modified = adminUser.Created = DateTime.UtcNow;
                         adminUser.EncryptedPassword = adminUser.PasswordSalt = "";
                         adminUser.Deleted = false;
+                        adminUser.Active = true;
 
                         db.AdminUser.Add(adminUser);
                         db.SaveChanges();
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.create,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = adminUser.Id,
+                            Item = (int)Enums.LogItem.AdminUser
+                        });
+                        db.SaveChanges();
+
                         error = null;
                     }
                 }
@@ -73,7 +85,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -83,6 +95,16 @@ namespace ias.Rebens
                     var user = db.AdminUser.SingleOrDefault(s => s.Id == id);
                     user.Deleted = true;
                     user.Modified = DateTime.UtcNow;
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.delete,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = id,
+                        Item = (int)Enums.LogItem.AdminUser
+                    });
+
                     db.SaveChanges();
                     error = null;
                 }
@@ -104,13 +126,13 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.AdminUser.Where(a => !a.Deleted
-                                && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
+                    var tmpList = db.AdminUser.Include("Operation").Include("OperationPartner").Where(a => !a.Deleted
+                                && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Surname.Contains(word) || a.Email.Contains(word))
                                 && (!idOperation.HasValue || (idOperation.HasValue && a.IdOperation == idOperation.Value))
-                                && (!status.HasValue || (status.HasValue && a.Status == (status.Value ? 1 : 2)))
+                                && (!status.HasValue || (status.HasValue && a.Active == status.Value))
                                 && (!idOperationPartner.HasValue || a.IdOperationPartner == idOperationPartner.Value)
                                 && (string.IsNullOrEmpty(role) || a.Roles == role)
-                                && (userRole == Enums.Roles.master.ToString() || a.Roles != Enums.Roles.master.ToString())
+                                && (userRole == "master" || a.Roles != "master")
                                 ); ;
                     switch (sort.ToLower())
                     {
@@ -119,6 +141,12 @@ namespace ias.Rebens
                             break;
                         case "name desc":
                             tmpList = tmpList.OrderByDescending(a => a.Name);
+                            break;
+                        case "surname asc":
+                            tmpList = tmpList.OrderBy(a => a.Surname);
+                            break;
+                        case "surname desc":
+                            tmpList = tmpList.OrderByDescending(a => a.Surname);
                             break;
                         case "id asc":
                             tmpList = tmpList.OrderBy(a => a.Id);
@@ -159,6 +187,27 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.AdminUser.SingleOrDefault(a => a.Id == id && !a.Deleted);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.Read", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar criar ler o usuário. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public AdminUser ReadFull(int id, out string error)
+        {
+            AdminUser ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.AdminUser.Include("Operation").Include("OperationPartner").SingleOrDefault(a => a.Id == id && !a.Deleted);
                     error = null;
                 }
             }
@@ -216,7 +265,48 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(AdminUser adminUser, out string error)
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.AdminUser.SingleOrDefault(a => a.Id == id);
+                    if(update != null)
+                    {
+                        ret = !update.Active;
+                        update.Active = ret;
+                        update.Modified = DateTime.UtcNow;
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.AdminUser,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+                        db.SaveChanges();
+                        error = null;   
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Usuário não encontrado!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o usuário. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool Update(AdminUser adminUser, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -227,12 +317,20 @@ namespace ias.Rebens
                     if (update != null)
                     {
                         update.Name = adminUser.Name;
+                        update.Surname = adminUser.Surname;
                         update.Email = adminUser.Email;
                         update.Modified = DateTime.UtcNow;
-                        update.Status = adminUser.Status;
+                        update.Active = adminUser.Active;
+                        update.Doc = adminUser.Doc;
+                        update.Picture = adminUser.Picture;
+                        update.PhoneComercial = adminUser.PhoneComercial;
+                        update.PhoneComercialBranch = adminUser.PhoneComercialBranch;
+                        update.PhoneComercialMobile = adminUser.PhoneComercialMobile;
+                        update.PhoneMobile = adminUser.PhoneMobile;
+
                         if(!string.IsNullOrEmpty(adminUser.Roles))
                             update.Roles = adminUser.Roles;
-                        if (adminUser.Roles == Enums.Roles.partnerAdministrator.ToString() || adminUser.Roles == Enums.Roles.partnerApprover.ToString())
+                        if (adminUser.Roles == "partnerApprover" || adminUser.Roles == "partnerAdministrator")
                             update.IdOperationPartner = adminUser.IdOperationPartner;
                         else
                             update.IdOperationPartner = null;
@@ -247,6 +345,15 @@ namespace ias.Rebens
                             update.IdOperation = adminUser.IdOperation;
                         else
                             update.IdOperation = null;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = adminUser.Id,
+                            Item = (int)Enums.LogItem.AdminUser
+                        });
 
                         db.SaveChanges();
                         error = null;
@@ -264,5 +371,64 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool CheckCPF(int id, string cpf, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (db.AdminUser.Any(a => a.Doc == cpf && a.Id != id))
+                    {
+                        ret = false;
+                        error = "Este CPF já está cadastrado em nossa base";
+                    }
+                    else
+                    {
+                        ret = true;
+                        error = null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.CheckCPF", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar verificar se o cpf já está cadastrado na base. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
+        public bool CheckEmail(int id, string email, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    if (db.AdminUser.Any(a => a.Email == email && a.Id != id))
+                    {
+                        ret = false;
+                        error = "Este E-mail já está cadastrado em nossa base";
+                    }
+                    else
+                    {
+                        ret = true;
+                        error = null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("AdminUserRepository.CheckEmail", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar verificar se o Email já está cadastrado na base. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
+
     }
 }

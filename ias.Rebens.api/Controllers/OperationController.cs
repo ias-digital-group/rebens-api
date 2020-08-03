@@ -25,7 +25,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/Operation")]
     [ApiController]
-    public class OperationController : ControllerBase
+    public class OperationController : BaseApiController
     {
         private IOperationRepository repo;
         private IAddressRepository addressRepo;
@@ -34,7 +34,6 @@ namespace ias.Rebens.api.Controllers
         private IFaqRepository faqRepo;
         private IStaticTextRepository staticTextRepo;
         private IBannerRepository bannerRepo;
-        private IOperationCustomerRepository operationCustomerRepo;
         private IFileToProcessRepository fileToProcessRepo;
         private IHostingEnvironment _hostingEnvironment;
         private IModuleRepository moduleRepo;
@@ -50,13 +49,12 @@ namespace ias.Rebens.api.Controllers
         /// <param name="faqRepository">Injeção de dependencia do repositório de faq</param>
         /// <param name="staticTextRepository">Injeção de dependencia do repositório de Texto</param>
         /// <param name="bannerRepository">Injeção de dependencia do repositório de Banner</param>
-        /// <param name="operationCustomerRepository">Injeção de dependencia do repositório de Clientes da operação</param>
         /// <param name="hostingEnvironment">Injeção de dependencia do repositório de Clientes da operação</param>
         /// <param name="logger">Injeção de dependencia do repositório de Clientes da operação</param>
         /// <param name="logError">Injeção de dependencia do repositório de Clientes da operação</param>
         public OperationController(IOperationRepository operationRepository, IContactRepository contactRepository, IAddressRepository addressRepository, 
             IFaqRepository faqRepository, IStaticTextRepository staticTextRepository, IBannerRepository bannerRepository,
-            IOperationCustomerRepository operationCustomerRepository, IHostingEnvironment hostingEnvironment, ILogger<OperationController> logger,
+            IHostingEnvironment hostingEnvironment, ILogger<OperationController> logger,
             ILogErrorRepository logError, IFileToProcessRepository fileToProcessRepository, IModuleRepository moduleRepository)
         {
             this.repo = operationRepository;
@@ -65,7 +63,6 @@ namespace ias.Rebens.api.Controllers
             this.faqRepo = faqRepository;
             this.staticTextRepo = staticTextRepository;
             this.bannerRepo = bannerRepository;
-            this.operationCustomerRepo = operationCustomerRepository;
             this._hostingEnvironment = hostingEnvironment;
             this._logger = logger;
             this.logError = logError;
@@ -87,8 +84,8 @@ namespace ias.Rebens.api.Controllers
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(ResultPageModel<OperationModel>), 200)]
+        [HttpGet, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,publisher,administrator,promoter")]
+        [ProducesResponseType(typeof(ResultPageModel<OperationListItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]bool? active = null)
@@ -100,16 +97,18 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<OperationModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<OperationModel>();
+                var ret = new ResultPageModel<OperationListItemModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<OperationListItemModel>()
+                };
                 foreach (var operation in list.Page)
-                    ret.Data.Add(new OperationModel(operation));
+                    ret.Data.Add(new OperationListItemModel(operation));
 
                 return Ok(ret);
             }
@@ -156,22 +155,37 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody]OperationModel operation)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (tmpId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-                if (int.TryParse(tmpId.Value, out int usrId))
-                    idAdminUser = usrId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if(operation == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "objeto nulo"});
 
             var op = operation.GetEntity();
+            if (operation.MainAddress != null)
+            {
+                if (operation.MainAddress.Id > 0)
+                    addressRepo.Update(operation.MainAddress.GetEntity(), idAdminUser, out _);
+                else
+                {
+                    var addr = operation.MainAddress.GetEntity();
+                    if (addressRepo.Create(addr, idAdminUser, out _))
+                        op.IdMainAddress = addr.Id;
+                }
+            }
+            if (operation.MainContact != null)
+            {
+                if (operation.MainContact.Id > 0)
+                    contactRepo.Update(operation.MainContact.GetEntity(), idAdminUser, out _);
+                else
+                {
+                    var contact = operation.MainContact.GetEntity();
+                    if (contactRepo.Create(contact, idAdminUser, out _))
+                        op.IdMainContact = contact.Id;
+                }
+            }
+
             if (repo.Update(op, idAdminUser, out string error))
             {
                 repo.ValidateOperation(op.Id, out error);
@@ -193,45 +207,28 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] OperationModel operation)
         {
-            string error = null;
-            int idContact = 0;
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (tmpId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-                if (int.TryParse(tmpId.Value, out int usrId))
-                    idAdminUser = usrId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            if (operation == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "objeto nulo" });
 
             var op = operation.GetEntity();
-            if(operation.Contact != null )
+            string error;
+            if (operation.MainContact != null)
             {
-                var contact = operation.Contact.GetEntity();
-
-                if(operation.Contact.Address != null)
-                {
-                    var addr = operation.Contact.Address.GetEntity();
-                    if (addressRepo.Create(addr, out error))
-                    {
-                        contact.IdAddress = addr.Id;
-                        if (contactRepo.Create(contact, out error))
-                        {
-                            idContact = contact.Id;
-                        }
-                    }
-                }
+                var contact = operation.MainContact.GetEntity();
+                if (contactRepo.Create(contact, idAdminUser, out error))
+                    op.IdMainContact = contact.Id;
+            }
+            if (operation.MainAddress != null)
+            {
+                var addr = operation.MainAddress.GetEntity();
+                if (addressRepo.Create(addr, idAdminUser, out error))
+                    op.IdMainAddress = addr.Id;
             }
 
-            if (!string.IsNullOrEmpty(error))
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-            
             if (repo.Create(op, idAdminUser, out error))
             {
                 var sendingblue = new Integration.SendinBlueHelper();
@@ -247,13 +244,22 @@ namespace ias.Rebens.api.Controllers
                     logError.Create("OperationController.Post", error1, "Create Sending blue list id", "");
                 }
 
-                if (idContact > 0)
+                if (operation.Contact != null)
                 {
-                    if (repo.AddContact(op.Id, idContact, idAdminUser, out error))
-                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Operação criada com sucesso!", Id = op.Id, Extra = op.Code.ToString() });
+                    var contact = operation.Contact.GetEntity();
+                    contact.Type = (int)Enums.LogItem.Operation;
+                    contact.Deleted = false;
+                    contact.IdItem = op.Id;
+                    if (operation.Contact.Address != null)
+                    {
+                        var addr = operation.Contact.Address.GetEntity();
+                        if (addressRepo.Create(addr, idAdminUser, out _))
+                            contact.IdAddress = addr.Id;
+                    }
 
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                    contactRepo.Create(contact, idAdminUser, out _);
                 }
+
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Operação criada com sucesso!", Id = op.Id, Extra = op.Code.ToString() });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -271,25 +277,20 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Publish(int id)
         {
-            if (repo.ValidateOperation(id, out string error))
+            var operation = repo.Read(id, out string error);
+            if(operation == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+            else if(operation.IsCustom)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não pode ser publicada!" });
+
+            if (repo.ValidateOperation(id, out error))
             {
                 var ret = repo.GetPublishData(id, out string domain, out error);
                 if (ret != null)
                 {
-                    int idAdminUser;
-                    var principal = HttpContext.User;
-                    if (principal?.Claims != null)
-                    {
-                        var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                        if (tmpId == null)
-                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-                        if (int.TryParse(tmpId.Value, out int usrId))
-                            idAdminUser = usrId;
-                        else
-                            return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-                    }
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+                    int idAdminUser = GetAdminUserId(out string errorId);
+                    if (errorId != null)
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
                     repo.SavePublishStatus(id, (int)Enums.PublishStatus.processing, idAdminUser, null, out _);
 
@@ -297,14 +298,12 @@ namespace ias.Rebens.api.Controllers
                     {
                         if (domain.Contains(".sistemarebens."))
                         {
-                            var operation = repo.Read(id, out error);
                             if (!operation.SubdomainCreated)
                             {
                                 var awsHelper = new Integration.AWSHelper();
                                 awsHelper.AddDomainToRoute53(operation.TemporarySubdomain, id, this.repo);
                             }
                         }
-
 
                         string content = JsonConvert.SerializeObject(ret);
 
@@ -356,8 +355,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult BuilderDone(string code)
         {
-            Guid operationGuid = Guid.Empty;
-            if (Guid.TryParse(code, out operationGuid))
+            if (Guid.TryParse(code, out Guid operationGuid))
             {
                 if (operationGuid != Guid.Empty)
                 {
@@ -406,7 +404,30 @@ namespace ias.Rebens.api.Controllers
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
+        
+        /// <summary>
+        /// Ativa/Inativa a operação
+        /// </summary>
+        /// <param name="id">id da operação</param>
+        /// <returns></returns>
+        /// <response code="200">Se o tudo ocorrer sem erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/ToggleActive")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ToggleActive(int id)
+        {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
+            var status = repo.ToggleActive(id, idAdminUser, out string error);
+
+            if (string.IsNullOrEmpty(error))
+                return Ok(new JsonModel() { Status = "ok", Data = status });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
         #endregion Operation
 
         #region Operation Configuration
@@ -424,7 +445,12 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetConfiguration(int id)
         {
-            var config = staticTextRepo.ReadOperationConfiguration(id, out string error);
+            StaticText config;
+            string error;
+            if (id == 0)
+                config = staticTextRepo.ReadByType((int)Enums.StaticTextType.OperationConfigurationDefault, out error);
+            else
+                config = staticTextRepo.ReadOperationConfiguration(id, out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -452,6 +478,10 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SaveConfiguration(int id, [FromBody]object data)
         {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
             var serializedData = JsonConvert.SerializeObject(data);
 
             var config = new StaticText()
@@ -469,7 +499,7 @@ namespace ias.Rebens.api.Controllers
                 Modified = DateTime.UtcNow
             };
 
-            if (staticTextRepo.Update(config, out string error))
+            if (staticTextRepo.Update(config, idAdminUser, out string error))
             {
                 repo.ValidateOperation(id, out _);
                 return Ok(new JsonModel() { Status = "ok", Message = "Configuração salva com sucesso!" });
@@ -505,86 +535,21 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<ContactModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<ContactModel>();
+                var ret = new ResultPageModel<ContactModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<ContactModel>()
+                };
                 foreach (var contact in list.Page)
                     ret.Data.Add(new ContactModel(contact));
 
                 return Ok(ret);
             }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Adiciona um contato a uma operação
-        /// </summary>
-        /// <param name="model">{ idOperation: 0, idContact: 0 }</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Víncula uma operação com um contato</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("AddContact"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult AddContact([FromBody]OperationContactModel model)
-        {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (tmpId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-                if (int.TryParse(tmpId.Value, out int usrId))
-                    idAdminUser = usrId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-
-            if (repo.AddContact(model.IdOperation, model.IdContact, idAdminUser, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Contato adicionado com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Remove um contato de uma operação
-        /// </summary>
-        /// <param name="id">id da operação</param>
-        /// <param name="idContact">id do contato</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Remove o vínculo de benefício com endereço</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}/Contact/{idContact}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult RemoveContact(int id, int idContact)
-        {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (tmpId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-                if (int.TryParse(tmpId.Value, out int usrId))
-                    idAdminUser = usrId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-
-            if (repo.DeleteContact(id, idContact, idAdminUser, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Contato removido com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
@@ -645,20 +610,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult AddAddress([FromBody]OperationAddressModel model)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (tmpId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-                if (int.TryParse(tmpId.Value, out int usrId))
-                    idAdminUser = usrId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             if (repo.AddAddress(model.IdOperation, model.IdAddress, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Endereço adicionado com sucesso!" });
@@ -679,20 +633,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RemoveAddress(int id, int idAddress)
         {
-            int idAdminUser;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (tmpId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-                if (int.TryParse(tmpId.Value, out int usrId))
-                    idAdminUser = usrId;
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
-            }
-            else
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Sem permissão de acesso!" });
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             if (repo.DeleteAddress(id, idAddress, idAdminUser, out string error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Endereço removido com sucesso!" });
@@ -727,14 +670,16 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<FaqModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<FaqModel>();
+                var ret = new ResultPageModel<FaqModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<FaqModel>()
+                };
                 foreach (var faq in list.Page)
                     ret.Data.Add(new FaqModel(faq));
 
@@ -771,14 +716,16 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<StaticTextModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<StaticTextModel>();
+                var ret = new ResultPageModel<StaticTextModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<StaticTextModel>()
+                };
                 foreach (var staticText in list.Page)
                     ret.Data.Add(new StaticTextModel(staticText));
 
@@ -846,14 +793,16 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<BannerModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<BannerModel>();
+                var ret = new ResultPageModel<BannerModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<BannerModel>()
+                };
                 foreach (var banner in list.Page)
                     ret.Data.Add(new BannerModel(banner));
 
@@ -863,248 +812,6 @@ namespace ias.Rebens.api.Controllers
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
         #endregion Banner
-
-        #region Operation Customers
-        /// <summary>
-        /// Lista os clientes pré cadastrados de uma operação 
-        /// </summary>
-        /// <param name="id">id da operação</param>
-        /// <param name="page">página, não obrigatório (default=0)</param>
-        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="sort">Ordenação campos (Id, Name, Order), direção (ASC, DESC)</param>
-        /// <param name="searchWord">Palavra à ser buscada</param>
-        /// <returns>lista dos banners da operação</returns>
-        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/Customers"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
-        [ProducesResponseType(typeof(ResultPageModel<OperationCustomerModel>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult ListCustomers(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "")
-        {
-            var list = operationCustomerRepo.ListPage(page, pageItems, searchWord, sort, out string error, id);
-
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.TotalItems == 0)
-                    return NoContent();
-
-                var ret = new ResultPageModel<OperationCustomerModel>()
-                {
-                    CurrentPage = list.CurrentPage,
-                    HasNextPage = list.HasNextPage,
-                    HasPreviousPage = list.HasPreviousPage,
-                    ItemsPerPage = list.ItemsPerPage,
-                    TotalItems = list.TotalItems,
-                    TotalPages = list.TotalPages,
-                    Data = new List<OperationCustomerModel>()
-                };
-                
-                foreach (var customer in list.Page)
-                    ret.Data.Add(new OperationCustomerModel(customer));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Apaga um cliente pré cadastrado
-        /// </summary>
-        /// <param name="id">id da operação</param>
-        /// <param name="idCustomer">id do cliente</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem.</returns>
-        /// <response code="200">Cliente foi apagado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpDelete("{id}/Customers/{idCustomer}"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
-        [ProducesResponseType(typeof(JsonModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult DeleteCustomer(int id, int idCustomer)
-        {
-            var resultModel = new JsonModel();
-
-            if (operationCustomerRepo.Delete(idCustomer, out string error))
-                return Ok(new JsonModel() { Status = "ok", Message = "Cliente apagado com sucesso!" });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Cria um cliente pré
-        /// </summary>
-        /// <param name="id">Id da operação</param>
-        /// <param name="customer"></param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
-        /// <response code="200">Se o objeto for criado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("{id}/Customers/"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
-        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult CreateCustomer(int id, [FromBody] OperationCustomerModel customer)
-        {
-            var c = customer.GetEntity();
-            c.IdOperation = id;
-            c.Signed = false;
-            if (operationCustomerRepo.Create(c, out string error))
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = c.Id });
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Cria uma list de cliente pré, a partir de um arquivo excel
-        /// </summary>
-        /// <param name="id">Id da operação</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
-        /// <response code="200">Se o objeto for criado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpPost("{id}/UploadCustomersList"), DisableRequestSizeLimit, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
-        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult CreateListOfCustomers(int id)
-        {
-            try
-            {
-                var file = Request.Form.Files[0];
-                string webRootPath = _hostingEnvironment.WebRootPath;
-                string newPath = Path.Combine(webRootPath, "files");
-                if (!Directory.Exists(newPath))
-                    Directory.CreateDirectory(newPath);
-
-                if (file.Length > 0)
-                {
-                    var list = new List<OperationCustomer>();
-                    ISheet sheet;
-                    string extension = Path.GetExtension(file.FileName);
-                    string fileName = Guid.NewGuid().ToString("n") + extension;
-                    string fullPath = Path.Combine(newPath, fileName);
-                    
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
-                    {
-                        file.CopyTo(stream);
-                    }
-
-                    var fileToProcess = new FileToProcess()
-                    {
-                        Name = fullPath,
-                        Created = DateTime.UtcNow,
-                        IdOperation = id,
-                        Modified = DateTime.UtcNow,
-                        Total = 0,
-                        Processed = 0,
-                        Status = extension != ".xls" && extension != ".xlsx" ? (int)Enums.FileToProcessStatus.Error : (int)Enums.FileToProcessStatus.New,
-                        Type = (int)Enums.FileToProcessType.OperationCustomer
-                    };
-
-                    this.fileToProcessRepo.Create(fileToProcess, out _);
-
-                    if (fileToProcess.Status == (int)Enums.FileToProcessStatus.New)
-                    {
-                        try
-                        {
-                            using (var stream = new StreamReader(fullPath))
-                            {
-                                if (extension == ".xls")
-                                {
-                                    HSSFWorkbook hssfwb = new HSSFWorkbook(stream.BaseStream); //This will read the Excel 97-2000 formats  
-                                    sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook  
-                                }
-                                else
-                                {
-                                    XSSFWorkbook hssfwb = new XSSFWorkbook(stream.BaseStream); //This will read 2007 Excel format  
-                                    sheet = hssfwb.GetSheetAt(0); //get first sheet from workbook   
-                                }
-                                int total = sheet.LastRowNum;
-                                this.fileToProcessRepo.UpdateTotal(fileToProcess.Id, total, out _);
-
-                                IRow headerRow = sheet.GetRow(0); //Get Header Row
-                                int cellCount = headerRow.LastCellNum;
-                                bool isValid = true;
-
-                                ICell cellName = headerRow.GetCell(0);
-                                ICell cellCPf = headerRow.GetCell(1);
-                                ICell cellPhone = headerRow.GetCell(2);
-                                ICell cellCellphone = headerRow.GetCell(3);
-                                ICell cellEmail1 = headerRow.GetCell(4);
-                                ICell cellEmail2 = headerRow.GetCell(5);
-
-                                isValid = cellName != null && cellName.ToString().Trim().ToLower() == "nome" &&
-                                    cellCPf != null && cellCPf.ToString().Trim().ToLower() == "cpf" &&
-                                    cellPhone != null && cellPhone.ToString().Trim().ToLower() == "telefone" &&
-                                    cellCellphone != null && cellCellphone.ToString().Trim().ToLower() == "celular" &&
-                                    cellEmail1 != null && cellEmail1.ToString().Trim().ToLower() == "email1" &&
-                                    cellEmail2 != null && cellEmail2.ToString().Trim().ToLower() == "email2";
-
-                                if (!isValid)
-                                {
-                                    this.fileToProcessRepo.UpdateStatus(fileToProcess.Id, (int)Enums.FileToProcessStatus.Error, out _);
-                                    return Ok(new JsonModel() { Status = "error", Message = "O arquivo não está no formato correto!" });
-                                }
-                                else
-                                {
-                                    this.fileToProcessRepo.UpdateStatus(fileToProcess.Id, (int)Enums.FileToProcessStatus.Ready, out _);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
-                        }
-
-                        return Ok(new JsonModel() { Status = "ok", Message = $"O arquivo será processado em breve." });
-                    }
-
-                    return Ok(new JsonModel() { Status = "error", Message = $"O arquivo não poderá ser processado, extensão não aceita ({extension})." });
-                }
-
-                return NoContent();
-
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(400, new JsonModel() { Status = "error", Message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Verifica se existe algum arquivo em processamento
-        /// </summary>
-        /// <param name="id">Id da operação</param>
-        /// <returns>Retorna um objeto com o status (ok, error), e uma mensagem, caso ok, retorna o id da faq criada</returns>
-        /// <response code="200">Se o objeto for criado com sucesso</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/HasFileProcessing/"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,administrator,publisher")]
-        [ProducesResponseType(typeof(JsonCreateResultModel), 200)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult HasFileProcessing(int id)
-        {
-            var ret = fileToProcessRepo.ReadByType((int)Enums.FileToProcessType.OperationCustomer, (int)Enums.FileToProcessStatus.Processing, id, out _);
-            if (ret != null)
-            {
-                return Ok(new JsonCreateResultModel() { Status = "ok", Message = $"Processando ({ret.Processed}/{ret.Total})" });
-            } 
-            else
-            {
-                ret = fileToProcessRepo.ReadByType((int)Enums.FileToProcessType.OperationCustomer, (int)Enums.FileToProcessStatus.New, id, out _);
-                if (ret != null)
-                {
-                    return Ok(new JsonCreateResultModel() { Status = "ok", Message = $"O arquivo está na fila para ser processado!" });
-                }
-                else
-                {
-                    ret = fileToProcessRepo.ReadByType((int)Enums.FileToProcessType.OperationCustomer, (int)Enums.FileToProcessStatus.Ready, id, out _);
-                    if (ret != null)
-                    {
-                        return Ok(new JsonCreateResultModel() { Status = "ok", Message = $"O arquivo está na fila para ser processado!" });
-                    }
-                }
-            }
-
-            return NoContent();
-        }
-        #endregion Operation Customers
 
         #region Modules
         /// <summary>

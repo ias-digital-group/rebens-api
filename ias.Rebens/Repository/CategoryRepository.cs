@@ -15,7 +15,7 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public bool Create(Category category, out string error)
+        public bool Create(Category category, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -24,9 +24,27 @@ namespace ias.Rebens
                 {
                     if (category.IdParent == 0)
                         category.IdParent = null;
+
+                    if(db.Category.Any(c => c.Name == category.Name && c.Type == category.Type))
+                    {
+                        error = "Esse nome de categoria já está cadastrado no sistema";
+                        return false;
+                    }
+
                     category.Modified = category.Created = DateTime.UtcNow;
                     db.Category.Add(category);
                     db.SaveChanges();
+
+                    db.LogAction.Add(new LogAction()
+                    {
+                        Action = (int)Enums.LogAction.create,
+                        Created = DateTime.UtcNow,
+                        IdAdminUser = idAdminUser,
+                        IdItem = category.Id,
+                        Item = (int)Enums.LogItem.Category
+                    });
+                    db.SaveChanges();
+
                     error = null;
                 }
             }
@@ -41,7 +59,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Delete(int id, out string error)
+        public bool Delete(int id, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -62,6 +80,15 @@ namespace ias.Rebens
                     {
                         var cat = db.Category.SingleOrDefault(c => c.Id == id);
                         db.Category.Remove(cat);
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.delete,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = id,
+                            Item = (int)Enums.LogItem.Category
+                        });
                         db.SaveChanges();
                         error = null;
                     }
@@ -77,9 +104,10 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Category> ListPage(int page, int pageItems, string word, string sort, int type, out string error, bool? status = null, int? idParent = null)
+        public ResultPage<Entity.CategoryListItem> ListPage(int page, int pageItems, string word, string sort, out string error, int? type, 
+                                                            bool? status = null, int? idParent = null, int? level = null)
         {
-            ResultPage<Category> ret;
+            ResultPage<Entity.CategoryListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -87,7 +115,9 @@ namespace ias.Rebens
                     var tmpList = db.Category.Where(c => (string.IsNullOrEmpty(word) || c.Name.Contains(word))
                                     && (!status.HasValue || (status.HasValue && c.Active == status.Value))
                                     && (!idParent.HasValue || (idParent.HasValue && c.IdParent == idParent.Value))
-                                    && c.Type == type);
+                                    && (!type.HasValue || (type.HasValue && c.Type == type.Value))
+                                    && (!level.HasValue || (level.HasValue && (level.Value == 0 && !c.IdParent.HasValue) || (level.Value == 1 && c.IdParent.HasValue))));
+
 
                     switch (sort.ToLower())
                     {
@@ -111,10 +141,35 @@ namespace ias.Rebens
                             break;
                     }
 
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).Select(c => new Entity.CategoryListItem() {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Active = c.Active,
+                        Created = c.Created,
+                        IdParent = c.IdParent,
+                        IdType = c.Type,
+                        Modified = c.Modified
+                                    }).ToList();
                     var total = tmpList.Count();
 
-                    ret = new ResultPage<Category>(list, page, pageItems, total);
+
+                    list.ForEach(c =>
+                    {
+                        var createUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Category && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.create)
+                                            .OrderBy(a => a.Created).FirstOrDefault();
+                        var modifiedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Category && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.update)
+                                            .OrderByDescending(a => a.Created).FirstOrDefault();
+                        if (createUser != null)
+                            c.CreatedUserName = createUser.AdminUser.Name + " " + createUser.AdminUser.Surname;
+                        else
+                            c.CreatedUserName = " - ";
+                        if (modifiedUser != null)
+                            c.ModifiedUserName = modifiedUser.AdminUser.Name + " " + modifiedUser.AdminUser.Surname;
+                        else
+                            c.ModifiedUserName = " - ";
+                    });
+
+                    ret = new ResultPage<Entity.CategoryListItem>(list, page, pageItems, total);
 
                     error = null;
                     db.SaveChanges();
@@ -140,9 +195,9 @@ namespace ias.Rebens
                     if(isCustomer && idOperation.HasValue)
                     {
                         ret = new List<Category>();
-                        if(type == (int)Enums.CategoryType.Benefit)
+                        if(type == (int)Enums.LogItem.Benefit)
                         {
-                            var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active && c.Type == (int)Enums.CategoryType.Benefit
+                            var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active && c.Type == (int)Enums.LogItem.Benefit
                                 && ((
                                     c.BenefitCategories.Count > 0 && c.BenefitCategories.Any(bc => bc.Benefit.Active && bc.Benefit.BenefitOperations.Any(bo => bo.IdOperation == idOperation.Value))
                                     ) || (
@@ -152,14 +207,14 @@ namespace ias.Rebens
                             foreach (var parent in listParent)
                             {
                                 parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.BenefitCategories.Count > 0 
-                                                            && c.BenefitCategories.Any(bc => bc.Benefit.Active) && c.Type == (int)Enums.CategoryType.Benefit)
+                                                            && c.BenefitCategories.Any(bc => bc.Benefit.Active) && c.Type == (int)Enums.LogItem.Benefit)
                                                         .OrderBy(c => c.Name).ToList();
                                 ret.Add(parent);
                             }
                         }
                         else
                         {
-                            var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active && c.Type == (int)Enums.CategoryType.FreeCourse
+                            var listParent = db.Category.Where(c => !c.IdParent.HasValue && c.Active && c.Type == (int)Enums.LogItem.FreeCourse
                                 && ((
                                     c.FreeCourseCategories.Count > 0 && c.FreeCourseCategories.Any(bc => bc.FreeCourse.Active && bc.FreeCourse.IdOperation == idOperation.Value)
                                     ) || (
@@ -169,7 +224,7 @@ namespace ias.Rebens
                             foreach (var parent in listParent)
                             {
                                 parent.Categories = db.Category.Where(c => c.IdParent == parent.Id && c.Active && c.FreeCourseCategories.Count > 0
-                                                            && c.FreeCourseCategories.Any(bc => bc.FreeCourse.Active) && c.Type == (int)Enums.CategoryType.FreeCourse)
+                                                            && c.FreeCourseCategories.Any(bc => bc.FreeCourse.Active) && c.Type == (int)Enums.LogItem.FreeCourse)
                                                         .OrderBy(c => c.Name).ToList();
                                 ret.Add(parent);
                             }
@@ -191,14 +246,26 @@ namespace ias.Rebens
             return ret;
         }
 
-        public Category Read(int id, out string error)
+        public CategoryItem Read(int id, out string error)
         {
-            Category ret;
+            CategoryItem ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Category.SingleOrDefault(c => c.Id == id);
+                    var cat = db.Category.SingleOrDefault(c => c.Id == id);
+                    ret = new CategoryItem()
+                    {
+                        Id = cat.Id,
+                        Name = cat.Name,
+                        Active = cat.Active,
+                        Created = cat.Created,
+                        IdParent = cat.IdParent,
+                        Modified = cat.Modified,
+                        Order = cat.Order,
+                        Type = cat.Type
+                    };
+                    ret.HasChild = db.Category.Any(c => c.IdParent == cat.Id);
                     error = null;
                 }
             }
@@ -212,7 +279,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(Category category, out string error)
+        public bool Update(Category category, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -222,8 +289,13 @@ namespace ias.Rebens
                     var update = db.Category.SingleOrDefault(c => c.Id == category.Id);
                     if(update != null)
                     {
+                        if(db.Category.Any(c => c.Name == update.Name && c.Type == update.Type && c.Id != update.Id))
+                        {
+                            error = "Esse nome de categoria já está cadastrado no sistema.";
+                            return false;
+                        }
+
                         update.Active = category.Active;
-                        update.Icon = category.Icon;
                         if (category.IdParent == 0)
                             update.IdParent = null;
                         else
@@ -231,6 +303,15 @@ namespace ias.Rebens
                         update.Modified = DateTime.UtcNow;
                         update.Name = category.Name;
                         update.Order = category.Order;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = category.Id,
+                            Item = (int)Enums.LogItem.Category
+                        });
 
                         db.SaveChanges();
                         error = null;
@@ -310,6 +391,49 @@ namespace ias.Rebens
                 int idLog = logError.Create("CategoryRepository.ListByFreeCourse", ex.Message, $"idFreeCourse: {idFreeCourse}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar as categorias vinculadas ao curso livre. (erro:" + idLog + ")";
                 ret = null;
+            }
+            return ret;
+        }
+
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Category.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        ret = !update.Active;
+                        update.Active = ret;
+                        update.Modified = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.Category,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Categoria não encontrada!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CategoryRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar a categoria. (erro:" + idLog + ")";
+                ret = false;
             }
             return ret;
         }

@@ -6,14 +6,6 @@ using System.Text;
 
 namespace ias.Rebens.Enums
 {
-    public enum AdminUserStatus : int
-    {
-        [Description("Ativo")]
-        Active = 1,
-        [Description("Inativo")]
-        Inactive = 2
-    }
-
     public enum BankAccountType
     {
         [Description("Conta Corrente")]
@@ -63,12 +55,7 @@ namespace ias.Rebens.Enums
         [Description("Cashback Resgatado")]
         Withdraw = 5
     }
-
-    public enum CategoryType : int
-    {
-        Benefit = 1,
-        FreeCourse = 2
-    }
+    
 
     public enum CustomerLogAction : int
     {
@@ -79,7 +66,6 @@ namespace ias.Rebens.Enums
         [Description("Login")]
         login = 3,
     }
-
     public enum CourseUseStatus : int
     {
         [Description("Gerado")]
@@ -90,12 +76,6 @@ namespace ias.Rebens.Enums
         Used = 3,
         [Description("Cancelado")]
         Canceled = 4
-    }
-
-    public enum ConfigurationType
-    {
-        [Description("Cliente")]
-        Customer = 1
     }
 
     public enum CouponStatus : int
@@ -114,16 +94,6 @@ namespace ias.Rebens.Enums
         noprize = 6
     }
 
-    public enum CustomerReferalStatus : int
-    {
-        [Description("Pendente")]
-        pending = 1,
-        [Description("Assinado")]
-        Signed = 2,
-        [Description("Cadastrado")]
-        SignUp = 3
-    }
-
     public enum CustomerStatus : int
     {
         [Description("Ativo/Completo")]
@@ -132,10 +102,30 @@ namespace ias.Rebens.Enums
         Inactive = 2,
         [Description("Validação")]
         Validation = 3,
-        [Description("Validação")]
+        [Description("Incompleto")]
         ChangePassword = 4,
         [Description("Incompleto")]
-        Incomplete = 5
+        Incomplete = 5,
+        [Description("Pré-cadastro")]
+        PreSignup = 6
+    }
+
+    public enum CustomerComplementaryStatus : int
+    {
+        [Description("Novo")]
+        waittingApproval = 1,
+        [Description("Aprovado")]
+        approved = 2,
+        [Description("Reprovado")]
+        reproved = 3,
+        [Description("Cadastrado")]
+        registered = 4,
+        [Description("Pendente")]
+        pending = 5,
+        [Description("Assinado")]
+        Signed = 6,
+        [Description("Apagado")]
+        deleted = 99,
     }
 
     public enum CustomerType : int
@@ -143,7 +133,13 @@ namespace ias.Rebens.Enums
         [Description("Cliente")]
         Customer = 1,
         [Description("Indicação")]
-        Referal = 2
+        Referal = 2,
+        [Description("Parceiro")]
+        Partner = 3,
+        [Description("Pré-Cadastro")]
+        PreSignup = 4,
+        [Description("Promotor")]
+        Promoter = 5
     }
 
     public enum DegreeOfKinship : int
@@ -206,6 +202,24 @@ namespace ias.Rebens.Enums
         generate = 4,
         [Description("Publicar")]
         publish = 5,
+        [Description("Ativar")]
+        activate = 6,
+        [Description("Inativar")]
+        inactivate = 7,
+        [Description("Adicionar endereço")]
+        addAddress = 8,
+        [Description("Remover endereço")]
+        removeAddress = 9,
+        [Description("Adicionar operação")]
+        addOperation = 10,
+        [Description("Remover operação")]
+        removeOperation = 11,
+        [Description("Adicionar categoria")]
+        addCategory = 12,
+        [Description("Remover categoria")]
+        removeCategory = 13,
+        [Description("Duplicar")]
+        duplicate = 14,
         [Description("Validar Produto")]
         voucherValidate = 15,
         [Description("Login")]
@@ -283,7 +297,6 @@ namespace ias.Rebens.Enums
         OrderItem = 33,
         [Description("Uso de benefício")]
         BenefitUse = 34
-
     }
 
     public enum MoipNotificationEvent : int
@@ -382,17 +395,11 @@ namespace ias.Rebens.Enums
         rent = 4
     }
 
-    public enum PartnerType : int
-    {
-        Benefit = 1,
-        FreeCourse = 2
-    }
-
     public enum PublishStatus : int
     {
         [Description("Incompleto")]
         notvalid = 0,
-        [Description("Publicar")]
+        [Description("Salvar e Publicar")]
         publish = 1,
         [Description("Processando")]
         processing = 2,
@@ -522,20 +529,6 @@ namespace ias.Rebens.Enums
         pendent = 1,
         [Description("Tratado")]
         treat = 2
-    }
-
-    public enum OperationPartnerCustomerStatus : int
-    {
-        [Description("Novo")]
-        newCustomer = 1,
-        [Description("Aprovado")]
-        approved = 2,
-        [Description("Reprovado")]
-        reproved = 3,
-        [Description("Cadastrado")]
-        signed = 4,
-        [Description("Apagado")]
-        deleted = 5,
     }
 
     public enum Roles

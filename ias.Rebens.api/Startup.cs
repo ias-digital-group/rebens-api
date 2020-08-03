@@ -105,7 +105,7 @@ namespace ias.Rebens.api
                 string xmlDocumentPath = Path.Combine(appPath, $"{appName}.xml");
                 //var xmlDocumentPath = "ias.Rebens.api.xml";
 
-                if (File.Exists(xmlDocumentPath))
+                if (System.IO.File.Exists(xmlDocumentPath))
                 {
                     c.IncludeXmlComments(xmlDocumentPath);
                 }
@@ -119,6 +119,7 @@ namespace ias.Rebens.api
             services.AddTransient<IBenefitUseRepository, BenefitUseRepository>();
             services.AddTransient<IBenefitViewRepository, BenefitViewRepository>();
             services.AddTransient<ICategoryRepository, CategoryRepository>();
+            services.AddTransient<ICompanyRepository, CompanyRepository>();
             services.AddTransient<IContactRepository, ContactRepository>();
             services.AddTransient<ICouponCampaignRepository, CouponCampaignRepository>();
             services.AddTransient<ICouponRepository, CouponRepository>();
@@ -129,11 +130,10 @@ namespace ias.Rebens.api
             services.AddTransient<ICourseRepository, CourseRepository>();
             services.AddTransient<ICourseUseRepository, CourseUseRepository>();
             services.AddTransient<ICourseViewRepository, CourseViewRepository>();
-            services.AddTransient<ICustomerReferalRepository, CustomerReferalRepository>();
             services.AddTransient<ICustomerRepository, CustomerRepository>();
-            services.AddTransient<ICustomerPromoterRepository, CustomerPromoterRepository>();
             services.AddTransient<IDrawRepository, DrawRepository>();
             services.AddTransient<IFaqRepository, FaqRepository>();
+            services.AddTransient<IFileRepository, FileRepository>();
             services.AddTransient<IFileToProcessRepository, FileToProcessRepository>();
             services.AddTransient<IFormContactRepository, FormContactRepository>();
             services.AddTransient<IFormEstablishmentRepository, FormEstablishmentRepository>();
@@ -143,7 +143,6 @@ namespace ias.Rebens.api
             services.AddTransient<IMoipNotificationRepository, MoipNotificationRepository>();
             services.AddTransient<IMoipRepository, MoipRepository>();
             services.AddTransient<IOperationRepository, OperationRepository>();
-            services.AddTransient<IOperationCustomerRepository, OperationCustomerRepository>();
             services.AddTransient<IOperationPartnerRepository, OperationPartnerRepository>();
             services.AddTransient<IOrderRepository, OrderRepository>();
             services.AddTransient<IPartnerRepository, PartnerRepository>();

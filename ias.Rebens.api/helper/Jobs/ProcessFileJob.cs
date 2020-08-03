@@ -24,13 +24,13 @@ namespace ias.Rebens.api.helper
             using (var serviceScope = serviceScopeFactory.CreateScope())
             {
                 IFileToProcessRepository repo = serviceScope.ServiceProvider.GetService<IFileToProcessRepository>();
-                IOperationCustomerRepository ocRepo = serviceScope.ServiceProvider.GetService<IOperationCustomerRepository>();
+                ICustomerRepository ocRepo = serviceScope.ServiceProvider.GetService<ICustomerRepository>();
                 
                 var file = repo.GetNextFile();
                 if (file != null)
                 {
                     repo.UpdateStatus(file.Id, (int)Enums.FileToProcessStatus.Processing, out _);
-                    var list = new List<OperationCustomer>();
+                    var list = new List<Customer>();
                     try
                     {
                         using (var stream = new StreamReader(file.Name))
@@ -56,15 +56,15 @@ namespace ias.Rebens.api.helper
 
                                 if (row.GetCell(0) == null || row.GetCell(1) == null) continue;
 
-                                list.Add(new OperationCustomer()
+                                list.Add(new Customer()
                                 {
                                     Name = row.GetCell(0) != null ? row.GetCell(0).ToString().Trim() : "",
-                                    CPF = row.GetCell(1) != null ? row.GetCell(1).ToString().Trim() : "",
+                                    Cpf = row.GetCell(1) != null ? row.GetCell(1).ToString().Trim() : "",
                                     Phone = row.GetCell(2) != null ? row.GetCell(2).ToString().Trim() : "",
                                     Cellphone = row.GetCell(3) != null ? row.GetCell(3).ToString().Trim() : "",
-                                    Email1 = row.GetCell(4) != null ? row.GetCell(4).ToString().Trim() : "",
-                                    Email2 = row.GetCell(5) != null ? row.GetCell(5).ToString().Trim() : "",
-                                    Signed = false,
+                                    Email = row.GetCell(4) != null ? row.GetCell(4).ToString().Trim() : "",
+                                    Status = (int)Enums.CustomerStatus.PreSignup,
+                                    Active = true,
                                     Created = DateTime.UtcNow,
                                     Modified = DateTime.UtcNow,
                                     IdOperation = file.IdOperation.Value

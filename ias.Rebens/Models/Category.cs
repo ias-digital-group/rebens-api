@@ -21,8 +21,6 @@ namespace ias.Rebens
         [Required]
         public int Order { get; set; }
         public int? IdParent { get; set; }
-        [MaxLength(500)]
-        public string Icon { get; set; }
         [Required]
         [DefaultValue(false)]
         public bool Active { get; set; }

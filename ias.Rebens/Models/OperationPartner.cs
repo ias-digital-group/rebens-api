@@ -8,7 +8,7 @@ namespace ias.Rebens
     {
         public OperationPartner()
         {
-            Customers = new HashSet<OperationPartnerCustomer>();
+            Customers = new HashSet<Customer>();
             AdminUsers = new HashSet<AdminUser>();
         }
 
@@ -19,9 +19,10 @@ namespace ias.Rebens
         public bool Deleted { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public string Doc { get; set; }
 
         public virtual Operation Operation { get; set; }
-        public virtual ICollection<OperationPartnerCustomer> Customers { get; set; }
+        public virtual ICollection<Customer> Customers { get; set; }
         public virtual ICollection<AdminUser> AdminUsers { get; set; }
 
     }

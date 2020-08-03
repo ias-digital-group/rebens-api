@@ -32,6 +32,11 @@ namespace ias.Rebens.api.Models
         /// </summary>
         [Required]
         public bool Active { get; set; }
+        /// <summary>
+        /// CNPJ
+        /// </summary>
+        [MaxLength(50)]
+        public string Doc { get; set; }
 
         /// <summary>
         /// Construtor
@@ -43,10 +48,14 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public OperationPartnerModel(OperationPartner partner)
         {
-            this.Id = partner.Id;
-            this.Name = partner.Name;
-            this.IdOperation = partner.IdOperation;
-            this.Active = partner.Active;
+            if (partner != null)
+            {
+                this.Id = partner.Id;
+                this.Name = partner.Name;
+                this.IdOperation = partner.IdOperation;
+                this.Active = partner.Active;
+                this.Doc = partner.Doc;
+            }
         }
 
         /// <summary>
@@ -61,8 +70,59 @@ namespace ias.Rebens.api.Models
                 Name = this.Name,
                 IdOperation = this.IdOperation,
                 Active = this.Active,
-                Deleted = false
+                Deleted = false,
+                Doc = this.Doc
             };
+        }
+    }
+
+    public class OperationPartnerListItem
+    {
+        /// <summary>
+        /// Id
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
+        /// Nome
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
+        /// Id da Operação
+        /// </summary>
+        public int IdOperation { get; set; }
+        /// <summary>
+        /// Ativo
+        /// </summary>
+        public bool Active { get; set; }
+
+        public string CreatedUserName { get; set; }
+        public string Created { get; set; }
+        public string ModifiedUserName { get; set; }
+        public string Modified { get; set; }
+        public string Doc { get; set; }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public OperationPartnerListItem() { }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public OperationPartnerListItem(Entity.OperationPartnerListItem partner)
+        {
+            if(partner != null)
+            {
+                this.Id = partner.Id;
+                this.Name = partner.Name;
+                this.IdOperation = partner.IdOperation;
+                this.Active = partner.Active;
+                this.Doc = partner.Doc;
+                this.CreatedUserName = partner.CreatedUserName;
+                this.Created = TimeZoneInfo.ConvertTimeFromUtc(partner.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.ModifiedUserName = partner.ModifiedUserName;
+                this.Modified = TimeZoneInfo.ConvertTimeFromUtc(partner.Modified, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+            }
         }
     }
 }

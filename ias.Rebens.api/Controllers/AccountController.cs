@@ -18,7 +18,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/Account")]
     [ApiController]
-    public class AccountController : ControllerBase
+    public class AccountController : BaseApiController
     {
         private IAdminUserRepository repo;
         private IOperationRepository operationRepo;
@@ -52,66 +52,18 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Login([FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
             var user = repo.ReadByEmail(model.Email, out string error);
-            if (user != null && user.Status == (int)Enums.AdminUserStatus.Active)
+            if (user != null && user.Active)
             {
                 if (user.CheckPassword(model.Password))
                 {
-                    ClaimsIdentity identity = new ClaimsIdentity(
-                        new GenericIdentity(model.Email),
-                        new[] {
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-                            new Claim(JwtRegisteredClaimNames.UniqueName, model.Email)
-                        }
-                    );
-
-                    var roles = user.Roles.Split(',');
-                    foreach (var role in roles)
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, role));
-                    }
-                    string modules = "";
-                    if (user.IdOperation.HasValue)
-                        modules = operationRepo.LoadModulesNames(user.IdOperation.Value, out error);
-
-                    if(user.Roles == Enums.Roles.couponChecker.ToString())
-                        identity.AddClaim(new Claim("operationPartnerId", user.IdPartner.HasValue ? user.IdPartner.Value.ToString() : "0"));
-                    else
-                        identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
-                    identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
-                    identity.AddClaim(new Claim("Id", user.Id.ToString()));
-                    identity.AddClaim(new Claim("Name", user.Name));
-                    identity.AddClaim(new Claim("modules", modules));
-
-                    DateTime dataCriacao = DateTime.UtcNow;
-                    DateTime dataExpiracao = dataCriacao.AddDays(2);
-
-                    var handler = new JwtSecurityTokenHandler();
-                    var securityToken = handler.CreateToken(new SecurityTokenDescriptor
-                    {
-                        Issuer = tokenConfigurations.Issuer,
-                        Audience = tokenConfigurations.Audience,
-                        SigningCredentials = signingConfigurations.SigningCredentials,
-                        Subject = identity,
-                        NotBefore = dataCriacao,
-                        Expires = dataExpiracao
-                    });
-                    var token = handler.WriteToken(securityToken);
-
-                    var Data = new TokenModel()
-                    {
-                        authenticated = true,
-                        created = dataCriacao,
-                        expiration = dataExpiracao,
-                        accessToken = token
-                    };
-
+                    var data = GetToken(user, signingConfigurations, tokenConfigurations);
                     repo.SetLastLogin(user.Id, out error);
 
-                    return Ok(Data);
+                    return Ok(data);
                 }
             }
 
-            return NotFound(new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "O login ou a senha não conferem!" });
         }
         
         /// <summary>
@@ -190,16 +142,9 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangePassword([FromBody]ChangePasswordModel model)
         {
-            int idAdmin = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var tmpId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (tmpId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-                if (!int.TryParse(tmpId.Value, out idAdmin))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Usuário não encontrado!" });
-            }
+            int idAdmin = GetAdminUserId(out string errorId);
+            if (!string.IsNullOrEmpty(errorId))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
             var user = repo.Read(idAdmin, out string error);
             if(user != null)
@@ -271,70 +216,75 @@ namespace ias.Rebens.api.Controllers
                 if (user != null)
                 {
                     if(model.Password != model.PasswordConfirm)
-                    {
                         return NotFound(new JsonModel() { Status = "error", Message = "A senha e a confirmação da senha devem ser iguais!" });
-                    }
 
                     user.SetPassword(model.Password);
                     if(repo.ChangePassword(user.Id, user.EncryptedPassword, user.PasswordSalt, out error))
                     {
-                        ClaimsIdentity identity = new ClaimsIdentity(
-                            new GenericIdentity(user.Email),
-                            new[] {
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-                            new Claim(JwtRegisteredClaimNames.UniqueName, user.Email)
-                            }
-                        );
-
-                        var roles = user.Roles.Split(',');
-                        foreach (var role in roles)
-                        {
-                            identity.AddClaim(new Claim(ClaimTypes.Role, role));
-                        }
-                        string modules = "";
-                        if (user.IdOperation.HasValue)
-                            modules = operationRepo.LoadModulesNames(user.IdOperation.Value, out _);
-
-                        if (user.Roles == Enums.Roles.couponChecker.ToString())
-                            identity.AddClaim(new Claim("operationPartnerId", user.IdPartner.HasValue ? user.IdPartner.Value.ToString() : "0"));
-                        else
-                            identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
-                        identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
-                        identity.AddClaim(new Claim("Id", user.Id.ToString()));
-                        identity.AddClaim(new Claim("Name", user.Name));
-                        identity.AddClaim(new Claim("modules", modules));
-
-                        DateTime dataCriacao = DateTime.UtcNow;
-                        DateTime dataExpiracao = dataCriacao.AddDays(2);
-
-                        var handler = new JwtSecurityTokenHandler();
-                        var securityToken = handler.CreateToken(new SecurityTokenDescriptor
-                        {
-                            Issuer = tokenConfigurations.Issuer,
-                            Audience = tokenConfigurations.Audience,
-                            SigningCredentials = signingConfigurations.SigningCredentials,
-                            Subject = identity,
-                            NotBefore = dataCriacao,
-                            Expires = dataExpiracao
-                        });
-                        var token = handler.WriteToken(securityToken);
-
-                        var Data = new TokenModel()
-                        {
-                            authenticated = true,
-                            created = dataCriacao,
-                            expiration = dataExpiracao,
-                            accessToken = token
-                        };
-
+                        var data = GetToken(user, signingConfigurations, tokenConfigurations);
                         repo.SetLastLogin(user.Id, out error);
 
-                        return Ok(Data);
+                        return Ok(data);
                     }
                 }
             }
 
             return NotFound(new JsonModel() { Status = "error", Message = "O código de validação não conferem!" });
+        }
+
+        private TokenModel GetToken(AdminUser user, helper.SigningConfigurations signingConfigurations, helper.TokenOptions tokenConfigurations)
+        {
+            ClaimsIdentity identity = new ClaimsIdentity(
+                        new GenericIdentity(user.Email),
+                        new[] {
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+                            new Claim(JwtRegisteredClaimNames.UniqueName, user.Email)
+                        }
+                    );
+
+            var roles = user.Roles.Split(',');
+            foreach (var role in roles)
+            {
+                identity.AddClaim(new Claim(ClaimTypes.Role, role));
+            }
+            string modules = "";
+            if (user.IdOperation.HasValue)
+                modules = operationRepo.LoadModulesNames(user.IdOperation.Value, out _);
+
+            identity.AddClaim(new Claim("operationPartnerId", user.IdOperationPartner.HasValue ? user.IdOperationPartner.Value.ToString() : "0"));
+            identity.AddClaim(new Claim("operationId", user.IdOperation.HasValue ? user.IdOperation.Value.ToString() : "0"));
+            identity.AddClaim(new Claim("partnerId", user.IdPartner.HasValue ? user.IdPartner.Value.ToString() : "0"));
+            identity.AddClaim(new Claim("id", user.Id.ToString()));
+            identity.AddClaim(new Claim("name", user.Name));
+            identity.AddClaim(new Claim("surname", user.Surname));
+            identity.AddClaim(new Claim("picture", user.Picture ?? ""));
+            identity.AddClaim(new Claim("initials", ($"{user.Name.Substring(0, 1)}{(user.Surname.Length > 0 ? user.Surname.Substring(0, 1) : "")}")));
+            identity.AddClaim(new Claim("modules", modules));
+            if (Enum.TryParse(user.Roles, out Enums.Roles role1))
+                identity.AddClaim(new Claim("roleName", Enums.EnumHelper.GetEnumDescription(role1)));
+
+            DateTime dataCriacao = DateTime.UtcNow;
+            DateTime dataExpiracao = dataCriacao.AddDays(2);
+
+            var handler = new JwtSecurityTokenHandler();
+            var securityToken = handler.CreateToken(new SecurityTokenDescriptor
+            {
+                Issuer = tokenConfigurations.Issuer,
+                Audience = tokenConfigurations.Audience,
+                SigningCredentials = signingConfigurations.SigningCredentials,
+                Subject = identity,
+                NotBefore = dataCriacao,
+                Expires = dataExpiracao
+            });
+            var token = handler.WriteToken(securityToken);
+
+            return new TokenModel()
+            {
+                authenticated = true,
+                created = dataCriacao,
+                expiration = dataExpiracao,
+                accessToken = token
+            };
         }
     }
 }

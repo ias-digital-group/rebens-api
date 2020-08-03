@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IdentityModel.Tokens.Jwt;
-using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ias.Rebens.api.Controllers
@@ -20,7 +17,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "customer")]
     [ApiController]
-    public class PortalController : ControllerBase
+    public class PortalController : BaseApiController
     {
         #region Attributes
         private IAddressRepository addrRepo;
@@ -30,13 +27,11 @@ namespace ias.Rebens.api.Controllers
         private IBenefitViewRepository benefitViewRepo;
         private ICouponRepository couponRepo;
         private ICustomerRepository customerRepo;
-        private ICustomerReferalRepository customerReferalRepo;
         private IFaqRepository faqRepo;
         private IFormContactRepository formContactRepo;
         private IFormEstablishmentRepository formEstablishmentRepo;
         private IMoipRepository moipRepo;
         private IOperationRepository operationRepo;
-        private IOperationCustomerRepository operationCustomerRepo;
         private IStaticTextRepository staticTextRepo;
         private IWithdrawRepository withdrawRepo;
         private IBankAccountRepository bankAccountRepo;
@@ -71,8 +66,6 @@ namespace ias.Rebens.api.Controllers
         /// <param name="staticTextRepository"></param>
         /// <param name="couponRepository"></param>
         /// <param name="moipRepository"></param>
-        /// <param name="customerReferalRepository"></param>
-        /// <param name="operationCustomerRepository"></param>
         /// <param name="benefitViewRepository"></param>
         /// <param name="bankAccountRepository"></param>
         /// <param name="operationPartnerRepository"></param>
@@ -90,7 +83,7 @@ namespace ias.Rebens.api.Controllers
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
             IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository, ICouponRepository couponRepository, 
-            IMoipRepository moipRepository, ICustomerReferalRepository customerReferalRepository, IOperationCustomerRepository operationCustomerRepository,
+            IMoipRepository moipRepository,
             IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository,
             ICourseRepository courseRepository, ICourseCollegeRepository courseCollegeRepository, ICourseGraduationTypeRepository courseGraduationTypeRepository, 
             ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository,
@@ -103,13 +96,11 @@ namespace ias.Rebens.api.Controllers
             this.benefitViewRepo = benefitViewRepository;
             this.couponRepo = couponRepository;
             this.customerRepo = customerRepository;
-            this.customerReferalRepo = customerReferalRepository;
             this.faqRepo = faqRepository;
             this.formContactRepo = formContactRepository;
             this.formEstablishmentRepo = formEstablishmentRepository;
             this.moipRepo = moipRepository;
             this.operationRepo = operationRepository;
-            this.operationCustomerRepo = operationCustomerRepository;
             this.staticTextRepo = staticTextRepository;
             this.withdrawRepo = withdrawRepository;
             this.bankAccountRepo = bankAccountRepository;
@@ -200,33 +191,17 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetText([FromQuery]string page, [FromHeader(Name = "x-operation-code")]string operationCode = null)
         {
-            int idOperation = 0;
-            Guid operationGuid = Guid.Empty;
+            int idOperation = GetOperationId(out string error);
             StaticText text = null;
-            string error;
-            if (string.IsNullOrEmpty(operationCode))
-            {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-                    text = staticTextRepo.ReadText(idOperation, page, out error);
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-            }
-            else
+            if (!string.IsNullOrEmpty(error))
             {
-                Guid.TryParse(operationCode, out operationGuid);
-                if (operationGuid == Guid.Empty)
+                if (!Guid.TryParse(operationCode, out Guid operationGuid))
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
                 text = staticTextRepo.ReadText(operationGuid, page, out error);
             }
+            else
+                text = staticTextRepo.ReadText(idOperation, page, out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -256,33 +231,19 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ReadText([FromQuery]int id, [FromHeader(Name = "x-operation-code")]string operationCode = null)
         {
-            int idOperation = 0;
-            Guid operationGuid = Guid.Empty;
+            int idOperation = GetOperationId(out string error);
             StaticText text = null;
-            string error;
-            if (string.IsNullOrEmpty(operationCode))
-            {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-                    text = staticTextRepo.Read(id, out error);
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-            }
-            else
+            if (!string.IsNullOrEmpty(error))
             {
+                Guid operationGuid = Guid.Empty;
                 Guid.TryParse(operationCode, out operationGuid);
                 if (operationGuid == Guid.Empty)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
                 text = staticTextRepo.Read(id, out error);
             }
+            else
+                text = staticTextRepo.Read(id, out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -354,7 +315,6 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult EstablishmentForm([FromHeader(Name = "x-operation-code")]string operationCode, [FromBody] FormEstablishmentModel formEstablishment)
         {
-            var model = new JsonModel();
             Guid operationGuid = Guid.Empty;
             Guid.TryParse(operationCode, out operationGuid);
 
@@ -439,10 +399,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SignUp([FromHeader(Name = "x-operation-code")] string operationCode, [FromBody] SignUpModel signUp)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var operation = operationRepo.ReadForSignUp(operationGuid, out bool openSignUp, out string error);
@@ -451,44 +408,31 @@ namespace ias.Rebens.api.Controllers
             {
                 if (!customerRepo.CheckEmailAndCpf(signUp.Email, signUp.Cpf, operation.Id, out error))
                 {
-                    Customer customer = null;
-                    CustomerReferal referal = null;
-                    OperationCustomer oc = operationCustomerRepo.ReadByCpf(signUp.Cpf, operation.Id, out error);
+                    Customer customer = customerRepo.ReadPreSign(signUp.Cpf, operation.Id, out error);
+                    bool isPreSignup = false;
 
-                    if (oc != null)
+                    if (customer != null)
                     {
-                        customer = new Customer()
-                        {
-                            Email = signUp.Email,
-                            Cpf = signUp.Cpf,
-                            Name = oc.Name,
-                            Phone = oc.Phone,
-                            Cellphone = oc.Cellphone,
-                            Created = DateTime.Now,
-                            Modified = DateTime.Now,
-                            Status = (int)Enums.CustomerStatus.Validation,
-                            CustomerType = (int)Enums.CustomerType.Customer,
-                            Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                            IdOperation = operation.Id
-                        };
+                        customer.Email = signUp.Email;
+                        customer.Cpf = signUp.Cpf;
+                        customer.Status = (int)Enums.CustomerStatus.Validation;
+                        customer.Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf);
+                        customer.Modified = DateTime.UtcNow;
+                        isPreSignup = true;
                     }
                     else
                     {
-                        referal = customerReferalRepo.ReadByEmail(signUp.Email, operation.Id, out error);
+                        Customer referal = customerRepo.ReadByEmail(signUp.Email, operation.Id, out error);
                         if (referal != null)
                         {
-                            customer = new Customer()
-                            {
-                                Email = signUp.Email,
-                                Cpf = signUp.Cpf,
-                                Name = referal.Name,
-                                Created = DateTime.Now,
-                                Modified = DateTime.Now,
-                                Status = (int)Enums.CustomerStatus.Validation,
-                                CustomerType = (int)Enums.CustomerType.Referal,
-                                Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                                IdOperation = operation.Id
-                            };
+                            isPreSignup = true;
+                            customer = referal;
+                            customer.Cpf = signUp.Cpf;
+                            customer.Modified = DateTime.UtcNow;
+                            customer.Status = (int)Enums.CustomerStatus.Validation;
+                            customer.CustomerType = (int)Enums.CustomerType.Referal;
+                            customer.Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf);
+                            customer.ComplementaryStatus = (int)Enums.CustomerComplementaryStatus.registered;
                         }
                     }
 
@@ -511,16 +455,24 @@ namespace ias.Rebens.api.Controllers
 
                     if (customer != null)
                     {
-                        if (customerRepo.Create(customer, out error))
+                        if (isPreSignup)
+                        {
+                            if (customerRepo.Update(customer, out string errorUpdate))
+                            {
+                                string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                                if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                                Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, fromEmail, out error);
+
+                                return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
+                            }
+                            else
+                                return StatusCode(400, new JsonModel() { Status = "error", Message = errorUpdate });
+                        }
+                        else if (customerRepo.Create(customer, out error))
                         {
                             string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
                             if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
                             Helper.EmailHelper.SendCustomerValidation(staticTextRepo, operation, customer, fromEmail, out error);
-
-                            if (oc != null)
-                                operationCustomerRepo.SetSigned(oc.Id, out error);
-                            else if (referal != null)
-                                customerReferalRepo.ChangeStatus(referal.Id, Enums.CustomerReferalStatus.SignUp, out error);
 
                             return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Enviamos um e-mail para ativação do cadastro.", Id = customer.Id });
                         }
@@ -534,7 +486,7 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Cria um novo cliente
+        /// Valida um novo cliente
         /// </summary>
         /// <param name="operationCode"></param>
         /// <param name="validateCustomer"></param>
@@ -549,33 +501,34 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ValidateCustomer([FromHeader(Name = "x-operation-code")] string operationCode, [FromBody] ValidateCustomerModel validateCustomer, [FromServices] helper.SigningConfigurations signingConfigurations, [FromServices] helper.TokenOptions tokenConfigurations)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var operation = operationRepo.Read(operationGuid, out string error);
 
-            if (operation != null)
+            if (string.IsNullOrEmpty(error))
             {
-                var customer = customerRepo.ReadByCode(validateCustomer.Code.Replace(" ", "+"), operation.Id, out error);
-
-                if (customer != null)
+                if (operation != null)
                 {
-                    customer.SetPassword(validateCustomer.Password);
-                    if (customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
-                    {
-                        var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
-                        customerRepo.SaveLog(customer.Id, Enums.CustomerLogAction.validate, null);
+                    var customer = customerRepo.ReadByCode(validateCustomer.Code.Replace(" ", "+"), operation.Id, out error);
 
-                        return Ok(Data);
+                    if (customer != null)
+                    {
+                        customer.SetPassword(validateCustomer.Password);
+                        if (customerRepo.ChangePassword(customer.Id, customer.EncryptedPassword, customer.PasswordSalt, (int)Enums.CustomerStatus.Incomplete, out error))
+                        {
+                            var Data = LoadToken(customer, tokenConfigurations, signingConfigurations);
+                            customerRepo.SaveLog(customer.Id, Enums.CustomerLogAction.validate, null);
+
+                            return Ok(Data);
+                        }
+                        return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
                     }
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "changing password", Data = error });
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = "reading customer - " + validateCustomer.Code, Data = error });
                 }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "reading customer - " + validateCustomer.Code, Data = error });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida! (code: " + operationCode + ")" });
             }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida! (code: " + operationCode + ")" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         private PortalTokenModel LoadToken(Customer customer, helper.TokenOptions tokenConfigurations, helper.SigningConfigurations signingConfigurations)
@@ -589,9 +542,6 @@ namespace ias.Rebens.api.Controllers
                         );
 
             identity.AddClaim(new Claim(ClaimTypes.Role, "customer"));
-            //foreach (var policy in user.Permissions)
-            //    identity.AddClaim(new Claim("permissions", "permission1"));
-
             identity.AddClaim(new Claim("operationId", customer.IdOperation.ToString()));
             identity.AddClaim(new Claim("Id", customer.Id.ToString()));
             identity.AddClaim(new Claim("Name", string.IsNullOrEmpty(customer.Name) ? "" : customer.Name));
@@ -656,10 +606,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult CustomerCreate([FromHeader(Name = "x-operation-code")] string operationCode, [FromBody] CustomerModel customer)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if(!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var operation = operationRepo.Read(operationGuid, out string error);
@@ -673,7 +620,7 @@ namespace ias.Rebens.api.Controllers
                 if (customer.Address != null)
                 {
                     addr = customer.Address.GetEntity();
-                    if (addrRepo.Create(addr, out error))
+                    if (addrRepo.Create(addr, 0, out error))
                         cust.IdAddress = addr.Id;
                 }
 
@@ -692,9 +639,7 @@ namespace ias.Rebens.api.Controllers
                     if (sendingBlue.CreateContact(cust, addr, operation, out int blueId, out string error1))
                     {
                         if (!customerRepo.SaveSendingblueId(cust.Id, blueId, out error1))
-                        {
                             logErrorRepo.Create("PortalController.CustomerCreate", error1, "Save sendingblue id", "");
-                        }
                     }
                     else
                         logErrorRepo.Create("PortalController.CustomerCreate", error1, "Create sendingblue id", "");
@@ -720,30 +665,25 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult CustomerUpdate([FromBody] CustomerModel customer, [FromServices] helper.SigningConfigurations signingConfigurations, [FromServices] helper.TokenOptions tokenConfigurations)
         {
-            int idOperation = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-            }
+            if(customer == null)
+                return StatusCode(400, "Objeto não pode ser nulo");
+
+            int idOperation = GetOperationId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
             var cust = customer.GetEntity();
             cust.IdOperation = idOperation;
-            string error = null;
 
             if (customer.Address != null)
             {
                 var addr = customer.Address.GetEntity();
                 if (addr.Id > 0)
                 {
-                    if (addrRepo.Update(addr, out error))
+                    if (addrRepo.Update(addr, 0, out error))
                         cust.IdAddress = addr.Id;
                 }
-                else if (addrRepo.Create(addr, out error))
+                else if (addrRepo.Create(addr, 0, out error))
                     cust.IdAddress = addr.Id;
             }
 
@@ -842,10 +782,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RememberPassword([FromHeader(Name = "x-operation-code")] string operationCode, [FromQuery] string email)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var operation = operationRepo.Read(operationGuid, out string error);
@@ -884,17 +821,15 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult SaveOperationPartnerCustomer([FromHeader(Name = "x-operation-code")] string operationCode, [FromBody] OperationPartnerCustomerModel model)
         {
-            Guid.TryParse(operationCode, out Guid operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if(!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var operation = operationRepo.ReadForSignUp(operationGuid, out bool openSignUp, out string error);
             if (operation != null)
             {
                 var customer = model.GetEntity();
-                customer.Status = (int)Enums.OperationPartnerCustomerStatus.newCustomer;
-                if (operationPartnerRepo.CreateCustomer(customer, out error))
+                customer.IdOperation = operation.Id;
+                if (customerRepo.Create(customer, out error))
                 {
                     string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
                     if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
@@ -902,9 +837,8 @@ namespace ias.Rebens.api.Controllers
                     Helper.EmailHelper.SendDefaultEmail(staticTextRepo, customer.Email, customer.Name, operation.Id, $"{operation.Title} - Cadastro no site", body, fromEmail, operation.Title, out error);
 
                     body = $"<p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Olá,</p><p style='text-align:center; font-size: 14px; font-family:verdana, arial, Helvetica; color: #666666; margin: 0;padding: 0 20px;'>Recebemos a solicitação de cadastro para aprovação, acesse o sistema para avaliar a solicitação.</p><br /><p style=\"text-align:center;\"><a href=\"{constant.URL}\" target=\"_blank\" style=\"display:inline-block;margin:0;outline:none;text-align:center;text-decoration:none;padding: 15px 50px;background-color:#08061e;color:#ffffff;font-size: 14px; font-family:verdana, arial, Helvetica;border-radius:50px;\">ACESSAR SISTEMA</a></p>";
-                    var listDestinataries = operationPartnerRepo.ListDestinataries(customer.IdOperationPartner, out error);
+                    var listDestinataries = operationPartnerRepo.ListDestinataries(customer.IdOperationPartner.Value, out error);
                     Helper.EmailHelper.SendAdminEmail(listDestinataries, $"{operation.Title} - Novo cadastro de parceiro", body, out error);
-
 
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Seu cadastro ira passar por um processo de validação e em breve entraremos em contato.", Id = customer.Id });
                 }
@@ -926,18 +860,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetCustomer()
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            var customer = customerRepo.Read(idCustomer, out string error);
+            var customer = customerRepo.Read(idCustomer, out error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -961,18 +888,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Home()
         {
-            int idOperation = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                if(!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-            }
+            int idOperation = GetOperationId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            var listFull = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Home, (int)Enums.BannerShow.HomeLogged, out string error);
+            var listFull = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Home, (int)Enums.BannerShow.HomeLogged, out error);
             var listUnmissable = bannerRepo.ListByTypeAndOperation(idOperation, (int)Enums.BannerType.Unmissable, (int)Enums.BannerShow.HomeLogged, out error);
             var listBenefits = benefitRepo.ListForHomePortal(idOperation, out error);
 
@@ -1040,32 +960,25 @@ namespace ias.Rebens.api.Controllers
                                 [FromQuery]string searchWord = "", [FromQuery]string benefitIds = "", 
                                 [FromQuery]string state = "", [FromQuery]string city = "")
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
             int idOperation = 0;
-            string error;
-
-            if (operationGuid == Guid.Empty)
+            if(!Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = GetOperationId(out string errorId);
+                if(!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
             {
-                var operation = operationRepo.Read(operationGuid, out error);
+                var operation = operationRepo.Read(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
                 idOperation = operation.Id;
             }
 
             if(idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             ResultPage<Benefit> list;
+            string error;
             if (idOperation != 1 && page == 0 && !idCategory.HasValue && string.IsNullOrEmpty(idBenefitType) && !latitude.HasValue && !longitude.HasValue && string.IsNullOrEmpty(searchWord))
                 list = benefitRepo.ListForHomeBenefitPortal(idOperation, out error);
             else
@@ -1111,20 +1024,15 @@ namespace ias.Rebens.api.Controllers
             if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
                 var operation = operationRepo.Read(operationGuid, out error);
+                if(!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 idOperation = operation.Id;
             }
             else
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
-                
+                idOperation = GetOperationId(out error);
+                if (!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
 
             if (idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
@@ -1162,20 +1070,15 @@ namespace ias.Rebens.api.Controllers
             if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
                 var operation = operationRepo.Read(operationGuid, out error);
+                if (!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 idOperation = operation.Id;
             }
             else
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
-
+                idOperation = GetOperationId(out error);
+                if (!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
 
             if (idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
@@ -1211,38 +1114,22 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetBenefit([FromHeader(Name = "x-operation-code")]string operationCode, int id)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-            int idCustomer = 0;
             int idOperation = 0;
-            string error;
-
-            var principal = HttpContext.User;
-            if (operationGuid == Guid.Empty)
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
-            }
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
             else
             {
-                var operation = operationRepo.Read(operationGuid, out error);
+                var operation = operationRepo.Read(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
                 idOperation = operation.Id;
             }
             if (idOperation == 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId != null)
-                    int.TryParse(customerId.Value, out idCustomer);
-            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
             var benefit = benefitRepo.Read(id, out error);
             if(idCustomer > 0)
@@ -1273,31 +1160,26 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListBenefitHistory([FromQuery] int page = 0, [FromQuery] int pageItems = 30)
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            var list = benefitUseRepo.ListByCustomer(idCustomer, page, pageItems, null, "date desc", out string error);
+            var list = benefitUseRepo.ListByCustomer(idCustomer, page, pageItems, null, "date desc", out error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<BenefitUseModel>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<BenefitUseModel>();
+                var ret = new ResultPageModel<BenefitUseModel>
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<BenefitUseModel>()
+                };
                 foreach (var benefitUse in list.Page)
                     ret.Data.Add(new BenefitUseModel(benefitUse));
 
@@ -1322,28 +1204,13 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListUnmissableBanners([FromHeader(Name = "x-operation-code")] string operationCode)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-            int idOperation = 0;
-            string error;
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+            var operation = operationRepo.Read(operationGuid, out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            int idOperation = operation.Id;
 
-            if (operationGuid == Guid.Empty)
-            {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
-            }
-            else
-            {
-                var operation = operationRepo.Read(operationGuid, out error);
-                idOperation = operation.Id;
-            }
             if (idOperation == 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
@@ -1381,30 +1248,23 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Faq([FromHeader(Name = "x-operation-code")] string operationCode)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            if (operationGuid != null && operationGuid != Guid.Empty)
+            var list = faqRepo.ListByOperation(operationGuid, out string error);
+            if (string.IsNullOrEmpty(error))
             {
-                var list = faqRepo.ListByOperation(operationGuid, out string error);
-                if (string.IsNullOrEmpty(error))
-                {
-                    if (list == null || list.Count == 0)
-                        return NoContent();
+                if (list == null || list.Count == 0)
+                    return NoContent();
 
-                    var ret = new JsonDataModel<List<FaqModel>>() { Data = new List<FaqModel>() };
-                    foreach (var faq in list)
-                        ret.Data.Add(new FaqModel(faq));
+                var ret = new JsonDataModel<List<FaqModel>>() { Data = new List<FaqModel>() };
+                foreach (var faq in list)
+                    ret.Data.Add(new FaqModel(faq));
 
-                    return Ok(ret);
-                }
-
-                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+                return Ok(ret);
             }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -1422,14 +1282,10 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListOperationPartners([FromHeader(Name = "x-operation-code")] string operationCode)
         {
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var list = operationPartnerRepo.ListActiveByOperation(operationGuid, out string error);
-
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
@@ -1463,18 +1319,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetWithdrawSummary()
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            if(benefitUseRepo.GetCustomerWithdrawSummary(idCustomer, out decimal available, out decimal blocked, out string error))
+            if (benefitUseRepo.GetCustomerWithdrawSummary(idCustomer, out decimal available, out decimal blocked, out error))
                 return Ok(new JsonDataModel<BalanceSummaryModel>() { Data = new BalanceSummaryModel() { AvailableBalance = available, BlokedBalance = blocked, Total = (available + blocked) } });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -1492,38 +1341,37 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Withdraw([FromBody]WithdrawModel withdraw)
         {
-            int idCustomer = 0;
-            int idOperation = 0;
-            string customerName = "", customerEmail = "";
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+            if (withdraw == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "O objeto não pode ser nulo!" });
 
-                var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                if (operationId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
-                if (!int.TryParse(operationId.Value, out idOperation))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
-
-                customerName = principal.Claims.SingleOrDefault(c => c.Type == "Name").Value;
-                customerEmail = principal.Claims.SingleOrDefault(c => c.Type == "Email").Value;
-            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            int idOperation = GetOperationId(out error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            string customerName = GetCustomerName(out error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            string customerEmail = GetCustomerEmail(out error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
             if (idCustomer > 0)
             {
-                if(withdraw.Amount < 25)
+                if (withdraw.Amount < 25)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "O valor mínimo para resgate é de R$ 25,00." });
 
-                decimal balance = benefitUseRepo.GetCustomerBalance(idCustomer, out string error);
-                if(withdraw.Amount > balance)
+                decimal balance = benefitUseRepo.GetCustomerBalance(idCustomer, out error);
+                if (!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+
+                if (withdraw.Amount > balance)
                     return StatusCode(400, new JsonModel() { Status = "error", Message = $"O valor máximo que você pode resgate é o seu saldo disponível." });
 
                 var operation = operationRepo.Read(idOperation, out error);
+                if (!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
                 var draw = new Withdraw()
                 {
@@ -1577,24 +1425,18 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListWithdraw([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            var list = withdrawRepo.ListPage(idCustomer, page, pageItems, "date desc", out string error);
+            var list = withdrawRepo.ListPage(idCustomer, page, pageItems, "date desc", out error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<WithdrawItemModel>() {
+                var ret = new ResultPageModel<WithdrawItemModel>()
+                {
                     Data = new List<WithdrawItemModel>(),
                     CurrentPage = list.CurrentPage,
                     HasNextPage = list.HasNextPage,
@@ -1630,18 +1472,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCoupons([FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            var list = couponRepo.ListPageByCustomer(idCustomer, page, pageItems, out string error);
+            var list = couponRepo.ListPageByCustomer(idCustomer, page, pageItems, out error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
@@ -1700,21 +1535,18 @@ namespace ias.Rebens.api.Controllers
                                             [FromQuery]string courseBegin = null, [FromQuery]string state = "", [FromQuery]string city = "")
         {
             int idOperation = 0;
-            string error = null;
             if (!Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
@@ -1757,7 +1589,7 @@ namespace ias.Rebens.api.Controllers
 
             var list = courseRepo.ListForPortal(page: page, pageItems: pageItems, word: searchWord, sort: sort, idOperation: idOperation,
                 idCollege: idCollege, graduationTypes: listGraduationTypes, modalities: listModalities, address: address, periods: listPeriods, 
-                error: out error, courseBegin: listCourseBegin, state: state, city: city);
+                error: out string error, courseBegin: listCourseBegin, state: state, city: city);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -1799,32 +1631,22 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetCourse(int id, [FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int idOperation = 0;
-            int idCustomer = 0;
-            string error = null;
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId != null)
-                    int.TryParse(customerId.Value, out idCustomer);
-            }
-
-            if (operationGuid == Guid.Empty)
-            {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
@@ -1867,31 +1689,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListGraduationTypes([FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int idOperation = 0;
-            string error = null;
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = courseGraduationTypeRepo.ListActive(idOperation, out error);
-
+            var list = courseGraduationTypeRepo.ListActive(idOperation, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
@@ -1931,31 +1746,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListModalities([FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int idOperation = 0;
-            string error = null;
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = courseModalityRepo.ListActive(idOperation, out error);
-
+            var list = courseModalityRepo.ListActive(idOperation, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
@@ -1995,28 +1803,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCoursesBegin([FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int idOperation = 0;
-            string error = null;
-            if (!Guid.TryParse(operationCode, out Guid operationGuid))
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = courseRepo.ListCourseBegins(idOperation, out error);
-
+            var list = courseRepo.ListCourseBegins(idOperation, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
@@ -2054,29 +1858,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListPeriods([FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int idOperation = 0;
-            string error = null;
-            
-            if(!Guid.TryParse(operationCode, out Guid operationGuid))
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = coursePeriodRepo.ListActive(idOperation, out error);
-
+            var list = coursePeriodRepo.ListActive(idOperation, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.Count == 0)
@@ -2116,30 +1915,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListColleges([FromHeader(Name = "x-operation-code")]string operationCode = null)
         {
-            int idOperation = 0;
-            string error;
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-
-            if (operationGuid == Guid.Empty)
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
-            if(idOperation <= 0)
+            if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = courseCollegeRepo.ListActive(idOperation, out error);
+            var list = courseCollegeRepo.ListActive(idOperation, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -2177,30 +1970,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCourseStates([FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int idOperation = 0;
-            string error;
+            int idOperation;
             if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var operation = operationRepo.Read(operationGuid, out error);
-                idOperation = operation.Id;
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
-
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
-            if (idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = courseRepo.ListStates(idOperation, out error);
+            var list = courseRepo.ListStates(idOperation, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 JsonDataModel<List<FilterListItem>> ret = new JsonDataModel<List<FilterListItem>>();
@@ -2228,30 +2015,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCourseCities([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]string state = null)
         {
-            int idOperation = 0;
-            string error;
+            int idOperation;
             if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var operation = operationRepo.Read(operationGuid, out error);
-                idOperation = operation.Id;
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
-
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
-            if (idOperation == 0) return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
+            if (idOperation <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = courseRepo.ListCities(idOperation, out error, state);
+            var list = courseRepo.ListCities(idOperation, out string error, state);
             if (string.IsNullOrEmpty(error))
             {
                 JsonDataModel<List<FilterListItem>> ret = new JsonDataModel<List<FilterListItem>>();
@@ -2290,29 +2071,25 @@ namespace ias.Rebens.api.Controllers
         public IActionResult ListFreeCourses([FromHeader(Name = "x-operation-code")]string operationCode, [FromQuery]int page = 0, [FromQuery]int pageItems = 30,
             [FromQuery]string sort = "name ASC", [FromQuery]string searchWord = null, [FromQuery]int? idPartner = null, [FromQuery]int? idCategory = null)
         {
-            int idOperation = 0;
-            string error = null;
-            if (!Guid.TryParse(operationCode, out Guid operationGuid))
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
             var list = freeCourseRepo.ListForPortal(page: page, pageItems: pageItems, word: searchWord, sort: sort, idOperation: idOperation,
-                idPartner: idPartner, error: out error, idCategory: idCategory);
-
+                idPartner: idPartner, error: out string error, idCategory: idCategory);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
@@ -2353,30 +2130,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetFreeCourse(int id, [FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int idOperation = 0;
-            string error = null;
-            Guid operationGuid = Guid.Empty;
-            Guid.TryParse(operationCode, out operationGuid);
-            var principal = HttpContext.User;
-
-            if (operationGuid == Guid.Empty)
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var course = freeCourseRepo.ReadForPortal(id, out error);
+            var course = freeCourseRepo.ReadForPortal(id, out string error);
             if (string.IsNullOrEmpty(error))
             {
                 if (course == null || course.Id == 0)
@@ -2400,27 +2171,24 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListFreeCoursePartners([FromHeader(Name = "x-operation-code")]string operationCode)
         {
-            int idOperation = 0;
-            string error = null;
-            if (!Guid.TryParse(operationCode, out Guid operationGuid))
+            int idOperation;
+            if (Guid.TryParse(operationCode, out Guid operationGuid))
             {
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, value: new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
-                }
+                idOperation = operationRepo.GetId(operationGuid, out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
-                idOperation = operationRepo.GetId(operationGuid, out error);
+            {
+                idOperation = GetOperationId(out string errorId);
+                if (!string.IsNullOrEmpty(errorId))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+            }
 
             if (idOperation <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var list = partnerRepo.ListFreeCoursePartners(idOperation, out error);
+            var list = partnerRepo.ListFreeCoursePartners(idOperation, out string error);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -2456,25 +2224,18 @@ namespace ias.Rebens.api.Controllers
         {
             if (model != null)
             {
-                int idCustomer = 0;
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                    if (customerId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                    if (!int.TryParse(customerId.Value, out idCustomer))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                }
+                int idCustomer = GetCustomerId(out string error);
+                if (!string.IsNullOrEmpty(error))
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-                var customer = customerRepo.Read(idCustomer, out _);
+                var customer = customerRepo.Read(idCustomer, out error);
                 if (customer != null)
                 {
                     var signature = model.GetMoipSignature();
                     signature.IdCustomer = customer.Id;
                     signature.IdOperation = customer.IdOperation;
 
-                    if (moipRepo.SaveSignature(signature, out string error))
+                    if (moipRepo.SaveSignature(signature, out error))
                     {
                         var operation = operationRepo.Read(customer.IdOperation, out _);
                         if (operation != null)
@@ -2488,7 +2249,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                 }
 
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
             return StatusCode(400, new JsonModel() { Status = "error", Message = "O objeto está vazio!" });
         }
@@ -2504,27 +2265,17 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult GetSubscription()
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
-            {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
-            var signature = moipRepo.GetUserSignature(idCustomer, out string error);
-            if (string.IsNullOrEmpty(error))
-            {
-                if(signature != null)
-                    return Ok(new MoipSignatureModel(signature));
-
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "O cliente não possui assinatura!" });
-            }
-                
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            var signature = moipRepo.GetUserSignature(idCustomer, out error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            
+            if (signature != null)
+                return Ok(new MoipSignatureModel(signature));
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "O cliente não possui assinatura!" });
         }
 
         /// <summary>
@@ -2554,37 +2305,29 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ChangeSubscriptionPlan([FromBody] MoipSignatureChangePlanModel model)
         {
-            if (model != null)
+            if (model == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto não pode ser nulo" });
+
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+
+            var customer = customerRepo.Read(idCustomer, out error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            if (customer == null)
+            return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+
+            if (moipRepo.UpdatePlan(model.Code, model.PlanCode, model.PlanName, model.Amount, model.NextInvoice, out error))
             {
-                int idCustomer = 0;
-                var principal = HttpContext.User;
-                if (principal?.Claims != null)
-                {
-                    var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                    if (customerId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                    if (!int.TryParse(customerId.Value, out idCustomer))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                }
+                var operation = operationRepo.Read(customer.IdOperation, out _);
+                var signature = moipRepo.GetUserSignature(idCustomer, out _);
+                string fromEmail = operationRepo.GetFromEmail(operation.Id);
+                Helper.EmailHelper.SendSignaturePlanChangeEmail(customer, operation, signature, fromEmail, staticTextRepo, out _);
 
-                var customer = customerRepo.Read(idCustomer, out _);
-                if (customer != null)
-                {
-                    
-                    if (moipRepo.UpdatePlan(model.Code, model.PlanCode, model.PlanName, model.Amount, model.NextInvoice, out string error))
-                    {
-                        var operation = operationRepo.Read(customer.IdOperation, out _);
-                        var signature = moipRepo.GetUserSignature(idCustomer, out _);
-                        string fromEmail = operationRepo.GetFromEmail(operation.Id);
-                        Helper.EmailHelper.SendSignaturePlanChangeEmail(customer, operation, signature, fromEmail, staticTextRepo, out _);
-
-                        return Ok(new JsonModel() { Status = "ok" });
-                    }
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-                }
-                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+                return Ok(new JsonModel() { Status = "ok" });
             }
-            return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto não pode ser nulo" });
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
 
         /// <summary>
@@ -2602,43 +2345,32 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListPayments([FromQuery] int page = 0, int pageItems = 30)
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
+            int idCustomer = GetCustomerId(out string error);
+            if(!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+
+            var list = moipRepo.ListPaymentsByCustomer(idCustomer, page, pageItems, out error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            if (list == null || list.Any())
+                return NoContent();
+
+            var ret = new ResultPageModel<PaymentModel>()
             {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+                Data = new List<PaymentModel>(),
+                CurrentPage = list.CurrentPage,
+                HasNextPage = list.HasNextPage,
+                HasPreviousPage = list.HasPreviousPage,
+                ItemsPerPage = list.ItemsPerPage,
+                TotalItems = list.TotalItems,
+                TotalPages = list.TotalPages,
 
-            var list = moipRepo.ListPaymentsByCustomer(idCustomer, page, pageItems, out string error);
+            };
 
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.Count() == 0)
-                    return NoContent();
+            foreach (var item in list)
+                ret.Data.Add(new PaymentModel(item));
 
-                var ret = new ResultPageModel<PaymentModel>()
-                {
-                    Data = new List<PaymentModel>(),
-                    CurrentPage = list.CurrentPage,
-                    HasNextPage = list.HasNextPage,
-                    HasPreviousPage = list.HasPreviousPage,
-                    ItemsPerPage = list.ItemsPerPage,
-                    TotalItems = list.TotalItems,
-                    TotalPages = list.TotalPages,
-
-                };
-
-                foreach (var item in list)
-                    ret.Data.Add(new PaymentModel(item));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            return Ok(ret);
         }
         #endregion subscription
 
@@ -2656,36 +2388,26 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListLuckNumbers()
         {
-            int idCustomer = 0;
-            var principal = HttpContext.User;
-            if (principal?.Claims != null)
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, error);
+
+            var list = drawRepo.ListDrawItems(idCustomer, out error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, error);
+             
+            if (list == null || list.Count == 0)
+                return NoContent();
+
+            var ret = new JsonDataModel<List<DrawItemModel>>()
             {
-                var customerId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                if (customerId == null)
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-                if (!int.TryParse(customerId.Value, out idCustomer))
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
-            }
+                Data = new List<DrawItemModel>()
+            };
 
-            var list = drawRepo.ListDrawItems(idCustomer, out string error);
+            foreach (var item in list)
+                ret.Data.Add(new DrawItemModel(item));
 
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.Count == 0)
-                    return NoContent();
-
-                var ret = new JsonDataModel<List<DrawItemModel>>()
-                {
-                    Data = new List<DrawItemModel>()
-                };
-
-                foreach (var item in list)
-                    ret.Data.Add(new DrawItemModel(item));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            return Ok(ret);
         }
         #endregion LuckNumbers
     }

@@ -26,7 +26,6 @@ namespace ias.Rebens.Integration
                 var jObj = JObject.Parse(ret);
                 if (jObj["saleItems"] != null && jObj["saleItems"]["saleItem"] != null)
                 {
-
                     var objList = jObj["saleItems"]["saleItem"].Children();
 
                     foreach (var item in objList)
@@ -40,8 +39,8 @@ namespace ias.Rebens.Integration
                             Amount = decimal.Parse(item["amount"].ToString()),
                             Commission = decimal.Parse(item["commission"].ToString()),
                             Currency = item["currency"].ToString(),
-                            Modified = DateTime.Now,
-                            Created = DateTime.Now
+                            Created = DateTime.Now,
+                            Modified = DateTime.Now
                         };
 
                         if (item["trackingDate"] != null)

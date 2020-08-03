@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ias.Rebens
 {
@@ -10,23 +9,15 @@ namespace ias.Rebens
 
         ResultPage<Benefit> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation = null, bool? status = null, int? type = null, bool exclusive = false);
 
-        bool Delete(int id, out string error);
+        bool Delete(int id, int idAdminUser, out string error);
 
-        bool Create(Benefit benefit, out string error);
+        bool Create(Benefit benefit, int idAdminUser, out string error);
 
-        bool Update(Benefit benefit, out string error);
+        bool Update(Benefit benefit, int idAdminUser, out string error);
 
-        bool AddOperation(int idBenefit, int idOperation, int idPostion, out string error);
+        bool AddAddress(int idBenefit, int idAddress, int idAdminUser, out string error);
 
-        bool AddAddress(int idBenefit, int idAddress, out string error);
-
-        bool DeleteOperation(int idBenefit, int idOperation, out string error);
-
-        bool DeleteAddress(int idBenefit, int idAddress, out string error);
-
-        bool AddCategory(int idBenefit, int idCategory, out string error);
-
-        bool DeleteCategory(int idBenefit, int idCategory, out string error);
+        bool DeleteAddress(int idBenefit, int idAddress, int idAdminUser, out string error);
 
         ResultPage<Benefit> ListByAddress(int idAddress, int page, int pageItems, string word, string sort, out string error);
 
@@ -48,7 +39,7 @@ namespace ias.Rebens
 
         List<Benefit> ListActive(out string error);
 
-        bool SaveCategories(int idBenefit, string categoryIds, out string error);
+        bool SaveCategories(int idBenefit, string categoryIds, int idAdminUser, out string error);
 
         ResultPage<Benefit> ListForHomePortal(int idOperation, out string error);
 
@@ -58,10 +49,13 @@ namespace ias.Rebens
         
         List<Tuple<string, string>> ListCities(int idOperation, out string error, string state = null);
 
-        bool ChangeActive(int idBenefit, bool active, out string error);
+        bool ToggleActive(int id, int idAdminUser, out string error);
 
-        bool Duplicate(int id, out int newId, out string error);
+        bool Duplicate(int id, out int newId, int idAdminUser, out string error);
 
         List<Benefit> ListToCheckLinks();
+
+        bool ConnectOperations(int id, int[] operations, out string error);
+        bool ConnectCategories(int id, int[] categories, out string error);
     }
 }

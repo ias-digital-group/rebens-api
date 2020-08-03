@@ -111,14 +111,14 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<StaticText> ListPage(int page, int pageItems, string word, string sort, int idStaticTextType, out string error, int? idOperation = null)
+        public ResultPage<Entity.StaticTextListItem> ListPage(int page, int pageItems, string word, string sort, int idStaticTextType, out string error, int? idOperation = null)
         {
-            ResultPage<StaticText> ret;
+            ResultPage<Entity.StaticTextListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.StaticText.Where(p => (!idOperation.HasValue || (idOperation.HasValue && p.IdOperation == idOperation)) 
+                    var tmpList = db.StaticText.Include("Operation").Where(p => (!idOperation.HasValue || (idOperation.HasValue && p.IdOperation == idOperation)) 
                                     && (string.IsNullOrEmpty(word) || p.Title.Contains(word)) && p.IdStaticTextType == idStaticTextType);
                     switch (sort.ToLower())
                     {
@@ -143,9 +143,40 @@ namespace ias.Rebens
                     }
 
                     var total = tmpList.Count();
-                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).Select(s => new Entity.StaticTextListItem() { 
+                        Id = s.Id,
+                        Title = s.Title,
+                        Url = s.Url,
+                        Order = s.Order,
+                        Html = s.Html,
+                        Style =s.Style,
+                        IdStaticTextType = s.IdStaticTextType,
+                        IdOperation = s.Operation.Id,
+                        OperationLogo = s.Operation.Image,
+                        OperationName = s.Operation.Title,
+                        Active = s.Active,
+                        Created = s.Created,
+                        Modified = s.Modified,
+                        IdBenefit = s.IdBenefit
+                    }).ToList();
 
-                    ret = new ResultPage<StaticText>(list, page, pageItems, total);
+                    list.ForEach(c =>
+                    {
+                        var createUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.StaticText && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.create)
+                                            .OrderBy(a => a.Created).FirstOrDefault();
+                        var modifiedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.StaticText && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.update)
+                                            .OrderByDescending(a => a.Created).FirstOrDefault();
+                        if (createUser != null)
+                            c.CreatedUserName = createUser.AdminUser.Name + " " + createUser.AdminUser.Surname;
+                        else
+                            c.CreatedUserName = " - ";
+                        if (modifiedUser != null)
+                            c.ModifiedUserName = modifiedUser.AdminUser.Name + " " + modifiedUser.AdminUser.Surname;
+                        else
+                            c.ModifiedUserName = " - ";
+                    });
+
+                    ret = new ResultPage<Entity.StaticTextListItem>(list, page, pageItems, total);
 
                     error = null;
                 }
@@ -153,7 +184,7 @@ namespace ias.Rebens
             catch (Exception ex)
             {
                 var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("PartnerRepository.ListPage", ex.Message, "", ex.StackTrace);
+                int idLog = logError.Create("StaticTextRepository.ListPage", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os textos. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -167,7 +198,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.StaticText.SingleOrDefault(c => c.Id == id);
+                    ret = db.StaticText.Include("Operation").SingleOrDefault(c => c.Id == id);
                     error = null;
                 }
             }
@@ -196,6 +227,27 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("StaticTextRepository.Read", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar ler o texto. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public StaticText ReadByType(int idType, out string error)
+        {
+            StaticText ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.StaticText.Where(t => t.IdStaticTextType == idType && t.Active).OrderByDescending(t => t.Modified).FirstOrDefault();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("StaticTextRepository.ReadByType", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar ler o texto. (erro:" + idLog + ")";
                 ret = null;
             }
@@ -265,7 +317,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Update(StaticText staticText, out string error)
+        public bool Update(StaticText staticText, int idAdminUser, out string error)
         {
             bool ret = true;
             try
@@ -301,6 +353,15 @@ namespace ias.Rebens
                         {
                             update.IdOperation = staticText.IdOperation;
                         }
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = (int)Enums.LogAction.update,
+                            Created = DateTime.UtcNow,
+                            IdAdminUser = idAdminUser,
+                            IdItem = update.Id,
+                            Item = (int)Enums.LogItem.StaticText
+                        });
 
                         db.SaveChanges();
                         error = null;

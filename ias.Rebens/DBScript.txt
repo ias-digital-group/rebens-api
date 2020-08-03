@@ -1,1 +1,350 @@
-﻿
+﻿/******IAS DEPLOYED TO HOMOLOG IN 07/03/2020 IAS******/
+/******IAS OPERATIONPARTNER IAS******/
+ALTER TABLE OperationPartner ADD Doc NVARCHAR(50) NULL
+GO
+
+/******IAS COLLATE IAS******/
+ALTER TABLE Company ALTER COLUMN [Name] NVARCHAR(300) COLLATE SQL_Latin1_General_CP1_CI_AI NULL
+GO
+ALTER TABLE [Address] ALTER COLUMN [Name] NVARCHAR(400) COLLATE SQL_Latin1_General_CP1_CI_AI NULL
+GO
+ALTER TABLE [Contact] ALTER COLUMN [Name] NVARCHAR(600) COLLATE SQL_Latin1_General_CP1_CI_AI NULL
+GO
+ALTER TABLE [Contact] ALTER COLUMN [Surname] NVARCHAR(200) COLLATE SQL_Latin1_General_CP1_CI_AI NULL
+GO
+/******IAS OPERATION IAS******/
+ALTER TABLE Operation ADD IsCustom BIT NULL
+GO
+
+UPDATE Operation SET IsCustom = 0
+GO
+
+ALTER TABLE Operation ALTER COLUMN IsCustom BIT NOT NULL
+GO
+
+ALTER TABLE [Operation] ADD IdMainAddress INT NULL
+GO
+
+ALTER TABLE [dbo].[Operation]  WITH CHECK ADD  CONSTRAINT [FK_Operation_MainAddress] FOREIGN KEY([IdMainAddress])
+REFERENCES [dbo].[Address] ([Id])
+GO
+
+ALTER TABLE [dbo].[Operation] CHECK CONSTRAINT [FK_Operation_MainAddress]
+GO
+
+ALTER TABLE [Operation] ADD IdMainContact INT NULL
+GO
+
+ALTER TABLE [dbo].[Operation]  WITH CHECK ADD  CONSTRAINT [FK_Operation_MainContact] FOREIGN KEY([IdMainContact])
+REFERENCES [dbo].[Contact] ([Id])
+GO
+
+ALTER TABLE [dbo].[Operation] CHECK CONSTRAINT [FK_Operation_MainContact]
+GO
+
+UPDATE StaticText SET html = REPLACE(CAST(html AS NVARCHAR(MAX)), '"Fechado + Parceiros"', '"Parceiros"') 
+FROM StaticText WHERE html LIKE '%"Fechado + Parceiros"%'
+
+/******IAS FAQ IAS******/
+INSERT INTO StaticText VALUES('Perguntas Frequentes', 'faq', '', null, 0, 12, null, 1, getdate(), getdate(), null)
+
+INSERT INTO StaticText 
+SELECT 'Perguntas Frequentes', 'faq', '', null, 0, 4, id, 1, getdate(), getdate(), null
+FROM Operation
+
+/******IAS CATEGORIA TYPE, PARTNER TYPE IAS******/
+UPDATE Category set [Type] = 4 where [Type] = 1
+UPDATE Category set [Type] = 19 where [Type] = 2
+UPDATE [Partner] set [Type] = 4 where [Type] = 1
+UPDATE [Partner] set [Type] = 19 where [Type] = 2
+
+/******IAS CATEGORIA IAS******/
+ALTER TABLE Category DROP COLUMN Icon
+GO
+
+/******IAS BENEFICIOS IAS******/
+ALTER TABLE Benefit DROP COLUMN IdAdminUser
+GO
+
+ALTER TABLE Benefit ADD TaxAmount money NULL
+GO
+
+ALTER TABLE Benefit ADD AvailableCashback money NULL
+GO
+
+
+/******IAS COTATO IAS******/
+ALTER TABLE Contact ADD  Active BIT NULL
+GO
+
+UPDATE Contact set active = 1
+GO
+
+ALTER TABLE Contact ALTER COLUMN Active BIT NOT NULL
+GO
+
+ALTER TABLE Contact ADD  Deleted BIT NULL
+GO
+
+UPDATE Contact set Deleted = 0
+GO
+
+ALTER TABLE Contact ALTER COLUMN Deleted BIT NOT NULL
+GO
+
+ALTER TABLE Contact ADD [Type] int null
+go
+
+ALTER TABLE Contact ADD IdItem int null
+GO
+
+UPDATE Contact SET [type] = 22, idItem = OperationContact.IdOperation from OperationContact where OperationContact.IdContact = Contact.Id
+GO
+
+UPDATE Contact SET [type] = 23, idItem = PartnerContact.IdPartner from PartnerContact where PartnerContact.IdContact = Contact.Id
+GO
+
+DROP TABLE OperationContact
+GO
+
+DROP TABLE PartnerContact
+GO
+
+
+/******IAS EMPRESAS IAS******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Company](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](300) NOT NULL,
+	[Cnpj] [nvarchar](50) NOT NULL,
+	[Type] [int] NOT NULL,
+	[IdItem] [int] NOT NULL,
+	[IdAddress] [int] NOT NULL,
+	[IdContact] [int] NOT NULL,
+	[Active] [bit] NOT NULL,
+	[Deleted] [bit] NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_Company] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Company]  WITH CHECK ADD  CONSTRAINT [FK_Company_Address] FOREIGN KEY([IdAddress])
+REFERENCES [dbo].[Address] ([Id])
+GO
+
+ALTER TABLE [dbo].[Company] CHECK CONSTRAINT [FK_Company_Address]
+GO
+
+ALTER TABLE [dbo].[Company]  WITH CHECK ADD  CONSTRAINT [FK_Company_Contact] FOREIGN KEY([IdContact])
+REFERENCES [dbo].[Contact] ([Id])
+GO
+
+ALTER TABLE [dbo].[Company] CHECK CONSTRAINT [FK_Company_Contact]
+GO
+
+
+/******IAS ARQUIVOS IAS******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[File](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[IdItem] [int] NOT NULL,
+	[ItemType] [int] NOT NULL, 
+	[Name] [nvarchar](200) NOT NULL,
+	[FileName] [nvarchar](200) NOT NULL,
+	[FileUrl] [nvarchar](1000) NOT NULL,
+	[Created] [datetime] NOT NULL,
+	[Modified] [datetime] NOT NULL,
+ CONSTRAINT [PK_Files] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+/******IAS PARCEIROS IAS******/
+ALTER TABLE [Partner] ADD Cnpj NVARCHAR(50)
+GO
+
+ALTER TABLE [Partner] ADD CompanyName NVARCHAR(300)
+GO
+
+ALTER TABLE Contact ADD Surname NVARCHAR(200)
+GO
+
+ALTER TABLE Contact ADD ComercialPhone NVARCHAR(50)
+GO
+
+ALTER TABLE Contact ADD ComercialPhoneBranch NVARCHAR(50)
+GO
+
+ALTER TABLE [Partner] ADD IdMainAddress INT NULL
+GO
+
+ALTER TABLE [dbo].[Partner]  WITH CHECK ADD  CONSTRAINT [FK_Partner_MainAddress] FOREIGN KEY([IdMainAddress])
+REFERENCES [dbo].[Address] ([Id])
+GO
+
+ALTER TABLE [dbo].[Partner] CHECK CONSTRAINT [FK_Partner_MainAddress]
+GO
+
+ALTER TABLE [Partner] ADD IdMainContact INT NULL
+GO
+
+ALTER TABLE [dbo].[Partner]  WITH CHECK ADD  CONSTRAINT [FK_Partner_MainContact] FOREIGN KEY([IdMainContact])
+REFERENCES [dbo].[Contact] ([Id])
+GO
+
+ALTER TABLE [dbo].[Partner] CHECK CONSTRAINT [FK_Partner_MainContact]
+GO
+
+
+
+
+
+/******IAS USUÁRIOS IAS******/
+ALTER TABLE AdminUser ADD Picture NVARCHAR(500) NULL
+GO
+
+ALTER TABLE AdminUser ADD Surname NVARCHAR(200) NULL
+GO
+
+update AdminUser SET Surname = '' 
+GO
+
+ALTER TABLE AdminUser ALTER COLUMN Surname NVARCHAR(200) NOT NULL
+GO
+
+ALTER TABLE AdminUser ADD Doc NVARCHAR(50) NULL
+GO
+
+update AdminUser SET Doc = '' 
+GO
+
+ALTER TABLE AdminUser ALTER COLUMN Doc NVARCHAR(50) NOT NULL
+GO
+
+ALTER TABLE AdminUser ADD PhoneMobile NVARCHAR(50) NULL
+GO
+
+ALTER TABLE AdminUser ADD PhoneComercial NVARCHAR(50) NULL
+GO
+
+ALTER TABLE AdminUser ADD PhoneComercialMobile NVARCHAR(50) NULL
+GO
+
+ALTER TABLE AdminUser ADD PhoneComercialBranch NVARCHAR(50) NULL
+GO
+
+
+ALTER TABLE AdminUser ADD Active BIT NULL
+GO
+
+UPDATE AdminUser SET Active = 1 where [status] = 1
+UPDATE AdminUser SET Active = 0 where [status] = 2
+
+ALTER TABLE AdminUser ALTER COLUMN Active BIT NOT NULL
+GO
+
+ALTER TABLE AdminUser DROP COLUMN [Status]
+GO
+
+
+/******IAS CLIENTES IAS******/
+ALTER TABLE Customer ADD Active BIT NULL
+GO
+
+UPDATE Customer SET Active = 1 where [status] <> 2
+GO
+
+UPDATE Customer SET Active = 0 where [status] = 2
+GO
+
+ALTER TABLE Customer ALTER COLUMN Active BIT NOT NULL
+GO
+
+ALTER TABLE Customer ADD IdOperationPartner INT NULL
+GO
+
+ALTER TABLE Customer ADD SignUpDate Datetime NULL
+GO
+
+ALTER TABLE Customer ADD ComplementaryStatus int NULL
+GO
+
+ALTER TABLE Customer ADD DegreeOfKinship int NULL
+GO
+
+ALTER TABLE Customer ADD IdCustomerReferer int NULL
+GO
+
+ALTER TABLE Customer ADD IdPromoter INT NULL
+GO
+
+
+ALTER TABLE [dbo].[Customer]  WITH CHECK ADD  CONSTRAINT [FK_Customer_Promoter] FOREIGN KEY([IdPromoter])
+REFERENCES [dbo].[AdminUser] ([Id])
+GO
+
+ALTER TABLE [dbo].[Customer] CHECK CONSTRAINT [FK_Customer_Promoter]
+GO
+
+ALTER TABLE [dbo].[Customer]  WITH CHECK ADD  CONSTRAINT [FK_Customer_CustomerReferer] FOREIGN KEY([IdCustomerReferer])
+REFERENCES [dbo].[Customer] ([Id])
+GO
+
+ALTER TABLE [dbo].[Customer] CHECK CONSTRAINT [FK_Customer_CustomerReferer]
+GO
+
+ALTER TABLE [dbo].[Customer]  WITH CHECK ADD  CONSTRAINT [FK_Customer_OperationPartner] FOREIGN KEY([IdOperationPartner])
+REFERENCES [dbo].[OperationPartner] ([Id])
+GO
+
+ALTER TABLE [dbo].[Customer] CHECK CONSTRAINT [FK_Customer_OperationPartner]
+GO
+
+
+INSERT INTO Customer 
+SELECT r.[name], c.IdOperation, '', NULL, r.Email, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 2, 6, 
+	r.Created, r.Modified, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, 5, r.DegreeOfKinship, r.IdCustomer, NULL 
+FROM CustomerReferal r
+INNER JOIN Customer c ON c.id = r.IdCustomer
+WHERE r.IdStatus = 1
+
+INSERT INTO Customer
+SELECT [Name], idOperation, '', null, email1, null, cpf, null, phone, cellphone, null, null, null, 4, 6, created,modified, null, null, null, null, null, 1, null, null, null, null, null, null
+FROM OperationCustomer
+
+
+UPDATE Customer SET idCustomerReferer = CustomerReferal.IdCustomer, ComplementaryStatus = 4 
+FROM CustomerReferal 
+WHERE CustomerReferal.Email = customer.Email AND CustomerReferal.IdStatus = 3
+
+UPDATE Customer SET CustomerType = 5, idPromoter = CustomerPromoter.IdAminUser
+FROM CustomerPromoter WHERE CustomerPromoter.idCustomer = Customer.Id
+
+DROP TABLE OperationCustomer
+GO
+
+DROP TABLE OperationPartnerCustomer
+GO
+
+DROP TABLE CustomerReferal
+GO
+
+DROP TABLE CustomerPromoter
+GO

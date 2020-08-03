@@ -1,7 +1,9 @@
 ﻿using ias.Rebens.api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Scaffolding;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ias.Rebens.api.Controllers
 {
@@ -11,7 +13,7 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publiser,administratorRebens,publisherRebens")]
     [ApiController]
-    public class AddressController : ControllerBase
+    public class AddressController : BaseApiController
     {
         private IAddressRepository repo;
         
@@ -104,11 +106,13 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Put([FromBody] AddressModel address)
         {
-            var model = new JsonModel();
+            int idAdminUser = GetAdminUserId(out string error);
+            if(error != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
 
             if (address != null)
             {
-                if (repo.Update(address.GetEntity(), out string error))
+                if (repo.Update(address.GetEntity(), idAdminUser, out error))
                     return Ok(new JsonModel() { Status = "ok", Message = "Endereço atualizado com sucesso!" });
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
             }
@@ -127,11 +131,15 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody] AddressModel address)
         {
+            int idAdminUser = GetAdminUserId(out string error);
+            if (error != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+
             if (address != null)
             {
                 var addr = address.GetEntity();
 
-                if (repo.Create(addr, out string error))
+                if (repo.Create(addr, idAdminUser, out error))
                     return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Endereço criado com sucesso!", Id = addr.Id });
 
                 return StatusCode(400, new JsonModel() { Status = "error", Message = error });
@@ -151,7 +159,11 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Delete(int id)
         {
-            if (repo.Delete(id, out string error))
+            int idAdminUser = GetAdminUserId(out string error);
+            if (error != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+
+            if (repo.Delete(id, idAdminUser, out error))
                 return Ok(new JsonModel() { Status = "ok", Message = "Endereço apagado com sucesso!" });
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

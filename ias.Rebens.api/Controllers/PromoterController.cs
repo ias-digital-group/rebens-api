@@ -15,20 +15,22 @@ namespace ias.Rebens.api.Controllers
     [Produces("application/json")]
     [Route("api/[controller]"), Authorize("Bearer", Roles = "master,administrator,publisher,administratorRebens,publisherRebens,promoter")]
     [ApiController]
-    public class PromoterController : ControllerBase
+    public class PromoterController : BaseApiController
     {
-        private ICustomerPromoterRepository repo;
+        private ICustomerRepository repo;
         private IOperationRepository operationRepo;
         private IStaticTextRepository staticTextRepo;
 
         /// <summary>
         /// Constuctor
         /// </summary>
-        /// <param name="customerPromoterRepository"></param>
-        public PromoterController(ICustomerPromoterRepository customerPromoterRepository, IOperationRepository operationRepository,
+        /// <param name="customerRepository"></param>
+        /// <param name="operationRepository"></param>
+        /// <param name="staticTextRepository"></param>
+        public PromoterController(ICustomerRepository customerRepository, IOperationRepository operationRepository,
                                     IStaticTextRepository staticTextRepository)
         {
-            this.repo = customerPromoterRepository;
+            this.repo = customerRepository;
             this.operationRepo = operationRepository;
             this.staticTextRepo = staticTextRepository;
         }
@@ -53,39 +55,21 @@ namespace ias.Rebens.api.Controllers
         public IActionResult List([FromQuery]int? idOperation = null, [FromQuery]int? idPromoter = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30, 
                                     [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? status = null)
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("promoter"))
+            if (CheckRole("promoter"))
             {
-                if (principal?.Claims != null)
-                {
-                    var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                    if (userId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
-                    if (int.TryParse(userId.Value, out int tmpId))
-                        idPromoter = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+                idPromoter = GetAdminUserId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
-            else if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            else if (CheckRoles(new string[] { "administrator", "publisher", "promoter" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (int.TryParse(operationId.Value, out int tmpId))
-                        idOperation = tmpId;
-                    else
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, status, idOperation, idPromoter);
+            var list = repo.ListPage(page: page, pageItems: pageItems, word: searchWord, sort: sort, error: out string error, 
+                                        idOperation: idOperation, status: status, idPromoter: idPromoter);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -103,11 +87,7 @@ namespace ias.Rebens.api.Controllers
                     Data = new List<CustomerModel>()
                 };
                 foreach (var customer in list.Page)
-                {
-                    var tmp = new CustomerModel(customer);
-                    tmp.Cpf = tmp.Cpf.Replace(tmp.Cpf.Substring(2, 5), "*****");
-                    ret.Data.Add(tmp);
-                }
+                    ret.Data.Add(new CustomerModel(customer));
 
                 return Ok(ret);
             }
@@ -157,29 +137,19 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult Post([FromBody]SignUpModel customer)
         {
-            int idPromoter = 0, idOperation = 0;
             if (customer == null)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto customer não pode ser nulo!" });
-
-            var principal = HttpContext.User;
-            if (principal.IsInRole("promoter"))
+            int idPromoter;
+            int idOperation;
+            if (CheckRole("promoter"))
             {
-                if (principal?.Claims != null)
-                {
-                    var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                    if (userId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
-                    if (!int.TryParse(userId.Value, out idPromoter))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+                idPromoter = GetAdminUserId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+                idOperation = GetOperationId(out errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não tem permissão para realizar esse processo!" });
@@ -191,16 +161,18 @@ namespace ias.Rebens.api.Controllers
                 {
                     Email = customer.Email,
                     Cpf = customer.Cpf,
-                    Name = customer.Name + " " + customer.Surname,
+                    Name = customer.Name,
+                    Surname = customer.Surname,
                     Created = DateTime.Now,
                     Modified = DateTime.Now,
                     Status = (int)Enums.CustomerStatus.Validation,
-                    CustomerType = (int)Enums.CustomerType.Customer,
+                    CustomerType = (int)Enums.CustomerType.Promoter,
                     Code = Helper.SecurityHelper.HMACSHA1(customer.Email, customer.Email + "|" + customer.Cpf),
-                    IdOperation = operation.Id
+                    IdOperation = operation.Id,
+                    IdPromoter = idPromoter
                 };
 
-                if (repo.Create(cust, idPromoter, out string error))
+                if (repo.Create(cust, out string error))
                 {
                     string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
                     if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
@@ -229,29 +201,20 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ResendValidation(int id)
         {
-            int idPromoter = 0, idOperation = 0;
             if (id <= 0)
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "O id do cliente é obrigatório!" });
 
-            var principal = HttpContext.User;
-            if (principal.IsInRole("promoter"))
+            int idPromoter;
+            int idOperation;
+            if (CheckRole("promoter"))
             {
-                if (principal?.Claims != null)
-                {
-                    var userId = principal.Claims.SingleOrDefault(c => c.Type == "Id");
-                    if (userId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
-                    if (!int.TryParse(userId.Value, out idPromoter))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+                idPromoter = GetAdminUserId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
 
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (!int.TryParse(operationId.Value, out idOperation))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Promotor não encontrada!" });
+                idOperation = GetOperationId(out errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
             else
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Você não tem permissão para realizar esse processo!" });
@@ -285,21 +248,11 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Report([FromQuery]int? idOperation = null, [FromQuery]int page = 0, [FromQuery]int pageItems = 30,
                                     [FromQuery]string searchWord = "")
         {
-            var principal = HttpContext.User;
-            if (principal.IsInRole("administrator") || principal.IsInRole("publisher"))
+            if (CheckRoles(new string[] { "administrator", "publisher" }))
             {
-                if (principal?.Claims != null)
-                {
-                    var operationId = principal.Claims.SingleOrDefault(c => c.Type == "operationId");
-                    if (operationId == null)
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    if (!int.TryParse(operationId.Value, out int tmpId))
-                        return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
-                    else
-                        idOperation = tmpId;
-                }
-                else
-                    return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
+                idOperation = GetOperationId(out string errorId);
+                if (errorId != null)
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
             }
 
             var list = repo.Report(page, pageItems, searchWord, out string error, idOperation);
