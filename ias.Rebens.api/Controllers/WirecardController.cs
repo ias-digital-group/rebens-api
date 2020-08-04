@@ -46,7 +46,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<MoipSignatureModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery] int page = 0, [FromQuery] int pageItems = 20, [FromQuery] string word = null, [FromQuery]int? idOperation = null)
+        public IActionResult List([FromQuery] int page = 0, [FromQuery] int pageItems = 20, [FromQuery] string searchWord = null, [FromQuery]int? idOperation = null)
         {
             if (CheckRole("administrator"))
             {
@@ -55,7 +55,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
             }
 
-            ResultPage<MoipSignature> list = repo.ListSubscriptions(page, pageItems, word, out string error, idOperation);
+            ResultPage<MoipSignature> list = repo.ListSubscriptions(page, pageItems, searchWord, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {

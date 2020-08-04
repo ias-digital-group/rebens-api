@@ -83,25 +83,34 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Title ASC", [FromQuery]string searchWord = "", [FromQuery]bool? active = null, [FromQuery]int? idOperation = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, active, idOperation);
+            string error = null;
+            if (CheckRole("administrator"))
+                idOperation = GetOperationId(out error);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || list.TotalItems == 0)
-                    return NoContent();
+                var list = repo.ListPage(page, pageItems, searchWord, sort, out error, active, idOperation);
 
-                var ret = new ResultPageModel<OperationPartnerListItem>();
-                ret.CurrentPage = list.CurrentPage;
-                ret.HasNextPage = list.HasNextPage;
-                ret.HasPreviousPage = list.HasPreviousPage;
-                ret.ItemsPerPage = list.ItemsPerPage;
-                ret.TotalItems = list.TotalItems;
-                ret.TotalPages = list.TotalPages;
-                ret.Data = new List<OperationPartnerListItem>();
-                foreach (var operation in list.Page)
-                    ret.Data.Add(new OperationPartnerListItem(operation));
+                if (string.IsNullOrEmpty(error))
+                {
+                    if (list == null || list.TotalItems == 0)
+                        return NoContent();
 
-                return Ok(ret);
+                    var ret = new ResultPageModel<OperationPartnerListItem>
+                    {
+                        CurrentPage = list.CurrentPage,
+                        HasNextPage = list.HasNextPage,
+                        HasPreviousPage = list.HasPreviousPage,
+                        ItemsPerPage = list.ItemsPerPage,
+                        TotalItems = list.TotalItems,
+                        TotalPages = list.TotalPages,
+                        Data = new List<OperationPartnerListItem>()
+                    };
+                    foreach (var operation in list.Page)
+                        ret.Data.Add(new OperationPartnerListItem(operation));
+
+                    return Ok(ret);
+                }
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });

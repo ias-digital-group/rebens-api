@@ -108,6 +108,7 @@ namespace ias.Rebens
                             var users = from c in db.Customer
                                         where c.IdOperation == operation.Id
                                         && c.Status != (int)Enums.CustomerStatus.ChangePassword
+                                        && c.Status != (int)Enums.CustomerStatus.PreSignup
                                         group c by c.Status into g
                                         select new { idStatus = g.Key, total = g.Count() };
                             foreach (var user in users)
@@ -122,6 +123,8 @@ namespace ias.Rebens
                             // Região - estados
                             var tmpStates = (from c in db.Customer
                                              where c.IdOperation == operation.Id
+                                             && c.Status != (int)Enums.CustomerStatus.ChangePassword
+                                             && c.Status != (int)Enums.CustomerStatus.PreSignup
                                              && !string.IsNullOrEmpty(c.Address.State)
                                              group c.Address by c.Address.State into g
                                              orderby g.Count()
@@ -145,6 +148,8 @@ namespace ias.Rebens
                             // Região - cidades
                             var tmpCities = (from c in db.Customer
                                              where c.IdOperation == operation.Id
+                                             && c.Status != (int)Enums.CustomerStatus.ChangePassword
+                                             && c.Status != (int)Enums.CustomerStatus.PreSignup
                                              && !string.IsNullOrEmpty(c.Address.City)
                                              group c.Address by c.Address.City into g
                                              orderby g.Count()
@@ -168,6 +173,8 @@ namespace ias.Rebens
                             // Região - Bairros
                             var tmpNeighborhood = (from c in db.Customer
                                                    where c.IdOperation == operation.Id
+                                                   && c.Status != (int)Enums.CustomerStatus.ChangePassword
+                                                   && c.Status != (int)Enums.CustomerStatus.PreSignup
                                                    && !string.IsNullOrEmpty(c.Address.Neighborhood)
                                                    group c.Address by c.Address.Neighborhood into g
                                                    orderby g.Count()

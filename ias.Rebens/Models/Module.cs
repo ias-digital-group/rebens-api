@@ -12,5 +12,6 @@ namespace ias.Rebens
         public string Information { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+        public bool Active { get; set; }
     }
 }

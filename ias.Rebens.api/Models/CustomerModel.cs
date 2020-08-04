@@ -40,7 +40,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Data de nascimento
         /// </summary>
-        public DateTime? Birthday { get; set; }
+        public string Birthday { get; set; }
         /// <summary>
         /// Email
         /// </summary>
@@ -127,51 +127,54 @@ namespace ias.Rebens.api.Models
         /// <param name="customer"></param>
         public CustomerModel(Customer customer)
         {
-            this.Id = customer.Id;
-            this.Name = customer.Name;
-            this.Surname = customer.Surname;
-            this.IdOperation = customer.IdOperation;
-            this.Gender = char.IsWhiteSpace(customer.Gender) || customer.Gender == '\0' ? "" : customer.Gender.ToString();
-            //this.Birthday = customer.Birthday.HasValue ? customer.Birthday.Value.ToString("dd/MM/yyyy") : null;
-            this.Birthday = customer.Birthday;
-            this.Email = customer.Email;
-            this.IdAddress = customer.IdAddress;
-            this.Cpf = customer.Cpf;
-            this.RG = customer.RG;
-            this.Picture = string.IsNullOrEmpty(customer.Picture) ? "https://res.cloudinary.com/rebens/image/upload/v1557186803/Portal/default-avatar.png" : customer.Picture;
-            if (string.IsNullOrEmpty(customer.Phone) || customer.Phone.Replace("(", "").Replace(")", "").Replace(" ", "").Replace("-", "").Length < 10)
-                this.Phone = "";
-            else {
-                string tempPhone = customer.Phone.Replace("(", "").Replace(")", "").Replace(" ", "").Replace("-", "");
-                this.Phone = $"{tempPhone.Substring(0, 2)} {tempPhone.Substring(2,4)}-{tempPhone.Substring(6,4)}";
-            }
-            if (string.IsNullOrEmpty(customer.Cellphone) || customer.Cellphone.Replace("(", "").Replace(")", "").Replace(" ", "").Replace("-", "").Length < 11)
-                this.Cellphone = "";
-            else
+            if (customer != null)
             {
-                string tempPhone = customer.Cellphone.Replace("(", "").Replace(")", "").Replace(" ", "").Replace("-", "");
-                this.Cellphone = $"{tempPhone.Substring(0, 2)} {tempPhone.Substring(2, 5)}-{tempPhone.Substring(7, 4)}";
+                this.Id = customer.Id;
+                this.Name = customer.Name;
+                this.Surname = customer.Surname;
+                this.IdOperation = customer.IdOperation;
+                this.Gender = char.IsWhiteSpace(customer.Gender) || customer.Gender == '\0' ? "" : customer.Gender.ToString();
+                this.Birthday = customer.Birthday.HasValue ? customer.Birthday.Value.ToString("dd/MM/yyyy") : null;
+                //this.Birthday = customer.Birthday;
+                this.Email = customer.Email;
+                this.IdAddress = customer.IdAddress;
+                this.Cpf = customer.Cpf;
+                this.RG = customer.RG;
+                this.Picture = string.IsNullOrEmpty(customer.Picture) ? "https://res.cloudinary.com/rebens/image/upload/v1557186803/Portal/default-avatar.png" : customer.Picture;
+                if (string.IsNullOrEmpty(customer.Phone) || customer.Phone.Replace("(", "").Replace(")", "").Replace(" ", "").Replace("-", "").Length < 10)
+                    this.Phone = "";
+                else
+                {
+                    string tempPhone = customer.Phone.Replace("(", "").Replace(")", "").Replace(" ", "").Replace("-", "");
+                    this.Phone = $"{tempPhone.Substring(0, 2)} {tempPhone.Substring(2, 4)}-{tempPhone.Substring(6, 4)}";
+                }
+                if (string.IsNullOrEmpty(customer.Cellphone) || customer.Cellphone.Replace("(", "").Replace(")", "").Replace(" ", "").Replace("-", "").Length < 11)
+                    this.Cellphone = "";
+                else
+                {
+                    string tempPhone = customer.Cellphone.Replace("(", "").Replace(")", "").Replace(" ", "").Replace("-", "");
+                    this.Cellphone = $"{tempPhone.Substring(0, 2)} {tempPhone.Substring(2, 5)}-{tempPhone.Substring(7, 4)}";
+                }
+
+                this.CustomerType = customer.CustomerType;
+                this.Status = customer.Status;
+                this.Active = customer.Active;
+                var culture = new CultureInfo("pt-BR");
+                this.Created = Convert.ToDateTime(customer.Created, culture).ToLocalTime().ToString("dd/MM/yyyy HH:mm", culture);
+                if (!string.IsNullOrEmpty(customer.Configuration))
+                    this.Configurations = Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetObject(customer.Configuration);
+                if (customer.IdAddress.HasValue && customer.Address != null)
+                    this.Address = new AddressModel(customer.Address);
+                else
+                    this.Address = new AddressModel();
+                if (customer.Operation != null)
+                    this.Operation = customer.Operation.Title;
+                if (customer.OperationPartner != null)
+                {
+                    this.OperationPartner = customer.OperationPartner.Name;
+                    this.IdOperationPartner = customer.IdOperationPartner;
+                }
             }
-            
-            this.CustomerType = customer.CustomerType;
-            this.Status = customer.Status;
-            this.Active = customer.Active;
-            var culture = new CultureInfo("pt-BR");
-            this.Created = Convert.ToDateTime(customer.Created, culture).ToLocalTime().ToString("dd/MM/yyyy HH:mm", culture);
-            if (!string.IsNullOrEmpty(customer.Configuration))
-                this.Configurations = Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetObject(customer.Configuration);
-            if (customer.IdAddress.HasValue && customer.Address != null)
-                this.Address = new AddressModel(customer.Address);
-            else
-                this.Address = new AddressModel();
-            if (customer.Operation != null)
-                this.Operation = customer.Operation.Title;
-            if (customer.OperationPartner != null)
-            {
-                 this.OperationPartner = customer.OperationPartner.Name;
-                 this.IdOperationPartner = customer.IdOperationPartner;
-            }
-            
         }
 
         /// <summary>
@@ -179,13 +182,22 @@ namespace ias.Rebens.api.Models
         /// </summary>
         /// <returns></returns>
         public Customer GetEntity() {
+            DateTime? birthDt = null;
+            if (this.Birthday != null && this.Birthday.Length == 10)
+            {
+                try
+                {
+                    birthDt = new DateTime(int.Parse(this.Birthday.Split('/')[2]), int.Parse(this.Birthday.Split('/')[1]), int.Parse(this.Birthday.Split('/')[0]));
+                }
+                catch { }
+            }
             var ret = new Customer()
             {
                 Id = this.Id,
                 Name = this.Name,
                 Surname = this.Surname,
                 IdOperation = this.IdOperation,
-                Gender = this.Gender != null ? this.Gender[0] : ' ',
+                Gender = this.Gender != null && this.Gender != "" ? this.Gender.ToUpper()[0] : ' ',
                 Email = this.Email,
                 IdAddress = this.IdAddress,
                 Cpf = this.Cpf,
@@ -198,19 +210,10 @@ namespace ias.Rebens.api.Models
                 Configuration = this.Configurations != null && this.Configurations.Count > 0 ? null : Helper.Config.JsonHelper<List<Helper.Config.ConfigurationValue>>.GetString(this.Configurations),
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow,
-                Birthday = this.Birthday,
+                Birthday = birthDt,
                 Active = this.Active
             };
 
-            //if(!string.IsNullOrEmpty(this.Birthday))
-            //{
-            //    try
-            //    {
-            //        var culture = new CultureInfo("pt-BR");
-            //        ret.Birthday = Convert.ToDateTime(this.Birthday, culture);
-            //    }
-            //    catch { }
-            //}
             return ret;
         }
 

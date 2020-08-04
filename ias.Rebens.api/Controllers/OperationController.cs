@@ -827,7 +827,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListModules(int id)
         {
-            var list = moduleRepo.List(out string error);
+            var list = moduleRepo.ListActive(out string error);
             List<ModuleModel> modules = null;
             var ret = new List<ModuleModel>();
 

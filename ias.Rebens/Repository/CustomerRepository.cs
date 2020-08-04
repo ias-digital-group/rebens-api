@@ -86,7 +86,8 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var customer = db.Customer.SingleOrDefault(c => c.Id == id);
-                    db.Customer.Remove(customer);
+                    customer.ComplementaryStatus = (int)Enums.CustomerComplementaryStatus.deleted;
+                    customer.Modified = DateTime.UtcNow;
 
                     if (idAdminUser > 0)
                     {
@@ -151,7 +152,8 @@ namespace ias.Rebens
                                             || (status.HasValue && ((status.Value == (int)CustomerStatus.Incomplete && (a.Status == (int)CustomerStatus.ChangePassword)) 
                                             || a.Status == status.Value)))
                                         && (!active.HasValue || (a.Active == active.Value))
-                                        && (!idPromoter.HasValue || (idPromoter.HasValue && a.IdPromoter == idPromoter.Value)));
+                                        && (!idPromoter.HasValue || (idPromoter.HasValue && a.IdPromoter == idPromoter.Value))
+                                        && a.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -206,7 +208,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.Customer.Include("Address").Include("Operation").Include("OperationPartner")
-                                        .SingleOrDefault(c => c.Id == id);
+                                        .SingleOrDefault(c => c.Id == id && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
                     error = null;
                 }
             }
@@ -227,7 +229,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Customer.SingleOrDefault(c => c.Email == email && c.IdOperation == idOperation);
+                    ret = db.Customer.SingleOrDefault(c => c.Email == email && c.IdOperation == idOperation && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
                     error = null;
                 }
             }
@@ -372,7 +374,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Customer.SingleOrDefault(c => c.IdOperation == idOperation && c.Code == code);
+                    ret = db.Customer.SingleOrDefault(c => c.IdOperation == idOperation && c.Code == code && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
                     error = null;
                 }
             }
@@ -441,6 +443,7 @@ namespace ias.Rebens
                     var dt = DateTime.Now.Date;
                     ret = db.Customer.Where(c => c.IdOperation == idOperation && !string.IsNullOrEmpty(c.Name)  
                                 && !c.Coupons.Any(cp => cp.Created > dt)
+                                && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted
                                 //&& c.Signatures.Any(s => s.Status.ToUpper() == "ACTIVE")
                                 )
                             .Take(totalItems).ToList();
@@ -463,7 +466,7 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     var dt = DateTime.Now.Date;
-                    ret = db.Customer.Any(c => c.IdOperation == idOperation && !string.IsNullOrEmpty(c.Name) && !c.Coupons.Any(cp => cp.Created > dt));
+                    ret = db.Customer.Any(c => c.IdOperation == idOperation && !string.IsNullOrEmpty(c.Name) && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted && !c.Coupons.Any(cp => cp.Created > dt));
                 }
             }
             catch(Exception ex)
@@ -687,7 +690,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.Customer.Where(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) && a.IdCustomerReferer == idCustomer);
+                    var tmpList = db.Customer.Where(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word)) && a.IdCustomerReferer == idCustomer && a.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
                     switch (sort.ToLower())
                     {
                         case "name asc":
@@ -743,6 +746,7 @@ namespace ias.Rebens
                 {
                     var tmpList = db.Customer.Where(a => (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word))
                                                 && (!idOperation.HasValue || (idOperation.HasValue && a.IdOperation == idOperation.Value))
+                                                && a.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted
                                                 && a.IdCustomerReferer.HasValue);
                     switch (sort.ToLower())
                     {
@@ -846,11 +850,11 @@ namespace ias.Rebens
 
                     list.ForEach(p =>
                     {
-                        p.TotalActive = db.Customer.Count(c => c.IdPromoter == p.Id && c.Active);
-                        p.TotalInactive = db.Customer.Count(c => c.IdPromoter == p.Id && !c.Active);
-                        p.TotalIncomplete = db.Customer.Count(c => c.IdPromoter == p.Id && (c.Status == (int)CustomerStatus.Incomplete || c.Status == (int)CustomerStatus.ChangePassword));
-                        p.TotalValidation = db.Customer.Count(c => c.IdPromoter == p.Id && c.Status == (int)CustomerStatus.Validation);
-                        p.TotalComplete = db.Customer.Count(c => c.IdPromoter == p.Id && c.Status == (int)CustomerStatus.Active);
+                        p.TotalActive = db.Customer.Count(c => c.IdPromoter == p.Id && c.Active && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
+                        p.TotalInactive = db.Customer.Count(c => c.IdPromoter == p.Id && !c.Active && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
+                        p.TotalIncomplete = db.Customer.Count(c => c.IdPromoter == p.Id && (c.Status == (int)CustomerStatus.Incomplete || c.Status == (int)CustomerStatus.ChangePassword) && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
+                        p.TotalValidation = db.Customer.Count(c => c.IdPromoter == p.Id && c.Status == (int)CustomerStatus.Validation && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
+                        p.TotalComplete = db.Customer.Count(c => c.IdPromoter == p.Id && c.Status == (int)CustomerStatus.Active && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
                     });
 
                     var total = db.AdminUser.Count(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))

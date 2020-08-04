@@ -7,5 +7,6 @@ namespace ias.Rebens
     public interface IModuleRepository
     {
         List<Module> List(out string error);
+        List<Module> ListActive(out string error);
     }
 }

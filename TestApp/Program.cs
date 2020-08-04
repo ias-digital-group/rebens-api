@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,21 +21,57 @@ namespace TestApp
             var sw = new Stopwatch();
             sw.Start();
 
-            var zpar1 = HttpUtility.UrlDecode("ozxE75LALXbDmxwuQetQPw%3d%3d");
-            var zpar2 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
-            var zpar3 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
+            var reader = new StreamReader(@"C:\ias\PROJECTS\Rebens\zanox.csv");
+            var writer = new StreamWriter(@"C:\ias\PROJECTS\Rebens\zanoxConfirmed.csv");
+            writer.WriteLine($"idBenefit,idCustomer,Commision,Total");
+            var line = reader.ReadLine();
+            //line = reader.ReadLine();
+            while (line != null)
+            {
+                var row = line.Split(',');
+                if(row.Length == 15)
+                {
+                    if(row[7] == "LIBERADO" && row[9].Trim() != "")
+                    {
+                        string urlDecoded = HttpUtility.UrlDecode(row[9]);
+                        string zparDecoded;
+                        try
+                        {
+                            zparDecoded = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(urlDecoded);
 
-            Console.WriteLine($"zpar1: {zpar1}");
-            Console.WriteLine($"zpar2: {zpar2}");
-            Console.WriteLine($"zpar3: {zpar3}");
+                            writer.WriteLine($"{zparDecoded.Split('|')[0]},{zparDecoded.Split('|')[1]},{row[2]},{row[10]}");
+                        }
+                        catch
+                        {
+                            zparDecoded = "ERROR";
+                        }
+                        Console.WriteLine($"zpar1: {row[9]} | {urlDecoded} | {zparDecoded}");
+                    }
+                }
 
-            var decode1 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar1);
-            var decode2 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar2);
-            var decode3 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar3);
+                line = reader.ReadLine();
+            }
 
-            Console.WriteLine($"decode1: {decode1}");
-            Console.WriteLine($"decode2: {decode2}");
-            Console.WriteLine($"decode3: {decode3}");
+            writer.Close();
+            reader.Close();
+            writer.Dispose();
+            reader.Dispose();
+
+            //var zpar1 = HttpUtility.UrlDecode("ozxE75LALXbDmxwuQetQPw%3d%3d");
+            //var zpar2 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
+            //var zpar3 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
+
+            //Console.WriteLine($"zpar1: {zpar1}");
+            //Console.WriteLine($"zpar2: {zpar2}");
+            //Console.WriteLine($"zpar3: {zpar3}");
+
+            //var decode1 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar1);
+            //var decode2 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar2);
+            //var decode3 = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(zpar3);
+
+            //Console.WriteLine($"decode1: {decode1}");
+            //Console.WriteLine($"decode2: {decode2}");
+            //Console.WriteLine($"decode3: {decode3}");
 
         
             //Task.WaitAll(ret);

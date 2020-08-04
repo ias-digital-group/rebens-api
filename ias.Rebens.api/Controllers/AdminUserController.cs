@@ -62,7 +62,6 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrada!" });
             }
 
-            idOperationPartner = null;
             if (CheckRole("partnerAdministrator"))
             {
                 idOperationPartner = GetOperationPartnerId(out string errorId);
