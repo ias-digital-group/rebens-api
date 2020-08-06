@@ -22,16 +22,16 @@ namespace TestApp
             sw.Start();
 
             var reader = new StreamReader(@"C:\ias\PROJECTS\Rebens\zanox.csv");
-            var writer = new StreamWriter(@"C:\ias\PROJECTS\Rebens\zanoxConfirmed.csv");
-            writer.WriteLine($"idBenefit,idCustomer,Commision,Total");
+            var writer = new StreamWriter(@"C:\ias\PROJECTS\Rebens\zanoxConfirmed.txt");
+            reader.ReadLine();
             var line = reader.ReadLine();
-            //line = reader.ReadLine();
+            int idx = 1;
             while (line != null)
             {
                 var row = line.Split(',');
                 if(row.Length == 15)
                 {
-                    if(row[7] == "LIBERADO" && row[9].Trim() != "")
+                    if(row[9].Trim() != "")
                     {
                         string urlDecoded = HttpUtility.UrlDecode(row[9]);
                         string zparDecoded;
@@ -39,7 +39,8 @@ namespace TestApp
                         {
                             zparDecoded = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(urlDecoded);
 
-                            writer.WriteLine($"{zparDecoded.Split('|')[0]},{zparDecoded.Split('|')[1]},{row[2]},{row[10]}");
+                            writer.WriteLine($"INSERT INTO ZanoxTemp (idBenefit,idCustomer,Status,Commision,Total,UserPercentage,UserCommission,IdZanoxSale,IDX) VALUES({zparDecoded.Split('|')[0]},{zparDecoded.Split('|')[1]},'{row[7]}',{row[2]},{row[10]}, NULL, NULL, NULL, {idx})");
+                            idx++;
                         }
                         catch
                         {

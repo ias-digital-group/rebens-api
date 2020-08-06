@@ -86,6 +86,7 @@ namespace ias.Rebens.api.Controllers
             string error = null;
             if (CheckRole("administrator"))
                 idOperation = GetOperationId(out error);
+            
 
             if (string.IsNullOrEmpty(error))
             {

@@ -267,7 +267,7 @@ namespace ias.Rebens
                         idInvoice = tmp;
 
                     var tmpList = db.MoipSignature.Include("Customer").Where(s => (!idOperation.HasValue || s.IdOperation == idOperation)
-                                    && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word))
+                                    && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word) || s.Customer.Surname.Contains(word))
                                     && (!idInvoice.HasValue || s.Payments.Any(p => p.IdMoipInvoice == idInvoice)));
                     var list = tmpList.OrderByDescending(s => s.Customer.Name).Skip(page * pageItems).Take(pageItems).ToList();
                     var total = tmpList.Count();
