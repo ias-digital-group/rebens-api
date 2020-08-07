@@ -120,9 +120,9 @@ namespace ias.Rebens
 
                     list.ForEach(c =>
                     {
-                        var createUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Operation && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.create)
+                        var createUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.OperationPartner && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.create)
                                             .OrderBy(a => a.Created).FirstOrDefault();
-                        var modifiedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.Operation && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.update)
+                        var modifiedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.OperationPartner && a.IdItem == c.Id && a.Action == (int)Enums.LogAction.update)
                                             .OrderByDescending(a => a.Created).FirstOrDefault();
                         if (createUser != null)
                             c.CreatedUserName = createUser.AdminUser.Name + " " + createUser.AdminUser.Surname;
