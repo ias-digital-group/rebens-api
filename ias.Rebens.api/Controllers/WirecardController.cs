@@ -95,7 +95,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<MoipSignatureModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GenerateExcel([FromQuery]string word = null, [FromQuery]int? idOperation = null)
+        public IActionResult GenerateExcel([FromQuery]string searchWord = null, [FromQuery]int? idOperation = null)
         {
             if (CheckRole("administrator"))
             {
@@ -104,43 +104,61 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
             }
 
-            ResultPage<MoipSignature> list = repo.ListSubscriptions(0, 9999999, word, out string error, idOperation);
+            ResultPage<MoipSignature> list = repo.ListSubscriptions(0, 9999999, searchWord, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
-
-                XLWorkbook workbook = new XLWorkbook();
-                IXLWorksheet worksheet = workbook.Worksheets.Add("Authors");
-                worksheet.Cell(1, 1).Value = "Código";
-                worksheet.Cell(1, 2).Value = "Nome";
-                worksheet.Cell(1, 3).Value = "Plano";
-                worksheet.Cell(1, 4).Value = "Valor";
-                worksheet.Cell(1, 5).Value = "Próxima cobrança";
-                worksheet.Cell(1, 6).Value = "Status";
-                int row = 2;
-                foreach (var item in list)
+                try
                 {
-                    var newitem = new MoipSignatureModel(item);
-                    worksheet.Cell(row, 1).Value = newitem.Code;
-                    worksheet.Cell(row, 2).Value = newitem.Customer.Name;
-                    worksheet.Cell(row, 3).Value = newitem.PlanName;
-                    worksheet.Cell(row, 4).Value = newitem.Amount.ToString("N", Constant.FormatProvider); ;
-                    worksheet.Cell(row, 5).Value = newitem.NextInvoiceDateString;
-                    worksheet.Cell(row, 6).Value = newitem.Status;
+                    string fileName = Guid.NewGuid().ToString("n", Constant.FormatProvider) + ".xlsx";
+                    using (XLWorkbook workbook = new XLWorkbook())
+                    {
+                        IXLWorksheet worksheet = workbook.Worksheets.Add("Authors");
+                        worksheet.Cell(1, 1).Value = "Código";
+                        worksheet.Cell(1, 2).Value = "Nome";
+                        worksheet.Cell(1, 3).Value = "Plano";
+                        worksheet.Cell(1, 4).Value = "Valor";
+                        worksheet.Cell(1, 5).Value = "Próxima cobrança";
+                        worksheet.Cell(1, 6).Value = "Status";
+                        int row = 2;
+                        foreach (var item in list)
+                        {
+                            var newitem = new MoipSignatureModel(item);
+                            worksheet.Cell(row, 1).Value = newitem.Code;
+                            worksheet.Cell(row, 2).Value = newitem.Customer.Name;
+                            worksheet.Cell(row, 3).Value = newitem.PlanName;
+                            worksheet.Cell(row, 4).Value = newitem.Amount.ToString("N", Constant.FormatProvider); ;
+                            worksheet.Cell(row, 5).Value = newitem.NextInvoiceDateString;
+                            worksheet.Cell(row, 6).Value = newitem.Status;
 
-                    row++;
+                            row++;
+                        }
+
+                        string newPath = Path.Combine(_hostingEnvironment.WebRootPath, "files", "excel");
+                        if (!Directory.Exists(newPath))
+                            Directory.CreateDirectory(newPath);
+
+                        workbook.SaveAs(Path.Combine(newPath, fileName));
+                        workbook.Dispose();
+                    }
+
+
+                    var constant = new Constant();
+                    return Ok(new FileUploadResultModel() { FileName = fileName, Url = $"{constant.URL}files/excel/{fileName}" });
                 }
-
-                string newPath = Path.Combine(_hostingEnvironment.WebRootPath, "files", "excel");
-                if (!Directory.Exists(newPath))
-                    Directory.CreateDirectory(newPath);
-                string fileName = Guid.NewGuid().ToString("n", Constant.FormatProvider) + ".xlsx";
-                workbook.SaveAs(Path.Combine(newPath, fileName));
-                
-                var constant = new Constant();
-                return Ok(new FileUploadResultModel() { FileName = fileName, Url = $"{constant.URL}files/excel/{fileName}" });
+                catch (Exception ex)
+                {
+                    string msg = ex.Message;
+                    msg += " | " + ex.StackTrace;
+                    if (ex.InnerException != null)
+                    {
+                        msg += " | INNER - " + ex.InnerException.Message;
+                        msg += " | " + ex.InnerException.StackTrace;
+                    }
+                    return StatusCode(400, new JsonModel() { Status = "error", Message = msg });
+                }
             }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
