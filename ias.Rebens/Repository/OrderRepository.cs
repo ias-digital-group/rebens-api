@@ -428,7 +428,7 @@ namespace ias.Rebens
                                         IdCustomer = i.Order.IdCustomer,
                                         IdOperation = i.Order.IdOperation,
                                         CustomerCpf = i.Order.Customer.Cpf,
-                                        CustomerName = i.Order.Customer.Name,
+                                        CustomerName = i.Order.Customer.Name + " " + i.Order.Customer.Surname,
                                         OperationName = i.Order.Operation.Title, 
                                         Voucher = i.Voucher
                                     }).ToList();
@@ -445,7 +445,7 @@ namespace ias.Rebens
                                 item.IdAdminUser = log.IdAdminUser;
                                 var admin = db.AdminUser.SingleOrDefault(a => a.Id == log.IdAdminUser);
                                 if (admin != null)
-                                    item.AdminUserName = admin.Name;
+                                    item.AdminUserName = admin.Name  + " " + admin.Surname;
                             }
                         }
                     }

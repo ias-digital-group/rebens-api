@@ -300,7 +300,7 @@ namespace ias.Rebens
                                         Code = b.Code,
                                         Created = b.Created,
                                         CustomerCpf = b.Customer.Cpf,
-                                        CustomerName = b.Customer.Name,
+                                        CustomerName = b.Customer.Name + " " + b.Customer.Surname,
                                         IdBenefit = b.IdBenefit,
                                         IdCustomer = b.IdCustomer,
                                         PartnerName = b.Name,
@@ -315,7 +315,7 @@ namespace ias.Rebens
                                                 && a.Action == (int)Enums.LogAction.voucherValidate
                                                 && a.Item == (int)Enums.LogItem.BenefitUse);
                             if (approver != null)
-                                i.ApproverName = approver.AdminUser.Name;
+                                i.ApproverName = approver.AdminUser.Name + " " + approver.AdminUser.Surname;
                         }
                     });
 
