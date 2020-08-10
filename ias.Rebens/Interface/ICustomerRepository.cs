@@ -30,6 +30,9 @@ namespace ias.Rebens
         bool ChangeComplementaryStatus(int id, Enums.CustomerComplementaryStatus status, out string error);
         void SaveLog(int id, Enums.CustomerLogAction action, string extra);
 
+        ResultPage<Customer> ListForApprovalPage(int page, int pageItems, string word, out string error, int? idOperation = null,
+                                                int? idOperationPartner = null);
+
         #region Referal
         bool CheckReferalLimit(int idOperation, int idCustomer, out int limit, out string error);
         ResultPage<Customer> ListReferalByCustomer(int idCustomer, int page, int pageItems, string word, string sort, out string error);

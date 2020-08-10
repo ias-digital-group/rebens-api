@@ -225,7 +225,7 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet("ListCustomers"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens,partnerAdministrator,partnerApprover,administrator")]
-        [ProducesResponseType(typeof(ResultPageModel<OperationPartnerCustomerModel>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<OperationPartnerCustomerListItem>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult ListCustomers([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? status = null, [FromQuery]int? idOperation = null, [FromQuery]int? idOperationPartner = null)
@@ -250,14 +250,14 @@ namespace ias.Rebens.api.Controllers
                 }
             }
 
-            var list = customerRepo.ListPage(page: page, pageItems: pageItems, word: searchWord, sort: sort, error: out string error,
+            var list = customerRepo.ListForApprovalPage(page: page, pageItems: pageItems, word: searchWord, error: out string error,
                                                 idOperation: idOperation, idOperationPartner: idOperationPartner);
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<OperationPartnerCustomerModel>()
+                var ret = new ResultPageModel<OperationPartnerCustomerListItem>()
                 {
                     CurrentPage = list.CurrentPage,
                     HasNextPage = list.HasNextPage,
@@ -265,10 +265,10 @@ namespace ias.Rebens.api.Controllers
                     ItemsPerPage = list.ItemsPerPage,
                     TotalItems = list.TotalItems,
                     TotalPages = list.TotalPages,
-                    Data = new List<OperationPartnerCustomerModel>()
+                    Data = new List<OperationPartnerCustomerListItem>()
                 };
                 foreach (var customer in list.Page)
-                    ret.Data.Add(new OperationPartnerCustomerModel(customer));
+                    ret.Data.Add(new OperationPartnerCustomerListItem(customer));
 
                 return Ok(ret);
             }

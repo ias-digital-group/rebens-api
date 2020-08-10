@@ -255,9 +255,9 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<MoipSignature> ListSubscriptions(int page, int pageItems, string word, out string error, int? idOperation)
+        public ResultPage<Entity.MoipSignatureItem> ListSubscriptions(int page, int pageItems, string word, out string error, int? idOperation)
         {
-            ResultPage<MoipSignature> ret;
+            ResultPage<Entity.MoipSignatureItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -269,10 +269,34 @@ namespace ias.Rebens
                     var tmpList = db.MoipSignature.Include("Customer").Where(s => (!idOperation.HasValue || s.IdOperation == idOperation)
                                     && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word) || s.Customer.Surname.Contains(word))
                                     );
-                    var list = tmpList.OrderByDescending(s => s.Customer.Name).Skip(page * pageItems).Take(pageItems).ToList();
+                    var list = tmpList.OrderBy(s => s.Customer.Name).Skip(page * pageItems).Take(pageItems)
+                                .Select(c => new Entity.MoipSignatureItem() { 
+                                    Amount = c.Amount,
+                                    Code = c.Code,
+                                    Created = c.Created,
+                                    CreationDate = c.CreationDate,
+                                    Customer = c.Customer,
+                                    ExpirationDate = c.ExpirationDate,
+                                    Id = c.Id,
+                                    IdCustomer = c.IdCustomer,
+                                    IdOperation = c.IdOperation,
+                                    Modified = c.Modified,
+                                    NextInvoiceDate = c.NextInvoiceDate,
+                                    PaymentMethod = c.PaymentMethod,
+                                    PlanCode = c.PlanCode,
+                                    PlanName = c.PlanName,
+                                    Status = c.Status
+                                }).ToList();
                     var total = tmpList.Count();
 
-                    ret = new ResultPage<MoipSignature>(list, page, pageItems, total);
+                    list.ForEach(i =>
+                    {
+                        if(i.IdOperation > 0)
+                            i.OperationName = db.Operation.Single(o => o.Id == i.IdOperation).Title;
+                    });
+
+
+                    ret = new ResultPage<Entity.MoipSignatureItem>(list, page, pageItems, total);
                     error = null;
                 }
             }

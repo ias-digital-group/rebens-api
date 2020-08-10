@@ -52,10 +52,12 @@ namespace ias.Rebens.api.Models
         /// Nome do parceiro
         /// </summary>
         public string OperationPartnerName { get; set; }
+        
         /// <summary>
         /// Nome do Usuário que aprovou ou reprovou o cadastro
         /// </summary>
         public string AdminUserName { get; set; }
+
 
         /// <summary>
         /// Construtor
@@ -68,6 +70,7 @@ namespace ias.Rebens.api.Models
         /// <param name="customer"></param>
         public OperationPartnerCustomerModel(Customer customer)
         {
+            if(customer != null)
             this.Id = customer.Id;
             this.Name = customer.Name;
             this.Email = customer.Email;
@@ -99,6 +102,44 @@ namespace ias.Rebens.api.Models
                 Modified = DateTime.UtcNow,
                 Status = (int)Enums.CustomerStatus.Validation
             };
+        }
+    }
+
+    public class OperationPartnerCustomerListItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Cpf { get; set; }
+        public string Phone { get; set; }
+        public string Cellphone { get; set; }
+        public int IdOperationPartner { get; set; }
+        public int Status { get; set; }
+        public string StatusName { get; set; }
+        public string OperationName { get; set; }
+        public string OperationPartnerName { get; set; }
+        public string AdminUserName { get; set; }
+        
+        public OperationPartnerCustomerListItem() { }
+
+        public OperationPartnerCustomerListItem(Customer customer)
+        {
+            if (customer != null)
+            {
+                this.Id = customer.Id;
+                this.Name = customer.Name + " " + customer.Surname;
+                this.Email = customer.Email;
+                this.Cpf = customer.Cpf;
+                this.Phone = customer.Phone;
+                this.Cellphone = customer.Cellphone;
+                this.IdOperationPartner = customer.IdOperationPartner.Value;
+                this.Status = customer.ComplementaryStatus.Value;
+                this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.CustomerComplementaryStatus)customer.Status);
+                if (customer.OperationPartner != null)
+                    this.OperationPartnerName = customer.OperationPartner.Name;
+                if (customer.Operation != null)
+                    this.OperationName = customer.Operation.Title;
+            }
         }
     }
 }

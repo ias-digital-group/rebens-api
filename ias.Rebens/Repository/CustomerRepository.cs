@@ -633,6 +633,39 @@ namespace ias.Rebens
             }
         }
 
+        public ResultPage<Customer> ListForApprovalPage(int page, int pageItems, string word, out string error, int? idOperation = null,
+                                                int? idOperationPartner = null)
+        {
+            ResultPage<Customer> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmpList = db.Customer.Include("Operation").Include("OperationPartner")
+                                    .Where(a => (!idOperation.HasValue || (idOperation.HasValue && idOperation == a.IdOperation))
+                                        && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word) || a.Cpf.Contains(word))
+                                        && (!idOperationPartner.HasValue || (a.IdOperationPartner.Value == idOperationPartner.Value))
+                                        && a.Active
+                                        && a.ComplementaryStatus != (int)CustomerComplementaryStatus.waittingApproval).OrderBy(f => f.Name);
+
+                    var total = tmpList.Count();
+                    var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
+
+                    ret = new ResultPage<Customer>(list, page, pageItems, total);
+
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("CustomerRepository.ListForApprovalPage", ex.Message, "", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os clientes. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
         #region Referal
         public bool CheckReferalLimit(int idOperation, int idCustomer, out int limit, out string error)
         {

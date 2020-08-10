@@ -55,7 +55,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
             }
 
-            ResultPage<MoipSignature> list = repo.ListSubscriptions(page, pageItems, searchWord, out string error, idOperation);
+            ResultPage<Entity.MoipSignatureItem> list = repo.ListSubscriptions(page, pageItems, searchWord, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -104,7 +104,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
             }
 
-            ResultPage<MoipSignature> list = repo.ListSubscriptions(0, 9999999, searchWord, out string error, idOperation);
+            ResultPage<Entity.MoipSignatureItem> list = repo.ListSubscriptions(0, 9999999, searchWord, out string error, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -127,9 +127,10 @@ namespace ias.Rebens.api.Controllers
                         {
                             var newitem = new MoipSignatureModel(item);
                             worksheet.Cell(row, 1).Value = newitem.Code;
+                            worksheet.Cell(row, 1).DataType = XLDataType.Number;
                             worksheet.Cell(row, 2).Value = newitem.Customer.Name;
                             worksheet.Cell(row, 3).Value = newitem.PlanName;
-                            worksheet.Cell(row, 4).Value = newitem.Amount.ToString("N", Constant.FormatProvider); ;
+                            worksheet.Cell(row, 4).Value = newitem.AmountString;
                             worksheet.Cell(row, 5).Value = newitem.NextInvoiceDateString;
                             worksheet.Cell(row, 6).Value = newitem.Status;
 
