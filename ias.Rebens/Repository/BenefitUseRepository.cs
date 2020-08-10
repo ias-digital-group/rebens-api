@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -305,6 +306,18 @@ namespace ias.Rebens
                                         PartnerName = b.Name,
                                         UsedDate = b.UseDate
                                 }).ToList();
+
+                    list.ForEach(i =>
+                    {
+                        if (i.UsedDate.HasValue)
+                        {
+                            var approver = db.LogAction.Include("AdminUser").FirstOrDefault(a => a.IdItem == i.Id
+                                                && a.Action == (int)Enums.LogAction.voucherValidate
+                                                && a.Item == (int)Enums.LogItem.BenefitUse);
+                            if (approver != null)
+                                i.ApproverName = approver.AdminUser.Name;
+                        }
+                    });
 
                     ret = new ResultPage<Entity.BenefitUseListItem>(list, page, pageItems, total);
 

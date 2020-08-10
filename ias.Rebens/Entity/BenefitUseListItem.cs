@@ -16,5 +16,6 @@ namespace ias.Rebens.Entity
         public string CustomerCpf { get; set; }
         public DateTime Created { get; set; }
         public DateTime? UsedDate { get; set; }
+        public string ApproverName { get; set; }
     }
 }
