@@ -255,7 +255,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Entity.MoipSignatureItem> ListSubscriptions(int page, int pageItems, string word, out string error, int? idOperation)
+        public ResultPage<Entity.MoipSignatureItem> ListSubscriptions(int page, int pageItems, string word, out string error, string plan, string status, int? idOperation)
         {
             ResultPage<Entity.MoipSignatureItem> ret;
             try
@@ -268,6 +268,8 @@ namespace ias.Rebens
 
                     var tmpList = db.MoipSignature.Include("Customer").Where(s => (!idOperation.HasValue || s.IdOperation == idOperation)
                                     && (string.IsNullOrEmpty(word) || s.Customer.Name.Contains(word) || s.Code.Contains(word) || s.Customer.Surname.Contains(word))
+                                    && (string.IsNullOrEmpty(plan) || s.PlanCode == plan)
+                                    && (string.IsNullOrEmpty(status) || s.Status == status)
                                     );
                     var list = tmpList.OrderBy(s => s.Customer.Name).Skip(page * pageItems).Take(pageItems)
                                 .Select(c => new Entity.MoipSignatureItem() { 

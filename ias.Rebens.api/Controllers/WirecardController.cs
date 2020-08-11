@@ -38,6 +38,8 @@ namespace ias.Rebens.api.Controllers
         /// <param name="pageItems"></param>
         /// <param name="word"></param>
         /// <param name="idOperation"></param>
+        /// <param name="plan"></param>
+        /// <param name="status"></param>
         /// <returns>Lista com as assinaturas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -46,7 +48,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<MoipSignatureModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery] int page = 0, [FromQuery] int pageItems = 20, [FromQuery] string searchWord = null, [FromQuery]int? idOperation = null)
+        public IActionResult List([FromQuery] int page = 0, [FromQuery] int pageItems = 20, [FromQuery] string searchWord = null, [FromQuery]int? idOperation = null, [FromQuery]string plan = null, [FromQuery]string status = null)
         {
             if (CheckRole("administrator"))
             {
@@ -55,7 +57,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
             }
 
-            ResultPage<Entity.MoipSignatureItem> list = repo.ListSubscriptions(page, pageItems, searchWord, out string error, idOperation);
+            ResultPage<Entity.MoipSignatureItem> list = repo.ListSubscriptions(page, pageItems, searchWord, out string error, plan, status, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {
@@ -87,6 +89,8 @@ namespace ias.Rebens.api.Controllers
         /// </summary>
         /// <param name="word"></param>
         /// <param name="idOperation"></param>
+        /// <param name="plan"></param>
+        /// <param name="status"></param>
         /// <returns>caminho do arquivo gerado</returns>
         /// <response code="200">Retorna a url do arquivo gerado, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
@@ -95,7 +99,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(ResultPageModel<MoipSignatureModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult GenerateExcel([FromQuery]string searchWord = null, [FromQuery]int? idOperation = null)
+        public IActionResult GenerateExcel([FromQuery]string searchWord = null, [FromQuery]int? idOperation = null, [FromQuery] string plan = null, [FromQuery] string status = null)
         {
             if (CheckRole("administrator"))
             {
@@ -104,7 +108,7 @@ namespace ias.Rebens.api.Controllers
                     return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não encontrado!" });
             }
 
-            ResultPage<Entity.MoipSignatureItem> list = repo.ListSubscriptions(0, 9999999, searchWord, out string error, idOperation);
+            ResultPage<Entity.MoipSignatureItem> list = repo.ListSubscriptions(0, 9999999, searchWord, out string error, plan, status, idOperation);
 
             if (string.IsNullOrEmpty(error))
             {

@@ -447,7 +447,8 @@ namespace ias.Rebens.api.Controllers
                             Status = (int)Enums.CustomerStatus.Validation,
                             CustomerType = (int)Enums.CustomerType.Customer,
                             Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                            IdOperation = operation.Id
+                            IdOperation = operation.Id,
+                            Active = true
                         };
                     }
                     else

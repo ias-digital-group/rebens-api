@@ -646,7 +646,8 @@ namespace ias.Rebens
                                         && (string.IsNullOrEmpty(word) || a.Name.Contains(word) || a.Email.Contains(word) || a.Cpf.Contains(word))
                                         && (!idOperationPartner.HasValue || (a.IdOperationPartner.Value == idOperationPartner.Value))
                                         && a.Active
-                                        && a.ComplementaryStatus != (int)CustomerComplementaryStatus.waittingApproval).OrderBy(f => f.Name);
+                                        && a.CustomerType == (int)CustomerType.Partner
+                                        && a.ComplementaryStatus == (int)CustomerComplementaryStatus.waittingApproval).OrderBy(f => f.Name);
 
                     var total = tmpList.Count();
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();

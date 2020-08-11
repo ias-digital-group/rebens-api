@@ -13,6 +13,6 @@ namespace ias.Rebens
         MoipSignature GetUserSignature(int idCustomer, out string error);
         bool CancelSignature(string code, out string error);
         bool UpdatePlan(string code, string planCode, string planName, decimal amount, DateTime nextInvoice, out string error);
-        ResultPage<Entity.MoipSignatureItem> ListSubscriptions(int page, int pageItems, string word, out string error, int? idOperation);
+        ResultPage<Entity.MoipSignatureItem> ListSubscriptions(int page, int pageItems, string word, out string error, string plan, string status, int? idOperation);
     }
 }
