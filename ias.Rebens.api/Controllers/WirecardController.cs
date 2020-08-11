@@ -131,7 +131,6 @@ namespace ias.Rebens.api.Controllers
                         {
                             var newitem = new MoipSignatureModel(item);
                             worksheet.Cell(row, 1).Value = newitem.Code;
-                            worksheet.Cell(row, 1).DataType = XLDataType.Number;
                             worksheet.Cell(row, 2).Value = newitem.Customer.Name;
                             worksheet.Cell(row, 3).Value = newitem.PlanName;
                             worksheet.Cell(row, 4).Value = newitem.AmountString;
