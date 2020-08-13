@@ -193,55 +193,8 @@ namespace ias.Rebens
                         update.Zpar = zanoxSale.Zpar;
                         update.Modified = DateTime.UtcNow;
 
-                        var use = db.BenefitUse.SingleOrDefault(b => b.Code == zanoxSale.ZanoxId);
-                        if (use != null)
-                        {
-                            use.Amount = zanoxSale.Amount;
-                            use.Comission = zanoxSale.Commission;
-                            use.Modified = DateTime.UtcNow;
-                            switch (zanoxSale.ReviewState)
-                            {
-                                case "confirmed":
-                                    use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
-                                    break;
-                                case "rejected":
-                                    use.Status = (int)Enums.BenefitUseStatus.NoCashBack;
-                                    break;
-                                default:
-                                    use.Status = (int)Enums.BenefitUseStatus.ProcessingCashback;
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            use = new BenefitUse()
-                            {
-                                Amount = update.Amount,
-                                Code = update.ZanoxId,
-                                Comission = update.Commission,
-                                Created = DateTime.UtcNow,
-                                IdBenefit = update.IdBenefit,
-                                IdBenefitType = (int)Enums.BenefitType.Cashback,
-                                IdCustomer = update.IdCustomer,
-                                Modified = DateTime.UtcNow,
-                            };
-
-                            use.Name = db.Partner.Where(p => p.Benefits.Any(b => b.Id == update.IdBenefit)).First().Name;
-                            switch (zanoxSale.ReviewState)
-                            {
-                                case "confirmed":
-                                    use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
-                                    break;
-                                case "rejected":
-                                    use.Status = (int)Enums.BenefitUseStatus.NoCashBack;
-                                    break;
-                                default:
-                                    use.Status = (int)Enums.BenefitUseStatus.ProcessingCashback;
-                                    break;
-                            }
-
-                            db.BenefitUse.Add(use);
-                        }
+                        zanoxSale.IdCustomer = update.IdCustomer;
+                        zanoxSale.IdBenefit = update.IdBenefit;
 
                         db.SaveChanges();
                         error = null;
@@ -261,41 +214,102 @@ namespace ias.Rebens
                                     zanoxSale.Status = (int)Enums.ZanoxStatus.treat;
                                     db.ZanoxSale.Add(zanoxSale);
                                     db.SaveChanges();
-
-                                    var use = new BenefitUse()
-                                    {
-                                        Amount = zanoxSale.Amount,
-                                        Code = zanoxSale.ZanoxId,
-                                        Comission = zanoxSale.Commission,
-                                        Created = DateTime.UtcNow,
-                                        IdBenefit = zanoxSale.IdBenefit,
-                                        IdBenefitType = (int)Enums.BenefitType.Cashback,
-                                        IdCustomer = zanoxSale.IdCustomer,
-                                        Modified = DateTime.UtcNow,
-                                    };
-
-                                    use.Name = db.Partner.Where(p => p.Benefits.Any(b => b.Id == idBenefit)).First().Name;
-                                    switch (zanoxSale.ReviewState)
-                                    {
-                                        case "confirmed":
-                                        case "approved":
-                                            use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
-                                            break;
-                                        case "rejected":
-                                            use.Status = (int)Enums.BenefitUseStatus.NoCashBack;
-                                            break;
-                                        default:
-                                            use.Status = (int)Enums.BenefitUseStatus.ProcessingCashback;
-                                            break;
-                                    }
-
-                                    db.BenefitUse.Add(use);
-                                    db.SaveChanges();
+                                }
+                                else
+                                {
+                                    error = "Cliente não encontrado";
+                                    return false;
                                 }
                             }
+                            else
+                            {
+                                error = "Zpar zero error";
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            error = "Zpar zero error";
+                            return false;
                         }
                         error = null;
-                    }   
+                    }
+
+                    var benefit = db.Benefit.SingleOrDefault(b => b.Id == zanoxSale.IdBenefit);
+                    if (benefit != null && benefit.MaxDiscountPercentage.HasValue && benefit.TaxAmount.HasValue && benefit.CashbackAmount.HasValue)
+                    {
+                        if(benefit.CashbackAmount <= 0)
+                        {
+                            error = "Valor do cashback é menor ou igual a 0.";
+                            return false;
+                        }
+                        decimal commision = 0;
+                        if(benefit.CashbackAmount > 40)
+                        {
+                            commision = zanoxSale.Amount * benefit.MaxDiscountPercentage.Value / 100;
+                            commision -= (commision * benefit.TaxAmount.Value / 100);
+                            commision = commision * benefit.CashbackAmount.Value / 100;
+                        } 
+                        else
+                            commision = zanoxSale.Amount * benefit.CashbackAmount.Value / 100;
+
+                        var use = db.BenefitUse.SingleOrDefault(b => b.Code == zanoxSale.ZanoxId);
+                        if (use != null)
+                        {
+                            use.Amount = zanoxSale.Amount;
+                            use.Comission = commision;
+                            use.Modified = DateTime.UtcNow;
+                            switch (zanoxSale.ReviewState)
+                            {
+                                case "confirmed":
+                                    use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
+                                    break;
+                                case "rejected":
+                                    use.Status = (int)Enums.BenefitUseStatus.NoCashBack;
+                                    break;
+                                default:
+                                    use.Status = (int)Enums.BenefitUseStatus.ProcessingCashback;
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            use = new BenefitUse()
+                            {
+                                Amount = zanoxSale.Amount,
+                                Code = zanoxSale.ZanoxId,
+                                Comission = commision,
+                                Created = DateTime.UtcNow,
+                                IdBenefit = zanoxSale.IdBenefit,
+                                IdBenefitType = (int)Enums.BenefitType.Cashback,
+                                IdCustomer = zanoxSale.IdCustomer,
+                                Modified = DateTime.UtcNow,
+                            };
+
+                            use.Name = db.Partner.Where(p => p.Benefits.Any(b => b.Id == update.IdBenefit)).First().Name;
+                            switch (zanoxSale.ReviewState)
+                            {
+                                case "confirmed":
+                                    use.Status = (int)Enums.BenefitUseStatus.CashbackAvailable;
+                                    break;
+                                case "rejected":
+                                    use.Status = (int)Enums.BenefitUseStatus.NoCashBack;
+                                    break;
+                                default:
+                                    use.Status = (int)Enums.BenefitUseStatus.ProcessingCashback;
+                                    break;
+                            }
+
+                            db.BenefitUse.Add(use);
+                        }
+                        db.SaveChanges();
+                    }
+                    else
+                    {
+                        error = "Benefício não encontrado!";
+                        return false;
+                    }
+                    
                 }
             }
             catch (Exception ex)

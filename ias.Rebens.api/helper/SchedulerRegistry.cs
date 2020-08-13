@@ -20,7 +20,7 @@ namespace ias.Rebens.api.helper
 
             Schedule(() => new BenefitLinkCheckerJob(serviceScopeFactory)).ToRunEvery(1).Days().At(2, 0);
 
-            //Schedule(() => new ZanoxUpdateJob(serviceScopeFactory)).ToRunNow().AndEvery(2).Hours();
+            Schedule(() => new ZanoxUpdateJob(serviceScopeFactory)).ToRunNow().AndEvery(2).Hours();
             Schedule(() => new WirecardJob(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
             Schedule(() => new KeepAlive(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
             Schedule(() => new ProcessFileJob(serviceScopeFactory)).ToRunNow().AndEvery(5).Minutes();
