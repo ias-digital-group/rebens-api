@@ -12,7 +12,7 @@ namespace ias.Rebens.api.helper
             //Schedule<CouponToolsUpdateJob>().ToRunEvery(1).Days().At(3, 0);
             //Schedule<CouponToolsGenerateJob>().ToRunNow().AndEvery(1).Days().At(0, 30);
 
-            using (var serviceScope = serviceScopeFactory.CreateScope())
+            using (IServiceScope serviceScope = serviceScopeFactory.CreateScope())
             {
                 ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();
                 log.Create("SchedulerRegistry", "START", "", "");
@@ -24,6 +24,8 @@ namespace ias.Rebens.api.helper
             Schedule(() => new WirecardJob(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
             Schedule(() => new KeepAlive(serviceScopeFactory)).ToRunNow().AndEvery(15).Minutes();
             Schedule(() => new ProcessFileJob(serviceScopeFactory)).ToRunNow().AndEvery(5).Minutes();
+
+            Schedule(() => new CustomerValidationJob(serviceScopeFactory)).ToRunNow().AndEvery(1).Days().At(23,0);
 
             //Schedule(() => new ScratchcardDailyJob(serviceScopeFactory)).ToRunEvery(1).Days().At(1,0);
             //Schedule(() => new ScratchcardMonthlyJob(serviceScopeFactory)).ToRunEvery(1).Months().On(1).At(3, 0);

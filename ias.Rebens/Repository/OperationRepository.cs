@@ -1429,5 +1429,24 @@ namespace ias.Rebens
             }
             return string.IsNullOrEmpty(ret) ? "contato@rebens.com.br" : ret;
         }
+
+        public List<Operation> ListActive()
+        {
+            List<Operation> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    ret = db.Operation.Where(o => o.Active).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                logError.Create("OperationRepository.ListActive", ex.Message, "", ex.StackTrace);
+                ret = null;
+            }
+            return ret;
+        }
     }
 }

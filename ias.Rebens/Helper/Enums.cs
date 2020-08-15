@@ -65,6 +65,9 @@ namespace ias.Rebens.Enums
         validate = 2,
         [Description("Login")]
         login = 3,
+        [Description("Lembrete validação")]
+        validationReminder = 4
+
     }
     public enum CourseUseStatus : int
     {
@@ -223,8 +226,7 @@ namespace ias.Rebens.Enums
         [Description("Validar Produto")]
         voucherValidate = 15,
         [Description("Login")]
-        login = 16
-
+        login = 16,
     }
 
     public enum LogItem : int

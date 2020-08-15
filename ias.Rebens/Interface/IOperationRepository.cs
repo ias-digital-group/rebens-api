@@ -51,5 +51,7 @@ namespace ias.Rebens
         bool ToggleActive(int id, int idAdminUser, out string error);
 
         string GetFromEmail(int id);
+
+        List<Operation> ListActive();
     }
 }

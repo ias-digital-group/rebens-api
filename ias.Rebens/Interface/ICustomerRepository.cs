@@ -16,6 +16,7 @@ namespace ias.Rebens
         bool Update(Customer customer, int idAdminUser, out string error);
         bool Update(Customer customer, out string error);
         bool Delete(int id, int idAdminUser, out string error);
+        List<Customer> ListForCustomerValidationReminder(int idOperation);
         Customer ReadByEmail(string email, int idOperation, out string error);
         bool ChangePassword(int id, string passwordEncrypted, string passwordSalt, int? status, out string error);
         Customer ReadByCode(string code, int idOperation, out string error);
