@@ -21,49 +21,11 @@ namespace TestApp
             var sw = new Stopwatch();
             sw.Start();
 
-            var reader = new StreamReader(@"C:\ias\PROJECTS\Rebens\awin.csv");
-            var writer = new StreamWriter(@"C:\ias\PROJECTS\Rebens\awin.txt");
-            reader.ReadLine();
-            var line = reader.ReadLine();
-            int idx = 1;
-            while (line != null)
-            {
-                var row = line.Split(';');
-                if(row.Length == 39)
-                {
-                    if(row[30].Trim() != "")
-                    {
-                        //string urlDecoded = HttpUtility.UrlDecode(row[30]);
-                        string urlDecoded = row[30].Replace("\"", "");
-                        string zparDecoded;
-                        try
-                        {
-                            zparDecoded = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(urlDecoded);
-                            Console.WriteLine($"UPDATE ZanoxTemp SET [date] = '{row[4].Replace("\"", "")}' WHERE idBenefit = {zparDecoded.Split('|')[0]} AND idCustomer = {zparDecoded.Split('|')[1]}");
-                            //    string tmp = $"insert into zanoxtemp ";
-                            //    tmp += "(idbenefit,idcustomer,status,commision,total,userpercentage,usercommission,idzanoxsale,idx) values(";
-                            //    tmp += $"{zparDecoded.Split('|')[0]}, {zparDecoded.Split('|')[1]}, '{row[5].Replace("\"", "")}',";
-                            //    tmp += $"{row[3].Replace("\"", "").Replace(",", ".")},{row[2].Replace("\"", "").Replace(",", ".")}, null, null, null, {idx})";
-                            //    writer.WriteLine(tmp);
-                            //    idx++;
-                        }
-                        catch
-                        {
-                            zparDecoded = "error";
-                        }
-                        //Console.WriteLine($"zpar1: {row[30]} | {urlDecoded} | {zparDecoded}");
-                        
 
-                    }
-                }
+            var zanox = new ias.Rebens.Integration.ZanoxHelper();
+            var programs = zanox.GetPrograms(out _);
+            var ret = zanox.GetIncentives(out _);
 
-                line = reader.ReadLine();
-            }
-
-            writer.Close();
-            reader.Close();
-            writer.Dispose();
-            reader.Dispose();
 
             //var zpar1 = HttpUtility.UrlDecode("ozxE75LALXbDmxwuQetQPw%3d%3d");
             //var zpar2 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
@@ -88,6 +50,53 @@ namespace TestApp
 
             sw.Stop();
             Console.WriteLine("Elapsed Time : " + sw.ElapsedMilliseconds + "ms");
+        }
+
+        public  static void Awin()
+        {
+            var reader = new StreamReader(@"C:\ias\PROJECTS\Rebens\awin.csv");
+            var writer = new StreamWriter(@"C:\ias\PROJECTS\Rebens\awin.txt");
+            reader.ReadLine();
+            var line = reader.ReadLine();
+            int idx = 1;
+            while (line != null)
+            {
+                var row = line.Split(';');
+                if (row.Length == 39)
+                {
+                    if (row[30].Trim() != "")
+                    {
+                        //string urlDecoded = HttpUtility.UrlDecode(row[30]);
+                        string urlDecoded = row[30].Replace("\"", "");
+                        string zparDecoded;
+                        try
+                        {
+                            zparDecoded = ias.Rebens.Helper.SecurityHelper.SimpleDecryption(urlDecoded);
+                            Console.WriteLine($"UPDATE ZanoxTemp SET [date] = '{row[4].Replace("\"", "")}' WHERE idBenefit = {zparDecoded.Split('|')[0]} AND idCustomer = {zparDecoded.Split('|')[1]}");
+                            //    string tmp = $"insert into zanoxtemp ";
+                            //    tmp += "(idbenefit,idcustomer,status,commision,total,userpercentage,usercommission,idzanoxsale,idx) values(";
+                            //    tmp += $"{zparDecoded.Split('|')[0]}, {zparDecoded.Split('|')[1]}, '{row[5].Replace("\"", "")}',";
+                            //    tmp += $"{row[3].Replace("\"", "").Replace(",", ".")},{row[2].Replace("\"", "").Replace(",", ".")}, null, null, null, {idx})";
+                            //    writer.WriteLine(tmp);
+                            //    idx++;
+                        }
+                        catch
+                        {
+                            zparDecoded = "error";
+                        }
+                        //Console.WriteLine($"zpar1: {row[30]} | {urlDecoded} | {zparDecoded}");
+
+
+                    }
+                }
+
+                line = reader.ReadLine();
+            }
+
+            writer.Close();
+            reader.Close();
+            writer.Dispose();
+            reader.Dispose();
         }
 
         public async static Task<bool> TestAWS()

@@ -914,51 +914,66 @@ namespace ias.Rebens
             List<Customer> ret;
             using (var db = new RebensContext(this._connectionString))
             {
-                var dt = DateTime.UtcNow.AddDays(-2);
-                ret = db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation 
-                                        && !c.CustomerLogs.Any() 
-                                        && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
-                                        && c.Created.Year == dt.Year
-                                        && c.Created.Month == dt.Month
-                                        && c.Created.Day == dt.Day).ToList();
+                ret = db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation
+                                               && !c.CustomerLogs.Any()
+                                            //&& !c.CustomerLogs.Any(l => l.Action == (int)CustomerLogAction.validationReminder) 
+                                            && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
+                                            //&& c.IdOperation == idOperation
+                                        ).ToList();
 
-                var oldestCustomer = db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation).OrderByDescending(c => c.Created).FirstOrDefault();
-                if (oldestCustomer != null)
-                {
-                    dt = DateTime.UtcNow.AddDays(-4);
-                    if (dt.Date > oldestCustomer.Created.Date)
-                    {
-                        ret.AddRange(db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation && db.CustomerLog.Any()
-                                        && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
-                                        && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Year == dt.Year
-                                        && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Month == dt.Month
-                                        && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Day == dt.Day));
+                //var oldestCustomer = db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation).OrderByDescending(c => c.Created).FirstOrDefault();
+                //if (oldestCustomer != null)
+                //{
+                //    var dt = DateTime.UtcNow.AddDays(-2);
+                //    if (dt.Date > oldestCustomer.Created.Date)
+                //    {
+                //        ret.AddRange(db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation && db.CustomerLog.Any()
+                //                        && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
+                //                        && c.IdOperation == idOperation
+                //                        && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Year == dt.Year
+                //                        && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Month == dt.Month
+                //                        && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Day == dt.Day
+                //                    ));
 
-                        dt = DateTime.UtcNow.AddDays(-6);
-                        if (dt.Date > oldestCustomer.Created.Date)
-                        {
-                            ret.AddRange(db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation && db.CustomerLog.Any()
-                                    && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
-                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Year == dt.Year
-                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Month == dt.Month
-                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Day == dt.Day));
+                //        dt = DateTime.UtcNow.AddDays(-4);
+                //        if (dt.Date > oldestCustomer.Created.Date)
+                //        {
+                //            ret.AddRange(db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation && db.CustomerLog.Any()
+                //                            && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
+                //                            && c.IdOperation == idOperation
+                //                            && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Year == dt.Year
+                //                            && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Month == dt.Month
+                //                            && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Day == dt.Day
+                //                        ));
 
-                            dt = dt.AddDays(-7);
-                            while (dt.Date >= oldestCustomer.Created.Date)
-                            {
-                                ret.AddRange(db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation && db.CustomerLog.Any()
-                                    && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
-                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Year == dt.Year
-                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Month == dt.Month
-                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)Enums.CustomerLogAction.validationReminder).First().Created.Day == dt.Day));
+                //            dt = DateTime.UtcNow.AddDays(-6);
+                //            if (dt.Date > oldestCustomer.Created.Date)
+                //            {
+                //                ret.AddRange(db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation && db.CustomerLog.Any()
+                //                                && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
+                //                                && c.IdOperation == idOperation
+                //                                && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Year == dt.Year
+                //                                && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Month == dt.Month
+                //                                && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Day == dt.Day
+                //                            ));
 
-                                dt = dt.AddDays(-7);
-                            }
-                        }
-                    }
-                }
-                else
-                    ret = null;
+                //                dt = dt.AddDays(-7);
+                //                while (dt.Date >= oldestCustomer.Created.Date)
+                //                {
+                //                    ret.AddRange(db.Customer.Where(c => c.Status == (int)CustomerStatus.Validation && db.CustomerLog.Any()
+                //                                    && (c.ComplementaryStatus == null || (c.ComplementaryStatus == (int)CustomerComplementaryStatus.approved))
+                //                                    && c.IdOperation == idOperation
+                //                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Year == dt.Year
+                //                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Month == dt.Month
+                //                                    && c.CustomerLogs.OrderByDescending(l => l.Action == (int)CustomerLogAction.validationReminder).First().Created.Day == dt.Day
+                //                                ));
+
+                //                    dt = dt.AddDays(-7);
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
             }
             
             return ret;

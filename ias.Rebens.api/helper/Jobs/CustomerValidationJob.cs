@@ -20,45 +20,57 @@ namespace ias.Rebens.api.helper
         {
             using (var serviceScope = serviceScopeFactory.CreateScope())
             {
-                ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();
+                //ILogErrorRepository log = serviceScope.ServiceProvider.GetService<ILogErrorRepository>();
                 IOperationRepository operationRepo = serviceScope.ServiceProvider.GetService<IOperationRepository>();
 
-                log.Create("CustomerValidationJob", "START", "", "");
+                //log.Create("CustomerValidationJob", "START", "", "");
 
                 try
                 {
                     var operations = operationRepo.ListActive();
-                    if(operations != null)
+                    if (operations != null)
                     {
-                        IStaticTextRepository staticRepo = serviceScope.ServiceProvider.GetService<IStaticTextRepository>();
+                        //log.Create("CustomerValidationJob", "Operations", operations.Count.ToString(), "");
+                        //IStaticTextRepository staticRepo = serviceScope.ServiceProvider.GetService<IStaticTextRepository>();
                         ICustomerRepository repo = serviceScope.ServiceProvider.GetService<ICustomerRepository>();
                         foreach(var operation in operations)
                         {
                             var customers = repo.ListForCustomerValidationReminder(operation.Id);
                             if (customers != null)
                             {
-                                string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
-                                if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                                //log.Create("CustomerValidationJob", operation.Title +  " - Customers", customers.Count.ToString(), "");
+
+                                //string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
+                                //if (string.IsNullOrEmpty(fromEmail) || !Helper.EmailHelper.IsValidEmail(fromEmail)) fromEmail = "contato@rebens.com.br";
+                                Console.WriteLine($"{operation.Title} - {customers.Count}");
 
                                 foreach (var customer in customers)
                                 {
-                                    if(Helper.EmailHelper.SendCustomerValidation(staticRepo, operation, customer, fromEmail, out _))
-                                    {
+                                    //if(Helper.EmailHelper.SendCustomerValidation(staticRepo, operation, customer, fromEmail, out _))
+                                    //{
                                         repo.SaveLog(customer.Id, Enums.CustomerLogAction.validationReminder, "");
+                                    //}
+                                    if (customer.Status != 3)
+                                    {
+                                        Console.WriteLine($"{customer.Id} - {customer.Name} - {customer.Status} | {customer.ComplementaryStatus}");
+                                        Thread.Sleep(100);
                                     }
-                                    Thread.Sleep(100);
                                 }
                             }
-                            Thread.Sleep(1000);
+                            //else
+                            //    log.Create("CustomerValidationJob", operation.Title + " - Customers", "no customers", "");
+                            //Thread.Sleep(1000);
                         }
                     }
+                    //else
+                    //    log.Create("CustomerValidationJob", "Operations", "no operations", "");
                 }
                 catch(Exception ex)
                 {
-                    log.Create("CustomerValidationJob", ex.Message, "ERROR", ex.StackTrace);
+                    //log.Create("CustomerValidationJob", ex.Message, "ERROR", ex.StackTrace);
                 }
 
-                log.Create("CustomerValidationJob", "END", "", "");
+                //log.Create("CustomerValidationJob", "END", "", "");
 
             }
         }
