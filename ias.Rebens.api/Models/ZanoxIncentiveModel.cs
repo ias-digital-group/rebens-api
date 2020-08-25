@@ -75,6 +75,10 @@ namespace ias.Rebens.api.Models
         /// Status (ativo = true, inativo = false)
         /// </summary>
         public bool Active { get; set; }
+        /// <summary>
+        /// Url
+        /// </summary>
+        public string Url { get; set; }
 
         /// <summary>
         /// Programa
@@ -102,6 +106,7 @@ namespace ias.Rebens.api.Models
                 this.Type = incentive.Type;
                 this.ZanoxCreated = incentive.ZanoxCreated;
                 this.ZanoxModified = incentive.ZanoxModified;
+                this.Url = incentive.Url;
                 if (incentive.Program != null)
                     this.Program = new ZanoxProgramModel(incentive.Program);
             }

@@ -21,14 +21,13 @@ namespace ias.Rebens.api.helper
                 log.Create("SchedulerRegistry", "START", "", "");
             }
 
-            //Schedule(() => new BenefitLinkCheckerJob(serviceScopeFactory)).ToRunEvery(1).Days().At(2, 0);
-            //Schedule(() => new ZanoxUpdateJob(serviceScopeFactory)).ToRunEvery(2).Hours();
-            //Schedule(() => new WirecardJob(serviceScopeFactory)).ToRunEvery(15).Minutes();
-            //Schedule(() => new KeepAlive(serviceScopeFactory)).ToRunEvery(15).Minutes();
-            //Schedule(() => new ProcessFileJob(serviceScopeFactory)).ToRunEvery(5).Minutes();
-            //Schedule(() => new WirecardSubscriptionJob(serviceScopeFactory)).ToRunEvery(10).Minutes();
-            //Schedule(() => new ZanoxProgramJob(serviceScopeFactory)).ToRunNow().AndEvery(1).Days().At(1,0);
-            Schedule(() => new ZanoxProgramJob(serviceScopeFactory)).ToRunNow();
+            Schedule(() => new BenefitLinkCheckerJob(serviceScopeFactory)).ToRunEvery(1).Days().At(2, 0);
+            Schedule(() => new ZanoxUpdateJob(serviceScopeFactory)).ToRunEvery(2).Hours();
+            Schedule(() => new WirecardJob(serviceScopeFactory)).ToRunEvery(15).Minutes();
+            Schedule(() => new KeepAlive(serviceScopeFactory)).ToRunEvery(15).Minutes();
+            Schedule(() => new ProcessFileJob(serviceScopeFactory)).ToRunEvery(5).Minutes();
+            Schedule(() => new WirecardSubscriptionJob(serviceScopeFactory)).ToRunEvery(10).Minutes();
+            Schedule(() => new ZanoxProgramJob(serviceScopeFactory)).ToRunEvery(1).Days().At(1, 0);
 
             //Schedule(() => new CustomerValidationJob(serviceScopeFactory)).ToRunEvery(1).Days().At(23,0);
 
