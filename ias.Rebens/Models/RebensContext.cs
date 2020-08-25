@@ -82,6 +82,8 @@ namespace ias.Rebens
         public virtual DbSet<StaticText> StaticText { get; set; }
         public virtual DbSet<WirecardPayment> WirecardPayment { get; set; }
         public virtual DbSet<Withdraw> Withdraw { get; set; }
+        public virtual DbSet<ZanoxIncentive> ZanoxIncentive { get; set; }
+        public virtual DbSet<ZanoxProgram> ZanoxProgram { get; set; }
         public virtual DbSet<ZanoxSale> ZanoxSale { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -1483,6 +1485,46 @@ namespace ias.Rebens
                    .HasForeignKey(d => d.IdBankAccount)
                    .OnDelete(DeleteBehavior.ClientSetNull)
                    .HasConstraintName("FK_Withdraw_BankAccount");
+            });
+
+            modelBuilder.Entity<ZanoxIncentive>(entity => {
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.ZanoxCreated).HasColumnType("datetime");
+                entity.Property(e => e.ZanoxModified).HasColumnType("datetime");
+                entity.Property(e => e.Start).HasColumnType("datetime");
+                entity.Property(e => e.End).HasColumnType("datetime");
+                
+                entity.Property(e => e.IdProgram).IsRequired();
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+
+                entity.Property(e => e.Amount).HasColumnType("money");
+
+
+                entity.HasOne(d => d.Program)
+                  .WithMany(p => p.Incentives)
+                  .HasForeignKey(d => d.IdProgram)
+                  .OnDelete(DeleteBehavior.ClientSetNull)
+                  .HasConstraintName("FK_ZanoxIncentive_ZanoxProgram");
+            });
+
+            modelBuilder.Entity<ZanoxProgram>(entity => {
+                
+                entity.Property(e => e.Modified).HasColumnType("datetime");
+                entity.Property(e => e.Created).HasColumnType("datetime");
+                entity.Property(e => e.StartDate).HasColumnType("datetime");
+
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                
+                entity.Property(e => e.AdRank).HasColumnType("money");
+                entity.Property(e => e.MaxCommissionPercent).HasColumnType("money");
+                entity.Property(e => e.MinCommissionPercent).HasColumnType("money");
+
+                entity.Property(e => e.Url).HasMaxLength(500);
+                entity.Property(e => e.Image).HasMaxLength(500);
+                entity.Property(e => e.Currency).HasMaxLength(50);
+                entity.Property(e => e.Status).HasMaxLength(50);
             });
 
             modelBuilder.Entity<ZanoxSale>(entity => {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -183,6 +184,66 @@ namespace ias.Rebens.Integration
                         program.Active = program.Status == "active";
 
                         ret.Add(program);
+                    }
+                }
+                error = null;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+            return ret;
+        }
+
+        public ZanoxProgram GetProgram(int id, out string error)
+        {
+            ZanoxProgram ret = null;
+            try
+            {
+                var result = CallPublicApi("GET", $"/programs/program/{id}", null);
+                var jObj = JObject.Parse(result);
+                if (jObj["programItem"] != null)
+                {
+                    var item = jObj["programItem"].Children().FirstOrDefault();
+                    if (item != null)
+                    {
+                        ret = new ZanoxProgram()
+                        {
+                            Id = item["@id"].Value<int>(),
+                            Name = item["name"].ToString(),
+                            Created = DateTime.UtcNow,
+                            Modified = DateTime.UtcNow
+                        };
+
+                        if (item["adrank"] != null)
+                            ret.AdRank = item["adrank"].Value<decimal>();
+                        if (item["description"] != null)
+                            ret.Description = item["description"].ToString();
+                        if (item["descriptionLocal"] != null)
+                            ret.LocalDescription = item["descriptionLocal"].ToString();
+                        if (item["url"] != null)
+                            ret.Url = item["url"].ToString();
+                        if (item["image"] != null)
+                            ret.Image = item["image"].ToString();
+                        if (item["currency"] != null)
+                            ret.Currency = item["currency"].ToString();
+                        if (item["status"] != null)
+                            ret.Status = item["status"].ToString();
+                        if (item["terms"] != null)
+                            ret.Terms = item["terms"].ToString();
+                        if (item["startDate"] != null)
+                        {
+                            try
+                            {
+                                ret.StartDate = item["startDate"].Value<DateTime>();
+                            }
+                            catch
+                            {
+                                if (DateTime.TryParse(item["startDate"].ToString(), out DateTime dt))
+                                    ret.StartDate = dt;
+                            }
+                        }
+                        ret.Active = ret.Status == "active";
                     }
                 }
                 error = null;

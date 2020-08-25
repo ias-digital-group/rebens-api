@@ -154,6 +154,8 @@ namespace ias.Rebens.api
             services.AddTransient<IStaticTextRepository, StaticTextRepository>();
             services.AddTransient<IWirecardPaymentRepository, WirecardPaymentRepository>();
             services.AddTransient<IWithdrawRepository, WithdrawRepository>();
+            services.AddTransient<IZanoxIncentiveRepository, ZanoxIncentiveRepository>();
+            services.AddTransient<IZanoxProgramRepository, ZanoxProgramRepository>();
             services.AddTransient<IZanoxSaleRepository, ZanoxSaleRepository>();
             
 
