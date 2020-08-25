@@ -83,7 +83,9 @@ namespace ias.Rebens
         public virtual DbSet<WirecardPayment> WirecardPayment { get; set; }
         public virtual DbSet<Withdraw> Withdraw { get; set; }
         public virtual DbSet<ZanoxIncentive> ZanoxIncentive { get; set; }
+        public virtual DbSet<ZanoxIncentiveClick> ZanoxIncentiveClick { get; set; }
         public virtual DbSet<ZanoxProgram> ZanoxProgram { get; set; }
+        public virtual DbSet<ZanoxProgramView> ZanoxProgramView { get; set; }
         public virtual DbSet<ZanoxSale> ZanoxSale { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -1509,6 +1511,22 @@ namespace ias.Rebens
                   .HasConstraintName("FK_ZanoxIncentive_ZanoxProgram");
             });
 
+            modelBuilder.Entity<ZanoxIncentiveClick>(entity => {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Incentive)
+                    .WithMany(p => p.ZanoxIncentiveClicks)
+                    .HasForeignKey(d => d.IdZanoxIncentive)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ZanoxIncentiveClick_ZanoxIncentive");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.ZanoxIncentiveClicks)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ZanoxIncentiveClick_Customer");
+            });
+
             modelBuilder.Entity<ZanoxProgram>(entity => {
                 
                 entity.Property(e => e.Modified).HasColumnType("datetime");
@@ -1525,6 +1543,22 @@ namespace ias.Rebens
                 entity.Property(e => e.Image).HasMaxLength(500);
                 entity.Property(e => e.Currency).HasMaxLength(50);
                 entity.Property(e => e.Status).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<ZanoxProgramView>(entity => {
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Program)
+                    .WithMany(p => p.ZanoxProgramViews)
+                    .HasForeignKey(d => d.IdZanoxProgram)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ZanoxProgramView_ZanoxProgram");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.ZanoxProgramViews)
+                    .HasForeignKey(d => d.IdCustomer)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ZanoxProgramView_Customer");
             });
 
             modelBuilder.Entity<ZanoxSale>(entity => {

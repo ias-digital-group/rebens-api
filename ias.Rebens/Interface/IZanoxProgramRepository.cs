@@ -10,5 +10,8 @@ namespace ias.Rebens
     {
         bool Save(ZanoxProgram program, out string error);
         ResultPage<ZanoxProgram> ListPage(int page, int pageItems, string word, string sort, out string error);
+        ResultPage<ZanoxProgram> ListPageForPortal(int page, int pageItems, string word, out string error);
+        ZanoxProgram Read(int id, out string error);
+        void SaveView(int id, int idCustomer, out string error);
     }
 }

@@ -6,6 +6,11 @@ namespace ias.Rebens
 {
     public class ZanoxIncentive
     {
+        public ZanoxIncentive()
+        {
+            ZanoxIncentiveClicks = new HashSet<ZanoxIncentiveClick>();
+        }
+
         public int Id { get; set; }
         public int IdProgram { get; set; }
         public string Name { get; set; }
@@ -26,5 +31,6 @@ namespace ias.Rebens
         public bool Removed { get; set; }
 
         public virtual ZanoxProgram Program { get; set; }
+        public virtual ICollection<ZanoxIncentiveClick> ZanoxIncentiveClicks { get; set; }
     }
 }

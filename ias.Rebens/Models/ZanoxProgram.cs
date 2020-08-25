@@ -9,6 +9,7 @@ namespace ias.Rebens
         public ZanoxProgram()
         {
             this.Incentives = new HashSet<ZanoxIncentive>();
+            ZanoxProgramViews = new HashSet<ZanoxProgramView>();
         }
 
         public int Id { get; set; }
@@ -29,5 +30,6 @@ namespace ias.Rebens
         public bool Active { get; set; }
 
         public virtual ICollection<ZanoxIncentive> Incentives { get; set; }
+        public virtual ICollection<ZanoxProgramView> ZanoxProgramViews { get; set; }
     }
 }

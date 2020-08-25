@@ -9,5 +9,6 @@ namespace ias.Rebens
         bool Save(ZanoxIncentive incentive, out string error);
         ResultPage<ZanoxIncentive> ListPage(int page, int pageItems, string word, string sort, out string error);
         bool DisableIncentives(List<int> incentiveIds);
+        void SaveClick(int id, int idCustomer, out string error);
     } 
 }

@@ -23,6 +23,8 @@ namespace ias.Rebens
             Orders = new HashSet<Order>();
             Draws = new HashSet<ScratchcardDraw>();
             CustomerLogs = new HashSet<CustomerLog>();
+            ZanoxProgramViews = new HashSet<ZanoxProgramView>();
+            ZanoxIncentiveClicks = new HashSet<ZanoxIncentiveClick>();
         }
 
         public int Id { get; set; }
@@ -77,6 +79,9 @@ namespace ias.Rebens
         public virtual ICollection<ScratchcardDraw> Draws { get; set; }
         public virtual ICollection<CustomerLog> CustomerLogs { get; set; }
         public virtual ICollection<Customer> CustomerReferals { get; set; }
+        public virtual ICollection<ZanoxProgramView> ZanoxProgramViews { get; set; }
+        public virtual ICollection<ZanoxIncentiveClick> ZanoxIncentiveClicks { get; set; }
+        
 
         public void SetPassword(string password)
         {

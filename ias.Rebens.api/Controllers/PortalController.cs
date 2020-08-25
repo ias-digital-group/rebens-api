@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -20,33 +21,34 @@ namespace ias.Rebens.api.Controllers
     public class PortalController : BaseApiController
     {
         #region Attributes
-        private IAddressRepository addrRepo;
-        private IBannerRepository bannerRepo;
-        private IBenefitRepository benefitRepo;
-        private IBenefitUseRepository benefitUseRepo;
-        private IBenefitViewRepository benefitViewRepo;
-        private ICouponRepository couponRepo;
-        private ICustomerRepository customerRepo;
-        private IFaqRepository faqRepo;
-        private IFormContactRepository formContactRepo;
-        private IFormEstablishmentRepository formEstablishmentRepo;
-        private IMoipRepository moipRepo;
-        private IOperationRepository operationRepo;
-        private IStaticTextRepository staticTextRepo;
-        private IWithdrawRepository withdrawRepo;
-        private IBankAccountRepository bankAccountRepo;
-        private IOperationPartnerRepository operationPartnerRepo;
-        private ICourseRepository courseRepo;
-        private ICourseCollegeRepository courseCollegeRepo;
-        private ICourseGraduationTypeRepository courseGraduationTypeRepo;
-        private ICoursePeriodRepository coursePeriodRepo;
-        private ICourseModalityRepository courseModalityRepo;
-        private ICourseViewRepository courseViewRepo;
-        private IDrawRepository drawRepo;
-        private IFreeCourseRepository freeCourseRepo;
-        private IPartnerRepository partnerRepo;
-        private ILogErrorRepository logErrorRepo;
-        private Constant constant;
+        private readonly IAddressRepository addrRepo;
+        private readonly IBannerRepository bannerRepo;
+        private readonly IBenefitRepository benefitRepo;
+        private readonly IBenefitUseRepository benefitUseRepo;
+        private readonly IBenefitViewRepository benefitViewRepo;
+        private readonly ICouponRepository couponRepo;
+        private readonly ICustomerRepository customerRepo;
+        private readonly IFaqRepository faqRepo;
+        private readonly IFormContactRepository formContactRepo;
+        private readonly IFormEstablishmentRepository formEstablishmentRepo;
+        private readonly IMoipRepository moipRepo;
+        private readonly IOperationRepository operationRepo;
+        private readonly IStaticTextRepository staticTextRepo;
+        private readonly IWithdrawRepository withdrawRepo;
+        private readonly IBankAccountRepository bankAccountRepo;
+        private readonly IOperationPartnerRepository operationPartnerRepo;
+        private readonly ICourseRepository courseRepo;
+        private readonly ICourseCollegeRepository courseCollegeRepo;
+        private readonly ICourseGraduationTypeRepository courseGraduationTypeRepo;
+        private readonly ICoursePeriodRepository coursePeriodRepo;
+        private readonly ICourseModalityRepository courseModalityRepo;
+        private readonly ICourseViewRepository courseViewRepo;
+        private readonly IDrawRepository drawRepo;
+        private readonly IFreeCourseRepository freeCourseRepo;
+        private readonly IPartnerRepository partnerRepo;
+        private readonly ILogErrorRepository logErrorRepo;
+        private readonly IZanoxProgramRepository zanoxProgramRepo;
+        private readonly Constant constant;
         #endregion Attributes
 
         #region Constructor
@@ -79,15 +81,17 @@ namespace ias.Rebens.api.Controllers
         /// <param name="freeCourseRepository"></param>
         /// <param name="partnerRepository"></param>
         /// <param name="logErrorRepository"></param>
+        /// <param name="logErrorRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
             IBenefitUseRepository benefitUseRepository, IStaticTextRepository staticTextRepository, ICouponRepository couponRepository, 
-            IMoipRepository moipRepository,
-            IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, IOperationPartnerRepository operationPartnerRepository,
-            ICourseRepository courseRepository, ICourseCollegeRepository courseCollegeRepository, ICourseGraduationTypeRepository courseGraduationTypeRepository, 
-            ICourseModalityRepository courseModalityRepository, ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository,
-            IDrawRepository drawRepository, IFreeCourseRepository freeCourseRepository, IPartnerRepository partnerRepository, ILogErrorRepository logErrorRepository)
+            IMoipRepository moipRepository, IBenefitViewRepository benefitViewRepository, IBankAccountRepository bankAccountRepository, 
+            IOperationPartnerRepository operationPartnerRepository, ICourseRepository courseRepository, ICourseCollegeRepository courseCollegeRepository, 
+            ICourseGraduationTypeRepository courseGraduationTypeRepository, ICourseModalityRepository courseModalityRepository, 
+            ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository, IDrawRepository drawRepository, 
+            IFreeCourseRepository freeCourseRepository, IPartnerRepository partnerRepository, ILogErrorRepository logErrorRepository,
+            IZanoxProgramRepository zanoxProgramRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -115,6 +119,7 @@ namespace ias.Rebens.api.Controllers
             this.freeCourseRepo = freeCourseRepository;
             this.partnerRepo = partnerRepository;
             this.logErrorRepo = logErrorRepository;
+            this.zanoxProgramRepo = zanoxProgramRepository;
             this.constant = new Constant();
         }
         #endregion Constructor
@@ -2411,5 +2416,83 @@ namespace ias.Rebens.api.Controllers
             return Ok(ret);
         }
         #endregion LuckNumbers
+
+        #region ZanoxPrograms/ZanoxIncentives
+        /// <summary>
+        /// Lista todos os programas da zanox com paginação
+        /// </summary>
+        /// <param name="page">página, não obrigatório (default=0)</param>
+        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
+        /// <param name="searchWord">Palavra à ser buscada</param>
+        /// <returns>Lista com os programas encontrados</returns>
+        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpGet("ZanoxPrograms"), Authorize("Bearer", Roles = "customer")]
+        [ProducesResponseType(typeof(ResultPageModel<ZanoxProgramModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListZanoxPrograms([FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "")
+        {
+            var list = zanoxProgramRepo.ListPageForPortal(page, pageItems, searchWord, out string error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0) return NoContent();
+
+                var ret = new ResultPageModel<ZanoxProgramModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<ZanoxProgramModel>()
+                };
+
+                foreach (var item in list.Page) ret.Data.Add(new ZanoxProgramModel(item));
+
+                return Ok(ret);
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Retorna o programa conforme o ID
+        /// </summary>
+        /// <param name="id">Id do programa</param>
+        /// <returns>Programas</returns>
+        /// <response code="200">Retorna o item, ou algum erro caso interno</response>
+        /// <response code="204">Se não encontrar nada</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpGet("ZanoxPrograms/{id}"), Authorize("Bearer", Roles = "customer")]
+        [ProducesResponseType(typeof(JsonDataModel<ZanoxProgramModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult GetZanoxProgram(int id)
+        {
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            if (idCustomer <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+
+            var program = zanoxProgramRepo.Read(id, out error);
+            if (string.IsNullOrEmpty(error))
+            {
+                if (program == null || program.Id == 0)
+                    return NoContent();
+                
+                zanoxProgramRepo.SaveView(id, idCustomer, out string viewError);
+
+                return Ok(new JsonDataModel<ZanoxProgramModel>() { Data = new ZanoxProgramModel(program) });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+        #endregion ZanoxPrograms/ZanoxIncentives
+
     }
 }

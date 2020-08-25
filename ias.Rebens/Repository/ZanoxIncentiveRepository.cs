@@ -126,5 +126,24 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public void SaveClick(int id, int idCustomer, out string error)
+        {
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    db.ZanoxIncentiveClick.Add(new ZanoxIncentiveClick() { IdZanoxIncentive = id, IdCustomer = idCustomer, Created = DateTime.Now });
+                    db.SaveChanges();
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ZanoxIncentiveRepository.SaveClick", ex.Message, $"IdZanoxIncentive: {id}, idCustomer: {idCustomer}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar gravar o click no incentivo. (erro:" + idLog + ")";
+            }
+        }
     }
 }
