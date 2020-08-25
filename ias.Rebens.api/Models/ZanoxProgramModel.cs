@@ -73,6 +73,8 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public bool Active { get; set; }
 
+        public List<ZanoxIncentiveModel> Incentives { get; set; }
+
         public ZanoxProgramModel() { }
         public ZanoxProgramModel(ZanoxProgram program) 
         {
@@ -94,6 +96,14 @@ namespace ias.Rebens.api.Models
                 this.Status = program.Status;
                 this.Terms = program.Terms;
                 this.Url = program.Url;
+
+                if(program.Incentives != null)
+                {
+                    this.Incentives = new List<ZanoxIncentiveModel>();
+                    foreach (var incentive in program.Incentives)
+                        this.Incentives.Add(new ZanoxIncentiveModel(incentive));
+
+                }
             }
         }
     }

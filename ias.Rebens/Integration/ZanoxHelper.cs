@@ -153,7 +153,7 @@ namespace ias.Rebens.Integration
                             Created = DateTime.UtcNow,
                             Modified = DateTime.UtcNow
                         };
-                        
+
                         if (item["adrank"] != null)
                             program.AdRank = item["adrank"].Value<decimal>();
                         if (item["description"] != null)
@@ -176,7 +176,8 @@ namespace ias.Rebens.Integration
                             {
                                 program.StartDate = item["startDate"].Value<DateTime>();
                             }
-                            catch {
+                            catch
+                            {
                                 if (DateTime.TryParse(item["startDate"].ToString(), out DateTime dt))
                                     program.StartDate = dt;
                             }
@@ -185,8 +186,10 @@ namespace ias.Rebens.Integration
 
                         ret.Add(program);
                     }
+                    error = null;
                 }
-                error = null;
+                else
+                    error = "Programas não encontrados!";
             }
             catch (Exception ex)
             {
@@ -245,8 +248,10 @@ namespace ias.Rebens.Integration
                         }
                         ret.Active = ret.Status == "active";
                     }
+                    error = null;
                 }
-                error = null;
+                else
+                    error = "Programa não encontrado!";
             }
             catch (Exception ex)
             {
@@ -260,7 +265,7 @@ namespace ias.Rebens.Integration
             List<ZanoxIncentive> ret = null;
             try
             {
-                var result = CallPublicApi("GET", "/incentives", null);
+                var result = CallPublicApi("GET", "/incentives?region=BR", null);
                 var jObj = JObject.Parse(result);
                 if (jObj["incentiveItems"] != null && jObj["incentiveItems"]["incentiveItem"] != null)
                 {
@@ -341,7 +346,18 @@ namespace ias.Rebens.Integration
                                     incentive.End = dt;
                             }
                         }
-                        ret.Add(incentive);
+                        if(item["admedia"] != null && item["admedia"]["admediumItem"] != null 
+                            && item["admedia"]["admediumItem"]["trackingLinks"] != null
+                            && item["admedia"]["admediumItem"]["trackingLinks"].ToString() != ""
+                            && item["admedia"]["admediumItem"]["trackingLinks"]["trackingLink"] != null)
+                        {
+                            var links = item["admedia"]["admediumItem"]["trackingLinks"]["trackingLink"].Children();
+                            var link = links.FirstOrDefault();
+                            if (link != null)
+                                incentive.Url = link["ppc"].ToString();
+                        }
+
+                            ret.Add(incentive);
                     }
                 }
                 error = null;
@@ -356,7 +372,7 @@ namespace ias.Rebens.Integration
         public string CallPublicApi(string method, string uri, string serializedObject)
         {
             string ret = null;
-            string apiroot = URL + uri + $"?connectid={CONNECT_ID}";
+            string apiroot = URL + uri + $"{(uri.Contains("?") ? "&" : "?")}connectid={CONNECT_ID}";
             var request = (HttpWebRequest)WebRequest.Create(apiroot);
             request.Method = method;
             request.Timeout = 50000;

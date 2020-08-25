@@ -1500,6 +1500,7 @@ namespace ias.Rebens
                 
                 entity.Property(e => e.IdProgram).IsRequired();
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+                entity.Property(e => e.Url).IsRequired().HasMaxLength(300);
 
                 entity.Property(e => e.Amount).HasColumnType("money");
 

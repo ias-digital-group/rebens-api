@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -120,8 +121,9 @@ namespace ias.Rebens
             }
             catch (Exception ex)
             {
+                string obj = JsonConvert.SerializeObject(incentive);
                 var logError = new LogErrorRepository(this._connectionString);
-                error = $"Ocorreu um erro ao tentar salvar o Incnetivo. (erro: {logError.Create("ZanoxIncentiveRepository.Save", ex.Message, "", ex.StackTrace)})";
+                error = $"Ocorreu um erro ao tentar salvar o Incnetivo. (erro: {logError.Create("ZanoxIncentiveRepository.Save", ex.Message, obj, ex.StackTrace)})";
                 ret = false;
             }
             return ret;

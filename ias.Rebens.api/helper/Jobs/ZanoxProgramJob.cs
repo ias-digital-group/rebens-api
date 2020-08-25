@@ -41,22 +41,24 @@ namespace ias.Rebens.api.helper
                     foreach (var programId in programs)
                     {
                         var program = zanox.GetProgram(programId, out error);
-                        if (string.IsNullOrEmpty(error))
+                        if (string.IsNullOrEmpty(error) && program != null)
                         {
                             if (programRepo.Save(program, out error))
                             {
-                                foreach (var incentive in incentives.Where(i => i.IdProgram == programId))
+                                var programIncentives = incentives.Where(i => i.IdProgram == programId);
+                                log.Create("ZanoxProgramJob", $"Program: {program.Id} - total Incentive: {programIncentives.Count()}", error, "");
+                                foreach (var incentive in programIncentives)
                                 {
                                     if (!incentiveRepo.Save(incentive, out error))
                                         log.Create("ZanoxProgramJob", $"ERROR Incentive: {incentive.Id}", error, "");
-                                    Thread.Sleep(100);
+                                    Thread.Sleep(10);
                                 }
                             }
                             else
                                 log.Create("ZanoxProgramJob", $"ERROR Program: {program.Id}", error, "");
                         }
                         else
-                            log.Create("ZanoxProgramJob", "ERROR", error, "");
+                            log.Create("ZanoxProgramJob", "ERROR", error, $"Program: {programId} - totalIncentives: {incentives.Count(i => i.IdProgram == programId)}");
                         //Thread.Sleep(1000);
                     }
                 }

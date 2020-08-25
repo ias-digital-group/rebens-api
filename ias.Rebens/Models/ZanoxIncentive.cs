@@ -24,6 +24,7 @@ namespace ias.Rebens
         public string Restriction { get; set; }
         public string Code  { get; set; }
         public string Currency { get; set; }
+        public string Url { get; set; }
         public decimal Amount { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
