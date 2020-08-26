@@ -48,6 +48,7 @@ namespace ias.Rebens.api.Controllers
         private readonly IPartnerRepository partnerRepo;
         private readonly ILogErrorRepository logErrorRepo;
         private readonly IZanoxProgramRepository zanoxProgramRepo;
+        private readonly IZanoxIncentiveRepository zanoxIncentiveRepo;
         private readonly Constant constant;
         #endregion Attributes
 
@@ -81,7 +82,8 @@ namespace ias.Rebens.api.Controllers
         /// <param name="freeCourseRepository"></param>
         /// <param name="partnerRepository"></param>
         /// <param name="logErrorRepository"></param>
-        /// <param name="logErrorRepository"></param>
+        /// <param name="zanoxProgramRepository"></param>
+        /// <param name="zanoxIncentiveRepository"></param>
         public PortalController(IBannerRepository bannerRepository, IBenefitRepository benefitRepository, IFaqRepository faqRepository, 
             IFormContactRepository formContactRepository, IOperationRepository operationRepository, IFormEstablishmentRepository formEstablishmentRepository, 
             ICustomerRepository customerRepository, IAddressRepository addressRepository, IWithdrawRepository withdrawRepository, 
@@ -91,7 +93,7 @@ namespace ias.Rebens.api.Controllers
             ICourseGraduationTypeRepository courseGraduationTypeRepository, ICourseModalityRepository courseModalityRepository, 
             ICoursePeriodRepository coursePeriodRepository, ICourseViewRepository courseViewRepository, IDrawRepository drawRepository, 
             IFreeCourseRepository freeCourseRepository, IPartnerRepository partnerRepository, ILogErrorRepository logErrorRepository,
-            IZanoxProgramRepository zanoxProgramRepository)
+            IZanoxProgramRepository zanoxProgramRepository, IZanoxIncentiveRepository zanoxIncentiveRepository)
         {
             this.addrRepo = addressRepository;
             this.bannerRepo = bannerRepository;
@@ -120,6 +122,7 @@ namespace ias.Rebens.api.Controllers
             this.partnerRepo = partnerRepository;
             this.logErrorRepo = logErrorRepository;
             this.zanoxProgramRepo = zanoxProgramRepository;
+            this.zanoxIncentiveRepo = zanoxIncentiveRepository;
             this.constant = new Constant();
         }
         #endregion Constructor
@@ -2489,6 +2492,32 @@ namespace ias.Rebens.api.Controllers
 
                 return Ok(new JsonDataModel<ZanoxProgramModel>() { Data = new ZanoxProgramModel(program) });
             }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Marca o click no incentivo
+        /// </summary>
+        /// <param name="id">Id do incentivo</param>
+        /// <returns></returns>
+        /// <response code="200">Retorna o ok, ou algum erro caso interno</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [AllowAnonymous]
+        [HttpPost("ZanoxIncentiveClicked/{id}"), Authorize("Bearer", Roles = "customer")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ZanoxIncentiveClicked(int id)
+        {
+            int idCustomer = GetCustomerId(out string error);
+            if (!string.IsNullOrEmpty(error))
+                return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+            if (idCustomer <= 0)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Cliente não encontrado!" });
+
+            zanoxIncentiveRepo.SaveClick(id, idCustomer, out error);
+            if (string.IsNullOrEmpty(error))
+                return Ok();
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }
