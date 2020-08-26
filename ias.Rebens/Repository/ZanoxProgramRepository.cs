@@ -97,9 +97,9 @@ namespace ias.Rebens
                 using (var db = new RebensContext(this._connectionString))
                 {
                     ret = db.ZanoxProgram.SingleOrDefault(b => b.Id == id);
-                    ret.Incentives = db.ZanoxIncentive.Where(i => i.Active && !i.Removed
-                                            && (!i.Start.HasValue && i.Start.Value <= DateTime.UtcNow)
-                                            && (!i.End.HasValue && i.End.Value >= DateTime.UtcNow)).OrderBy(i => i.Name).ToList();
+                    ret.Incentives = db.ZanoxIncentive.Where(i => i.IdProgram == ret.Id && i.Active && !i.Removed
+                                            && (!i.Start.HasValue || i.Start.Value <= DateTime.UtcNow)
+                                            && (!i.End.HasValue || i.End.Value >= DateTime.UtcNow)).OrderBy(i => i.Name).ToList();
                     error = null;
                 }
             }

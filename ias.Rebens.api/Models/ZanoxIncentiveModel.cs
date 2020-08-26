@@ -80,11 +80,6 @@ namespace ias.Rebens.api.Models
         /// </summary>
         public string Url { get; set; }
 
-        /// <summary>
-        /// Programa
-        /// </summary>
-        public ZanoxProgramModel Program { get; set; }
-
         public ZanoxIncentiveModel() { }
         public ZanoxIncentiveModel(ZanoxIncentive incentive) {
             if(incentive != null)
@@ -107,8 +102,6 @@ namespace ias.Rebens.api.Models
                 this.ZanoxCreated = incentive.ZanoxCreated;
                 this.ZanoxModified = incentive.ZanoxModified;
                 this.Url = incentive.Url;
-                if (incentive.Program != null)
-                    this.Program = new ZanoxProgramModel(incentive.Program);
             }
         }
 
