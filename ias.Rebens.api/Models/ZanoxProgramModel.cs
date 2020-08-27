@@ -72,6 +72,10 @@ namespace ias.Rebens.api.Models
         /// Status (ativo = true, inativo = false)
         /// </summary>
         public bool Active { get; set; }
+        /// <summary>
+        /// Puiblicado 
+        /// </summary>
+        public bool Published { get; set; }
 
         public List<ZanoxIncentiveModel> Incentives { get; set; }
 
@@ -96,6 +100,7 @@ namespace ias.Rebens.api.Models
                 this.Status = program.Status;
                 this.Terms = program.Terms;
                 this.Url = program.Url;
+                this.Published = program.Published;
 
                 if(program.Incentives != null)
                 {
@@ -105,6 +110,30 @@ namespace ias.Rebens.api.Models
 
                 }
             }
+        }
+
+        public ZanoxProgram GetEntity()
+        {
+            return new ZanoxProgram()
+            {
+                Active = this.Active,
+                AdRank = this.AdRank,
+                Created = DateTime.UtcNow,
+                Currency = this.Currency,
+                Description = this.Description,
+                Image = this.Image, 
+                LocalDescription = this.LocalDescription,
+                MaxCommissionPercent = this.MaxCommissionPercent,
+                MinCommissionPercent = this.MinCommissionPercent,
+                Modified = DateTime.UtcNow,
+                Name = this.Name,
+                Published = this.Published,
+                StartDate = this.StartDate, 
+                Status = this.Status, 
+                Terms = this.Terms,
+                Url = this.Url, 
+                Id = this.Id
+            };
         }
     }
 }

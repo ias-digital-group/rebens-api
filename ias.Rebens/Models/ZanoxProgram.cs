@@ -28,6 +28,9 @@ namespace ias.Rebens
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
         public bool Active { get; set; }
+        public bool Published { get; set; }
+        public DateTime? PublishedDate { get; set; }
+
 
         public virtual ICollection<ZanoxIncentive> Incentives { get; set; }
         public virtual ICollection<ZanoxProgramView> ZanoxProgramViews { get; set; }

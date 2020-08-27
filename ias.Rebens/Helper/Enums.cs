@@ -298,7 +298,11 @@ namespace ias.Rebens.Enums
         [Description("Item Pedido")]
         OrderItem = 33,
         [Description("Uso de benefício")]
-        BenefitUse = 34
+        BenefitUse = 34,
+        [Description("Programa Zanox")]
+        ZanoxProgram = 35,
+        [Description("Incentivo Zanox")]
+        ZanoxIncentive = 36
     }
 
     public enum MoipNotificationEvent : int

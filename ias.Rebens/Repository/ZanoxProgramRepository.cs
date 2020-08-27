@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ias.Rebens.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
@@ -63,9 +64,9 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-
-                    var tmpList = db.ZanoxProgram.Where(b => (string.IsNullOrEmpty(word) || b.Name.Contains(word)) &&
-                                        b.Incentives.Any(i => i.Active && !i.Removed 
+                    var tmpList = db.ZanoxProgram.Where(b => (string.IsNullOrEmpty(word) || b.Name.Contains(word)) 
+                                    && b.Published && b.Active
+                                    && b.Incentives.Any(i => i.Active && !i.Removed 
                                                     && (!i.Start.HasValue || i.Start.Value <= DateTime.UtcNow)
                                                     && (!i.End.HasValue || i.End.Value >= DateTime.UtcNow)
                                                 )
@@ -113,7 +114,7 @@ namespace ias.Rebens
             return ret;
         }
 
-        public bool Save(ZanoxProgram program, out string error)
+        public bool Save(ZanoxProgram program, out string error, int? idAdminUser = null)
         {
             bool ret = true;
             try
@@ -123,23 +124,51 @@ namespace ias.Rebens
                     var update = db.ZanoxProgram.SingleOrDefault(i => i.Id == program.Id);
                     if(update != null)
                     {
-                        update.Active = program.Active;
-                        update.AdRank = program.AdRank;
-                        update.Currency = program.Currency;
-                        update.Description = program.Description;
-                        update.Image = program.Image;
-                        update.LocalDescription = program.LocalDescription;
-                        update.MaxCommissionPercent = program.MaxCommissionPercent;
-                        update.MinCommissionPercent = program.MinCommissionPercent;
-                        update.Modified = DateTime.UtcNow;
-                        update.Name = program.Name;
-                        update.StartDate = program.StartDate;
-                        update.Status = program.Status;
-                        update.Terms = program.Terms;
-                        update.Url = program.Url;
+                        if (idAdminUser.HasValue)
+                        {
+                            if (!update.Published && program.Published)
+                                update.PublishedDate = DateTime.UtcNow;
+
+                            update.Description = program.Description;
+                            update.Image = program.Image;
+                            update.LocalDescription = program.LocalDescription;
+                            update.Name = program.Name;
+                            update.Terms = program.Terms;
+                            update.Published = program.Published;
+
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = (int)Enums.LogAction.update,
+                                Created = DateTime.UtcNow,
+                                IdAdminUser = idAdminUser.Value,
+                                IdItem = update.Id,
+                                Item = (int)Enums.LogItem.ZanoxProgram
+                            });
+                        }
+                        else
+                        {
+                            if (!update.PublishedDate.HasValue)
+                            {
+                                update.Description = program.Description;
+                                update.Image = program.Image;
+                                update.LocalDescription = program.LocalDescription;
+                                update.Name = program.Name;
+                                update.Terms = program.Terms;
+                            }
+                            update.AdRank = program.AdRank;
+                            update.Currency = program.Currency;
+                            update.Modified = DateTime.UtcNow;
+                            update.MaxCommissionPercent = program.MaxCommissionPercent;
+                            update.MinCommissionPercent = program.MinCommissionPercent;
+                            update.Active = program.Active;
+                            update.Url = program.Url;
+                            update.StartDate = program.StartDate;
+                            update.Status = program.Status;
+                        }
                     }
                     else
                     {
+                        program.Published = false;
                         program.Created = program.Modified = DateTime.UtcNow;
                         db.ZanoxProgram.Add(program);
                     }
@@ -175,6 +204,50 @@ namespace ias.Rebens
                 int idLog = logError.Create("ZanoxProgramRepository.SaveView", ex.Message, $"IdZanoxProgram: {id}, idCustomer: {idCustomer}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar gravar a visualização do programa. (erro:" + idLog + ")";
             }
+        }
+
+        public bool TogglePublish(int id, int idAdminUser, out string error)
+        {
+            bool ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.ZanoxProgram.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        ret = !update.Published;
+                        update.Published = ret;
+                        update.Modified = DateTime.UtcNow;
+                        update.PublishedDate = DateTime.UtcNow;
+
+                        db.LogAction.Add(new LogAction()
+                        {
+                            Action = ret ? (int)Enums.LogAction.publish : (int)Enums.LogAction.publish,
+                            Created = DateTime.UtcNow,
+                            Item = (int)Enums.LogItem.ZanoxProgram,
+                            IdItem = id,
+                            IdAdminUser = idAdminUser
+                        });
+
+                        db.SaveChanges();
+                        error = null;
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Usuário não encontrado!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("BannerRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar o usuário. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
         }
     }
 }
