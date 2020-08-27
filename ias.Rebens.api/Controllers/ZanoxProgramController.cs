@@ -34,7 +34,7 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "")
         {
-            var list = repo.ListPage(page, pageItems, searchWord, null, out string error);
+            var list = repo.ListPage(page, pageItems, searchWord, out string error);
 
             if (string.IsNullOrEmpty(error))
             {

@@ -15,29 +15,14 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public ResultPage<ZanoxProgram> ListPage(int page, int pageItems, string word, string sort, out string error)
+        public ResultPage<ZanoxProgram> ListPage(int page, int pageItems, string word, out string error)
         {
             ResultPage<ZanoxProgram> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var tmpList = db.ZanoxProgram.Where(b => string.IsNullOrEmpty(word) || b.Name.Contains(word));
-                    switch (sort.ToLower())
-                    {
-                        case "name desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Name);
-                            break;
-                        case "id asc":
-                            tmpList = tmpList.OrderBy(f => f.Id);
-                            break;
-                        case "id desc":
-                            tmpList = tmpList.OrderByDescending(f => f.Id);
-                            break;
-                        default:
-                            tmpList = tmpList.OrderBy(f => f.Name);
-                            break;
-                    }
+                    var tmpList = db.ZanoxProgram.Where(b => string.IsNullOrEmpty(word) || b.Name.Contains(word)).OrderBy(f => f.Name);
 
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = tmpList.Count();

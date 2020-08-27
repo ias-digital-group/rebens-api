@@ -31,7 +31,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Início
         /// </summary>
-        public DateTime? StartDate { get; set; }
+        public string StartDate { get; set; }
         /// <summary>
         /// Url
         /// </summary>
@@ -96,7 +96,7 @@ namespace ias.Rebens.api.Models
                 this.MinCommissionPercent = program.MinCommissionPercent;
                 this.Modified = program.Modified;
                 this.Name = program.Name;
-                this.StartDate = program.StartDate;
+                this.StartDate = program.StartDate.HasValue ? program.StartDate.Value.ToString("dd/MM/yyyy") : " - ";
                 this.Status = program.Status;
                 this.Terms = program.Terms;
                 this.Url = program.Url;
@@ -116,22 +116,12 @@ namespace ias.Rebens.api.Models
         {
             return new ZanoxProgram()
             {
-                Active = this.Active,
-                AdRank = this.AdRank,
-                Created = DateTime.UtcNow,
-                Currency = this.Currency,
-                Description = this.Description,
                 Image = this.Image, 
                 LocalDescription = this.LocalDescription,
-                MaxCommissionPercent = this.MaxCommissionPercent,
-                MinCommissionPercent = this.MinCommissionPercent,
                 Modified = DateTime.UtcNow,
                 Name = this.Name,
                 Published = this.Published,
-                StartDate = this.StartDate, 
-                Status = this.Status, 
                 Terms = this.Terms,
-                Url = this.Url, 
                 Id = this.Id
             };
         }
