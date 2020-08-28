@@ -111,9 +111,7 @@ namespace ias.Rebens
                     {
                         if (idAdminUser.HasValue)
                         {
-                            if (!update.Published && program.Published)
-                                update.PublishedDate = DateTime.UtcNow;
-
+                            update.PublishedDate = DateTime.UtcNow;
                             update.Description = program.Description;
                             update.Image = program.Image;
                             update.LocalDescription = program.LocalDescription;
@@ -127,7 +125,7 @@ namespace ias.Rebens
                                 Created = DateTime.UtcNow,
                                 IdAdminUser = idAdminUser.Value,
                                 IdItem = update.Id,
-                                Item = (int)Enums.LogItem.ZanoxProgram
+                                Item = (int)LogItem.ZanoxProgram
                             });
                         }
                         else

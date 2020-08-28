@@ -22,10 +22,23 @@ namespace TestApp
             sw.Start();
 
 
-            var zanox = new ias.Rebens.Integration.ZanoxHelper();
-            var programs = zanox.GetPrograms(out _);
-            var ret = zanox.GetIncentives(out _);
+            //var zanox = new ias.Rebens.Integration.ZanoxHelper();
+            //var programs = zanox.GetPrograms(out _);
+            //var ret = zanox.GetIncentives(out _);
 
+            using (StreamWriter writer = new StreamWriter(@"C:\ias\PROJECTS\Rebens\logos\list.csv"))
+            {
+                var files = new DirectoryInfo(@"C:\ias\PROJECTS\Rebens\logos\Rebens _ Logos").GetFiles();
+                var cloudinary = new ias.Rebens.Integration.CloudinaryHelper();
+                foreach (var file in files)
+                {
+                    var result = cloudinary.UploadFile(file.FullName, "portal");
+                    if (result.Status)
+                        writer.WriteLine(file.Name + "," + result.public_id + "," + result.secure_url);
+                    else
+                        writer.WriteLine(file.Name + ",ERROR," + result.Message);
+                }
+            }
 
             //var zpar1 = HttpUtility.UrlDecode("ozxE75LALXbDmxwuQetQPw%3d%3d");
             //var zpar2 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
