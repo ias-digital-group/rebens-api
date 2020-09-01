@@ -15,10 +15,12 @@ namespace ias.Rebens.api.Controllers
     public class ZanoxProgramController : BaseApiController
     {
         private IZanoxProgramRepository repo;
+        private IZanoxIncentiveRepository incentiveRepo;
 
-        public ZanoxProgramController(IZanoxProgramRepository zanoxProgram)
+        public ZanoxProgramController(IZanoxProgramRepository zanoxProgram, IZanoxIncentiveRepository zanoxIncentive)
         {
             repo = zanoxProgram;
+            incentiveRepo = zanoxIncentive;
         }
 
         /// <summary>
@@ -128,6 +130,45 @@ namespace ias.Rebens.api.Controllers
 
             if (string.IsNullOrEmpty(error))
                 return Ok(new JsonModel() { Status = "ok", Data = status });
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
+
+        /// <summary>
+        /// Lista os Incentivos da Zanox
+        /// </summary>
+        /// <param name="page">pagina (default = 0)</param>
+        /// <param name="pageItems">itens por página (default = 30)</param>
+        /// <param name="searchWord">palavra à ser buscada</param>
+        /// <returns></returns>
+        [HttpGet("incentives")]
+        [ProducesResponseType(typeof(ResultPageModel<ZanoxIncentiveModel>), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ListIncentives([FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "", [FromQuery] int? idZanoxProgram = null)
+        {
+            var list = incentiveRepo.ListPage(page, pageItems, searchWord, out string error, idZanoxProgram);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (list == null || list.TotalItems == 0)
+                    return NoContent();
+
+                var ret = new ResultPageModel<ZanoxIncentiveModel>()
+                {
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<ZanoxIncentiveModel>()
+                };
+                foreach (var item in list.Page)
+                    ret.Data.Add(new ZanoxIncentiveModel(item));
+
+                return Ok(ret);
+            }
 
             return StatusCode(400, new JsonModel() { Status = "error", Message = error });
         }

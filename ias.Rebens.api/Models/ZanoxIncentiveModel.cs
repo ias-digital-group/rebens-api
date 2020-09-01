@@ -34,11 +34,11 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Inicio de validade 
         /// </summary>
-        public DateTime? Start { get; set; }
+        public string Start { get; set; }
         /// <summary>
         /// Fim da validade
         /// </summary>
-        public DateTime? End { get; set; }
+        public string End { get; set; }
         /// <summary>
         /// Informação do publicador
         /// </summary>
@@ -62,7 +62,7 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Valor
         /// </summary>
-        public decimal Amount { get; set; }
+        public string Amount { get; set; }
         /// <summary>
         /// Data criação
         /// </summary>
@@ -79,6 +79,8 @@ namespace ias.Rebens.api.Models
         /// Url
         /// </summary>
         public string Url { get; set; }
+        public string ProgramName { get; set; }
+        public string ProgramImage { get; set; }
 
         public ZanoxIncentiveModel() { }
         public ZanoxIncentiveModel(ZanoxIncentive incentive) {
@@ -88,20 +90,26 @@ namespace ias.Rebens.api.Models
                 this.Name = incentive.Name;
                 this.IdProgram = incentive.IdProgram;
                 this.Active = incentive.Active;
-                this.Amount = incentive.Amount;
+                this.Amount = incentive.Amount.ToString("N");
                 this.Code = incentive.Code;
                 this.Created = incentive.Created;
                 this.Currency = incentive.Currency;
                 this.CustomerInfo = incentive.CustomerInfo;
-                this.End = incentive.End;
+                this.End = incentive.End.HasValue ? incentive.End.Value.ToString("dd/MM/yyyy") : " - ";
                 this.Modified = incentive.Modified;
                 this.PublisherInfo = incentive.PublisherInfo;
                 this.Restriction = incentive.Restriction;
-                this.Start = incentive.Start;
+                this.Start = incentive.Start.HasValue ? incentive.Start.Value.ToString("dd/MM/yyyy") : " - ";
                 this.Type = incentive.Type;
                 this.ZanoxCreated = incentive.ZanoxCreated;
                 this.ZanoxModified = incentive.ZanoxModified;
                 this.Url = incentive.Url;
+
+                if(incentive.Program != null)
+                {
+                    this.ProgramName = incentive.Program.Name;
+                    this.ProgramImage = incentive.Program.Image;
+                }
             }
         }
 
