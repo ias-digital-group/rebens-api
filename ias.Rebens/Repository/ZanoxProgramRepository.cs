@@ -30,7 +30,7 @@ namespace ias.Rebens
                     var total = tmpList.Count();
 
                     var retList = new List<ZanoxProgramListItem>();
-                    list.ForEach(p =>
+                    foreach(var p in list)
                     {
                         var updatedUser = db.LogAction.Where(a => a.Item == (int)Enums.LogItem.ZanoxProgram && a.Action == (int)Enums.LogAction.update && a.IdItem == p.Id).OrderByDescending(a => a.Created).FirstOrDefault();
                         retList.Add(new ZanoxProgramListItem()
@@ -47,7 +47,7 @@ namespace ias.Rebens
                             ModifiedBy = updatedUser != null ? updatedUser.AdminUser.Name : " - ",
                             Status = p.Status
                         });
-                    });
+                    }
                     
 
                     ret = new ResultPage<ZanoxProgramListItem>(retList, page, pageItems, total);
