@@ -1,8 +1,10 @@
-﻿using ias.Rebens.Enums;
+﻿using ias.Rebens.Entity;
+using ias.Rebens.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ias.Rebens
@@ -15,9 +17,9 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public ResultPage<ZanoxProgram> ListPage(int page, int pageItems, string word, out string error)
+        public ResultPage<ZanoxProgramListItem> ListPage(int page, int pageItems, string word, out string error)
         {
-            ResultPage<ZanoxProgram> ret;
+            ResultPage<ZanoxProgramListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -27,7 +29,28 @@ namespace ias.Rebens
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = tmpList.Count();
 
-                    ret = new ResultPage<ZanoxProgram>(list, page, pageItems, total);
+                    var retList = new List<ZanoxProgramListItem>();
+                    list.ForEach(p =>
+                    {
+                        var updatedUser = db.LogAction.Where(a => a.Item == (int)Enums.LogItem.ZanoxProgram && a.Action == (int)Enums.LogAction.update && a.IdItem == p.Id).OrderByDescending(a => a.Created).FirstOrDefault();
+                        retList.Add(new ZanoxProgramListItem()
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Logo = p.Image,
+                            Created = p.Created,
+                            Modified = p.Modified,
+                            LastIntegrationDate = p.LastintegrationDate,
+                            Platform = "Zanox",
+                            Rank = p.AdRank,
+                            StartDate = p.StartDate,
+                            ModifiedBy = updatedUser != null ? updatedUser.AdminUser.Name : " - ",
+                            Status = p.Status
+                        });
+                    });
+                    
+
+                    ret = new ResultPage<ZanoxProgramListItem>(retList, page, pageItems, total);
 
                     error = null;
                 }
@@ -147,12 +170,15 @@ namespace ias.Rebens
                             update.Url = program.Url;
                             update.StartDate = program.StartDate;
                             update.Status = program.Status;
+                            if (!idAdminUser.HasValue)
+                                update.LastintegrationDate = DateTime.UtcNow;
                         }
                     }
                     else
                     {
                         program.Published = false;
-                        program.Created = program.Modified = DateTime.UtcNow;
+                        program.LastintegrationDate = program.Created = program.Modified = DateTime.UtcNow;
+                        
                         db.ZanoxProgram.Add(program);
                     }
 

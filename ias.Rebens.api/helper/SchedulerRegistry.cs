@@ -28,6 +28,7 @@ namespace ias.Rebens.api.helper
             Schedule(() => new ProcessFileJob(serviceScopeFactory)).ToRunEvery(5).Minutes();
             Schedule(() => new WirecardSubscriptionJob(serviceScopeFactory)).ToRunEvery(10).Minutes();
             Schedule(() => new ZanoxProgramJob(serviceScopeFactory)).ToRunEvery(1).Days().At(1, 0);
+            //Schedule(() => new ZanoxProgramJob(serviceScopeFactory)).ToRunNow();
 
 
             //Schedule(() => new CustomerValidationJob(serviceScopeFactory)).ToRunEvery(1).Days().At(23,0);

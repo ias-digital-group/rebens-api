@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Internal;
+﻿using ias.Rebens.Entity;
+using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,11 +64,11 @@ namespace ias.Rebens.api.Models
         /// <summary>
         /// Data criaçaõ
         /// </summary>
-        public DateTime Created { get; set; }
+        public string Created { get; set; }
         /// <summary>
         /// Data última modificação
         /// </summary>
-        public DateTime Modified { get; set; }
+        public string Modified { get; set; }
         /// <summary>
         /// Status (ativo = true, inativo = false)
         /// </summary>
@@ -76,6 +77,8 @@ namespace ias.Rebens.api.Models
         /// Puiblicado 
         /// </summary>
         public bool Published { get; set; }
+        public string LastUpdatedBy { get; set; }
+        public string LastintegrationDate { get; set; }
 
         public List<ZanoxIncentiveModel> Incentives { get; set; }
 
@@ -86,7 +89,7 @@ namespace ias.Rebens.api.Models
             {
                 this.Active = program.Active;
                 this.AdRank = program.AdRank;
-                this.Created = program.Created;
+                this.Created = TimeZoneInfo.ConvertTimeFromUtc(program.Created, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm:ss", Constant.FormatProvider);
                 this.Currency = program.Currency;
                 this.Description = program.Description;
                 this.Id = program.Id;
@@ -94,13 +97,14 @@ namespace ias.Rebens.api.Models
                 this.LocalDescription = program.LocalDescription;
                 this.MaxCommissionPercent = program.MaxCommissionPercent;
                 this.MinCommissionPercent = program.MinCommissionPercent;
-                this.Modified = program.Modified;
+                this.Modified = TimeZoneInfo.ConvertTimeFromUtc(program.Modified, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm:ss", Constant.FormatProvider); 
                 this.Name = program.Name;
-                this.StartDate = program.StartDate.HasValue ? program.StartDate.Value.ToString("dd/MM/yyyy") : " - ";
+                this.StartDate = program.StartDate.HasValue ? program.StartDate.Value.ToString("dd/MM/yyyy", Constant.FormatProvider) : " - ";
                 this.Status = program.Status;
                 this.Terms = program.Terms;
                 this.Url = program.Url;
                 this.Published = program.Published;
+                this.LastintegrationDate = program.LastintegrationDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(program.LastintegrationDate.Value, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm:ss", Constant.FormatProvider) : " - ";
 
                 if(program.Incentives != null)
                 {
@@ -124,6 +128,42 @@ namespace ias.Rebens.api.Models
                 Terms = this.Terms,
                 Id = this.Id
             };
+        }
+    }
+
+    public class ZanoxProgramListItemModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Logo { get; set; }
+        public string StartDate { get; set; }
+        public string Status { get; set; }
+        public decimal? Rank { get; set; }
+        public string Platform { get; set; }
+        public string Created { get; set; }
+        public string Modified { get; set; }
+        public string ModifiedBy { get; set; }
+        public string LastIntegrationDate { get; set; }
+        public bool Published { get; set; }
+
+        public ZanoxProgramListItemModel() { }
+        public ZanoxProgramListItemModel(ZanoxProgramListItem program)
+        {
+            if (program != null)
+            {
+                this.Id = program.Id;
+                this.Name = program.Name;
+                this.Logo = program.Logo;
+                this.StartDate = program.StartDate.HasValue ? program.StartDate.Value.ToString("dd/MM/yyyy", Constant.FormatProvider) : " - ";
+                this.Status = program.Status;
+                this.Rank = program.Rank;
+                this.Platform = program.Platform;
+                this.Created = TimeZoneInfo.ConvertTimeFromUtc(program.Created, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm:ss", Constant.FormatProvider);
+                this.Modified = TimeZoneInfo.ConvertTimeFromUtc(program.Modified, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm:ss", Constant.FormatProvider);
+                this.ModifiedBy = program.ModifiedBy;
+                this.LastIntegrationDate = program.LastIntegrationDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(program.LastIntegrationDate.Value, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm:ss", Constant.FormatProvider) : " - ";
+                this.Published = program.Published;
+            }
         }
     }
 }
