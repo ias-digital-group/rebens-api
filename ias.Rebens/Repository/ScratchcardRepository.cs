@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ias.Rebens.Enums;
+using ias.Rebens.Entity;
+using Remotion.Linq.Parsing.ExpressionVisitors.Transformation.PredefinedTransformations;
 
 namespace ias.Rebens
 {
@@ -140,9 +142,9 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Scratchcard> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation)
+        public ResultPage<ScratchcardListItem> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation, int? status)
         {
-            ResultPage<Scratchcard> ret;
+            ResultPage<ScratchcardListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -181,7 +183,31 @@ namespace ias.Rebens
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = tmpList.Count();
 
-                    ret = new ResultPage<Scratchcard>(list, page, pageItems, total);
+                    var result = new List<ScratchcardListItem>();
+                    foreach(var item in list)
+                    {
+                        var s = new ScratchcardListItem()
+                        {
+                            Id = item.Id,
+                            Name = item.Name,
+                            IdOperation = item.IdOperation,
+                            End = item.End,
+                            Created = item.Created,
+                            Quantity = item.Quantity,
+                            Start = item.Start,
+                            Status = item.Status,
+                            Type = item.Type
+                        };
+                        s.OperationName = db.Operation.Single(o => o.Id == item.IdOperation).Title;
+                        var createdUser = db.LogAction.Include("AdminUser").SingleOrDefault(a => a.IdItem == item.Id
+                                                && a.Action == (int)Enums.LogAction.create
+                                                && a.Item == (int)Enums.LogItem.Scratchcard);
+                        if (createdUser != null && createdUser.AdminUser != null)
+                            s.CreatedBy = createdUser.AdminUser.Name + " " + createdUser.AdminUser.Surname;
+                        result.Add(s);
+                    }
+
+                    ret = new ResultPage<ScratchcardListItem>(result, page, pageItems, total);
                     error = null;
                 }
             }

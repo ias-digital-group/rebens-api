@@ -56,19 +56,19 @@ namespace ias.Rebens.api.Controllers
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
         [HttpGet, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(ResultPageModel<ScratchcardModel>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<ScratchcardListItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null)
+        public IActionResult List([FromQuery]int page = 0, [FromQuery]int pageItems = 30, [FromQuery]string sort = "Name ASC", [FromQuery]string searchWord = "", [FromQuery]int? idOperation = null, [FromQuery]int? status = null)
         {
-            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation);
+            var list = repo.ListPage(page, pageItems, searchWord, sort, out string error, idOperation, status);
 
             if (string.IsNullOrEmpty(error))
             {
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<ScratchcardModel>
+                var ret = new ResultPageModel<ScratchcardListItemModel>
                 {
                     CurrentPage = list.CurrentPage,
                     HasNextPage = list.HasNextPage,
@@ -76,13 +76,10 @@ namespace ias.Rebens.api.Controllers
                     ItemsPerPage = list.ItemsPerPage,
                     TotalItems = list.TotalItems,
                     TotalPages = list.TotalPages,
-                    Data = new List<ScratchcardModel>()
+                    Data = new List<ScratchcardListItemModel>()
                 };
                 foreach (var scratchcard in list.Page)
-                {
-                    var operationName = operationRepo.GetName(scratchcard.IdOperation, out _);
-                    ret.Data.Add(new ScratchcardModel(scratchcard, operationName));
-                }
+                    ret.Data.Add(new ScratchcardListItemModel(scratchcard));
 
                 return Ok(ret);
             }
@@ -339,48 +336,6 @@ namespace ias.Rebens.api.Controllers
         public IActionResult Billets(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30)
         {
             var list = drawRepo.ListByScratchcard(id, page, pageItems, out string error);
-
-            if (string.IsNullOrEmpty(error))
-            {
-                if (list == null || list.TotalItems == 0)
-                    return NoContent();
-
-                var ret = new ResultPageModel<ScratchcardDrawModel>
-                {
-                    CurrentPage = list.CurrentPage,
-                    HasNextPage = list.HasNextPage,
-                    HasPreviousPage = list.HasPreviousPage,
-                    ItemsPerPage = list.ItemsPerPage,
-                    TotalItems = list.TotalItems,
-                    TotalPages = list.TotalPages,
-                    Data = new List<ScratchcardDrawModel>()
-                };
-                foreach (var scratchcard in list.Page)
-                    ret.Data.Add(new ScratchcardDrawModel(scratchcard));
-
-                return Ok(ret);
-            }
-
-            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
-        }
-
-        /// <summary>
-        /// Retorna uma lista de Raspadinhas de uma campanha
-        /// </summary>
-        /// <param name="page">página, não obrigatório (default=0)</param>
-        /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="idScratchcard">Id da campanha de raspadinha, obrigatório</param>
-        /// <returns>Lista com as raspadinahs encontradas</returns>
-        /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
-        /// <response code="204">Se não encontrar nada</response>
-        /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}/PrizeBillets"), Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
-        [ProducesResponseType(typeof(ResultPageModel<ScratchcardDrawModel>), 200)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult PrizeBillets(int id, [FromQuery]int page = 0, [FromQuery]int pageItems = 30)
-        {
-            var list = drawRepo.ListScratchedWithPrize(id, page, pageItems, out string error);
 
             if (string.IsNullOrEmpty(error))
             {

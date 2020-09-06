@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ias.Rebens.Entity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -206,6 +207,43 @@ namespace ias.Rebens.api.Models
                 Title = $"Regulamento - {this.Name}",
                 IdOperation = this.IdOperation
             };
+        }
+    }
+
+    public class ScratchcardListItemModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string OperationName { get; set; }
+        public int IdOperation { get; set; }
+        public int Quantity { get; set; }
+        public string Type { get; set; }
+        public string CreatedBy { get; set; }
+        public string Created { get; set; }
+        public string Start { get; set; }
+        public string End { get; set; }
+        public int Status { get; set; }
+        public string StatusName { get; set; }
+
+        public ScratchcardListItemModel() { }
+        
+        public ScratchcardListItemModel(ScratchcardListItem scratchcard) 
+        {
+            if (scratchcard != null) 
+            {
+                this.Id = scratchcard.Id;
+                this.Name = scratchcard.Name;
+                this.OperationName = scratchcard.OperationName;
+                this.IdOperation = scratchcard.IdOperation;
+                this.Quantity = scratchcard.Quantity.HasValue ? scratchcard.Quantity.Value : 0;
+                this.Type = Enums.EnumHelper.GetEnumDescription((Enums.ScratchcardType)scratchcard.Type);
+                this.CreatedBy = scratchcard.CreatedBy;
+                this.Created = TimeZoneInfo.ConvertTimeFromUtc(scratchcard.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.Start = scratchcard.Start.HasValue ? scratchcard.Start.Value.ToString("dd/MM/yyyy", Constant.FormatProvider) : " - ";
+                this.End = scratchcard.End.HasValue ? scratchcard.End.Value.ToString("dd/MM/yyyy", Constant.FormatProvider) : " - ";
+                this.Status = scratchcard.Status;
+                this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.ScratchcardStatus)scratchcard.Status);
+            }
         }
     }
 }

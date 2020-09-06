@@ -32,21 +32,26 @@ namespace ias.Rebens
                     var retList = new List<ZanoxProgramListItem>();
                     foreach(var p in list)
                     {
-                        var updatedUser = db.LogAction.Where(a => a.Item == (int)Enums.LogItem.ZanoxProgram && a.Action == (int)Enums.LogAction.update && a.IdItem == p.Id).OrderByDescending(a => a.Created).FirstOrDefault();
-                        retList.Add(new ZanoxProgramListItem()
+                        var item = new ZanoxProgramListItem()
                         {
                             Id = p.Id,
                             Name = p.Name,
                             Logo = p.Image,
                             Created = p.Created,
                             Modified = p.Modified,
-                            LastIntegrationDate = p.LastintegrationDate,
+                            LastIntegrationDate = p.LastIntegrationDate,
                             Platform = "Zanox",
                             Rank = p.AdRank,
                             StartDate = p.StartDate,
-                            ModifiedBy = updatedUser != null ? updatedUser.AdminUser.Name : " - ",
-                            Status = p.Status
-                        });
+                            Status = p.Status,
+                            Published = p.Published
+                        };
+                        var updatedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.ZanoxProgram && a.Action == (int)Enums.LogAction.update && a.IdItem == p.Id).OrderByDescending(a => a.Created).FirstOrDefault();
+                        if (updatedUser != null && updatedUser.AdminUser != null)
+                            item.ModifiedBy = updatedUser.AdminUser.Name + " " + updatedUser.AdminUser.Surname;
+                        else
+                            item.ModifiedBy = " - ";
+                        retList.Add(item);
                     }
                     
 
@@ -141,6 +146,7 @@ namespace ias.Rebens
                             update.Name = program.Name;
                             update.Terms = program.Terms;
                             update.Published = program.Published;
+                            update.Modified = DateTime.UtcNow;
 
                             db.LogAction.Add(new LogAction()
                             {
@@ -163,21 +169,19 @@ namespace ias.Rebens
                             }
                             update.AdRank = program.AdRank;
                             update.Currency = program.Currency;
-                            update.Modified = DateTime.UtcNow;
                             update.MaxCommissionPercent = program.MaxCommissionPercent;
                             update.MinCommissionPercent = program.MinCommissionPercent;
                             update.Active = program.Active;
                             update.Url = program.Url;
                             update.StartDate = program.StartDate;
                             update.Status = program.Status;
-                            if (!idAdminUser.HasValue)
-                                update.LastintegrationDate = DateTime.UtcNow;
+                            update.LastIntegrationDate = DateTime.UtcNow;
                         }
                     }
                     else
                     {
                         program.Published = false;
-                        program.LastintegrationDate = program.Created = program.Modified = DateTime.UtcNow;
+                        program.LastIntegrationDate = program.Created = program.Modified = DateTime.UtcNow;
                         
                         db.ZanoxProgram.Add(program);
                     }

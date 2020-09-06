@@ -104,7 +104,7 @@ namespace ias.Rebens.api.Models
                 this.Terms = program.Terms;
                 this.Url = program.Url;
                 this.Published = program.Published;
-                this.LastintegrationDate = program.LastintegrationDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(program.LastintegrationDate.Value, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm:ss", Constant.FormatProvider) : " - ";
+                this.LastintegrationDate = program.LastIntegrationDate.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(program.LastIntegrationDate.Value, Constant.TimeZone).ToString("dd/MM/yyyy HH:mm:ss", Constant.FormatProvider) : " - ";
 
                 if(program.Incentives != null)
                 {
