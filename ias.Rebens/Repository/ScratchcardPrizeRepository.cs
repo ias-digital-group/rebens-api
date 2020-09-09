@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using ias.Rebens.Entity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,22 +23,35 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    prize.Created = prize.Modified = DateTime.UtcNow;
-                    db.ScratchcardPrize.Add(prize);
-                    db.SaveChanges();
-
-                    db.LogAction.Add(new LogAction()
+                    var campaign = db.Scratchcard.SingleOrDefault(c => c.Id == prize.IdScratchcard);
+                    if(campaign != null)
                     {
-                        Action = (int)Enums.LogAction.create,
-                        Created = DateTime.UtcNow,
-                        IdAdminUser = idAdminUser,
-                        IdItem = prize.Id,
-                        Item = (int)Enums.LogItem.ScratchcardPrize
-                    });
-                    db.SaveChanges();
+                        if (campaign.Status == (int)Enums.ScratchcardStatus.draft || campaign.Status == (int)Enums.ScratchcardStatus.hasPrize)
+                        {
+                            prize.Created = prize.Modified = DateTime.UtcNow;
+                            db.ScratchcardPrize.Add(prize);
+                            campaign.Status = (int)Enums.ScratchcardStatus.hasPrize;
+                            db.SaveChanges();
 
-                    ret = true;
-                    error = null;
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = (int)Enums.LogAction.create,
+                                Created = DateTime.UtcNow,
+                                IdAdminUser = idAdminUser,
+                                IdItem = prize.Id,
+                                Item = (int)Enums.LogItem.ScratchcardPrize
+                            });
+                            db.SaveChanges();
+
+                            ret = true;
+                            error = null;
+                        }
+                        else
+                            error = "Não é possível criar prêmio para esta campanha!";
+                        
+                    }
+                    else
+                        error = "Campanha não encontrada!";
                 }
             }
             catch (Exception ex)
@@ -100,6 +115,61 @@ namespace ias.Rebens
             {
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("ScratchcardPrizeRepository.List", ex.Message, $"idScratchcard:{idScratchcard}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar os prêmios. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<ScratchcardPrizeListItem> ListPage(int page, int pageItems, string searchWord, out string error, int? idOperation = null, int? idScratchcard = null)
+        {
+            ResultPage<ScratchcardPrizeListItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmplist = db.ScratchcardPrize.Include("Scratchcard").Where(s => (string.IsNullOrEmpty(searchWord)
+                                                                    || s.Title.Contains(searchWord)
+                                                                    || s.Name.Contains(searchWord)
+                                                                    || s.Description.Contains(searchWord))
+                                                            && (!idOperation.HasValue || s.Scratchcard.IdOperation == idOperation)
+                                                            && (!idScratchcard.HasValue || s.IdScratchcard == idScratchcard)
+                                                       );
+                    var total = tmplist.Count();
+                    var list = tmplist.OrderBy(s => s.Title)
+                                        .Skip(page * pageItems)
+                                        .Take(pageItems);
+
+                    var result = new List<ScratchcardPrizeListItem>();
+                    foreach (var item in list)
+                    {
+                        var prize = new ScratchcardPrizeListItem()
+                        {
+                            Id = item.Id,
+                            Created = item.Created,
+                            IdScratchcard = item.IdScratchcard,
+                            CampaignName = item.Scratchcard.Name,
+                            IdOperation = item.Scratchcard.IdOperation,
+                            Prize = item.Title,
+                            Quantity = item.Quantity
+                        };
+                        prize.OperationName = db.Operation.Single(o => o.Id == prize.IdOperation).Title;
+                        var createdUser = db.LogAction.Include("AdminUser").SingleOrDefault(a => a.IdItem == item.Id
+                                                && a.Action == (int)Enums.LogAction.create
+                                                && a.Item == (int)Enums.LogItem.ScratchcardPrize);
+                        if (createdUser != null && createdUser.AdminUser != null)
+                            prize.CreatedBy = createdUser.AdminUser.Name + " " + createdUser.AdminUser.Surname;
+                        result.Add(prize);
+                    }
+
+                    ret = new ResultPage<ScratchcardPrizeListItem>(result, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardPrizeRepository.ListPage", ex.Message, $"idScratchcard:{idScratchcard}", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar listar os prêmios. (erro:" + idLog + ")";
                 ret = null;
             }

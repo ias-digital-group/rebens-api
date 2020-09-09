@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ias.Rebens.Entity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -85,6 +86,35 @@ namespace ias.Rebens.api.Models
                 Description = this.Description,
                 Odds = this.Odds
             };
+        }
+    }
+
+    public class ScratchcardPrizeListItemModel
+    {
+        public int Id { get; set; }
+        public string CampaignName { get; set; }
+        public int IdScratchcard { get; set; }
+        public int IdOperation { get; set; }
+        public string OperationName { get; set; }
+        public string Prize { get; set; }
+        public int Quantity { get; set; }
+        public string CreatedBy { get; set; }
+        public string Created { get; set; }
+
+        public ScratchcardPrizeListItemModel() { }
+        public ScratchcardPrizeListItemModel(ScratchcardPrizeListItem prize) {
+            if (prize != null)
+            {
+                this.Id = prize.Id;
+                this.CampaignName = prize.CampaignName;
+                this.IdScratchcard = prize.IdScratchcard;
+                this.IdOperation = prize.IdOperation;
+                this.OperationName = prize.OperationName;
+                this.Prize = prize.Prize;
+                this.Quantity = prize.Quantity;
+                this.Created = TimeZoneInfo.ConvertTimeFromUtc(prize.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
+                this.CreatedBy = prize.CreatedBy;
+            }
         }
     }
 }

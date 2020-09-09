@@ -51,13 +51,17 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 404)]
         public IActionResult Login([FromBody]LoginModel model, [FromServices]helper.SigningConfigurations signingConfigurations, [FromServices]helper.TokenOptions tokenConfigurations)
         {
-            var user = repo.ReadByEmail(model.Email, out string error);
+            if(model == null || signingConfigurations == null || tokenConfigurations == null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = "Objeto nulo" });
+
+
+            var user = repo.ReadByEmail(model.Email, out _);
             if (user != null && user.Active)
             {
                 if (user.CheckPassword(model.Password))
                 {
                     var data = GetToken(user, signingConfigurations, tokenConfigurations);
-                    repo.SetLastLogin(user.Id, out error);
+                    repo.SetLastLogin(user.Id, out _);
 
                     return Ok(data);
                 }
@@ -79,7 +83,7 @@ namespace ias.Rebens.api.Controllers
         {
             JsonModel resultModel;
 
-            if (model == null || string.IsNullOrEmpty(model.accessToken))
+            if (model == null || string.IsNullOrEmpty(model.accessToken) || signingConfigurations == null || tokenConfigurations == null)
                 resultModel = new JsonModel() { Status = "error", Message = "no token" };
             else
             {

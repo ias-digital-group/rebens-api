@@ -101,11 +101,11 @@ namespace ias.Rebens
                 using(var db = new RebensContext(this._connectionString))
                 {
                     var dt = DateTime.UtcNow;
-                    var scratchcard = db.Scratchcard.SingleOrDefault(s => s.Id == id && s.Status == (int)Enums.ScratchcardStatus.draft);
+                    var scratchcard = db.Scratchcard.SingleOrDefault(s => s.Id == id && s.Status == (int)ScratchcardStatus.hasPrize);
                     
                     if(scratchcard != null)
                     {
-                        scratchcard.Status = (int)Enums.ScratchcardStatus.generating;
+                        scratchcard.Status = (int)ScratchcardStatus.generating;
                         scratchcard.Modified = DateTime.UtcNow;
                         await db.LogAction.AddAsync(new LogAction()
                         {
@@ -313,7 +313,7 @@ namespace ias.Rebens
 
                     if (ret != null)
                     {
-                        canPublish = ret.Status == (int)Enums.ScratchcardStatus.draft;
+                        canPublish = ret.Status == (int)ScratchcardStatus.hasPrize;
                         if (string.IsNullOrEmpty(ret.NoPrizeImage1))
                             canPublish = false;
                         if (!db.ScratchcardPrize.Any(p => p.IdScratchcard == id))
