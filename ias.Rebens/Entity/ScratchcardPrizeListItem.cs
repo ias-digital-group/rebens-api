@@ -15,6 +15,6 @@ namespace ias.Rebens.Entity
         public int Quantity { get; set; }
         public string CreatedBy { get; set; }
         public DateTime Created { get; set; }
-        
+        public bool CanEdit { get; set; }
     }
 }

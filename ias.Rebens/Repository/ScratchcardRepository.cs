@@ -401,5 +401,65 @@ namespace ias.Rebens
             }
             return ret;
         }
+
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Scratchcard.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        if(update.Status == (int)ScratchcardStatus.active 
+                            || update.Status == (int)ScratchcardStatus.inactive
+                            || update.Status == (int)ScratchcardStatus.generated)
+                        {
+                            if (update.Status == (int)ScratchcardStatus.inactive
+                            || update.Status == (int)ScratchcardStatus.generated)
+                            {
+                                ret = true;
+                                update.Status = (int)ScratchcardStatus.active;
+                            }
+                            else
+                                update.Status = (int)ScratchcardStatus.inactive;
+
+                            update.Modified = DateTime.UtcNow;
+
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                                Created = DateTime.UtcNow,
+                                Item = (int)LogItem.Banner,
+                                IdItem = id,
+                                IdAdminUser = idAdminUser
+                            });
+
+                            db.SaveChanges();
+                            error = null;
+                        }
+                        else
+                        {
+                            ret = false;
+                            error = "Está campanha não pode ser Ativada/Inativada!";
+                        }
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Campanha não encontrada!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar a campanha. (erro:" + idLog + ")";
+                ret = false;
+            }
+            return ret;
+        }
     }
 }

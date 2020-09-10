@@ -50,6 +50,7 @@ namespace ias.Rebens.api.Models
         public string Description { get; set; }
 
         public string ImagePath { get; set; }
+        public bool CanEdit { get; }
 
         /// <summary>
         /// Chances
@@ -70,6 +71,11 @@ namespace ias.Rebens.api.Models
                 this.Quantity = scratchcardPrize.Quantity;
                 this.Description = scratchcardPrize.Description;
                 this.Odds = scratchcardPrize.Odds;
+                if (scratchcardPrize.Scratchcard != null)
+                {
+                    this.CanEdit = scratchcardPrize.Scratchcard.Status == (int)Enums.ScratchcardStatus.draft 
+                        || scratchcardPrize.Scratchcard.Status == (int)Enums.ScratchcardStatus.hasPrize;
+                }
             }
         }
 
@@ -100,6 +106,7 @@ namespace ias.Rebens.api.Models
         public int Quantity { get; set; }
         public string CreatedBy { get; set; }
         public string Created { get; set; }
+        public bool CanEdit { get; set; }
 
         public ScratchcardPrizeListItemModel() { }
         public ScratchcardPrizeListItemModel(ScratchcardPrizeListItem prize) {
@@ -114,6 +121,7 @@ namespace ias.Rebens.api.Models
                 this.Quantity = prize.Quantity;
                 this.Created = TimeZoneInfo.ConvertTimeFromUtc(prize.Created, Constant.TimeZone).ToString("dd/MM/yyyy - HH:mm", Constant.FormatProvider);
                 this.CreatedBy = prize.CreatedBy;
+                this.CanEdit = prize.CanEdit;
             }
         }
     }

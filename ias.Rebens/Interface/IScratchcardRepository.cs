@@ -17,5 +17,6 @@ namespace ias.Rebens
         Scratchcard Read(int id, out bool canPublish, out string regulation, out string error);
         List<Scratchcard> ListByDistributionType(Enums.ScratchcardDistribution type);
         List<int> ListCustomers(int idOperation, int type);
+        bool ToggleActive(int id, int idAdminUser, out string error);
     }
 }

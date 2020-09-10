@@ -516,5 +516,36 @@ namespace ias.Rebens.api.Controllers
             }
             return Ok(new JsonModel() { Status = "ok" });
         }
+
+        /// <summary>
+        /// Ativa/Inativa uma campanha
+        /// </summary>
+        /// <param name="id">id da campanha</param>
+        /// <returns></returns>
+        /// <response code="200">Se o tudo ocorrer sem erro</response>
+        /// <response code="400">Se ocorrer algum erro</response>
+        [HttpPost("{id}/ToggleActive")]
+        [ProducesResponseType(typeof(JsonModel), 200)]
+        [ProducesResponseType(typeof(JsonModel), 400)]
+        public IActionResult ToggleActive(int id)
+        {
+            int idAdminUser = GetAdminUserId(out string errorId);
+            if (errorId != null)
+                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
+
+            var status = repo.ToggleActive(id, idAdminUser, out string error);
+
+            if (string.IsNullOrEmpty(error)) {
+                return Ok(new JsonModel()
+                {
+                    Status = "ok",
+                    Data = status,
+                    Message = status ? Enums.EnumHelper.GetEnumDescription(Enums.ScratchcardStatus.active)
+                                    : Enums.EnumHelper.GetEnumDescription(Enums.ScratchcardStatus.inactive)
+                });
+            }
+
+            return StatusCode(400, new JsonModel() { Status = "error", Message = error });
+        }
     }
 }

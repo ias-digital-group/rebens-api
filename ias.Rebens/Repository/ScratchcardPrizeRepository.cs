@@ -1,4 +1,5 @@
 ﻿using ias.Rebens.Entity;
+using ias.Rebens.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -151,12 +152,13 @@ namespace ias.Rebens
                             CampaignName = item.Scratchcard.Name,
                             IdOperation = item.Scratchcard.IdOperation,
                             Prize = item.Title,
-                            Quantity = item.Quantity
+                            Quantity = item.Quantity,
+                            CanEdit = item.Scratchcard.Status == (int)ScratchcardStatus.draft || item.Scratchcard.Status == (int)ScratchcardStatus.hasPrize
                         };
                         prize.OperationName = db.Operation.Single(o => o.Id == prize.IdOperation).Title;
                         var createdUser = db.LogAction.Include("AdminUser").SingleOrDefault(a => a.IdItem == item.Id
                                                 && a.Action == (int)Enums.LogAction.create
-                                                && a.Item == (int)Enums.LogItem.ScratchcardPrize);
+                                                && a.Item == (int)LogItem.ScratchcardPrize);
                         if (createdUser != null && createdUser.AdminUser != null)
                             prize.CreatedBy = createdUser.AdminUser.Name + " " + createdUser.AdminUser.Surname;
                         result.Add(prize);
@@ -183,7 +185,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.ScratchcardPrize.SingleOrDefault(p => p.Id == id);
+                    ret = db.ScratchcardPrize.Include("Scratchcard").SingleOrDefault(p => p.Id == id);
                     error = null;
                 }
             }

@@ -153,7 +153,7 @@ namespace ias.Rebens.api.Models
                 this.Status = scratchcard.Status;
                 this.Operation = operationName;
                 this.StatusName = Enums.EnumHelper.GetEnumDescription((Enums.ScratchcardStatus)scratchcard.Status);
-                this.CanEdit = scratchcard.Status == (int)Enums.ScratchcardStatus.draft;
+                this.CanEdit = scratchcard.Status == (int)Enums.ScratchcardStatus.draft || scratchcard.Status == (int)Enums.ScratchcardStatus.hasPrize;
                 this.IdAdminUser = scratchcard.IdAdminUser;
                 this.Instructions = scratchcard.Instructions;
                 this.GetNotifications = scratchcard.GetNotifications;
@@ -224,6 +224,29 @@ namespace ias.Rebens.api.Models
         public string End { get; set; }
         public int Status { get; set; }
         public string StatusName { get; set; }
+        public bool ShowDelete
+        {
+            get
+            {
+                return this.Status == (int)Enums.ScratchcardStatus.draft || this.Status == (int)Enums.ScratchcardStatus.hasPrize;
+            }
+        }
+        public bool ShowActive
+        {
+            get
+            {
+                return this.Status == (int)Enums.ScratchcardStatus.active 
+                    || this.Status == (int)Enums.ScratchcardStatus.inactive
+                    || this.Status == (int)Enums.ScratchcardStatus.generated;
+            }
+        }
+        public bool Active
+        {
+            get
+            {
+                return this.Status == (int)Enums.ScratchcardStatus.active;
+            }
+        }
 
         public ScratchcardListItemModel() { }
         
