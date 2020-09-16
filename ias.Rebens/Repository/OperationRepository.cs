@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using Remotion.Linq.Clauses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,7 +87,8 @@ namespace ias.Rebens
                     db.Operation.Add(operation);
                     db.SaveChanges();
 
-                    var staticText = db.StaticText.Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfigurationDefault);
+                    var staticText = db.StaticText
+                                        .Single(s => s.IdStaticTextType == (int)Enums.StaticTextType.OperationConfigurationDefault);
                     if (staticText != null)
                     {
                         var config = new StaticText()
@@ -105,7 +107,9 @@ namespace ias.Rebens
                         db.StaticText.Add(config);
                     }
 
-                    var pages = db.StaticText.Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault && s.Url != "contract" && s.Active);
+                    var pages = db.StaticText
+                                    .Where(s => s.IdStaticTextType == (int)Enums.StaticTextType.PagesDefault 
+                                        && s.Url != "contract" && s.Active);
                     var listPages = new List<StaticText>();
                     foreach(var page in pages)
                     {
@@ -127,7 +131,53 @@ namespace ias.Rebens
                     db.StaticText.AddRange(listPages);
                     db.SaveChanges();
 
-                    foreach(var page in listPages)
+                    db.Faq.Add(new Faq()
+                    {
+                        Active = true,
+                        Answer = "<p><span style='color: rgb(0, 0, 0);'>Não há limites de compras. O usuário compra de acordo com sua necessidade, interesse, prioridade e possibilidade. Da forma que lhe for mais conveniente: dinheiro, débito automático, cartão de crédito, seguindo as normas de cada estabelecimento comercial.</span></p>",
+                        Created = DateTime.UtcNow,
+                        IdOperation = operation.Id,
+                        Modified = DateTime.UtcNow,
+                        Order = 1,
+                        Question = "Existe um limite de compras na utilização do Clube?"
+                    });
+                    db.Faq.Add(new Faq()
+                    {
+                        Active = true,
+                        Answer = "<p><span style='color: rgb(0, 0, 0);'>Os descontos podem ser alterados a qualquer tempo, conforme disponibilidade de nossos parceiros. Importante: Certifique-se de que o desconto ou a promoção que lhe interessam ainda estão válidos; Nas compras realizadas através da internet, ou seja, no ambiente virtual, o usuário deve seguir as instruções do estabelecimento no qual realiza sua transação.</span></p>",
+                        Created = DateTime.UtcNow,
+                        IdOperation = operation.Id,
+                        Modified = DateTime.UtcNow,
+                        Order = 2,
+                        Question = "Os descontos e as promoções oferecidas pelo Clube de Vantagens Rebens são fixos ou temporários?"
+                    });
+                    db.Faq.Add(new Faq()
+                    {
+                        Active = true,
+                        Answer = "<p><span style='color: rgb(0, 0, 0);'>O cashback (dinheiro de volta) é a porcentagem que recebe de volta, do valor que gastou, na compra efetuada nos parceiros desta categoria do Clube. Com ele você acumula valores que poderão ser resgatados assim que acumular o valor a partir de R$ 25,00.</span></p>",
+                        Created = DateTime.UtcNow,
+                        IdOperation = operation.Id,
+                        Modified = DateTime.UtcNow,
+                        Order = 3,
+                        Question = "O que é o cashback (dinheiro de volta)?"
+                    });
+                    db.SaveChanges();
+
+                    var benefits = db.Benefit.Where(b => b.Active).Select(b => b.Id);
+                    foreach(var benefit in benefits)
+                    {
+                        db.BenefitOperation.Add(new BenefitOperation()
+                        {
+                            Created = DateTime.UtcNow,
+                            IdBenefit = benefit,
+                            IdOperation = operation.Id,
+                            IdPosition = 1,
+                            Modified = DateTime.UtcNow
+                        });
+                    }
+                    db.SaveChanges();
+
+                    foreach (var page in listPages)
                     {
                         db.LogAction.Add(new LogAction()
                         {
