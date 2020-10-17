@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using System.Security.Cryptography.X509Certificates;
+using ias.Rebens.Models;
+using Remotion.Linq.Clauses;
 
 namespace ias.Rebens
 {
@@ -311,6 +314,102 @@ namespace ias.Rebens
                 ret = null;
             }
             return ret;
+        }
+
+        public UnicsulReport UnicsulWeekly()
+        {
+            UnicsulReport result = new UnicsulReport()
+            {
+                Summary = new UnicsulReportSummary(),
+                BenefitsUsed = new List<UnicsulReportBenefit>(),
+                BenefitViews = new List<UnicsulReportBenefit>(),
+                Customers = new List<UnicsulReportCustomer>()
+            };
+
+            var dt = DateTime.UtcNow.Date.AddDays(1);
+            DateTime end = DateTime.UtcNow.DayOfWeek == DayOfWeek.Saturday ? DateTime.UtcNow.AddDays(-1).Date : DateTime.UtcNow.AddDays(-((int)dt.DayOfWeek + 2)).Date;
+            DateTime start = end.AddDays(-6).Date.AddMinutes(-1);
+            end = end.AddDays(1).Date;
+            
+            using(var db = new RebensContext(this._connectionString))
+            {
+                var lastWeekUsers = (from c in db.Customer
+                                     where c.IdOperation == 66
+                                         && c.Created > start
+                                         && c.Created < end
+                                     group c by c.Status into g
+                                     select new
+                                     {
+                                         Status = g.Key,
+                                         Count = g.Count(x => x.Status == g.Key)
+                                     }).ToList();
+                result.Summary.CompleteWeek = lastWeekUsers.Any(c => c.Status == (int)Enums.CustomerStatus.Active) ? lastWeekUsers.SingleOrDefault(c => c.Status == (int)Enums.CustomerStatus.Active).Count : 0;
+                result.Summary.IncompleteWeek = lastWeekUsers.Any(c => c.Status == (int)Enums.CustomerStatus.Incomplete) ? lastWeekUsers.SingleOrDefault(c => c.Status == (int)Enums.CustomerStatus.Incomplete).Count : 0;
+                result.Summary.IncompleteWeek += lastWeekUsers.Any(c => c.Status == (int)Enums.CustomerStatus.ChangePassword) ? lastWeekUsers.SingleOrDefault(c => c.Status == (int)Enums.CustomerStatus.ChangePassword).Count : 0;
+                result.Summary.ValidateWeek = lastWeekUsers.Any(c => c.Status == (int)Enums.CustomerStatus.Validation) ? lastWeekUsers.SingleOrDefault(c => c.Status == (int)Enums.CustomerStatus.Validation).Count : 0;
+
+                var listCustomers = db.Customer.Include("Address").Where(c => c.IdOperation == 66);
+
+                var benefitViews = (from bv in db.BenefitView
+                                   where listCustomers.Any(c => c.Id == bv.IdCustomer)
+                                   && bv.Created > start
+                                   && bv.Created < end
+                                   select bv.IdBenefit).Distinct().ToList();
+                var benefitsUsed = (from bv in db.BenefitUse
+                                    where listCustomers.Any(c => c.Id == bv.IdCustomer)
+                                    && bv.Created > start
+                                    && bv.Created < end
+                                    select bv.IdBenefit).Distinct().ToList();
+
+                foreach(var benefitId in benefitViews)
+                {
+                    var benefit = db.Benefit.Include("Partner").Single(b => b.Id == benefitId);
+                    result.BenefitViews.Add(new UnicsulReportBenefit()
+                    {
+                        Name = benefit.Title,
+                        PartnerName = benefit.Partner.Name,
+                        Total = db.BenefitView.Count(bv => bv.IdBenefit == benefitId && listCustomers.Any(c => c.Id == bv.IdCustomer)),
+                        TotalWeek = db.BenefitView.Count(bv => bv.IdBenefit == benefitId 
+                                        && listCustomers.Any(c => c.Id == bv.IdCustomer)
+                                        && bv.Created > start
+                                        && bv.Created < end)
+                    });
+                }
+
+                foreach (var benefitId in benefitsUsed)
+                {
+                    var benefit = db.Benefit.Include("Partner").Single(b => b.Id == benefitId);
+                    result.BenefitsUsed.Add(new UnicsulReportBenefit()
+                    {
+                        Name = benefit.Title,
+                        PartnerName = benefit.Partner.Name,
+                        Total = db.BenefitView.Count(bv => bv.IdBenefit == benefitId && listCustomers.Any(c => c.Id == bv.IdCustomer)),
+                        TotalWeek = db.BenefitView.Count(bv => bv.IdBenefit == benefitId
+                                        && listCustomers.Any(c => c.Id == bv.IdCustomer)
+                                        && bv.Created > start
+                                        && bv.Created < end)
+                    });
+                }
+
+                foreach(var customer in listCustomers)
+                {
+                    var tmpCustomer = new UnicsulReportCustomer(customer);
+                    if(customer.Status != (int)Enums.CustomerStatus.PreSignup && customer.Status != (int)Enums.CustomerStatus.Inactive)
+                    {
+                        var tmpLastLogin = db.CustomerLog.Where(l => l.IdCustomer == customer.Id
+                                                && l.Action == (int)Enums.CustomerLogAction.login)
+                                        .OrderByDescending(l => l.Created)
+                                        .FirstOrDefault();
+                        if (tmpLastLogin != null)
+                            tmpCustomer.LastLogin = tmpLastLogin.Created.ToString("dd/MM/yyyy HH:mm:ss");
+                    }
+                        
+                    result.Customers.Add(tmpCustomer);
+                }
+            }
+            
+            
+            return result;   
         }
     }
 }

@@ -26,11 +26,7 @@ namespace TestApp
             //var programs = zanox.GetPrograms(out _);
             //var ret = zanox.GetIncentives(out _);
 
-            var file = new FileInfo(@"C:\ias\PROJECTS\Rebens\logos\dafiti.jpg");
-            var cloudinary = new ias.Rebens.Integration.CloudinaryHelper();
-            var result = cloudinary.UploadFile(file.FullName, "portal");
-            if (result.Status)
-                Console.WriteLine(result.secure_url);
+
 
             //var zpar1 = HttpUtility.UrlDecode("ozxE75LALXbDmxwuQetQPw%3d%3d");
             //var zpar2 = HttpUtility.UrlDecode("hgB3N2OuVd3r96rDO8eZ8Q%3d%3d");
@@ -48,10 +44,14 @@ namespace TestApp
             //Console.WriteLine($"decode2: {decode2}");
             //Console.WriteLine($"decode3: {decode3}");
 
-        
+
             //Task.WaitAll(ret);
 
             //Console.WriteLine($"result: {ret}");
+
+
+
+
 
             sw.Stop();
             Console.WriteLine("Elapsed Time : " + sw.ElapsedMilliseconds + "ms");
