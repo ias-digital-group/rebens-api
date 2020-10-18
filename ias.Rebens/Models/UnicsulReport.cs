@@ -31,6 +31,7 @@ namespace ias.Rebens.Models
         public string Created { get; set; }
         public string LastLogin { get; set; }
         public string Status { get; set; }
+        public int StatusId { get; set; }
 
         public UnicsulReportCustomer(Customer customer)
         {
@@ -53,6 +54,7 @@ namespace ias.Rebens.Models
                     this.City = customer.Address.City;
                     this.State = customer.Address.State;
                 }
+                this.StatusId = customer.Status;
                 this.Status = Enums.EnumHelper.GetEnumDescription((Enums.CustomerStatus)customer.Status);
                 this.Created = customer.Created.ToString("dd/MM/yyyy HH:mm:ss");
             }

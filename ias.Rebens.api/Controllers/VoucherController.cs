@@ -83,7 +83,7 @@ namespace ias.Rebens.api.Controllers
         private Models.VoucherModel GenerateBenefitVoucher(int idBenefit, Customer customer, Operation operation, out string error)
         {
             Models.VoucherModel model;
-            var benefit = benefitRepo.Read(idBenefit, out error);
+            var benefit = benefitRepo.Read(idBenefit, out _);
 
             var benefitUse = new BenefitUse()
             {

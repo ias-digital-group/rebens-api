@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography.X509Certificates;
 using ias.Rebens.Models;
 using Remotion.Linq.Clauses;
+using Amazon.Route53.Model.Internal.MarshallTransformations;
 
 namespace ias.Rebens
 {
@@ -406,6 +407,12 @@ namespace ias.Rebens
                         
                     result.Customers.Add(tmpCustomer);
                 }
+
+                result.Summary.Complete = result.Customers.Count(c => c.StatusId == (int)Enums.CustomerStatus.Active);
+                result.Summary.Validate = result.Customers.Count(c => c.StatusId == (int)Enums.CustomerStatus.Validation);
+                result.Summary.Incomplete = result.Customers.Count(c => c.StatusId == (int)Enums.CustomerStatus.Incomplete);
+                result.Summary.Incomplete += result.Customers.Count(c => c.StatusId == (int)Enums.CustomerStatus.ChangePassword);
+                result.Summary.PreSign = result.Customers.Count(c => c.StatusId == (int)Enums.CustomerStatus.PreSignup);
             }
             
             
