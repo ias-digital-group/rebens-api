@@ -30,7 +30,7 @@ namespace ias.Rebens
         public bool Active { get; set; }
         public bool Published { get; set; }
         public DateTime? PublishedDate { get; set; }
-
+        public DateTime? LastIntegrationDate { get; set; }
 
         public virtual ICollection<ZanoxIncentive> Incentives { get; set; }
         public virtual ICollection<ZanoxProgramView> ZanoxProgramViews { get; set; }

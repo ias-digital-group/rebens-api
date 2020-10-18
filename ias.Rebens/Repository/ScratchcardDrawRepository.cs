@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ias.Rebens.Entity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,31 @@ namespace ias.Rebens
         public ScratchcardDrawRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+        }
+
+
+        public ResultPage<ScratchcardDraw> ListByScratchcard(int idScratchcard, int page, int pageItems, out string error)
+        {
+            ResultPage<ScratchcardDraw> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var list = db.ScratchcardDraw.Where(s => s.IdScratchcard == idScratchcard)
+                                    .OrderBy(s => s.Created).ToList();
+
+                    ret = new ResultPage<ScratchcardDraw>(list, page, list.Count, list.Count);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardDrawRepository.ListByScratchcard", ex.Message, $"idScratchcard: {idScratchcard}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as raspadinhas. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
         }
 
         public ResultPage<ScratchcardDraw> ListByCustomer(int idCustomer, int page, int pageItems, out string error)
@@ -43,29 +69,6 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<ScratchcardDraw> ListByScratchcard(int idScratchcard, int page, int pageItems, out string error)
-        {
-            ResultPage<ScratchcardDraw> ret;
-            try
-            {
-                using (var db = new RebensContext(this._connectionString))
-                {
-                    var list = db.ScratchcardDraw.Where(s => s.IdScratchcard == idScratchcard)
-                                    .OrderBy(s => s.Created).ToList();
-
-                    ret = new ResultPage<ScratchcardDraw>(list, page, list.Count, list.Count);
-                    error = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                var logError = new LogErrorRepository(this._connectionString);
-                int idLog = logError.Create("ScratchcardDrawRepository.ListByScratchcard", ex.Message, $"idScratchcard: {idScratchcard}", ex.StackTrace);
-                error = "Ocorreu um erro ao tentar listar as raspadinhas. (erro:" + idLog + ")";
-                ret = null;
-            }
-            return ret;
-        }
 
         public bool SaveRandom(int idScratchcard, string path, int idCustomer, DateTime date, DateTime? expireDate, out string error)
         {
@@ -265,24 +268,122 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<ScratchcardDraw> ListScratchedWithPrize(int idScratchcard, int page, int pageItems, out string error)
+        public ResultPage<ScratchcardDrawListItem> ScratchedWithPrizeListPage(int page, int pageItems, string searchWord, int? idOperation, int? idScratchcard, out string error)
         {
-            ResultPage<ScratchcardDraw> ret;
+            ResultPage<ScratchcardDrawListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    var list = db.ScratchcardDraw.Include("Customer").Where(s => s.IdScratchcard == idScratchcard 
-                                        && s.IdScratchcardPrize.HasValue
-                                        && s.PlayedDate.HasValue)
-                                    .OrderBy(s => s.Created).Skip(page * pageItems)
-                                    .Take(pageItems).ToList();
+                    var tmplist = db.ScratchcardDraw.Include("Scratchcard").Where(s => (string.IsNullOrEmpty(searchWord)
+                                                                    || s.Customer.Name.Contains(searchWord)
+                                                                    || s.Customer.Surname.Contains(searchWord)
+                                                                    || s.Customer.Email.Contains(searchWord)
+                                                                    || s.Customer.Cpf.Contains(searchWord)
+                                                                    )
+                                                            && (!idOperation.HasValue || s.Scratchcard.IdOperation == idOperation)
+                                                            && (!idScratchcard.HasValue || s.IdScratchcard == idScratchcard)
+                                                            && s.IdCustomer.HasValue
+                                                            && s.IdScratchcardPrize.HasValue
+                                                            && s.Status == (int)Enums.ScratchcardDraw.scratched
+                                                            && s.PlayedDate.HasValue
+                                                       );
 
-                    var total = db.ScratchcardDraw.Count(s => s.IdScratchcard == idScratchcard
-                                        && s.IdScratchcardPrize.HasValue
-                                        && s.PlayedDate.HasValue);
+                    var total = tmplist.Count();
+                    var list = tmplist.OrderByDescending(s => s.IdScratchcardPrize)
+                                        .ThenByDescending(s => s.IdCustomer)
+                                        .Skip(page * pageItems)
+                                        .Take(pageItems);
+                    var result = new List<ScratchcardDrawListItem>();
+                    foreach (var item in list)
+                    {
+                        var billet = new ScratchcardDrawListItem()
+                        {
+                            Id = item.Id,
+                            Date = item.Date,
+                            IdCustomer = item.IdCustomer,
+                            IdScratchcard = item.IdScratchcard,
+                            IdPrize = item.IdScratchcardPrize,
+                            ValidationCode = item.ValidationCode,
+                            ValidationDate = item.ValidationDate,
+                            CampaignName = item.Scratchcard.Name,
+                            IdOperation = item.Scratchcard.IdOperation
+                        };
+                        billet.OperationName = db.Operation.Single(o => o.Id == billet.IdOperation).Title;
+                        var customer = db.Customer.Single(c => c.Id == billet.IdCustomer.Value);
+                        billet.CustomerName = customer.Name + " " + customer.Surname;
+                        billet.CustomerCpf = customer.Cpf;
+                        billet.CustomerEmail = customer.Email;
+                        billet.Prize = db.ScratchcardPrize.Single(p => p.Id == billet.IdPrize.Value).Title;
 
-                    ret = new ResultPage<ScratchcardDraw>(list, page, pageItems, total);
+                        result.Add(billet);
+                    }
+
+
+                    ret = new ResultPage<ScratchcardDrawListItem>(result, page, pageItems, total);
+                    error = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardDrawRepository.ListScratchedWithPrize", ex.Message, $"idScratchcard: {idScratchcard}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar listar as raspadinhas. (erro:" + idLog + ")";
+                ret = null;
+            }
+            return ret;
+        }
+
+        public ResultPage<ScratchcardDrawListItem> ListPage(int page, int pageItems, string searchWord, out string error, int? idOperation, int? idScratchcard)
+        {
+            ResultPage<ScratchcardDrawListItem> ret;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var tmplist = db.ScratchcardDraw.Include("Scratchcard").Where(s =>  (string.IsNullOrEmpty(searchWord) 
+                                                                    || s.Customer.Name.Contains(searchWord) 
+                                                                    || s.Customer.Surname.Contains(searchWord))
+                                                            && (!idOperation.HasValue || s.Scratchcard.IdOperation == idOperation)
+                                                            && (!idScratchcard.HasValue || s.IdScratchcard == idScratchcard)
+                                                       );
+
+                    var total = tmplist.Count();
+                    var list = tmplist.OrderByDescending(s => s.IdScratchcardPrize)
+                                        .ThenByDescending(s => s.IdCustomer)
+                                        .Skip(page * pageItems)
+                                        .Take(pageItems);
+                    var result = new List<ScratchcardDrawListItem>();
+                    foreach(var item in list)
+                    {
+                        var billet = new ScratchcardDrawListItem()
+                        {
+                            Id = item.Id,
+                            Date = item.Date,
+                            IdCustomer = item.IdCustomer,
+                            IdScratchcard = item.IdScratchcard,
+                            IdPrize = item.IdScratchcardPrize,
+                            ValidationCode = item.ValidationCode,
+                            ValidationDate = item.ValidationDate,
+                            CampaignName = item.Scratchcard.Name,
+                            IdOperation = item.Scratchcard.IdOperation
+                        };
+                        billet.OperationName = db.Operation.Single(o => o.Id == billet.IdOperation).Title;
+                        if (billet.IdCustomer.HasValue)
+                        {
+                            var customer = db.Customer.Single(c => c.Id == billet.IdCustomer.Value);
+                            billet.CustomerName = customer.Name + " " + customer.Surname;
+                            billet.CustomerCpf = customer.Cpf;
+                            billet.CustomerEmail = customer.Email;
+                        }
+                        if (billet.IdPrize.HasValue)
+                            billet.Prize = db.ScratchcardPrize.Single(p => p.Id == billet.IdPrize.Value).Title;
+
+                        result.Add(billet);
+                    }
+
+
+                    ret = new ResultPage<ScratchcardDrawListItem>(result, page, pageItems, total);
                     error = null;
                 }
             }

@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ias.Rebens.Enums;
+using ias.Rebens.Entity;
+using Remotion.Linq.Parsing.ExpressionVisitors.Transformation.PredefinedTransformations;
 
 namespace ias.Rebens
 {
@@ -99,11 +101,11 @@ namespace ias.Rebens
                 using(var db = new RebensContext(this._connectionString))
                 {
                     var dt = DateTime.UtcNow;
-                    var scratchcard = db.Scratchcard.SingleOrDefault(s => s.Id == id && s.Status == (int)Enums.ScratchcardStatus.draft);
+                    var scratchcard = db.Scratchcard.SingleOrDefault(s => s.Id == id && s.Status == (int)ScratchcardStatus.hasPrize);
                     
                     if(scratchcard != null)
                     {
-                        scratchcard.Status = (int)Enums.ScratchcardStatus.generating;
+                        scratchcard.Status = (int)ScratchcardStatus.generating;
                         scratchcard.Modified = DateTime.UtcNow;
                         await db.LogAction.AddAsync(new LogAction()
                         {
@@ -140,9 +142,9 @@ namespace ias.Rebens
             return ret;
         }
 
-        public ResultPage<Scratchcard> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation)
+        public ResultPage<ScratchcardListItem> ListPage(int page, int pageItems, string word, string sort, out string error, int? idOperation, int? status)
         {
-            ResultPage<Scratchcard> ret;
+            ResultPage<ScratchcardListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -181,7 +183,31 @@ namespace ias.Rebens
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = tmpList.Count();
 
-                    ret = new ResultPage<Scratchcard>(list, page, pageItems, total);
+                    var result = new List<ScratchcardListItem>();
+                    foreach(var item in list)
+                    {
+                        var s = new ScratchcardListItem()
+                        {
+                            Id = item.Id,
+                            Name = item.Name,
+                            IdOperation = item.IdOperation,
+                            End = item.End,
+                            Created = item.Created,
+                            Quantity = item.Quantity,
+                            Start = item.Start,
+                            Status = item.Status,
+                            Type = item.Type
+                        };
+                        s.OperationName = db.Operation.Single(o => o.Id == item.IdOperation).Title;
+                        var createdUser = db.LogAction.Include("AdminUser").SingleOrDefault(a => a.IdItem == item.Id
+                                                && a.Action == (int)Enums.LogAction.create
+                                                && a.Item == (int)Enums.LogItem.Scratchcard);
+                        if (createdUser != null && createdUser.AdminUser != null)
+                            s.CreatedBy = createdUser.AdminUser.Name + " " + createdUser.AdminUser.Surname;
+                        result.Add(s);
+                    }
+
+                    ret = new ResultPage<ScratchcardListItem>(result, page, pageItems, total);
                     error = null;
                 }
             }
@@ -287,7 +313,7 @@ namespace ias.Rebens
 
                     if (ret != null)
                     {
-                        canPublish = ret.Status == (int)Enums.ScratchcardStatus.draft;
+                        canPublish = ret.Status == (int)ScratchcardStatus.hasPrize;
                         if (string.IsNullOrEmpty(ret.NoPrizeImage1))
                             canPublish = false;
                         if (!db.ScratchcardPrize.Any(p => p.IdScratchcard == id))
@@ -345,13 +371,19 @@ namespace ias.Rebens
                     {
                         case ScratchcardType.opened:
                         case ScratchcardType.closedPartner:
-                            ret = db.Customer.Where(c => c.IdOperation == idOperation && !c.Active
-                                                    && c.Status != (int)CustomerStatus.Validation)
+                            ret = db.Customer.Where(c => c.IdOperation == idOperation && c.Active
+                                                    && (
+                                                        c.Status == (int)CustomerStatus.Active
+                                                        || c.Status == (int)CustomerStatus.Incomplete
+                                                    ))
                                                 .Select(c => c.Id).ToList();
                             break;
                         case ScratchcardType.closed:
-                            ret = db.Customer.Where(c => c.IdOperation == idOperation && !c.Active
-                                                    && c.Status != (int)CustomerStatus.Validation
+                            ret = db.Customer.Where(c => c.IdOperation == idOperation && c.Active
+                                                    && (
+                                                        c.Status == (int)CustomerStatus.Active
+                                                        || c.Status == (int)CustomerStatus.Incomplete
+                                                    )
                                                     && !c.IdOperationPartner.HasValue)
                                                 .Select(c => c.Id).ToList();
                             break;
@@ -372,6 +404,66 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 logError.Create("ScratchcardRepository.ListCustomers", ex.Message, $"type: {type.ToString()}", ex.StackTrace);
                 ret = null;
+            }
+            return ret;
+        }
+
+        public bool ToggleActive(int id, int idAdminUser, out string error)
+        {
+            bool ret = false;
+            try
+            {
+                using (var db = new RebensContext(this._connectionString))
+                {
+                    var update = db.Scratchcard.SingleOrDefault(a => a.Id == id);
+                    if (update != null)
+                    {
+                        if(update.Status == (int)ScratchcardStatus.active 
+                            || update.Status == (int)ScratchcardStatus.inactive
+                            || update.Status == (int)ScratchcardStatus.generated)
+                        {
+                            if (update.Status == (int)ScratchcardStatus.inactive
+                            || update.Status == (int)ScratchcardStatus.generated)
+                            {
+                                ret = true;
+                                update.Status = (int)ScratchcardStatus.active;
+                            }
+                            else
+                                update.Status = (int)ScratchcardStatus.inactive;
+
+                            update.Modified = DateTime.UtcNow;
+
+                            db.LogAction.Add(new LogAction()
+                            {
+                                Action = ret ? (int)Enums.LogAction.activate : (int)Enums.LogAction.inactivate,
+                                Created = DateTime.UtcNow,
+                                Item = (int)LogItem.Banner,
+                                IdItem = id,
+                                IdAdminUser = idAdminUser
+                            });
+
+                            db.SaveChanges();
+                            error = null;
+                        }
+                        else
+                        {
+                            ret = false;
+                            error = "Está campanha não pode ser Ativada/Inativada!";
+                        }
+                    }
+                    else
+                    {
+                        ret = false;
+                        error = "Campanha não encontrada!";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logError = new LogErrorRepository(this._connectionString);
+                int idLog = logError.Create("ScratchcardRepository.ToggleActive", ex.Message, $"id:{id}", ex.StackTrace);
+                error = "Ocorreu um erro ao tentar atualizar a campanha. (erro:" + idLog + ")";
+                ret = false;
             }
             return ret;
         }

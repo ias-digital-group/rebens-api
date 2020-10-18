@@ -1,8 +1,10 @@
-﻿using ias.Rebens.Enums;
+﻿using ias.Rebens.Entity;
+using ias.Rebens.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ias.Rebens
@@ -15,9 +17,9 @@ namespace ias.Rebens
             _connectionString = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
         }
 
-        public ResultPage<ZanoxProgram> ListPage(int page, int pageItems, string word, out string error)
+        public ResultPage<ZanoxProgramListItem> ListPage(int page, int pageItems, string word, out string error)
         {
-            ResultPage<ZanoxProgram> ret;
+            ResultPage<ZanoxProgramListItem> ret;
             try
             {
                 using (var db = new RebensContext(this._connectionString))
@@ -27,7 +29,33 @@ namespace ias.Rebens
                     var list = tmpList.Skip(page * pageItems).Take(pageItems).ToList();
                     var total = tmpList.Count();
 
-                    ret = new ResultPage<ZanoxProgram>(list, page, pageItems, total);
+                    var retList = new List<ZanoxProgramListItem>();
+                    foreach(var p in list)
+                    {
+                        var item = new ZanoxProgramListItem()
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Logo = p.Image,
+                            Created = p.Created,
+                            Modified = p.Modified,
+                            LastIntegrationDate = p.LastIntegrationDate,
+                            Platform = "Zanox",
+                            Rank = p.AdRank,
+                            StartDate = p.StartDate,
+                            Status = p.Status,
+                            Published = p.Published
+                        };
+                        var updatedUser = db.LogAction.Include("AdminUser").Where(a => a.Item == (int)Enums.LogItem.ZanoxProgram && a.Action == (int)Enums.LogAction.update && a.IdItem == p.Id).OrderByDescending(a => a.Created).FirstOrDefault();
+                        if (updatedUser != null && updatedUser.AdminUser != null)
+                            item.ModifiedBy = updatedUser.AdminUser.Name + " " + updatedUser.AdminUser.Surname;
+                        else
+                            item.ModifiedBy = " - ";
+                        retList.Add(item);
+                    }
+                    
+
+                    ret = new ResultPage<ZanoxProgramListItem>(retList, page, pageItems, total);
 
                     error = null;
                 }
@@ -118,6 +146,7 @@ namespace ias.Rebens
                             update.Name = program.Name;
                             update.Terms = program.Terms;
                             update.Published = program.Published;
+                            update.Modified = DateTime.UtcNow;
 
                             db.LogAction.Add(new LogAction()
                             {
@@ -140,19 +169,20 @@ namespace ias.Rebens
                             }
                             update.AdRank = program.AdRank;
                             update.Currency = program.Currency;
-                            update.Modified = DateTime.UtcNow;
                             update.MaxCommissionPercent = program.MaxCommissionPercent;
                             update.MinCommissionPercent = program.MinCommissionPercent;
                             update.Active = program.Active;
                             update.Url = program.Url;
                             update.StartDate = program.StartDate;
                             update.Status = program.Status;
+                            update.LastIntegrationDate = DateTime.UtcNow;
                         }
                     }
                     else
                     {
                         program.Published = false;
-                        program.Created = program.Modified = DateTime.UtcNow;
+                        program.LastIntegrationDate = program.Created = program.Modified = DateTime.UtcNow;
+                        
                         db.ZanoxProgram.Add(program);
                     }
 

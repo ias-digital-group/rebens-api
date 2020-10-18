@@ -29,41 +29,42 @@ namespace ias.Rebens.api.Controllers
         }
 
         /// <summary>
-        /// Lista os prêmios conforme os parametros
+        /// Retorna a lista de Raspadinhas premiadas
         /// </summary>
         /// <param name="page">página, não obrigatório (default=0)</param>
         /// <param name="pageItems">itens por página, não obrigatório (default=30)</param>
-        /// <param name="sort">Ordenação campos (Id, Question, Answer, Order), direção (ASC, DESC)</param>
         /// <param name="searchWord">Palavra à ser buscada</param>
-        /// <param name="idOperation">Id da Operação</param>
-        /// <returns>Lista com as faqs encontradas</returns>
+        /// <param name="idOperation">Id da operação, não obrigatório</param>
+        /// <returns>Lista com as raspadinahs encontradas</returns>
         /// <response code="200">Retorna a lista, ou algum erro caso interno</response>
         /// <response code="204">Se não encontrar nada</response>
         /// <response code="400">Se ocorrer algum erro</response>
-        [HttpGet("{id}")]
-        [ProducesResponseType(typeof(JsonDataModel<List<ScratchcardPrizeModel>>), 200)]
+        [HttpGet, Authorize("Bearer", Roles = "master,administratorRebens,publisherRebens")]
+        [ProducesResponseType(typeof(ResultPageModel<ScratchcardPrizeListItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
-        public IActionResult List(int id)
+        public IActionResult ListPrizes([FromQuery] int page = 0, [FromQuery] int pageItems = 30,
+                [FromQuery] string searchWord = "", [FromQuery] int? idOperation = null, [FromQuery] int? idScratchcard = null)
         {
-            int idAdminUser = GetAdminUserId(out string errorId);
-            if(errorId != null)
-                return StatusCode(400, new JsonModel() { Status = "error", Message = errorId });
-
-            var list = repo.List(id, out string error);
+            var list = repo.ListPage(page, pageItems, searchWord, out string error, idOperation, idScratchcard);
 
             if (string.IsNullOrEmpty(error))
             {
-                if (list == null || !list.Any())
+                if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new JsonDataModel<List<ScratchcardPrizeModel>>()
+                var ret = new ResultPageModel<ScratchcardPrizeListItemModel>
                 {
-                    Data = new List<ScratchcardPrizeModel>()
+                    CurrentPage = list.CurrentPage,
+                    HasNextPage = list.HasNextPage,
+                    HasPreviousPage = list.HasPreviousPage,
+                    ItemsPerPage = list.ItemsPerPage,
+                    TotalItems = list.TotalItems,
+                    TotalPages = list.TotalPages,
+                    Data = new List<ScratchcardPrizeListItemModel>()
                 };
-
-                foreach (var prize in list)
-                    ret.Data.Add(new ScratchcardPrizeModel(prize));
+                foreach (var prize in list.Page)
+                    ret.Data.Add(new ScratchcardPrizeListItemModel(prize));
 
                 return Ok(ret);
             }

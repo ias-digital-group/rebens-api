@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Amazon.S3.Model;
+using ias.Rebens.Entity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -113,6 +115,40 @@ namespace ias.Rebens.api.Models
                 if (scratchcardDraw.Customer != null)
                     this.Customer = new CustomerModel(scratchcardDraw.Customer);
             }
+        }
+    }
+
+    public class ScratchcardDrawListItemModel
+    {
+        public int Id { get; set; }
+        public string CampaignName { get; set; }
+        public int IdScratchcard { get; set; }
+        public int IdOperation { get; set; }
+        public string OperationName { get; set; }
+        public int? IdCustomer { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerCpf { get; set; }
+        public string CustomerEmail { get; set; }
+        public string Date { get; set; }
+        public string ValidationCode { get; set; }
+        public string ValidationDate { get; set; }
+        public string Prize { get; set; }
+
+        public ScratchcardDrawListItemModel() { }
+        public ScratchcardDrawListItemModel(ScratchcardDrawListItem item) {
+            this.Id = item.Id;
+            this.CampaignName = item.CampaignName;
+            this.IdScratchcard = item.IdScratchcard;
+            this.IdOperation = item.IdOperation;
+            this.OperationName = item.OperationName;
+            this.IdCustomer = item.IdCustomer;
+            this.CustomerName = item.CustomerName;
+            this.CustomerCpf = item.CustomerCpf;
+            this.CustomerEmail = item.CustomerEmail;
+            this.Date = item.Date.HasValue ? item.Date.Value.ToString("dd/MM/yyyy", Constant.FormatProvider) : "";
+            this.ValidationCode = item.ValidationCode;
+            this.ValidationDate = item.ValidationDate.HasValue ? item.ValidationDate.Value.ToString("dd/MM/yyyy", Constant.FormatProvider) : "";
+            this.Prize = item.Prize;
         }
     }
 }

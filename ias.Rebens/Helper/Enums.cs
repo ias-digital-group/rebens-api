@@ -427,6 +427,8 @@ namespace ias.Rebens.Enums
         inactive = 4,
         [Description("Processando")]
         generating = 5,
+        [Description("Pronto para publicar")]
+        hasPrize = 6,
         [Description("Apagado")]
         deleted = 99
     }

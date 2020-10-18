@@ -31,7 +31,7 @@ namespace ias.Rebens.api.Controllers
         /// <param name="searchWord">palavra à ser buscada</param>
         /// <returns></returns>
         [HttpGet]
-        [ProducesResponseType(typeof(ResultPageModel<ZanoxProgramModel>), 200)]
+        [ProducesResponseType(typeof(ResultPageModel<ZanoxProgramListItemModel>), 200)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult List([FromQuery] int page = 0, [FromQuery] int pageItems = 30, [FromQuery] string searchWord = "")
@@ -43,7 +43,7 @@ namespace ias.Rebens.api.Controllers
                 if (list == null || list.TotalItems == 0)
                     return NoContent();
 
-                var ret = new ResultPageModel<ZanoxProgramModel>()
+                var ret = new ResultPageModel<ZanoxProgramListItemModel>()
                 {
                     CurrentPage = list.CurrentPage,
                     HasNextPage = list.HasNextPage,
@@ -51,10 +51,10 @@ namespace ias.Rebens.api.Controllers
                     ItemsPerPage = list.ItemsPerPage,
                     TotalItems = list.TotalItems,
                     TotalPages = list.TotalPages,
-                    Data = new List<ZanoxProgramModel>()
+                    Data = new List<ZanoxProgramListItemModel>()
                 };
                 foreach (var item in list.Page)
-                    ret.Data.Add(new ZanoxProgramModel(item));
+                    ret.Data.Add(new ZanoxProgramListItemModel(item));
 
                 return Ok(ret);
             }
