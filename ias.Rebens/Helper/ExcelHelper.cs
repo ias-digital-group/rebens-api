@@ -10,12 +10,22 @@ namespace ias.Rebens.Helper
     public class ExcelHelper
     {
         //https://dzone.com/articles/import-and-export-excel-file-in-asp-net-core-31-ra
-        public bool UnicsulReport(Models.UnicsulReport report, string filePath)
+        public bool UnicsulReport(Models.UnicsulReport report, string filePath, ILogErrorRepository logRepo)
         {
             bool ret = false;
             using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
-                IWorkbook workbook = new XSSFWorkbook();
+                IWorkbook workbook;
+                try
+                {
+                    workbook = new XSSFWorkbook();
+                }
+                catch(Exception ex)
+                {
+                    logRepo.Create("ExcelHelper.UnicsulReport", ex.Message, "create workbook", ex.StackTrace);
+                    return false;
+                }
+
                 ISheet summarySheet = workbook.CreateSheet("Resumo Clientes");
 
                 IRow row = summarySheet.CreateRow(0);
