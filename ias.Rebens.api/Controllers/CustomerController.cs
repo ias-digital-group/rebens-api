@@ -143,7 +143,7 @@ namespace ias.Rebens.api.Controllers
                 custo.IdOperationPartner = customer.IdOperationPartner.Value;
                 custo.ComplementaryStatus = (int)Enums.CustomerComplementaryStatus.approved;
             }
-            custo.Code = Helper.SecurityHelper.HMACSHA1(custo.Email, custo.Email + "|" + custo.Cpf);
+            custo.Code = Guid.NewGuid().ToString().Replace("-", "");
 
             if (repo.Create(custo, idAdminUser, out string error))
                 return Ok(new JsonCreateResultModel() { Status = "ok", Message = "Cliente criado com sucesso!", Id = custo.Id });

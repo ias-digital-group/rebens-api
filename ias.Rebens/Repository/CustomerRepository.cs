@@ -35,7 +35,7 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    if(db.Customer.Any(c => c.IdOperation == customer.IdOperation && (c.Email == customer.Email || c.Cpf == customer.Cpf)))
+                    if(db.Customer.Any(c => c.IdOperation == customer.IdOperation && (c.Email == customer.Email || (!string.IsNullOrEmpty(customer.Cpf) && c.Cpf == customer.Cpf))))
                     {
                         error = "Este Cpf ou e-mail já está cadastrado na nossa base.";
                         return false;
@@ -73,6 +73,8 @@ namespace ias.Rebens
                 var logError = new LogErrorRepository(this._connectionString);
                 int idLog = logError.Create("CustomerRepository.Create", ex.Message, "", ex.StackTrace);
                 error = "Ocorreu um erro ao tentar criar o cliente. (erro:" + idLog + ")";
+                if(ex.InnerException != null)
+                    logError.Create("CustomerRepository.Create INNER", ex.InnerException.Message, "", ex.InnerException.StackTrace);
                 ret = false;
             }
             return ret;

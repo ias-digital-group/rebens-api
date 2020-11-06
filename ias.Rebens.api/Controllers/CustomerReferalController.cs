@@ -167,9 +167,11 @@ namespace ias.Rebens.api.Controllers
             {
                 var referal = customerReferal.GetEntity();
                 referal.ComplementaryStatus = (int)Enums.CustomerComplementaryStatus.pending;
+                referal.Status = (int)Enums.CustomerStatus.PreSignup;
                 referal.IdCustomerReferer = idCustomer;
+                referal.IdOperation = idOperation;
                 referal.Created = referal.Modified = DateTime.Now;
-                if (repo.Create(referal, operation.Id, out error))
+                if (repo.Create(referal, 0, out error))
                 {
                     string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
                     string color = operationRepo.GetConfigurationOption(operation.Id, "color", out _);

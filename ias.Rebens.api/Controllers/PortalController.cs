@@ -424,7 +424,7 @@ namespace ias.Rebens.api.Controllers
                         customer.Email = signUp.Email;
                         customer.Cpf = signUp.Cpf;
                         customer.Status = (int)Enums.CustomerStatus.Validation;
-                        customer.Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf);
+                        customer.Code = Guid.NewGuid().ToString().Replace("-", "");
                         customer.Modified = DateTime.UtcNow;
                         isPreSignup = true;
                     }
@@ -439,7 +439,7 @@ namespace ias.Rebens.api.Controllers
                             customer.Modified = DateTime.UtcNow;
                             customer.Status = (int)Enums.CustomerStatus.Validation;
                             customer.CustomerType = (int)Enums.CustomerType.Referal;
-                            customer.Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf);
+                            customer.Code = Guid.NewGuid().ToString().Replace("-", "");
                             customer.ComplementaryStatus = (int)Enums.CustomerComplementaryStatus.registered;
                         }
                     }
@@ -454,8 +454,8 @@ namespace ias.Rebens.api.Controllers
                             Modified = DateTime.Now,
                             Status = (int)Enums.CustomerStatus.Validation,
                             CustomerType = (int)Enums.CustomerType.Customer,
-                            Code = Helper.SecurityHelper.HMACSHA1(signUp.Email, signUp.Email + "|" + signUp.Cpf),
-                            IdOperation = operation.Id,
+                            Code = Guid.NewGuid().ToString().Replace("-", ""),
+                        IdOperation = operation.Id,
                             Active = true
                         };
                     }
@@ -791,21 +791,21 @@ namespace ias.Rebens.api.Controllers
         [ProducesResponseType(typeof(JsonModel), 400)]
         public IActionResult RememberPassword([FromHeader(Name = "x-operation-code")] string operationCode, [FromQuery] string email)
         {
-            if (Guid.TryParse(operationCode, out Guid operationGuid))
+            if (!Guid.TryParse(operationCode, out Guid operationGuid))
                 return StatusCode(400, new JsonModel() { Status = "error", Message = "Operação não reconhecida!" });
 
-            var operation = operationRepo.Read(operationGuid, out string error);
+            var operation = operationRepo.Read(operationGuid, out _);
 
             if (operation != null)
             {
-                var user = customerRepo.ReadByEmail(email, operation.Id, out error);
+                var user = customerRepo.ReadByEmail(email, operation.Id, out _);
                 if (user != null)
                 {
-                    if (customerRepo.ChangeStatus(user.Id, Enums.CustomerStatus.ChangePassword, out error))
+                    if (customerRepo.ChangeStatus(user.Id, Enums.CustomerStatus.ChangePassword, out _))
                     {
                         string emailFrom = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);
                         if (string.IsNullOrEmpty(emailFrom) || !Helper.EmailHelper.IsValidEmail(emailFrom)) emailFrom = "contato@rebens.com.br";
-                        if (Helper.EmailHelper.SendPasswordRecovery(staticTextRepo, operation, emailFrom, user, out error))
+                        if (Helper.EmailHelper.SendPasswordRecovery(staticTextRepo, operation, emailFrom, user, out string error))
                             return Ok(new JsonModel() { Status = "ok", Message = "Enviamos um link com as instruções para definir uma nova senha." });
                         return StatusCode(400, new JsonModel() { Status = "error", Message = error });
                     }
