@@ -171,6 +171,7 @@ namespace ias.Rebens.api.Controllers
                 referal.IdCustomerReferer = idCustomer;
                 referal.IdOperation = idOperation;
                 referal.Created = referal.Modified = DateTime.Now;
+                referal.CustomerType = (int)Enums.CustomerType.Referal;
                 if (repo.Create(referal, 0, out error))
                 {
                     string fromEmail = operationRepo.GetConfigurationOption(operation.Id, "contact-email", out _);

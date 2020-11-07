@@ -231,7 +231,9 @@ namespace ias.Rebens
             {
                 using (var db = new RebensContext(this._connectionString))
                 {
-                    ret = db.Customer.SingleOrDefault(c => c.Email == email && c.IdOperation == idOperation && c.ComplementaryStatus != (int)Enums.CustomerComplementaryStatus.deleted);
+                    ret = db.Customer.SingleOrDefault(c => c.Email == email 
+                                && c.IdOperation == idOperation 
+                                && c.ComplementaryStatus != (int)CustomerComplementaryStatus.deleted);
                     error = null;
                 }
             }
@@ -303,6 +305,10 @@ namespace ias.Rebens
                         update.Active = customer.Active;
                         if(customer.Status != 0)
                             update.Status = customer.Status;
+                        if (customer.CustomerType != 0)
+                            update.CustomerType = customer.CustomerType;
+                        if (customer.ComplementaryStatus != 0)
+                            update.ComplementaryStatus = customer.ComplementaryStatus;
                         update.Picture = customer.Picture;
 
                         if (customer.IdAddress.HasValue && customer.IdAddress.Value != 0)
@@ -573,7 +579,10 @@ namespace ias.Rebens
                     cpf = cpf.Replace(".", "").Replace("-", "");
                     string cpfMasked = cpf.Substring(0, 3) + "." + cpf.Substring(3, 3) + "." + cpf.Substring(6, 3) + "-" + cpf.Substring(9);
 
-                    ret = db.Customer.SingleOrDefault(o => (o.Cpf == cpf || o.Cpf == cpfMasked) && o.IdOperation == idOperation && o.Status == (int)Enums.CustomerStatus.PreSignup);
+                    ret = db.Customer.SingleOrDefault(o => (o.Cpf == cpf || o.Cpf == cpfMasked) 
+                                && o.IdOperation == idOperation 
+                                && o.Status == (int)CustomerStatus.PreSignup
+                                && o.CustomerType == (int)CustomerType.PreSignup);
                     error = null;
                 }
             }
